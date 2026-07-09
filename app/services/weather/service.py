@@ -1,4 +1,4 @@
-import os
+﻿import os
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -55,37 +55,52 @@ class QWeatherService:
         )
 
     def lookup_location(self, location: str, number: int = 10) -> list[GeoLocation]:
-        payload = self._client.get(
-            f"{self.config.geo_base_url}/v2/city/lookup",
-            params={"location": location, "number": number, "lang": self.config.lang},
-        )
-        self._ensure_success(payload)
-
+        payload = self.lookup_location_payload(location=location, number=number)
         locations = [GeoLocation.model_validate(item) for item in payload.get("location", [])]
         if not locations:
             raise LocationNotFoundError(f"No matching location found for: {location}")
 
         return locations
 
+    def lookup_location_payload(self, location: str, number: int = 10) -> dict:
+        payload = self._client.get(
+            f"{self.config.geo_base_url}/geo/v2/city/lookup",
+            params={"location": location, "number": number, "lang": self.config.lang},
+        )
+        self._ensure_success(payload)
+        return payload
+
     def get_hourly_weather(
         self,
         location_id: str,
         hours: Literal["24h", "72h", "168h"] = "72h",
     ) -> HourlyWeatherResponse:
+        payload = self.get_hourly_weather_payload(location_id=location_id, hours=hours)
+        return HourlyWeatherResponse.model_validate(payload)
+
+    def get_hourly_weather_payload(
+        self,
+        location_id: str,
+        hours: Literal["24h", "72h", "168h"] = "72h",
+    ) -> dict:
         payload = self._client.get(
             f"{self.config.weather_base_url}/v7/weather/{hours}",
             params={"location": location_id, "lang": self.config.lang},
         )
         self._ensure_success(payload)
-        return HourlyWeatherResponse.model_validate(payload)
+        return payload
 
     def get_weather_warning(self, latitude: str, longitude: str) -> WeatherWarningResponse:
-        payload = self._client.get(
-            f"{self.config.warning_base_url}/v7/warning/now",
-            params={"location": f"{longitude},{latitude}", "lang": self.config.lang},
-        )
-        self._ensure_success(payload)
+        payload = self.get_weather_warning_payload(latitude=latitude, longitude=longitude)
         return WeatherWarningResponse.model_validate(payload)
+
+    def get_weather_warning_payload(self, latitude: str, longitude: str) -> dict:
+        payload = self._client.get(
+            f"{self.config.warning_base_url}/weatheralert/v1/current/{latitude}/{longitude}",
+            params={"lang": self.config.lang},
+        )
+        self._ensure_warning_success(payload)
+        return payload
 
     def close(self) -> None:
         self._client.close()
@@ -95,3 +110,10 @@ class QWeatherService:
         if payload.get("code") == "200":
             return
         raise WeatherResponseError(f"Unexpected weather API response code: {payload.get('code')}")
+
+    @staticmethod
+    def _ensure_warning_success(payload: dict) -> None:
+        if "metadata" in payload and "alerts" in payload:
+            return
+        raise WeatherResponseError("Unexpected warning API response structure")
+

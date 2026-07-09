@@ -6,6 +6,7 @@ from app.schemas.assessment import (
     RiskDecision,
 )
 from app.schemas.error import ErrorDetail, ErrorResponse
+from app.schemas.fetch import WeatherFetchErrorContext, WeatherFetchResponse
 from app.schemas.request import CruiseEvaluateRequest
 from app.schemas.warning import WarningData, WarningDataBundle
 from app.schemas.weather import LocationInfo, WeatherDataBundle, WeatherHourData
@@ -16,6 +17,8 @@ __all__ = [
     "CruiseEvaluateRequest",
     "ErrorDetail",
     "ErrorResponse",
+    "WeatherFetchErrorContext",
+    "WeatherFetchResponse",
     "HourlyAssessment",
     "InputValidationPreviewResponse",
     "LocationInfo",
