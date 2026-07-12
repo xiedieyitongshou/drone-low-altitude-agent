@@ -1,6 +1,7 @@
-from app.schemas.warning import WarningData, WarningDataBundle
+from app.schemas.warning import WarningDataBundle
 from app.schemas.weather import LocationInfo, WeatherDataBundle, WeatherHourData
 from app.services.weather.schemas import GeoLocation, HourlyWeatherResponse, WeatherWarningResponse
+from app.services.weather.warning_extractor import extract_warnings
 
 
 def to_location_info(location: GeoLocation) -> LocationInfo:
@@ -40,23 +41,4 @@ def to_weather_data_bundle(location: GeoLocation, weather_response: HourlyWeathe
 
 
 def to_warning_data_bundle(warning_response: WeatherWarningResponse) -> WarningDataBundle:
-    warnings = [
-        WarningData(
-            warning_id=item.warning_id,
-            event_type=item.event_type.name if item.event_type else None,
-            warning_level=item.severity,
-            title=item.headline,
-            sender=item.sender_name,
-            publish_time=item.issued_time,
-            start_time=item.effective_time,
-            end_time=item.expire_time,
-            status=item.message_type.code if item.message_type else None,
-            text=item.description,
-        )
-        for item in warning_response.alerts
-    ]
-    return WarningDataBundle(
-        warnings=warnings,
-        has_warning=len(warnings) > 0,
-        warning_count=len(warnings),
-    )
+    return extract_warnings(warning_response)
