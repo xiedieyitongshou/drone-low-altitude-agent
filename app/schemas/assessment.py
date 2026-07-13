@@ -29,7 +29,7 @@ class CruiseAssessmentAdvice(BaseModel):
 
 
 class CruiseAssessmentResponse(BaseModel):
-    request: dict[str, str | None]
+    request: dict[str, str | bool | None]
     weather: WeatherDataBundle | None = None
     warnings: WarningDataBundle | None = None
     advice: CruiseAssessmentAdvice

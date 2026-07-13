@@ -10,12 +10,13 @@ from pydantic import BaseModel
 
 from app.core.config import load_environment
 from app.schemas import (
+    CruiseAssessmentResponse,
     CruiseEvaluateRequest,
     ErrorDetail,
     ErrorResponse,
-    InputValidationPreviewResponse,
     WeatherFetchResponse,
 )
+from app.rules import assess_cruise_window
 from app.services.weather import (
     GeoLocation,
     HourlyWeatherResponse,
@@ -27,6 +28,7 @@ from app.services.weather import (
     WeatherSampleStore,
     WeatherServiceError,
     WeatherWarningResponse,
+    extract_hourly_weather_from_request,
     to_location_info,
     to_warning_data_bundle,
     to_weather_data_bundle,
@@ -137,21 +139,71 @@ def health_check() -> dict[str, str]:
     }
 
 
-@app.post("/cruise/evaluate", response_model=InputValidationPreviewResponse)
-def evaluate_cruise_input(payload: CruiseEvaluateRequest) -> InputValidationPreviewResponse:
-    return InputValidationPreviewResponse(
-        request={
+@app.post("/cruise/evaluate", response_model=CruiseAssessmentResponse)
+def evaluate_cruise(payload: CruiseEvaluateRequest) -> CruiseAssessmentResponse:
+    logger.info(
+        "Starting cruise evaluation",
+        extra={
             "location": payload.location,
             "date": payload.normalized_date,
             "start_time": payload.normalized_start_time,
             "end_time": payload.normalized_end_time,
             "task_type": payload.task_type,
-            "purpose": payload.purpose,
-            "spans_next_day": payload.spans_next_day,
-            "start_datetime": payload.start_datetime,
-            "end_datetime": payload.end_datetime,
-        }
+        },
     )
+
+    weather_service = QWeatherService()
+    try:
+        locations = weather_service.lookup_location(payload.location, number=1)
+        selected_location = locations[0]
+
+        hourly_response = weather_service.get_hourly_weather(selected_location.location_id, hours="72h")
+        warning_response = weather_service.get_weather_warning(
+            latitude=selected_location.latitude,
+            longitude=selected_location.longitude,
+        )
+
+        standardized_weather = to_weather_data_bundle(selected_location, hourly_response)
+        standardized_warnings = to_warning_data_bundle(warning_response)
+        target_hourly_weather = extract_hourly_weather_from_request(payload, standardized_weather)
+        target_weather_bundle = standardized_weather.model_copy(
+            update={"hourly_weather": target_hourly_weather}
+        )
+        advice = assess_cruise_window(
+            target_hourly_weather,
+            standardized_warnings,
+            task_type=payload.task_type,
+        )
+
+        logger.info(
+            "Cruise evaluation completed",
+            extra={
+                "location_id": selected_location.location_id,
+                "selected_hour_count": len(target_hourly_weather),
+                "warning_count": standardized_warnings.warning_count,
+                "overall_decision": advice.overall_decision,
+            },
+        )
+
+        return CruiseAssessmentResponse(
+            request={
+                "location": payload.location,
+                "date": payload.normalized_date,
+                "start_time": payload.normalized_start_time,
+                "end_time": payload.normalized_end_time,
+                "task_type": payload.task_type,
+                "purpose": payload.purpose,
+                "spans_next_day": payload.spans_next_day,
+                "start_datetime": payload.start_datetime,
+                "end_datetime": payload.end_datetime,
+            },
+            weather=target_weather_bundle,
+            warnings=standardized_warnings,
+            advice=advice,
+        )
+    finally:
+        with suppress(Exception):
+            weather_service.close()
 
 
 @app.post("/cruise/weather-fetch", response_model=WeatherFetchResponse)

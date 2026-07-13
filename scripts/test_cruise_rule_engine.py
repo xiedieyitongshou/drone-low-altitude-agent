@@ -97,12 +97,32 @@ def main() -> None:
     assert orange_result.hourly_assessment[1].decision == RiskDecision.PROHIBITED
     assert "高风险预警：雷电orange" in orange_result.hourly_assessment[1].risk_factors
 
+    hover_weather = [
+        WeatherHourData(
+            fx_time="2026-07-05T09:00:00+08:00",
+            temp="30",
+            text="多云",
+            wind_scale="2",
+            wind_speed="5.5",
+            humidity="78",
+            precip="0",
+            pop="15",
+        )
+    ]
+    cruise_hover_result = assess_cruise_window(hover_weather, task_type="cruise")
+    strict_hover_result = assess_cruise_window(hover_weather, task_type="hover")
+    assert cruise_hover_result.overall_decision == RiskDecision.SUITABLE
+    assert strict_hover_result.overall_decision == RiskDecision.CAUTION
+    assert "风速中等偏高" in strict_hover_result.hourly_assessment[0].risk_factors
+
     print("base overall:", base_result.overall_decision)
     print("base first hour:", base_result.hourly_assessment[0].decision, base_result.hourly_assessment[0].risk_factors)
     print("yellow overall:", yellow_result.overall_decision)
     print("yellow second hour:", yellow_result.hourly_assessment[1].decision, yellow_result.hourly_assessment[1].risk_factors)
     print("orange overall:", orange_result.overall_decision)
     print("orange second hour:", orange_result.hourly_assessment[1].decision, orange_result.hourly_assessment[1].risk_factors)
+    print("cruise hover overall:", cruise_hover_result.overall_decision)
+    print("hover hover overall:", strict_hover_result.overall_decision, strict_hover_result.hourly_assessment[0].risk_factors)
     print("rule engine assertions passed")
 
 
