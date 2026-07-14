@@ -10,13 +10,21 @@ from pydantic import BaseModel
 
 from app.core.config import load_environment
 from app.schemas import (
+    ComparedLocationResult,
     CruiseAssessmentResponse,
     CruiseEvaluateRequest,
     ErrorDetail,
     ErrorResponse,
+    MultiLocationComparisonRequest,
+    MultiLocationComparisonResponse,
+    RecommendationRequest,
+    RecommendationResponse,
     WeatherFetchResponse,
 )
 from app.rules import assess_cruise_window
+from app.services.comparison import compare_locations
+from app.services.cruise_evaluator import evaluate_cruise_request
+from app.services.recommendation import build_recommendation_from_weather, build_recommendation_request_preview
 from app.services.weather import (
     GeoLocation,
     HourlyWeatherResponse,
@@ -152,11 +160,58 @@ def evaluate_cruise(payload: CruiseEvaluateRequest) -> CruiseAssessmentResponse:
         },
     )
 
+    result = evaluate_cruise_request(payload)
+    logger.info(
+        "Cruise evaluation completed",
+        extra={
+            "selected_hour_count": len(result.advice.hourly_assessment),
+            "warning_count": result.warnings.warning_count if result.warnings else 0,
+            "overall_decision": result.advice.overall_decision,
+        },
+    )
+    return result
+
+
+@app.post("/cruise/compare", response_model=MultiLocationComparisonResponse)
+def compare_cruise_locations(payload: MultiLocationComparisonRequest) -> MultiLocationComparisonResponse:
+    logger.info(
+        "Starting location comparison",
+        extra={
+            "locations": payload.locations,
+            "date": payload.date,
+            "start_time": payload.start_time,
+            "end_time": payload.end_time,
+            "task_type": payload.task_type,
+        },
+    )
+    result = compare_locations(payload)
+    logger.info(
+        "Location comparison completed",
+        extra={
+            "location_count": len(payload.locations),
+            "recommended_location": result.recommended_location.location if result.recommended_location else None,
+        },
+    )
+    return result
+
+
+@app.post("/cruise/recommend", response_model=RecommendationResponse)
+def recommend_execution_windows(payload: RecommendationRequest) -> RecommendationResponse:
+    logger.info(
+        "Starting recommendation scan",
+        extra={
+            "location": payload.location,
+            "date": payload.date,
+            "task_type": payload.task_type,
+            "scan_hours": payload.scan_hours,
+            "min_window_hours": payload.min_window_hours,
+        },
+    )
+
     weather_service = QWeatherService()
     try:
         locations = weather_service.lookup_location(payload.location, number=1)
         selected_location = locations[0]
-
         hourly_response = weather_service.get_hourly_weather(selected_location.location_id, hours="72h")
         warning_response = weather_service.get_weather_warning(
             latitude=selected_location.latitude,
@@ -165,41 +220,40 @@ def evaluate_cruise(payload: CruiseEvaluateRequest) -> CruiseAssessmentResponse:
 
         standardized_weather = to_weather_data_bundle(selected_location, hourly_response)
         standardized_warnings = to_warning_data_bundle(warning_response)
-        target_hourly_weather = extract_hourly_weather_from_request(payload, standardized_weather)
-        target_weather_bundle = standardized_weather.model_copy(
-            update={"hourly_weather": target_hourly_weather}
-        )
-        advice = assess_cruise_window(
-            target_hourly_weather,
-            standardized_warnings,
+        filtered_weather, _, recommendation = build_recommendation_from_weather(
+            location=payload.location,
+            date_text=payload.date,
             task_type=payload.task_type,
+            weather_data=standardized_weather,
+            warnings=standardized_warnings,
+            scan_hours=payload.scan_hours,
+            min_window_hours=payload.min_window_hours,
+        )
+        target_weather_bundle = standardized_weather.model_copy(
+            update={"hourly_weather": filtered_weather}
         )
 
         logger.info(
-            "Cruise evaluation completed",
+            "Recommendation scan completed",
             extra={
                 "location_id": selected_location.location_id,
-                "selected_hour_count": len(target_hourly_weather),
-                "warning_count": standardized_warnings.warning_count,
-                "overall_decision": advice.overall_decision,
+                "scanned_hour_count": len(filtered_weather),
+                "recommended_window_count": len(recommendation.recommended_windows),
             },
         )
 
-        return CruiseAssessmentResponse(
-            request={
-                "location": payload.location,
-                "date": payload.normalized_date,
-                "start_time": payload.normalized_start_time,
-                "end_time": payload.normalized_end_time,
-                "task_type": payload.task_type,
-                "purpose": payload.purpose,
-                "spans_next_day": payload.spans_next_day,
-                "start_datetime": payload.start_datetime,
-                "end_datetime": payload.end_datetime,
-            },
+        return RecommendationResponse(
+            request=build_recommendation_request_preview(
+                location=payload.location,
+                date_text=payload.date,
+                task_type=payload.task_type,
+                purpose=payload.purpose,
+                scan_hours=payload.scan_hours,
+                min_window_hours=payload.min_window_hours,
+            ),
             weather=target_weather_bundle,
             warnings=standardized_warnings,
-            advice=advice,
+            recommendation=recommendation,
         )
     finally:
         with suppress(Exception):
