@@ -10,7 +10,6 @@ from pydantic import BaseModel
 
 from app.core.config import load_environment
 from app.schemas import (
-    ComparedLocationResult,
     CruiseAssessmentResponse,
     CruiseEvaluateRequest,
     CruiseHistoryResponse,
@@ -22,9 +21,8 @@ from app.schemas import (
     RecommendationResponse,
     WeatherFetchResponse,
 )
-from app.rules import assess_cruise_window
 from app.services.comparison import compare_locations
-from app.services.cruise_evaluator import evaluate_cruise_request, evaluate_cruise_request_with_artifacts
+from app.services.cruise_evaluator import evaluate_cruise_request_with_artifacts
 from app.services.history_persistence import persist_cruise_evaluation
 from app.services.history_query import get_cruise_history
 from app.services.recommendation import build_recommendation_from_weather, build_recommendation_request_preview
@@ -39,7 +37,6 @@ from app.services.weather import (
     WeatherSampleStore,
     WeatherServiceError,
     WeatherWarningResponse,
-    extract_hourly_weather_from_request,
     to_location_info,
     to_warning_data_bundle,
     to_weather_data_bundle,
