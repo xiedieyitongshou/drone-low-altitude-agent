@@ -1,5 +1,6 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
+from app.rules.mission_profiles import is_supported_task_type, normalize_task_type
 from app.schemas.assessment import HourlyAssessment, RiskDecision
 from app.schemas.warning import WarningDataBundle
 from app.schemas.weather import WeatherDataBundle
@@ -34,6 +35,14 @@ class RecommendationRequest(BaseModel):
     purpose: str | None = None
     scan_hours: int = 72
     min_window_hours: int = 2
+
+    @field_validator("task_type")
+    @classmethod
+    def validate_task_type(cls, value: str) -> str:
+        normalized = normalize_task_type(value)
+        if not is_supported_task_type(normalized):
+            raise ValueError("task_type must be one of: cruise, inspection, hover, survey")
+        return normalized
 
 
 class RecommendationResponse(BaseModel):

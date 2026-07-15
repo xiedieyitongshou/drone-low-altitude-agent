@@ -1,24 +1,52 @@
 from contextlib import suppress
+from dataclasses import dataclass
 
 from app.rules import assess_cruise_window
 from app.schemas import CruiseAssessmentResponse, CruiseEvaluateRequest
-from app.services.weather import QWeatherService, extract_hourly_weather_from_request, to_warning_data_bundle, to_weather_data_bundle
+from app.schemas.warning import WarningDataBundle
+from app.schemas.weather import LocationInfo, WeatherDataBundle
+from app.services.weather import (
+    LocationNotFoundError,
+    QWeatherService,
+    extract_hourly_weather_from_request,
+    to_warning_data_bundle,
+    to_weather_data_bundle,
+)
+from app.services.weather.schemas import GeoLocation, HourlyWeatherResponse, WeatherWarningResponse
 
 
-def evaluate_cruise_request(payload: CruiseEvaluateRequest) -> CruiseAssessmentResponse:
+@dataclass
+class CruiseEvaluationArtifacts:
+    response: CruiseAssessmentResponse
+    provider_name: str
+    raw_location_payload: dict
+    raw_hourly_weather_payload: dict
+    raw_warning_payload: dict
+    standardized_location: LocationInfo
+    standardized_weather: WeatherDataBundle
+    standardized_warnings: WarningDataBundle
+
+
+def evaluate_cruise_request_with_artifacts(payload: CruiseEvaluateRequest) -> CruiseEvaluationArtifacts:
     weather_service = QWeatherService()
     try:
-        locations = weather_service.lookup_location(payload.location, number=1)
+        raw_location_payload = weather_service.lookup_location_payload(payload.location, number=1)
+        locations = [GeoLocation.model_validate(item) for item in raw_location_payload.get("location", [])]
+        if not locations:
+            raise LocationNotFoundError(f"No matching location found for: {payload.location}")
         selected_location = locations[0]
 
-        hourly_response = weather_service.get_hourly_weather(selected_location.location_id, hours="72h")
-        warning_response = weather_service.get_weather_warning(
+        raw_hourly_weather_payload = weather_service.get_hourly_weather_payload(selected_location.location_id, hours="72h")
+        hourly_response = HourlyWeatherResponse.model_validate(raw_hourly_weather_payload)
+        raw_warning_payload = weather_service.get_weather_warning_payload(
             latitude=selected_location.latitude,
             longitude=selected_location.longitude,
         )
+        warning_response = WeatherWarningResponse.model_validate(raw_warning_payload)
 
         standardized_weather = to_weather_data_bundle(selected_location, hourly_response)
         standardized_warnings = to_warning_data_bundle(warning_response)
+        standardized_location = standardized_weather.location
         target_hourly_weather = extract_hourly_weather_from_request(payload, standardized_weather)
         target_weather_bundle = standardized_weather.model_copy(
             update={"hourly_weather": target_hourly_weather}
@@ -29,7 +57,7 @@ def evaluate_cruise_request(payload: CruiseEvaluateRequest) -> CruiseAssessmentR
             task_type=payload.task_type,
         )
 
-        return CruiseAssessmentResponse(
+        response = CruiseAssessmentResponse(
             request={
                 "location": payload.location,
                 "date": payload.normalized_date,
@@ -45,9 +73,24 @@ def evaluate_cruise_request(payload: CruiseEvaluateRequest) -> CruiseAssessmentR
             warnings=standardized_warnings,
             advice=advice,
         )
+
+        return CruiseEvaluationArtifacts(
+            response=response,
+            provider_name="qweather",
+            raw_location_payload=raw_location_payload,
+            raw_hourly_weather_payload=raw_hourly_weather_payload,
+            raw_warning_payload=raw_warning_payload,
+            standardized_location=standardized_location,
+            standardized_weather=standardized_weather,
+            standardized_warnings=standardized_warnings,
+        )
     finally:
         with suppress(Exception):
             weather_service.close()
+
+
+def evaluate_cruise_request(payload: CruiseEvaluateRequest) -> CruiseAssessmentResponse:
+    return evaluate_cruise_request_with_artifacts(payload).response
 
 
 def build_cruise_request(

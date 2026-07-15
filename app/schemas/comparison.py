@@ -1,5 +1,6 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
+from app.rules.mission_profiles import is_supported_task_type, normalize_task_type
 from app.schemas.assessment import CruiseAssessmentAdvice, RiskDecision
 from app.schemas.recommendation import RecommendationWindow
 
@@ -13,6 +14,14 @@ class MultiLocationComparisonRequest(BaseModel):
     purpose: str | None = None
     top_k: int = 3
     comparison_mode: str = "default"
+
+    @field_validator("task_type")
+    @classmethod
+    def validate_task_type(cls, value: str) -> str:
+        normalized = normalize_task_type(value)
+        if not is_supported_task_type(normalized):
+            raise ValueError("task_type must be one of: cruise, inspection, hover, survey")
+        return normalized
 
 
 class ComparedLocationResult(BaseModel):

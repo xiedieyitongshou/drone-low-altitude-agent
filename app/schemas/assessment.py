@@ -35,6 +35,15 @@ class CruiseAssessmentResponse(BaseModel):
     advice: CruiseAssessmentAdvice
 
 
+class CruiseHistoryResponse(BaseModel):
+    request_id: str
+    created_at: str
+    request: dict[str, str | bool | None]
+    weather: WeatherDataBundle | None = None
+    warnings: WarningDataBundle | None = None
+    advice: CruiseAssessmentAdvice
+
+
 class InputValidationPreviewResponse(BaseModel):
     success: bool = True
     message: str = "input validation passed"

@@ -13,6 +13,7 @@ from app.schemas import (
     ComparedLocationResult,
     CruiseAssessmentResponse,
     CruiseEvaluateRequest,
+    CruiseHistoryResponse,
     ErrorDetail,
     ErrorResponse,
     MultiLocationComparisonRequest,
@@ -23,7 +24,9 @@ from app.schemas import (
 )
 from app.rules import assess_cruise_window
 from app.services.comparison import compare_locations
-from app.services.cruise_evaluator import evaluate_cruise_request
+from app.services.cruise_evaluator import evaluate_cruise_request, evaluate_cruise_request_with_artifacts
+from app.services.history_persistence import persist_cruise_evaluation
+from app.services.history_query import get_cruise_history
 from app.services.recommendation import build_recommendation_from_weather, build_recommendation_request_preview
 from app.services.weather import (
     GeoLocation,
@@ -160,13 +163,32 @@ def evaluate_cruise(payload: CruiseEvaluateRequest) -> CruiseAssessmentResponse:
         },
     )
 
-    result = evaluate_cruise_request(payload)
+    artifacts = evaluate_cruise_request_with_artifacts(payload)
+    result = artifacts.response
+    request_id = persist_cruise_evaluation(payload=payload, artifacts=artifacts)
+    result.request["request_id"] = request_id
     logger.info(
         "Cruise evaluation completed",
         extra={
+            "request_id": request_id,
             "selected_hour_count": len(result.advice.hourly_assessment),
             "warning_count": result.warnings.warning_count if result.warnings else 0,
             "overall_decision": result.advice.overall_decision,
+        },
+    )
+    return result
+
+
+@app.get("/cruise/history/{request_id}", response_model=CruiseHistoryResponse)
+def read_cruise_history(request_id: str) -> CruiseHistoryResponse:
+    logger.info("Reading cruise history", extra={"request_id": request_id})
+    result = get_cruise_history(request_id)
+    logger.info(
+        "Cruise history loaded",
+        extra={
+            "request_id": request_id,
+            "hour_count": len(result.advice.hourly_assessment),
+            "warning_count": result.warnings.warning_count if result.warnings else 0,
         },
     )
     return result

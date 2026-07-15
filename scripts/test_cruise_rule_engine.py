@@ -6,6 +6,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from app.rules import assess_cruise_window
+from app.rules.mission_profiles import list_supported_task_types
 from app.schemas.assessment import RiskDecision
 from app.schemas.warning import WarningData, WarningDataBundle
 from app.schemas.weather import LocationInfo, WeatherDataBundle, WeatherHourData
@@ -115,6 +116,29 @@ def main() -> None:
     assert strict_hover_result.overall_decision == RiskDecision.CAUTION
     assert "风速中等偏高" in strict_hover_result.hourly_assessment[0].risk_factors
 
+    mission_weather = [
+        WeatherHourData(
+            fx_time="2026-07-05T10:00:00+08:00",
+            temp="30",
+            text="多云",
+            wind_scale="2",
+            wind_speed="5.2",
+            humidity="79",
+            precip="0.00",
+            pop="22",
+        )
+    ]
+    cruise_result = assess_cruise_window(mission_weather, task_type="cruise")
+    inspection_result = assess_cruise_window(mission_weather, task_type="inspection")
+    hover_result = assess_cruise_window(mission_weather, task_type="hover")
+    survey_result = assess_cruise_window(mission_weather, task_type="survey")
+
+    assert cruise_result.overall_decision == RiskDecision.SUITABLE
+    assert inspection_result.overall_decision == RiskDecision.SUITABLE
+    assert hover_result.overall_decision == RiskDecision.CAUTION
+    assert survey_result.overall_decision == RiskDecision.CAUTION
+    assert list_supported_task_types() == ("cruise", "inspection", "hover", "survey")
+
     print("base overall:", base_result.overall_decision)
     print("base first hour:", base_result.hourly_assessment[0].decision, base_result.hourly_assessment[0].risk_factors)
     print("yellow overall:", yellow_result.overall_decision)
@@ -123,6 +147,12 @@ def main() -> None:
     print("orange second hour:", orange_result.hourly_assessment[1].decision, orange_result.hourly_assessment[1].risk_factors)
     print("cruise hover overall:", cruise_hover_result.overall_decision)
     print("hover hover overall:", strict_hover_result.overall_decision, strict_hover_result.hourly_assessment[0].risk_factors)
+    print("task type decisions:", {
+        "cruise": cruise_result.overall_decision,
+        "inspection": inspection_result.overall_decision,
+        "hover": hover_result.overall_decision,
+        "survey": survey_result.overall_decision,
+    })
     print("rule engine assertions passed")
 
 

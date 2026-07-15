@@ -1,5 +1,6 @@
 from app.schemas.assessment import (
     CruiseAssessmentAdvice,
+    CruiseHistoryResponse,
     CruiseAssessmentResponse,
     HourlyAssessment,
     InputValidationPreviewResponse,
@@ -21,6 +22,7 @@ from app.schemas.weather import LocationInfo, WeatherDataBundle, WeatherHourData
 
 __all__ = [
     "CruiseAssessmentAdvice",
+    "CruiseHistoryResponse",
     "CruiseAssessmentResponse",
     "CruiseEvaluateRequest",
     "ComparedLocationResult",

@@ -1,6 +1,7 @@
 from datetime import date, datetime, time, timedelta
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from app.rules.mission_profiles import is_supported_task_type, normalize_task_type
 
 
 class CruiseEvaluateRequest(BaseModel):
@@ -38,6 +39,14 @@ class CruiseEvaluateRequest(BaseModel):
         except ValueError as exc:
             raise ValueError("time must use HH:MM format") from exc
         return value
+
+    @field_validator("task_type")
+    @classmethod
+    def validate_task_type(cls, value: str) -> str:
+        normalized = normalize_task_type(value)
+        if not is_supported_task_type(normalized):
+            raise ValueError("task_type must be one of: cruise, inspection, hover, survey")
+        return normalized
 
     @model_validator(mode="after")
     def normalize_time_range(self) -> "CruiseEvaluateRequest":
