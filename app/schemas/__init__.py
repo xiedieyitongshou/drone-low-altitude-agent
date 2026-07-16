@@ -9,6 +9,8 @@ from app.schemas.assessment import (
 from app.schemas.comparison import ComparedLocationResult, MultiLocationComparisonRequest, MultiLocationComparisonResponse
 from app.schemas.error import ErrorDetail, ErrorResponse
 from app.schemas.fetch import WeatherFetchErrorContext, WeatherFetchResponse
+from app.schemas.nl import NaturalLanguageParseRequest, NaturalLanguageParseResponse
+from app.schemas.orchestrator import OrchestratorRequest, OrchestratorResponse
 from app.schemas.recommendation import (
     RecommendationRequest,
     RecommendationResponse,
@@ -35,6 +37,10 @@ __all__ = [
     "LocationInfo",
     "MultiLocationComparisonRequest",
     "MultiLocationComparisonResponse",
+    "NaturalLanguageParseRequest",
+    "NaturalLanguageParseResponse",
+    "OrchestratorRequest",
+    "OrchestratorResponse",
     "RecommendationRequest",
     "RecommendationResponse",
     "RecommendationResult",

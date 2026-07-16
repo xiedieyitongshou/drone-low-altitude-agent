@@ -17,6 +17,10 @@ from app.schemas import (
     ErrorResponse,
     MultiLocationComparisonRequest,
     MultiLocationComparisonResponse,
+    NaturalLanguageParseRequest,
+    NaturalLanguageParseResponse,
+    OrchestratorRequest,
+    OrchestratorResponse,
     RecommendationRequest,
     RecommendationResponse,
     WeatherFetchResponse,
@@ -25,7 +29,9 @@ from app.services.comparison import compare_locations
 from app.services.cruise_evaluator import evaluate_cruise_request_with_artifacts
 from app.services.history_persistence import persist_cruise_evaluation
 from app.services.history_query import get_cruise_history
-from app.services.recommendation import build_recommendation_from_weather, build_recommendation_request_preview
+from app.services.nl_parser import NaturalLanguageParseError, parse_natural_language_request
+from app.services.recommendation_executor import build_recommendation_response
+from app.services.task_orchestrator import orchestrate_task_query
 from app.services.weather import (
     GeoLocation,
     HourlyWeatherResponse,
@@ -130,6 +136,19 @@ async def weather_request_exception_handler(request: Request, exc: WeatherServic
     return JSONResponse(status_code=502, content=payload.model_dump())
 
 
+@app.exception_handler(NaturalLanguageParseError)
+async def natural_language_parse_exception_handler(request: Request, exc: NaturalLanguageParseError) -> JSONResponse:
+    payload = ErrorResponse(
+        error_code="NATURAL_LANGUAGE_PARSE_ERROR",
+        message=str(exc),
+        details=[
+            ErrorDetail(field=field, message="required information not detected").model_dump()
+            for field in exc.missing_fields
+        ],
+    )
+    return JSONResponse(status_code=422, content=payload.model_dump())
+
+
 @app.get("/")
 def read_root() -> dict[str, str]:
     return {
@@ -145,6 +164,33 @@ def health_check() -> dict[str, str]:
         "service": settings.app_name,
         "environment": settings.app_env,
     }
+
+
+@app.post("/nl/parse", response_model=NaturalLanguageParseResponse)
+def parse_natural_language(payload: NaturalLanguageParseRequest) -> NaturalLanguageParseResponse:
+    logger.info("Starting natural language parse")
+    result = parse_natural_language_request(payload.query)
+    logger.info(
+        "Natural language parse completed",
+        extra={"intent": result.intent, "target_endpoint": result.target_endpoint},
+    )
+    return NaturalLanguageParseResponse(
+        intent=result.intent,
+        target_endpoint=result.target_endpoint,
+        parsed=result.parsed,
+        warnings=result.warnings,
+    )
+
+
+@app.post("/agent/query", response_model=OrchestratorResponse)
+def orchestrate_task(payload: OrchestratorRequest) -> OrchestratorResponse:
+    logger.info("Starting task orchestration")
+    result = orchestrate_task_query(payload.query)
+    logger.info(
+        "Task orchestration completed",
+        extra={"intent": result.intent, "success": result.success, "target_endpoint": result.target_endpoint},
+    )
+    return result
 
 
 @app.post("/cruise/evaluate", response_model=CruiseAssessmentResponse)
@@ -227,56 +273,15 @@ def recommend_execution_windows(payload: RecommendationRequest) -> Recommendatio
         },
     )
 
-    weather_service = QWeatherService()
-    try:
-        locations = weather_service.lookup_location(payload.location, number=1)
-        selected_location = locations[0]
-        hourly_response = weather_service.get_hourly_weather(selected_location.location_id, hours="72h")
-        warning_response = weather_service.get_weather_warning(
-            latitude=selected_location.latitude,
-            longitude=selected_location.longitude,
-        )
-
-        standardized_weather = to_weather_data_bundle(selected_location, hourly_response)
-        standardized_warnings = to_warning_data_bundle(warning_response)
-        filtered_weather, _, recommendation = build_recommendation_from_weather(
-            location=payload.location,
-            date_text=payload.date,
-            task_type=payload.task_type,
-            weather_data=standardized_weather,
-            warnings=standardized_warnings,
-            scan_hours=payload.scan_hours,
-            min_window_hours=payload.min_window_hours,
-        )
-        target_weather_bundle = standardized_weather.model_copy(
-            update={"hourly_weather": filtered_weather}
-        )
-
-        logger.info(
-            "Recommendation scan completed",
-            extra={
-                "location_id": selected_location.location_id,
-                "scanned_hour_count": len(filtered_weather),
-                "recommended_window_count": len(recommendation.recommended_windows),
-            },
-        )
-
-        return RecommendationResponse(
-            request=build_recommendation_request_preview(
-                location=payload.location,
-                date_text=payload.date,
-                task_type=payload.task_type,
-                purpose=payload.purpose,
-                scan_hours=payload.scan_hours,
-                min_window_hours=payload.min_window_hours,
-            ),
-            weather=target_weather_bundle,
-            warnings=standardized_warnings,
-            recommendation=recommendation,
-        )
-    finally:
-        with suppress(Exception):
-            weather_service.close()
+    result = build_recommendation_response(payload)
+    logger.info(
+        "Recommendation scan completed",
+        extra={
+            "scanned_hour_count": len(result.weather.hourly_weather) if result.weather else 0,
+            "recommended_window_count": len(result.recommendation.recommended_windows),
+        },
+    )
+    return result
 
 
 @app.post("/cruise/weather-fetch", response_model=WeatherFetchResponse)
