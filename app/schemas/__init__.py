@@ -1,4 +1,4 @@
-from app.schemas.assessment import (
+﻿from app.schemas.assessment import (
     CruiseAssessmentAdvice,
     CruiseHistoryResponse,
     CruiseAssessmentResponse,
@@ -7,6 +7,12 @@ from app.schemas.assessment import (
     RiskDecision,
 )
 from app.schemas.comparison import ComparedLocationResult, MultiLocationComparisonRequest, MultiLocationComparisonResponse
+from app.schemas.composed_response import (
+    ComposedHistorySummary,
+    ComposedLocationRanking,
+    ComposedRecommendationWindow,
+    UnifiedBusinessResponse,
+)
 from app.schemas.error import ErrorDetail, ErrorResponse
 from app.schemas.fetch import WeatherFetchErrorContext, WeatherFetchResponse
 from app.schemas.nl import NaturalLanguageParseRequest, NaturalLanguageParseResponse
@@ -23,32 +29,36 @@ from app.schemas.warning import WarningData, WarningDataBundle
 from app.schemas.weather import LocationInfo, WeatherDataBundle, WeatherHourData
 
 __all__ = [
-    "CruiseAssessmentAdvice",
-    "CruiseHistoryResponse",
-    "CruiseAssessmentResponse",
-    "CruiseEvaluateRequest",
-    "ComparedLocationResult",
-    "ErrorDetail",
-    "ErrorResponse",
-    "WeatherFetchErrorContext",
-    "WeatherFetchResponse",
-    "HourlyAssessment",
-    "InputValidationPreviewResponse",
-    "LocationInfo",
-    "MultiLocationComparisonRequest",
-    "MultiLocationComparisonResponse",
-    "NaturalLanguageParseRequest",
-    "NaturalLanguageParseResponse",
-    "OrchestratorRequest",
-    "OrchestratorResponse",
-    "RecommendationRequest",
-    "RecommendationResponse",
-    "RecommendationResult",
-    "RecommendationStrategy",
-    "RecommendationWindow",
-    "RiskDecision",
-    "WarningData",
-    "WarningDataBundle",
-    "WeatherDataBundle",
-    "WeatherHourData",
+    'ComposedHistorySummary',
+    'ComposedLocationRanking',
+    'ComposedRecommendationWindow',
+    'CruiseAssessmentAdvice',
+    'CruiseHistoryResponse',
+    'CruiseAssessmentResponse',
+    'CruiseEvaluateRequest',
+    'ComparedLocationResult',
+    'ErrorDetail',
+    'ErrorResponse',
+    'WeatherFetchErrorContext',
+    'WeatherFetchResponse',
+    'HourlyAssessment',
+    'InputValidationPreviewResponse',
+    'LocationInfo',
+    'MultiLocationComparisonRequest',
+    'MultiLocationComparisonResponse',
+    'NaturalLanguageParseRequest',
+    'NaturalLanguageParseResponse',
+    'OrchestratorRequest',
+    'OrchestratorResponse',
+    'RecommendationRequest',
+    'RecommendationResponse',
+    'RecommendationResult',
+    'RecommendationStrategy',
+    'RecommendationWindow',
+    'RiskDecision',
+    'UnifiedBusinessResponse',
+    'WarningData',
+    'WarningDataBundle',
+    'WeatherDataBundle',
+    'WeatherHourData',
 ]

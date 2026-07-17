@@ -1,4 +1,4 @@
-import re
+﻿import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
@@ -14,7 +14,7 @@ TASK_TYPE_KEYWORDS = {
     "cruise": ["低空巡航", "巡航", "巡视"],
 }
 
-COMPARE_HINTS = ["哪个", "哪里", "先去哪", "先去哪个", "排序", "比较", "对比"]
+COMPARE_HINTS = ["哪个", "哪里", "先去哪", "先去哪一个", "排序", "比较", "对比"]
 RECOMMEND_HINTS = ["什么时候", "何时", "推荐", "最佳时间", "最适合"]
 TIME_RANGE_PATTERNS = [
     re.compile(
@@ -27,10 +27,18 @@ TIME_RANGE_PATTERNS = [
 ]
 DATE_PATTERN = re.compile(
     r"(今天|明天|后天|大后天|本周[一二三四五六日天]|下周[一二三四五六日天]|周[一二三四五六日天]|"
-    r"\d{4}[-/年]\d{1,2}[-/月]\d{1,2}[日]?|\d{1,2}月\d{1,2}日)"
+    r"\d{4}[-/年]\d{1,2}[-/月]\d{1,2}[日号]?|\d{1,2}月\d{1,2}[日号]?)"
 )
-SCAN_HOURS_PATTERN = re.compile(r"(未来|接下来)(?P<hours>\d{1,3})小时")
+SCAN_HOURS_PATTERN = re.compile(r"(?:未来|接下来)(?P<hours>\d{1,3})小时")
 WEEKDAY_MAP = {"一": 0, "二": 1, "三": 2, "四": 3, "五": 4, "六": 5, "日": 6, "天": 6}
+PERIOD_WINDOWS = {
+    "凌晨": ("00:00", "06:00"),
+    "早上": ("06:00", "09:00"),
+    "上午": ("06:00", "12:00"),
+    "中午": ("11:00", "13:00"),
+    "下午": ("13:00", "18:00"),
+    "晚上": ("18:00", "24:00"),
+}
 
 
 class NaturalLanguageParseError(ValueError):
@@ -45,78 +53,140 @@ class ParsedTaskRequest:
     target_endpoint: str
     parsed: dict[str, object]
     warnings: list[str]
+    context_used: bool = False
 
 
-def parse_natural_language_request(query: str) -> ParsedTaskRequest:
+def parse_natural_language_request(
+    query: str,
+    *,
+    context: dict[str, object] | None = None,
+) -> ParsedTaskRequest:
     text = _normalize_query(query)
     if not text:
         raise NaturalLanguageParseError("未检测到有效输入内容", missing_fields=["query"])
 
-    task_type = _detect_task_type(text)
+    task_type, task_type_detected = _detect_task_type(text)
     scan_hours = _detect_scan_hours(text)
     start_time, end_time = _detect_time_range(text)
+    if not start_time or not end_time:
+        start_time, end_time = _detect_period_window(text)
     date_text = _detect_date(text)
     locations = _detect_locations(text)
-    if not locations and not date_text and not start_time and not end_time and not scan_hours:
+    context = context or {}
+
+    if not any([locations, date_text, start_time, end_time, scan_hours, task_type_detected, _has_intent_hint(text)]):
         raise NaturalLanguageParseError("未检测到可解析的任务要素", missing_fields=["location", "date"])
-    intent = _detect_intent(text=text, locations=locations, scan_hours=scan_hours, has_time_range=bool(start_time))
+
+    intent = _detect_intent(
+        text=text,
+        locations=locations,
+        scan_hours=scan_hours,
+        has_time_range=bool(start_time and end_time),
+        fallback_intent=str(context.get("intent")) if context.get("intent") else None,
+    )
 
     warnings: list[str] = []
-    parsed: dict[str, object] = {}
-    missing_fields: list[str] = []
+    context_used = False
+    parsed: dict[str, object]
+
+    merged_task_type = task_type if task_type_detected else _context_value(context, "task_type", "cruise")
 
     if intent == "compare":
-        if len(locations) < 2:
+        merged_locations = locations or _context_list(context, "locations")
+        merged_date = date_text or _context_value(context, "date")
+        merged_start_time = start_time or _context_value(context, "start_time")
+        merged_end_time = end_time or _context_value(context, "end_time")
+        context_used = any(
+            [
+                not locations and bool(merged_locations),
+                not date_text and bool(merged_date),
+                not start_time and bool(merged_start_time),
+                not end_time and bool(merged_end_time),
+            ]
+        )
+
+        missing_fields: list[str] = []
+        if len(merged_locations) < 2:
             missing_fields.append("locations")
-        if not date_text:
+        if not merged_date:
             missing_fields.append("date")
-        if not start_time or not end_time:
-            missing_fields.extend(item for item in ["start_time", "end_time"] if item not in missing_fields)
+        if not merged_start_time:
+            missing_fields.append("start_time")
+        if not merged_end_time:
+            missing_fields.append("end_time")
         if missing_fields:
             raise NaturalLanguageParseError("多地点比选请求信息不完整", missing_fields=missing_fields)
+
         parsed = {
-            "locations": locations,
-            "date": date_text,
-            "start_time": start_time,
-            "end_time": end_time,
-            "task_type": task_type,
+            "locations": merged_locations,
+            "date": merged_date,
+            "start_time": merged_start_time,
+            "end_time": merged_end_time,
+            "task_type": merged_task_type,
             "purpose": query,
-            "top_k": min(3, len(locations)),
+            "top_k": min(3, len(merged_locations)),
             "comparison_mode": "default",
         }
         target_endpoint = "/cruise/compare"
     elif intent == "recommend":
-        if not locations:
-            missing_fields.append("location")
-        if not date_text:
+        merged_location = (locations[0] if locations else None) or _context_value(context, "location")
+        merged_date = date_text or _context_value(context, "date")
+        merged_scan_hours = scan_hours or _context_value(context, "scan_hours", 72)
+        context_used = any(
+            [
+                not locations and bool(merged_location),
+                not date_text and bool(merged_date),
+                scan_hours is None and merged_scan_hours != 72,
+            ]
+        )
+
+        if not merged_location:
+            raise NaturalLanguageParseError("推荐请求缺少关键地点信息", missing_fields=["location"])
+        if not merged_date:
             warnings.append("未显式识别日期，已默认使用今天")
-            date_text = datetime.now().date().isoformat()
+            merged_date = datetime.now().date().isoformat()
+
         parsed = {
-            "location": locations[0] if locations else None,
-            "date": date_text,
-            "task_type": task_type,
+            "location": merged_location,
+            "date": merged_date,
+            "task_type": merged_task_type,
             "purpose": query,
-            "scan_hours": scan_hours or 72,
+            "scan_hours": int(merged_scan_hours),
             "min_window_hours": 2,
         }
-        if missing_fields:
-            raise NaturalLanguageParseError("推荐请求缺少关键地点信息", missing_fields=missing_fields)
         target_endpoint = "/cruise/recommend"
     else:
-        if not locations:
+        merged_location = (locations[0] if locations else None) or _context_value(context, "location")
+        merged_date = date_text or _context_value(context, "date")
+        merged_start_time = start_time or _context_value(context, "start_time")
+        merged_end_time = end_time or _context_value(context, "end_time")
+        context_used = any(
+            [
+                not locations and bool(merged_location),
+                not date_text and bool(merged_date),
+                not start_time and bool(merged_start_time),
+                not end_time and bool(merged_end_time),
+            ]
+        )
+
+        missing_fields: list[str] = []
+        if not merged_location:
             missing_fields.append("location")
-        if not date_text:
+        if not merged_date:
             missing_fields.append("date")
-        if not start_time or not end_time:
-            missing_fields.extend(item for item in ["start_time", "end_time"] if item not in missing_fields)
+        if not merged_start_time:
+            missing_fields.append("start_time")
+        if not merged_end_time:
+            missing_fields.append("end_time")
         if missing_fields:
             raise NaturalLanguageParseError("评估请求信息不完整", missing_fields=missing_fields)
+
         parsed = {
-            "location": locations[0],
-            "date": date_text,
-            "start_time": start_time,
-            "end_time": end_time,
-            "task_type": task_type,
+            "location": merged_location,
+            "date": merged_date,
+            "start_time": merged_start_time,
+            "end_time": merged_end_time,
+            "task_type": merged_task_type,
             "purpose": query,
         }
         target_endpoint = "/cruise/evaluate"
@@ -126,6 +196,7 @@ def parse_natural_language_request(query: str) -> ParsedTaskRequest:
         target_endpoint=target_endpoint,
         parsed=parsed,
         warnings=warnings,
+        context_used=context_used,
     )
 
 
@@ -134,20 +205,29 @@ def _normalize_query(query: str) -> str:
     return text.strip("，。！？,.!?")
 
 
-def _detect_task_type(text: str) -> str:
+def _detect_task_type(text: str) -> tuple[str, bool]:
     for task_type, keywords in TASK_TYPE_KEYWORDS.items():
         if any(keyword in text for keyword in keywords):
-            return task_type
-    return "cruise"
+            return task_type, True
+    return "cruise", False
 
 
-def _detect_intent(*, text: str, locations: list[str], scan_hours: int | None, has_time_range: bool) -> str:
+def _detect_intent(
+    *,
+    text: str,
+    locations: list[str],
+    scan_hours: int | None,
+    has_time_range: bool,
+    fallback_intent: str | None,
+) -> str:
     if len(locations) >= 2 or any(word in text for word in COMPARE_HINTS):
         return "compare"
     if scan_hours or any(word in text for word in RECOMMEND_HINTS):
         return "recommend"
     if has_time_range:
         return "evaluate"
+    if fallback_intent:
+        return fallback_intent
     raise NaturalLanguageParseError("未识别到明确任务意图", missing_fields=["intent"])
 
 
@@ -230,6 +310,13 @@ def _detect_time_range(text: str) -> tuple[str | None, str | None]:
     return None, None
 
 
+def _detect_period_window(text: str) -> tuple[str | None, str | None]:
+    for period, window in PERIOD_WINDOWS.items():
+        if period in text:
+            return window
+    return None, None
+
+
 def _build_time_text(*, period: str | None, hour_text: str | None, minute_text: str | None) -> str:
     hour = int(hour_text or "0")
     minute = int(minute_text or "0")
@@ -257,13 +344,15 @@ def _detect_locations(text: str) -> list[str]:
     cleaned = DATE_PATTERN.sub("", cleaned)
     for pattern in TIME_RANGE_PATTERNS:
         cleaned = pattern.sub("", cleaned)
+    for period in PERIOD_WINDOWS:
+        cleaned = cleaned.replace(period, "")
 
     stop_words = [
+        "什么时间最适合执行任务",
         "什么时候最适合执行任务",
         "什么时候最适合",
+        "最佳时间",
         "最适合执行任务",
-        "是否适合执行任务",
-        "适合执行任务",
         "多个地点中",
         "先去哪一个",
         "哪个更适合先去",
@@ -273,14 +362,15 @@ def _detect_locations(text: str) -> list[str]:
         "可以执行吗",
         "适合吗",
         "能飞吗",
-        "吗",
+        "好吗",
         "请问",
         "帮我",
-        "一下",
         "任务",
         "执行",
         "低空",
         "无人机",
+        "那",
+        "呢",
     ]
     for word in stop_words:
         cleaned = cleaned.replace(word, "")
@@ -304,3 +394,18 @@ def _is_valid_location(value: str) -> bool:
     if is_supported_task_type(value):
         return False
     return True
+
+
+def _has_intent_hint(text: str) -> bool:
+    return any(word in text for word in COMPARE_HINTS + RECOMMEND_HINTS)
+
+
+def _context_value(context: dict[str, object], key: str, default: object | None = None) -> object | None:
+    return context.get(key, default)
+
+
+def _context_list(context: dict[str, object], key: str) -> list[str]:
+    value = context.get(key)
+    if isinstance(value, list):
+        return [str(item) for item in value if str(item).strip()]
+    return []

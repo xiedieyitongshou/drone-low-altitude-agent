@@ -21,6 +21,7 @@ from app.schemas import (
     NaturalLanguageParseResponse,
     OrchestratorRequest,
     OrchestratorResponse,
+    UnifiedBusinessResponse,
     RecommendationRequest,
     RecommendationResponse,
     WeatherFetchResponse,
@@ -30,6 +31,8 @@ from app.services.cruise_evaluator import evaluate_cruise_request_with_artifacts
 from app.services.history_persistence import persist_cruise_evaluation
 from app.services.history_query import get_cruise_history
 from app.services.nl_parser import NaturalLanguageParseError, parse_natural_language_request
+from app.services.response_composer import compose_history_response
+from app.services.session_memory import build_session_context, session_memory_store
 from app.services.recommendation_executor import build_recommendation_response
 from app.services.task_orchestrator import orchestrate_task_query
 from app.services.weather import (
@@ -169,15 +172,26 @@ def health_check() -> dict[str, str]:
 @app.post("/nl/parse", response_model=NaturalLanguageParseResponse)
 def parse_natural_language(payload: NaturalLanguageParseRequest) -> NaturalLanguageParseResponse:
     logger.info("Starting natural language parse")
-    result = parse_natural_language_request(payload.query)
+    context = session_memory_store.get(payload.session_id) if payload.session_id else None
+    result = parse_natural_language_request(payload.query, context=context)
     logger.info(
         "Natural language parse completed",
-        extra={"intent": result.intent, "target_endpoint": result.target_endpoint},
+        extra={
+            "intent": result.intent,
+            "target_endpoint": result.target_endpoint,
+            "session_id": payload.session_id,
+            "context_used": result.context_used,
+        },
     )
+    if payload.session_id:
+        session_memory_store.set(payload.session_id, build_session_context(result.intent, result.parsed))
+
     return NaturalLanguageParseResponse(
+        session_id=payload.session_id,
         intent=result.intent,
         target_endpoint=result.target_endpoint,
         parsed=result.parsed,
+        context_used=result.context_used,
         warnings=result.warnings,
     )
 
@@ -185,10 +199,16 @@ def parse_natural_language(payload: NaturalLanguageParseRequest) -> NaturalLangu
 @app.post("/agent/query", response_model=OrchestratorResponse)
 def orchestrate_task(payload: OrchestratorRequest) -> OrchestratorResponse:
     logger.info("Starting task orchestration")
-    result = orchestrate_task_query(payload.query)
+    result = orchestrate_task_query(payload.query, session_id=payload.session_id)
     logger.info(
         "Task orchestration completed",
-        extra={"intent": result.intent, "success": result.success, "target_endpoint": result.target_endpoint},
+        extra={
+            "intent": result.intent,
+            "success": result.success,
+            "target_endpoint": result.target_endpoint,
+            "session_id": payload.session_id,
+            "context_used": result.context_used,
+        },
     )
     return result
 
@@ -235,6 +255,13 @@ def read_cruise_history(request_id: str) -> CruiseHistoryResponse:
         },
     )
     return result
+
+
+@app.get("/cruise/history/{request_id}/composed", response_model=UnifiedBusinessResponse)
+def read_cruise_history_composed(request_id: str) -> UnifiedBusinessResponse:
+    logger.info("Reading composed cruise history", extra={"request_id": request_id})
+    result = get_cruise_history(request_id)
+    return compose_history_response(result)
 
 
 @app.post("/cruise/compare", response_model=MultiLocationComparisonResponse)
