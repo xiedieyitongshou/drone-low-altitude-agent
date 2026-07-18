@@ -1,4 +1,16 @@
-﻿from app.schemas.assessment import (
+﻿from app.schemas.advice import (
+    AdviceActionType,
+    AdviceCategory,
+    AdvicePriority,
+    AdviceRetrievalContext,
+    AdviceSuggestion,
+    KnowledgeAdviceItem,
+    KnowledgeAdviceLibrary,
+    KnowledgeRetrievalRequest,
+    KnowledgeRetrievalResponse,
+    RetrievedKnowledgeSnippet,
+)
+from app.schemas.assessment import (
     CruiseAssessmentAdvice,
     CruiseHistoryResponse,
     CruiseAssessmentResponse,
@@ -29,6 +41,11 @@ from app.schemas.warning import WarningData, WarningDataBundle
 from app.schemas.weather import LocationInfo, WeatherDataBundle, WeatherHourData
 
 __all__ = [
+    'AdviceActionType',
+    'AdviceCategory',
+    'AdvicePriority',
+    'AdviceRetrievalContext',
+    'AdviceSuggestion',
     'ComposedHistorySummary',
     'ComposedLocationRanking',
     'ComposedRecommendationWindow',
@@ -43,6 +60,10 @@ __all__ = [
     'WeatherFetchResponse',
     'HourlyAssessment',
     'InputValidationPreviewResponse',
+    'KnowledgeAdviceItem',
+    'KnowledgeAdviceLibrary',
+    'KnowledgeRetrievalRequest',
+    'KnowledgeRetrievalResponse',
     'LocationInfo',
     'MultiLocationComparisonRequest',
     'MultiLocationComparisonResponse',
@@ -55,6 +76,7 @@ __all__ = [
     'RecommendationResult',
     'RecommendationStrategy',
     'RecommendationWindow',
+    'RetrievedKnowledgeSnippet',
     'RiskDecision',
     'UnifiedBusinessResponse',
     'WarningData',

@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 import os
 from contextlib import suppress
 
@@ -15,25 +15,28 @@ from app.schemas import (
     CruiseHistoryResponse,
     ErrorDetail,
     ErrorResponse,
+    KnowledgeRetrievalRequest,
+    KnowledgeRetrievalResponse,
     MultiLocationComparisonRequest,
     MultiLocationComparisonResponse,
     NaturalLanguageParseRequest,
     NaturalLanguageParseResponse,
     OrchestratorRequest,
     OrchestratorResponse,
-    UnifiedBusinessResponse,
     RecommendationRequest,
     RecommendationResponse,
+    UnifiedBusinessResponse,
     WeatherFetchResponse,
 )
+from app.services.advice_retriever import retrieve_knowledge_by_request
 from app.services.comparison import compare_locations
 from app.services.cruise_evaluator import evaluate_cruise_request_with_artifacts
 from app.services.history_persistence import persist_cruise_evaluation
 from app.services.history_query import get_cruise_history
 from app.services.nl_parser import NaturalLanguageParseError, parse_natural_language_request
+from app.services.recommendation_executor import build_recommendation_response
 from app.services.response_composer import compose_history_response
 from app.services.session_memory import build_session_context, session_memory_store
-from app.services.recommendation_executor import build_recommendation_response
 from app.services.task_orchestrator import orchestrate_task_query
 from app.services.weather import (
     GeoLocation,
@@ -167,6 +170,14 @@ def health_check() -> dict[str, str]:
         "service": settings.app_name,
         "environment": settings.app_env,
     }
+
+
+@app.post("/knowledge/advice/retrieve", response_model=KnowledgeRetrievalResponse)
+def retrieve_knowledge(payload: KnowledgeRetrievalRequest) -> KnowledgeRetrievalResponse:
+    logger.info("Starting knowledge retrieval", extra={"task_type": payload.task_type, "top_k": payload.top_k})
+    result = retrieve_knowledge_by_request(payload)
+    logger.info("Knowledge retrieval completed", extra={"snippet_count": len(result.snippets), "advice_count": len(result.advice)})
+    return result
 
 
 @app.post("/nl/parse", response_model=NaturalLanguageParseResponse)

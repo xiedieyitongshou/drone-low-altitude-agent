@@ -10,6 +10,7 @@ from app.schemas.composed_response import (
     ComposedRecommendationWindow,
     UnifiedBusinessResponse,
 )
+from app.services.advice_retriever import build_advice_context, retrieve_advice, retrieve_knowledge_by_request
 
 
 def compose_evaluation_response(response: CruiseAssessmentResponse) -> UnifiedBusinessResponse:
@@ -21,6 +22,24 @@ def compose_evaluation_response(response: CruiseAssessmentResponse) -> UnifiedBu
         f"{request.get('start_time')}-{request.get('end_time')} "
         f"任务结论为 {response.advice.overall_decision}。"
     )
+    warning_items = [item.model_dump() for item in response.warnings.warnings] if response.warnings else []
+    advice_context = build_advice_context(
+        task_type=str(request.get('task_type') or 'cruise'),
+        overall_decision=str(response.advice.overall_decision),
+        risk_reasons=response.advice.summary_risk_factors,
+        warning_items=warning_items,
+        limit=3,
+    )
+    advice = [item.model_dump(mode='json') for item in retrieve_advice(advice_context)]
+    knowledge = retrieve_knowledge_by_request(
+        payload=_build_knowledge_request(
+            task_type=str(request.get('task_type') or 'cruise'),
+            overall_decision=str(response.advice.overall_decision),
+            risk_reasons=response.advice.summary_risk_factors,
+            warning_items=warning_items,
+            top_k=3,
+        )
+    )
     return UnifiedBusinessResponse(
         scene="evaluate",
         summary=summary,
@@ -31,6 +50,8 @@ def compose_evaluation_response(response: CruiseAssessmentResponse) -> UnifiedBu
             "request": response.request,
             "warning_count": response.warnings.warning_count if response.warnings else 0,
             "hour_count": len(response.advice.hourly_assessment),
+            "advice": advice,
+            "knowledge_snippets": [item.model_dump(mode='json') for item in knowledge.snippets],
         },
     )
 
@@ -63,6 +84,17 @@ def compose_recommendation_response(response: RecommendationResponse) -> Unified
         overall_decision = None
         risk_reasons = []
 
+    warning_items = [item.model_dump() for item in response.warnings.warnings] if response.warnings else []
+    knowledge = retrieve_knowledge_by_request(
+        payload=_build_knowledge_request(
+            task_type=str(response.request.get('task_type') or 'cruise'),
+            overall_decision=str(overall_decision) if overall_decision else None,
+            risk_reasons=risk_reasons,
+            warning_items=warning_items,
+            top_k=3,
+        )
+    )
+
     return UnifiedBusinessResponse(
         scene="recommend",
         summary=summary,
@@ -74,6 +106,8 @@ def compose_recommendation_response(response: RecommendationResponse) -> Unified
             "request": response.request,
             "total_candidates": response.recommendation.total_candidates,
             "warning_count": response.warnings.warning_count if response.warnings else 0,
+            "advice": [item.model_dump(mode='json') for item in knowledge.advice],
+            "knowledge_snippets": [item.model_dump(mode='json') for item in knowledge.snippets],
         },
     )
 
@@ -96,17 +130,29 @@ def compose_comparison_response(response: MultiLocationComparisonResponse) -> Un
     ]
     recommended = response.recommended_location
     summary = f"当前推荐优先地点为 {recommended.location}。" if recommended else "当前没有明确推荐地点。"
+    risk_reasons = recommended.summary_risk_factors if recommended else []
+    knowledge = retrieve_knowledge_by_request(
+        payload=_build_knowledge_request(
+            task_type=str(response.request.get('task_type') or 'cruise'),
+            overall_decision=str(recommended.overall_decision) if recommended and recommended.overall_decision else None,
+            risk_reasons=risk_reasons,
+            warning_items=[],
+            top_k=3,
+        )
+    )
     return UnifiedBusinessResponse(
         scene="compare",
         summary=summary,
         overall_decision=recommended.overall_decision if recommended else None,
         allow_execute=recommended.allow_cruise if recommended else None,
-        risk_reasons=recommended.summary_risk_factors if recommended else [],
+        risk_reasons=risk_reasons,
         ranked_locations=rankings,
         details={
             "request": response.request,
             "location_count": len(response.comparisons),
             "comparison_mode": response.request.get("comparison_mode"),
+            "advice": [item.model_dump(mode='json') for item in knowledge.advice],
+            "knowledge_snippets": [item.model_dump(mode='json') for item in knowledge.snippets],
         },
     )
 
@@ -118,6 +164,16 @@ def compose_history_response(response: CruiseHistoryResponse) -> UnifiedBusiness
     summary = (
         f"历史任务 {response.request_id} 的整体结论为 {response.advice.overall_decision}，"
         f"地点为 {request.get('location')}。"
+    )
+    warning_items = [item.model_dump() for item in response.warnings.warnings] if response.warnings else []
+    knowledge = retrieve_knowledge_by_request(
+        payload=_build_knowledge_request(
+            task_type=str(request.get('task_type') or 'cruise'),
+            overall_decision=str(response.advice.overall_decision),
+            risk_reasons=response.advice.summary_risk_factors,
+            warning_items=warning_items,
+            top_k=3,
+        )
     )
     return UnifiedBusinessResponse(
         scene="history",
@@ -138,6 +194,8 @@ def compose_history_response(response: CruiseHistoryResponse) -> UnifiedBusiness
         details={
             "hour_count": len(response.advice.hourly_assessment),
             "warning_count": response.warnings.warning_count if response.warnings else 0,
+            "advice": [item.model_dump(mode='json') for item in knowledge.advice],
+            "knowledge_snippets": [item.model_dump(mode='json') for item in knowledge.snippets],
         },
     )
 
@@ -159,3 +217,18 @@ def _safe_str(value: object) -> str | None:
     if value is None:
         return None
     return str(value)
+
+
+def _build_knowledge_request(*, task_type: str, overall_decision: str | None, risk_reasons: list[str], warning_items: list[dict[str, object]], top_k: int):
+    from app.schemas import KnowledgeRetrievalRequest
+
+    warning_types = [str(item.get('event_type')) for item in warning_items if item.get('event_type')]
+    warning_levels = [str(item.get('warning_level')) for item in warning_items if item.get('warning_level')]
+    return KnowledgeRetrievalRequest(
+        task_type=task_type,
+        overall_decision=overall_decision,
+        risk_reasons=risk_reasons,
+        warning_types=warning_types,
+        warning_levels=warning_levels,
+        top_k=top_k,
+    )
