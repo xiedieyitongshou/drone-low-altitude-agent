@@ -1,254 +1,175 @@
-# 低空作业气象决策 Agent
-
-这是一个把比赛原型重构为本地可开发、可测试、可部署后端系统的项目。
-
-项目最初基于阿里云百炼工作流搭建，核心场景是：在执行无人机巡航、巡检、悬停拍摄、测绘等低空任务前，结合逐小时天气和天气预警，给出是否适合执行任务的判断。
-
-当前这版已经不再只是流程原型，而是一个以 **规则引擎** 为核心、以 **天气服务** 为数据来源、以 **FastAPI** 为接口入口的本地后端系统。
-
-## 项目目标
-
-这个项目不是做“天气查询”，而是做“任务执行决策”。
-
-它希望回答这些问题：
-
-- 某个地点、某个时间段是否适合执行低空任务
-- 风险主要来自哪些天气因素
-- 未来什么时候更适合执行任务
-- 多个候选地点中先去哪一个更合适
-- 历史任务为什么当时被判断为慎飞或禁飞
-
-## 当前已完成能力
-
-### 1. 单地点任务评估
-
-系统已经支持：
-
-- 输入地点、日期、时间段、任务类型
-- 查询天气与预警
-- 输出逐小时判断
-- 输出整体结论 `适飞 / 慎飞 / 禁飞`
-
-对应接口：
-
-- `POST /cruise/evaluate`
-
-### 2. 最佳执行时间推荐
-
-系统已经支持：
-
-- 扫描未来逐小时天气数据
-- 识别连续低风险窗口
-- 按“适飞优先、风险低优先、连续性优先”排序
-- 返回推荐时间段和原因
-
-对应接口：
-
-- `POST /cruise/recommend`
-
-### 3. 多地点任务比选
-
-系统已经支持：
-
-- 同一时间段内对多个地点批量评估
-- 输出地点排序
-- 输出 `Top-K`
-- 根据不同权重模式做比选
-
-当前比选指标包括：
-
-- 可飞小时数
-- 最长连续可飞小时数
-- 最早可飞时间
-- 可飞窗口质量
-
-对应接口：
-
-- `POST /cruise/compare`
-
-### 4. 历史任务复盘
-
-系统已经支持：
-
-- 评估结果自动落库
-- 保存请求、天气快照、预警快照、评估结果
-- 按 `request_id` 查询历史记录
-
-对应接口：
-
-- `GET /cruise/history/{request_id}`
-
-## 当前架构思路
-
-当前项目已经形成比较清晰的三层数据结构：
-
-### 1. Provider 原始响应层
-
-负责接和风天气 API 原始返回。
-
-### 2. Mapper / Adapter 层
-
-负责把原始天气、预警数据转换为项目内部统一模型。
-
-### 3. 内部统一模型层
-
-规则引擎、推荐模块、比选模块、历史复盘都只依赖统一后的内部数据结构。
-
-这层设计的意义是：
-
-- 外部天气 API 可以变化
-- 内部规则和业务逻辑尽量保持稳定
-
-## 当前模块划分
-
-### `app/services/weather/`
-
-负责：
-
-- 地点解析
-- 逐小时天气查询
-- 预警查询
-- 原始响应标准化
-- 时间段小时桶提取
-
-### `app/rules/`
-
-负责：
-
-- 逐小时风险判断
-- 预警修正
-- 时间段汇总
-- 不同任务类型阈值配置
-
-### `app/services/recommendation/`
-
-负责：
-
-- 推荐时间窗口识别
-- 连续低风险窗口排序
-
-### `app/services/comparison/`
-
-负责：
-
-- 多地点并行评估
-- 排序与 `Top-K` 输出
-- 不同比选权重模式
-
-### `app/db/`
-
-负责：
-
-- `SQLite + SQLAlchemy + Alembic`
-- 历史任务复盘最小闭环落库
-
-## 当前支持的任务类型
-
-目前系统内置四类低空任务模板：
-
-- `cruise`：巡航
-- `inspection`：巡检
-- `hover`：悬停拍摄
-- `survey`：测绘
-
-它们使用不同的天气阈值，因此同一气象条件下，可能得到不同风险结论。
-
-## 当前规则思路
-
-规则引擎保持了原型阶段的核心原则：
-
-- 先根据逐小时天气做判断
-- 再根据高风险预警做统一修正
-- 最后按“最差小时原则”汇总整体结果
-
-当前输出特点：
-
-- 每个小时都有独立判断
-- 每个小时保留风险原因
-- 整体结论可解释、可回放
-
-## 数据持久化现状
-
-当前已经接入：
-
-- `SQLite`
-- `SQLAlchemy`
-- `Alembic`
-
-已完成的最小闭环表包括：
-
-- `task_requests`
-- `locations`
-- `weather_provider_snapshots`
-- `weather_hourly_snapshots`
-- `weather_warning_snapshots`
-- `cruise_assessments`
-- `cruise_hourly_assessments`
-
-后续正式部署阶段计划迁移到 `PostgreSQL`。
-
-## 快速启动
+# 无人机低空巡航任务决策系统
+
+这是一个从“阿里云百炼工作流原型”重构出来的本地后端项目。原型阶段主要依赖工作流节点完成天气查询和条件判断；重构后，项目改为基于 FastAPI 的模块化后端服务，把天气数据获取、数据标准化、规则判断、推荐、比选、历史记录、自然语言入口和知识库建议拆成可维护的 Python 模块。
+
+项目目标不是简单查询天气，而是面向无人机低空任务，回答这类问题：
+
+- 当前地点和时间段是否适合飞行？
+- 未来什么时候更适合执行任务？
+- 多个地点中哪个地点优先级更高？
+- 风险原因是什么？有什么操作建议？
+- 用户连续追问时，能否复用上一轮上下文？
+
+## 当前功能
+
+- 天气服务：接入和风天气，支持地点解析、逐小时天气、天气预警获取。
+- 数据标准化：通过 mapper 层把外部 API 数据转换为内部统一结构。
+- 规则引擎：根据任务类型、天气指标和预警信息输出逐小时风险判断。
+- 推荐窗口：扫描传入的逐小时天气，识别连续低风险时间窗口。
+- 多地点比选：支持多个地点并行评估，并按可飞小时、连续窗口、风险质量等维度排序。
+- 历史记录：使用 SQLite + SQLAlchemy 保存评估请求、天气快照、预警和判断结果。
+- 自然语言入口：支持基于关键词和正则的任务信息解析。
+- 编排器：通过 `/agent/query` 串起解析、天气、规则、推荐、比选、响应生成。
+- 会话记忆：使用 `cachetools.TTLCache` 保存短期上下文，支持省略表达。
+- RAG 建议原型：基于本地知识库 JSON 和 TF-IDF 检索风险说明与操作建议。
+
+## 系统结构
+
+```text
+用户输入
+  ↓
+自然语言解析 / 结构化请求
+  ↓
+Orchestrator 编排器
+  ↓
+Weather Provider 获取原始天气数据
+  ↓
+Mapper 转换为内部统一模型
+  ↓
+规则引擎 / 推荐模块 / 多地点比选
+  ↓
+历史落库 / RAG 建议检索
+  ↓
+统一响应输出
+```
+
+核心设计思路：
+
+- Provider 层只负责对接外部 API。
+- Mapper 层负责屏蔽不同数据源格式差异。
+- Rules 层只依赖内部统一数据结构，不直接依赖和风天气原始字段。
+- Service / Orchestrator 负责组织流程，不把规则细节写死在接口中。
+
+## 主要接口
+
+启动服务后可访问 `http://127.0.0.1:8000/docs` 查看 OpenAPI 文档。
+
+- `GET /health`：健康检查。
+- `POST /nl/parse`：自然语言任务解析。
+- `POST /agent/query`：Agent 主入口，支持一句话完成任务调用。
+- `POST /cruise/weather-fetch`：获取地点、天气和预警原始数据。
+- `POST /cruise/evaluate`：单地点、指定时间段巡航风险评估。
+- `POST /cruise/recommend`：推荐未来合适执行窗口。
+- `POST /cruise/compare`：多地点任务风险比选。
+- `GET /cruise/history/{request_id}`：查询历史评估记录。
+- `GET /cruise/history/{request_id}/composed`：查询统一业务响应格式的历史记录。
+- `POST /knowledge/advice/retrieve`：根据风险结果检索知识库建议。
+
+## 技术栈
+
+- Web 框架：FastAPI、Uvicorn
+- 数据校验：Pydantic
+- HTTP 请求：httpx
+- 配置管理：python-dotenv
+- 数据库：SQLite、SQLAlchemy、Alembic
+- 会话缓存：cachetools TTLCache
+- 知识检索：scikit-learn TF-IDF + cosine similarity
+
+当前 RAG 检索是可运行的轻量版本，后续可升级为 `OpenAI Embeddings + FAISS` 或 `OpenAI Embeddings + Chroma`。
+
+## 本地运行
 
 ### 1. 安装依赖
 
-```powershell
+```bash
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
 ### 2. 配置环境变量
 
-复制 `.env.example` 为 `.env`，至少填写：
+复制 `.env.example` 为 `.env`，并填写自己的和风天气配置。
 
-- `QWEATHER_API_KEY`
-- `QWEATHER_GEO_BASE_URL`
-- `QWEATHER_WEATHER_BASE_URL`
-- `QWEATHER_WARNING_BASE_URL`
-- `DATABASE_URL`
-
-当前本地默认数据库：
+常用配置项包括：
 
 ```env
+QWEATHER_API_KEY=你的和风天气Key
+QWEATHER_GEO_BASE_URL=https://你的专属host
+QWEATHER_WEATHER_BASE_URL=https://你的专属host
+QWEATHER_WARNING_BASE_URL=https://你的专属host
 DATABASE_URL=sqlite:///./data/drone_agent.db
 ```
 
-### 3. 启动服务
+`.env` 不应提交到 GitHub。
 
-```powershell
+### 3. 初始化数据库
+
+```bash
+.\.venv\Scripts\python.exe -m alembic upgrade head
+```
+
+### 4. 启动服务
+
+```bash
 .\.venv\Scripts\python.exe -m uvicorn main:app --reload
 ```
 
-### 4. 打开接口文档
+访问：
 
 ```text
 http://127.0.0.1:8000/docs
 ```
 
-## 当前主要接口
+## 示例请求
 
-- `GET /health`
-- `POST /cruise/weather-fetch`
-- `POST /cruise/evaluate`
-- `POST /cruise/recommend`
-- `POST /cruise/compare`
-- `GET /cruise/history/{request_id}`
+### 单地点评估
 
-## 当前状态
+```json
+{
+  "location": "Shenzhen",
+  "date": "2026-07-14",
+  "start_time": "09:00",
+  "end_time": "12:00",
+  "task_type": "cruise",
+  "purpose": "日常巡航任务"
+}
+```
 
-截至目前，项目已经完成：
+### 推荐执行窗口
 
-- 天气服务封装
-- 统一 Schema
-- Mapper / Adapter 数据收口
-- 本地规则引擎
-- 推荐窗口模块
-- 多地点比选模块
-- 任务类型差异化规则
-- 历史任务复盘最小闭环
+```json
+{
+  "location": "Shenzhen",
+  "date": "2026-07-14",
+  "task_type": "cruise",
+  "purpose": "日常巡航任务",
+  "scan_hours": 72,
+  "min_window_hours": 2
+}
+```
 
-后续工作重点将转向：
+### Agent 自然语言入口
 
-- 第三周剩余增强功能整理
-- 更完整的历史列表与复盘能力
-- Agent 化输入解析
-- RAG / 知识增强解释
-- 部署与演示完善
+```json
+{
+  "query": "帮我看一下深圳明天下午适不适合做无人机巡航",
+  "session_id": "demo-session"
+}
+```
+
+## 当前阶段
+
+项目已经完成从基础天气判断工具到任务决策系统的主体升级：
+
+- 第一阶段：后端服务、天气服务、Schema、输入校验、数据 mapper。
+- 第二阶段：时间提取、预警提取、规则引擎、任务阈值配置、评估接口。
+- 第三阶段：推荐窗口、多地点比选、历史持久化、多任务模板。
+- 第四阶段：自然语言解析、Agent 编排、会话记忆、统一响应。
+- 第五阶段：已接入轻量 RAG 建议检索，后续计划升级 embedding 向量库和 LLM 解释层。
+
+## 后续计划
+
+- 使用大模型结构化输出增强自然语言解析，保留规则解析作为 fallback。
+- 引入统一 LLM 客户端，用于任务解析和最终结果解释。
+- 将 TF-IDF 检索升级为 embedding + FAISS / Chroma。
+- 将短期 TTLCache 会话记忆升级为 Redis。
+- 补充 Docker、部署配置和更完整的自动化测试。
