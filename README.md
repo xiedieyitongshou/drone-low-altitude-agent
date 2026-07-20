@@ -20,7 +20,9 @@
 - 历史记录：使用 SQLite + SQLAlchemy 保存评估请求、天气快照、预警和判断结果。
 - 自然语言入口：支持基于关键词和正则的任务信息解析。
 - 编排器：通过 `/agent/query` 串起解析、天气、规则、推荐、比选、响应生成。
-- 会话记忆：使用 `cachetools.TTLCache` 保存短期上下文，支持省略表达。
+- 会话记忆：默认使用 `cachetools.TTLCache` 保存短期上下文，支持省略表达；部署时可通过配置切换为 Redis。
+- Profile Memory：当前采用单用户 `default_user` 版本，使用数据库保存默认任务偏好和常用地点。
+- Conversation History：`/agent/query` 调用后自动保存自然语言请求、解析结果、响应摘要和完整响应。
 - RAG 建议原型：基于本地知识库 JSON 和 TF-IDF 检索风险说明与操作建议。
 
 ## 系统结构
@@ -72,7 +74,8 @@ Mapper 转换为内部统一模型
 - HTTP 请求：httpx
 - 配置管理：python-dotenv
 - 数据库：SQLite、SQLAlchemy、Alembic
-- 会话缓存：cachetools TTLCache
+- 会话缓存：cachetools TTLCache，预留 Redis 后端
+- 记忆持久化：user_profiles、conversation_records
 - 知识检索：scikit-learn TF-IDF + cosine similarity
 
 当前 RAG 检索是可运行的轻量版本，后续可升级为 `OpenAI Embeddings + FAISS` 或 `OpenAI Embeddings + Chroma`。
@@ -97,9 +100,31 @@ QWEATHER_GEO_BASE_URL=https://你的专属host
 QWEATHER_WEATHER_BASE_URL=https://你的专属host
 QWEATHER_WARNING_BASE_URL=https://你的专属host
 DATABASE_URL=sqlite:///./data/drone_agent.db
+SESSION_MEMORY_BACKEND=ttlcache
+REDIS_URL=redis://localhost:6379/0
 ```
 
 `.env` 不应提交到 GitHub。
+
+### Session Memory 配置
+
+本地默认使用进程内缓存：
+
+```env
+SESSION_MEMORY_BACKEND=ttlcache
+SESSION_MEMORY_TTL_SECONDS=1800
+SESSION_MEMORY_MAXSIZE=1024
+```
+
+如果 Docker 或服务器环境中启动了 Redis，可以切换为：
+
+```env
+SESSION_MEMORY_BACKEND=redis
+REDIS_URL=redis://redis:6379/0
+SESSION_MEMORY_REDIS_KEY_PREFIX=drone_agent:session:
+```
+
+注意：`redis://redis:6379/0` 中的 `redis` 是 `docker-compose.yml` 里的 Redis 服务名；如果在本机直接连接 Redis，通常使用 `redis://localhost:6379/0`。
 
 ### 3. 初始化数据库
 
@@ -152,9 +177,12 @@ http://127.0.0.1:8000/docs
 ```json
 {
   "query": "帮我看一下深圳明天下午适不适合做无人机巡航",
-  "session_id": "demo-session"
+  "session_id": "demo-session",
+  "user_id": "default_user"
 }
 ```
+
+当前 `user_id` 默认为 `default_user`，用于单用户版本的 Profile Memory 和 Conversation History。后续接入登录或 API Key 后，可以替换为真实用户 ID。
 
 ## 当前阶段
 
@@ -164,12 +192,12 @@ http://127.0.0.1:8000/docs
 - 第二阶段：时间提取、预警提取、规则引擎、任务阈值配置、评估接口。
 - 第三阶段：推荐窗口、多地点比选、历史持久化、多任务模板。
 - 第四阶段：自然语言解析、Agent 编排、会话记忆、统一响应。
-- 第五阶段：已接入轻量 RAG 建议检索，后续计划升级 embedding 向量库和 LLM 解释层。
+- 第五阶段：已接入轻量 RAG 建议检索、Profile Memory 和 Conversation History，后续计划升级 embedding 向量库和 LLM 解释层。
 
 ## 后续计划
 
 - 使用大模型结构化输出增强自然语言解析，保留规则解析作为 fallback。
 - 引入统一 LLM 客户端，用于任务解析和最终结果解释。
 - 将 TF-IDF 检索升级为 embedding + FAISS / Chroma。
-- 将短期 TTLCache 会话记忆升级为 Redis。
+- 在 Docker 部署中启用 Redis 会话记忆，并保留 TTLCache 作为本地默认后端。
 - 补充 Docker、部署配置和更完整的自动化测试。

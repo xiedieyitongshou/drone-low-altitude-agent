@@ -211,7 +211,7 @@ def parse_natural_language(payload: NaturalLanguageParseRequest) -> NaturalLangu
 @app.post("/agent/query", response_model=OrchestratorResponse)
 def orchestrate_task(payload: OrchestratorRequest) -> OrchestratorResponse:
     logger.info("Starting task orchestration")
-    result = orchestrate_task_query(payload.query, session_id=payload.session_id)
+    result = orchestrate_task_query(payload.query, session_id=payload.session_id, user_id=payload.user_id)
     logger.info(
         "Task orchestration completed",
         extra={
@@ -219,6 +219,8 @@ def orchestrate_task(payload: OrchestratorRequest) -> OrchestratorResponse:
             "success": result.success,
             "target_endpoint": result.target_endpoint,
             "session_id": payload.session_id,
+            "user_id": result.user_id,
+            "conversation_id": result.conversation_id,
             "context_used": result.context_used,
         },
     )
