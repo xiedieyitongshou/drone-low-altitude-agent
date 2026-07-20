@@ -38,6 +38,9 @@ class ComposedHistorySummary(BaseModel):
 class UnifiedBusinessResponse(BaseModel):
     scene: Literal['evaluate', 'recommend', 'compare', 'history']
     summary: str
+    explanation: str | None = None
+    explanation_source: Literal['template', 'llm', 'none'] = 'none'
+    llm_used: bool = False
     overall_decision: str | None = None
     allow_execute: bool | None = None
     risk_reasons: list[str] = Field(default_factory=list)

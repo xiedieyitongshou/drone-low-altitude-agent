@@ -201,6 +201,7 @@ def parse_natural_language(payload: NaturalLanguageParseRequest) -> NaturalLangu
         session_id=payload.session_id,
         intent=result.intent,
         target_endpoint=result.target_endpoint,
+        parser_source=result.parser_source,
         parsed=result.parsed,
         context_used=result.context_used,
         warnings=result.warnings,

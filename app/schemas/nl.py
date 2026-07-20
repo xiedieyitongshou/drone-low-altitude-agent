@@ -10,6 +10,7 @@ class NaturalLanguageParseResponse(BaseModel):
     session_id: str | None = None
     intent: str
     target_endpoint: str
+    parser_source: str = "rule"
     parsed: dict[str, object]
     context_used: bool = False
     warnings: list[str] = Field(default_factory=list)

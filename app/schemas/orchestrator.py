@@ -13,6 +13,7 @@ class OrchestratorResponse(BaseModel):
     session_id: str | None = None
     intent: str
     target_endpoint: str
+    parser_source: str = "rule"
     parsed: dict[str, object]
     context_used: bool = False
     message: str

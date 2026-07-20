@@ -11,6 +11,7 @@ from app.schemas.composed_response import (
     UnifiedBusinessResponse,
 )
 from app.services.advice_retriever import build_advice_context, retrieve_advice, retrieve_knowledge_by_request
+from app.services.response_explainer import explain_business_response
 
 
 def compose_evaluation_response(response: CruiseAssessmentResponse) -> UnifiedBusinessResponse:
@@ -40,7 +41,7 @@ def compose_evaluation_response(response: CruiseAssessmentResponse) -> UnifiedBu
             top_k=3,
         )
     )
-    return UnifiedBusinessResponse(
+    return _with_explanation(UnifiedBusinessResponse(
         scene="evaluate",
         summary=summary,
         overall_decision=response.advice.overall_decision,
@@ -53,7 +54,7 @@ def compose_evaluation_response(response: CruiseAssessmentResponse) -> UnifiedBu
             "advice": advice,
             "knowledge_snippets": [item.model_dump(mode='json') for item in knowledge.snippets],
         },
-    )
+    ))
 
 
 def compose_recommendation_response(response: RecommendationResponse) -> UnifiedBusinessResponse:
@@ -95,7 +96,7 @@ def compose_recommendation_response(response: RecommendationResponse) -> Unified
         )
     )
 
-    return UnifiedBusinessResponse(
+    return _with_explanation(UnifiedBusinessResponse(
         scene="recommend",
         summary=summary,
         overall_decision=overall_decision,
@@ -109,7 +110,7 @@ def compose_recommendation_response(response: RecommendationResponse) -> Unified
             "advice": [item.model_dump(mode='json') for item in knowledge.advice],
             "knowledge_snippets": [item.model_dump(mode='json') for item in knowledge.snippets],
         },
-    )
+    ))
 
 
 def compose_comparison_response(response: MultiLocationComparisonResponse) -> UnifiedBusinessResponse:
@@ -140,7 +141,7 @@ def compose_comparison_response(response: MultiLocationComparisonResponse) -> Un
             top_k=3,
         )
     )
-    return UnifiedBusinessResponse(
+    return _with_explanation(UnifiedBusinessResponse(
         scene="compare",
         summary=summary,
         overall_decision=recommended.overall_decision if recommended else None,
@@ -154,7 +155,7 @@ def compose_comparison_response(response: MultiLocationComparisonResponse) -> Un
             "advice": [item.model_dump(mode='json') for item in knowledge.advice],
             "knowledge_snippets": [item.model_dump(mode='json') for item in knowledge.snippets],
         },
-    )
+    ))
 
 
 def compose_history_response(response: CruiseHistoryResponse) -> UnifiedBusinessResponse:
@@ -175,7 +176,7 @@ def compose_history_response(response: CruiseHistoryResponse) -> UnifiedBusiness
             top_k=3,
         )
     )
-    return UnifiedBusinessResponse(
+    return _with_explanation(UnifiedBusinessResponse(
         scene="history",
         summary=summary,
         overall_decision=response.advice.overall_decision,
@@ -197,7 +198,7 @@ def compose_history_response(response: CruiseHistoryResponse) -> UnifiedBusiness
             "advice": [item.model_dump(mode='json') for item in knowledge.advice],
             "knowledge_snippets": [item.model_dump(mode='json') for item in knowledge.snippets],
         },
-    )
+    ))
 
 
 def _build_location_reason(item) -> str | None:
@@ -217,6 +218,14 @@ def _safe_str(value: object) -> str | None:
     if value is None:
         return None
     return str(value)
+
+
+def _with_explanation(response: UnifiedBusinessResponse) -> UnifiedBusinessResponse:
+    explanation = explain_business_response(response)
+    response.explanation = explanation.text
+    response.explanation_source = explanation.source
+    response.llm_used = explanation.llm_used
+    return response
 
 
 def _build_knowledge_request(*, task_type: str, overall_decision: str | None, risk_reasons: list[str], warning_items: list[dict[str, object]], top_k: int):

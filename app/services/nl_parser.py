@@ -54,6 +54,7 @@ class ParsedTaskRequest:
     parsed: dict[str, object]
     warnings: list[str]
     context_used: bool = False
+    parser_source: str = "rule"
 
 
 def parse_natural_language_request(
@@ -197,6 +198,7 @@ def parse_natural_language_request(
         parsed=parsed,
         warnings=warnings,
         context_used=context_used,
+        parser_source="rule",
     )
 
 
