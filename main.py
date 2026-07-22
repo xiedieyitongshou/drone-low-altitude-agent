@@ -4,6 +4,7 @@ from contextlib import suppress
 
 import uvicorn
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -58,11 +59,21 @@ from app.services.weather import (
 load_environment()
 
 
+def parse_csv_env(value: str) -> list[str]:
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
 class Settings(BaseModel):
     app_name: str = os.getenv("APP_NAME", "drone-low-altitude-agent")
     app_env: str = os.getenv("APP_ENV", "local")
     app_port: int = int(os.getenv("APP_PORT", "8000"))
     log_level: str = os.getenv("LOG_LEVEL", "INFO").upper()
+    cors_allowed_origins: list[str] = parse_csv_env(
+        os.getenv(
+            "CORS_ALLOWED_ORIGINS",
+            "http://localhost:5173,http://127.0.0.1:5173",
+        )
+    )
 
 
 def setup_logging(log_level: str) -> None:
@@ -77,6 +88,13 @@ setup_logging(settings.log_level)
 logger = logging.getLogger(settings.app_name)
 
 app = FastAPI(title=settings.app_name)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_allowed_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 sample_store = WeatherSampleStore()
 
 

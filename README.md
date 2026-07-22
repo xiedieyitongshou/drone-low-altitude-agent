@@ -1,5 +1,78 @@
 # 无人机低空巡航任务决策系统
 
+## 前后端本地启动
+
+本项目现在包含 FastAPI 后端和 React 前端。本地开发时建议开两个终端分别启动。
+
+### 1. 启动后端
+
+在项目根目录执行：
+
+```bash
+cd D:\desktop\drone-low-altitude-agent
+.\.venv\Scripts\activate
+uvicorn main:app --reload
+```
+
+后端默认地址：
+
+```text
+http://localhost:8000
+```
+
+常用检查地址：
+
+```text
+http://localhost:8000/health
+http://localhost:8000/docs
+```
+
+如果是第一次启动，先安装依赖并初始化数据库：
+
+```bash
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m alembic upgrade head
+```
+
+### 2. 启动前端
+
+再打开一个新终端：
+
+```bash
+cd D:\desktop\drone-low-altitude-agent\frontend
+npm install
+npm run dev
+```
+
+前端默认地址通常是：
+
+```text
+http://localhost:5173
+```
+
+说明：
+
+- `npm install` 只需要第一次安装依赖时执行
+- 后续日常启动前端只需要执行 `npm run dev`
+- 前端默认请求 `http://localhost:8000`
+- 如需修改后端地址，在 `frontend/.env.local` 中配置 `VITE_API_BASE_URL`
+
+示例：
+
+```env
+VITE_API_BASE_URL=http://localhost:8000
+```
+
+### 3. 启动顺序
+
+推荐顺序：
+
+```text
+先启动后端 -> 再启动前端 -> 打开 http://localhost:5173
+```
+
+也可以只启动前端查看页面骨架，但涉及 `/health`、`/agent/query` 等接口的页面会提示后端连接失败。
+
 这是一个从“阿里云百炼工作流原型”重构出来的本地后端项目。原型阶段主要依赖工作流节点完成天气查询和条件判断；重构后，项目改为基于 FastAPI 的模块化后端服务，把天气数据获取、数据标准化、规则判断、推荐、比选、历史记录、自然语言入口和知识库建议拆成可维护的 Python 模块。
 
 项目目标不是简单查询天气，而是面向无人机低空任务，回答这类问题：

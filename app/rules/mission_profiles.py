@@ -24,7 +24,7 @@ class HourlyRuleThresholds:
     # 禁飞阈值：达到或超过即判禁飞。
     prohibited_precip_mm: float
     prohibited_pop_percent: float
-    prohibited_wind_speed_ms: float
+    prohibited_wind_speed_kmh: float
     prohibited_wind_scale_upper: int
 
     # 慎飞阈值：仅在未触发禁飞时生效。
@@ -32,8 +32,8 @@ class HourlyRuleThresholds:
     caution_precip_max_mm: float
     caution_pop_min_percent: float
     caution_pop_max_percent: float
-    caution_wind_speed_min_ms: float
-    caution_wind_speed_max_ms: float
+    caution_wind_speed_min_kmh: float
+    caution_wind_speed_max_kmh: float
     caution_wind_scale_upper: int
     caution_humidity_percent: float
 
@@ -79,14 +79,14 @@ MISSION_RULE_PROFILES: dict[str, MissionRuleProfile] = {
             caution_weather_texts=frozenset({"小雨", "阴"}),
             prohibited_precip_mm=0.3,
             prohibited_pop_percent=70,
-            prohibited_wind_speed_ms=10,
+            prohibited_wind_speed_kmh=25,
             prohibited_wind_scale_upper=4,
             caution_precip_min_mm=0.0,
             caution_precip_max_mm=0.3,
             caution_pop_min_percent=30,
             caution_pop_max_percent=70,
-            caution_wind_speed_min_ms=7,
-            caution_wind_speed_max_ms=10,
+            caution_wind_speed_min_kmh=15,
+            caution_wind_speed_max_kmh=25,
             caution_wind_scale_upper=3,
             caution_humidity_percent=85,
         ),
@@ -101,14 +101,14 @@ MISSION_RULE_PROFILES: dict[str, MissionRuleProfile] = {
             caution_weather_texts=frozenset({"小雨", "阴"}),
             prohibited_precip_mm=0.25,
             prohibited_pop_percent=65,
-            prohibited_wind_speed_ms=8.5,
+            prohibited_wind_speed_kmh=25,
             prohibited_wind_scale_upper=4,
             caution_precip_min_mm=0.0,
             caution_precip_max_mm=0.25,
             caution_pop_min_percent=25,
             caution_pop_max_percent=65,
-            caution_wind_speed_min_ms=5.5,
-            caution_wind_speed_max_ms=8.5,
+            caution_wind_speed_min_kmh=15,
+            caution_wind_speed_max_kmh=25,
             caution_wind_scale_upper=3,
             caution_humidity_percent=80,
         ),
@@ -123,14 +123,14 @@ MISSION_RULE_PROFILES: dict[str, MissionRuleProfile] = {
             caution_weather_texts=frozenset({"小雨", "阴"}),
             prohibited_precip_mm=0.2,
             prohibited_pop_percent=60,
-            prohibited_wind_speed_ms=8,
+            prohibited_wind_speed_kmh=25,
             prohibited_wind_scale_upper=4,
             caution_precip_min_mm=0.0,
             caution_precip_max_mm=0.2,
             caution_pop_min_percent=20,
             caution_pop_max_percent=60,
-            caution_wind_speed_min_ms=5,
-            caution_wind_speed_max_ms=8,
+            caution_wind_speed_min_kmh=15,
+            caution_wind_speed_max_kmh=25,
             caution_wind_scale_upper=3,
             caution_humidity_percent=80,
         ),
@@ -145,14 +145,14 @@ MISSION_RULE_PROFILES: dict[str, MissionRuleProfile] = {
             caution_weather_texts=frozenset({"小雨", "阴"}),
             prohibited_precip_mm=0.22,
             prohibited_pop_percent=60,
-            prohibited_wind_speed_ms=8.0,
+            prohibited_wind_speed_kmh=25,
             prohibited_wind_scale_upper=4,
             caution_precip_min_mm=0.0,
             caution_precip_max_mm=0.22,
             caution_pop_min_percent=20,
             caution_pop_max_percent=60,
-            caution_wind_speed_min_ms=5.0,
-            caution_wind_speed_max_ms=8.0,
+            caution_wind_speed_min_kmh=15,
+            caution_wind_speed_max_kmh=25,
             caution_wind_scale_upper=3,
             caution_humidity_percent=78,
         ),

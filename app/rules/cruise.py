@@ -40,7 +40,7 @@ def assess_hourly_weather(
         risk_factors.append("降水量偏高")
     if pop is not None and pop >= hourly_rules.prohibited_pop_percent:
         risk_factors.append("降水概率高")
-    if wind_speed is not None and wind_speed >= hourly_rules.prohibited_wind_speed_ms:
+    if wind_speed is not None and wind_speed >= hourly_rules.prohibited_wind_speed_kmh:
         risk_factors.append("风速偏高")
     if wind_scale_upper is not None and wind_scale_upper >= hourly_rules.prohibited_wind_scale_upper:
         risk_factors.append("风力等级过高")
@@ -55,7 +55,7 @@ def assess_hourly_weather(
         risk_factors.append("存在轻中度降水")
     if pop is not None and hourly_rules.caution_pop_min_percent <= pop < hourly_rules.caution_pop_max_percent:
         risk_factors.append("降水概率中等")
-    if wind_speed is not None and hourly_rules.caution_wind_speed_min_ms <= wind_speed < hourly_rules.caution_wind_speed_max_ms:
+    if wind_speed is not None and hourly_rules.caution_wind_speed_min_kmh <= wind_speed < hourly_rules.caution_wind_speed_max_kmh:
         risk_factors.append("风速中等偏高")
     if wind_scale_upper is not None and wind_scale_upper == hourly_rules.caution_wind_scale_upper:
         risk_factors.append("风力等级中等")
@@ -181,16 +181,20 @@ def _parse_wind_scale_upper(value: str | None) -> int | None:
         return None
     text = value.strip()
     if "-" in text:
-        _, upper = text.split("-", 1)
+        lower, upper = text.split("-", 1)
         try:
-            return int(upper)
+            lower_scale = int(lower)
+            upper_scale = int(upper)
         except ValueError:
             return None
+        if lower_scale == 1 and upper_scale == 3:
+            return 2
+        return upper_scale
     try:
-        return int(text)
+        wind_scale = int(text)
     except ValueError:
         return None
-
+    return wind_scale
 
 def _build_warning_message(event_type: str | None, warning_level: str | None) -> str:
     level = (warning_level or "").lower()

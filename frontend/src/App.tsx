@@ -1,6 +1,10 @@
 import { NavLink, Route, Routes } from 'react-router-dom'
+import { AgentPage } from './pages/AgentPage'
+import { ComparePage } from './pages/ComparePage'
+import { EvaluatePage } from './pages/EvaluatePage'
 import { HealthPage } from './pages/HealthPage'
-import { PlaceholderPage } from './pages/PlaceholderPage'
+import { HistoryPage } from './pages/HistoryPage'
+import { RecommendPage } from './pages/RecommendPage'
 import './App.css'
 
 const navItems = [
@@ -43,51 +47,11 @@ function App() {
       <main className="main-panel">
         <Routes>
           <Route path="/" element={<HealthPage />} />
-          <Route
-            path="/agent"
-            element={
-              <PlaceholderPage
-                title="Agent 对话"
-                description="后续接入 /agent/query，用自然语言完成任务解析、评估、推荐和总结。"
-              />
-            }
-          />
-          <Route
-            path="/evaluate"
-            element={
-              <PlaceholderPage
-                title="单地点评估"
-                description="后续接入 /cruise/evaluate，展示逐小时风险判断和整体结论。"
-              />
-            }
-          />
-          <Route
-            path="/recommend"
-            element={
-              <PlaceholderPage
-                title="推荐窗口"
-                description="后续接入推荐接口，展示适飞时间窗口、风险原因和排序依据。"
-              />
-            }
-          />
-          <Route
-            path="/compare"
-            element={
-              <PlaceholderPage
-                title="多地点比选"
-                description="后续接入多地点比选接口，展示地点风险排行和 TopK 推荐。"
-              />
-            }
-          />
-          <Route
-            path="/history"
-            element={
-              <PlaceholderPage
-                title="历史记录"
-                description="后续接入历史查询接口，展示历史评估、推荐和对话记录摘要。"
-              />
-            }
-          />
+          <Route path="/agent" element={<AgentPage />} />
+          <Route path="/evaluate" element={<EvaluatePage />} />
+          <Route path="/recommend" element={<RecommendPage />} />
+          <Route path="/compare" element={<ComparePage />} />
+          <Route path="/history" element={<HistoryPage />} />
         </Routes>
       </main>
     </div>
