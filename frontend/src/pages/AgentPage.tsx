@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { queryAgent } from '../api/agent'
 import { JsonDetails } from '../components/JsonDetails'
+import { KnowledgeAdvicePanel } from '../components/KnowledgeAdvicePanel'
 import type { AgentMessage } from '../types/agent'
 
 const defaultQuery = '帮我评估深圳明天下午2点到5点是否适合日常巡航'
@@ -179,6 +180,16 @@ export function AgentPage() {
                     <span>context_used: {String(message.response.context_used)}</span>
                     <span>conversation_id: {message.response.conversation_id ?? '-'}</span>
                   </div>
+
+                  <KnowledgeAdvicePanel
+                    details={
+                      message.response.composed?.details &&
+                      typeof message.response.composed.details === 'object' &&
+                      !Array.isArray(message.response.composed.details)
+                        ? message.response.composed.details
+                        : null
+                    }
+                  />
 
                   <JsonDetails title="parsed" data={message.response.parsed} />
                   <JsonDetails title="composed" data={message.response.composed} />

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { getCruiseHistory, getCruiseHistoryComposed } from '../api/history'
 import { JsonDetails } from '../components/JsonDetails'
+import { KnowledgeAdvicePanel } from '../components/KnowledgeAdvicePanel'
 import type { CruiseHistoryResponse, UnifiedBusinessResponse } from '../types/history'
 
 function getDecisionClass(decision?: string | null) {
@@ -145,6 +146,7 @@ export function HistoryPage() {
                 <span>source: {composed.explanation_source}</span>
                 <span>llm_used: {String(composed.llm_used)}</span>
               </div>
+              <KnowledgeAdvicePanel details={composed.details} />
             </section>
           ) : null}
 

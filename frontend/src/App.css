@@ -689,6 +689,54 @@
   color: #0f172a;
 }
 
+.knowledge-panel {
+  display: grid;
+  gap: 16px;
+  margin-top: 14px;
+  background: #f8fafc;
+}
+
+.knowledge-block > span {
+  display: block;
+  margin-bottom: 10px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.knowledge-list {
+  display: grid;
+  gap: 12px;
+}
+
+.knowledge-card {
+  border: 1px solid #dbeafe;
+  border-radius: 14px;
+  padding: 14px;
+  background: #eff6ff;
+}
+
+.knowledge-card strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #1e3a8a;
+}
+
+.knowledge-card p {
+  color: #334155;
+}
+
+.snippet-card {
+  border-color: #e0e7ff;
+  background: #f5f3ff;
+}
+
+.snippet-card strong {
+  color: #4c1d95;
+}
+
 @media (max-width: 860px) {
   .app-shell {
     grid-template-columns: 1fr;
