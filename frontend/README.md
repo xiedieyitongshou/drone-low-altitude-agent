@@ -114,3 +114,25 @@ npm run build
 ```text
 frontend/dist/
 ```
+
+## Docker 运行
+
+前端已提供 `Dockerfile`，生产模式使用 Nginx 托管 Vite 构建产物。
+
+推荐在项目根目录通过 Compose 同时启动前端、后端和 Redis：
+
+```bash
+docker compose up --build
+```
+
+启动后访问：
+
+```text
+http://localhost:5173
+```
+
+前端镜像构建时默认使用：
+
+```env
+VITE_API_BASE_URL=http://localhost:8000
+```

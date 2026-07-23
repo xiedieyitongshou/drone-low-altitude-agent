@@ -73,6 +73,44 @@ VITE_API_BASE_URL=http://localhost:8000
 
 也可以只启动前端查看页面骨架，但涉及 `/health`、`/agent/query` 等接口的页面会提示后端连接失败。
 
+## Docker Compose 完整启动
+
+本项目也支持通过 Docker Compose 同时启动前端、后端和 Redis。
+
+在项目根目录执行：
+
+```bash
+docker compose up --build
+```
+
+后台启动：
+
+```bash
+docker compose up --build -d
+```
+
+启动后访问：
+
+```text
+前端展示页面：http://localhost:5173
+后端 OpenAPI：http://localhost:8000/docs
+后端健康检查：http://localhost:8000/health
+```
+
+当前 Compose 服务包括：
+
+- `frontend`：React 前端，Nginx 托管静态资源
+- `app`：FastAPI 后端
+- `redis`：会话上下文缓存
+
+前端 Docker 构建时默认注入：
+
+```env
+VITE_API_BASE_URL=http://localhost:8000
+```
+
+因此浏览器打开 `http://localhost:5173` 后，会直接请求本机映射出来的后端 API。
+
 这是一个从“阿里云百炼工作流原型”重构出来的本地后端项目。原型阶段主要依赖工作流节点完成天气查询和条件判断；重构后，项目改为基于 FastAPI 的模块化后端服务，把天气数据获取、数据标准化、规则判断、推荐、比选、历史记录、自然语言入口和知识库建议拆成可维护的 Python 模块。
 
 项目目标不是简单查询天气，而是面向无人机低空任务，回答这类问题：
