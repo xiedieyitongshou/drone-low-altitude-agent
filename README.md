@@ -316,5 +316,3 @@ http://127.0.0.1:8000/docs
 - 使用大模型结构化输出增强自然语言解析，保留规则解析作为 fallback。
 - 引入统一 LLM 客户端，用于任务解析和最终结果解释。
 - 将 TF-IDF 检索升级为 embedding + FAISS / Chroma。
-- 在 Docker 部署中启用 Redis 会话记忆，并保留 TTLCache 作为本地默认后端。
-- 补充 Docker、部署配置和更完整的自动化测试。
