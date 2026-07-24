@@ -53,35 +53,21 @@ def _generate_candidate_windows(
 
     candidates: list[RecommendationWindow] = []
     sorted_hours = sorted(hourly_assessment, key=lambda item: item.fx_time)
+    current_segment: list[HourlyAssessment] = []
 
-    for start_index in range(len(sorted_hours)):
-        for end_index in range(start_index, len(sorted_hours)):
-            window_hours = sorted_hours[start_index : end_index + 1]
-            if not _is_contiguous_window(window_hours):
-                break
+    for hour in sorted_hours:
+        if hour.decision == RiskDecision.PROHIBITED:
+            _append_segment_candidate(candidates, current_segment, config)
+            current_segment = []
+            continue
 
-            duration_hours = len(window_hours)
-            if duration_hours < config.min_window_hours:
-                continue
+        if current_segment and not _is_next_hour(current_segment[-1], hour):
+            _append_segment_candidate(candidates, current_segment, config)
+            current_segment = []
 
-            overall_decision = _summarize_window_decision(window_hours)
-            if overall_decision == RiskDecision.PROHIBITED:
-                continue
+        current_segment.append(hour)
 
-            risk_score = _calculate_risk_score(window_hours, overall_decision)
-            reasons = _build_window_reasons(window_hours, overall_decision)
-            candidates.append(
-                RecommendationWindow(
-                    rank=0,
-                    start_time=window_hours[0].fx_time,
-                    end_time=_shift_one_hour(window_hours[-1].fx_time),
-                    duration_hours=duration_hours,
-                    overall_decision=overall_decision,
-                    risk_score=risk_score,
-                    reasons=reasons,
-                    hourly_assessment=window_hours,
-                )
-            )
+    _append_segment_candidate(candidates, current_segment, config)
 
     ranked = sorted(
         candidates,
@@ -95,13 +81,36 @@ def _generate_candidate_windows(
     return ranked
 
 
-def _is_contiguous_window(window_hours: list[HourlyAssessment]) -> bool:
-    for current, following in zip(window_hours, window_hours[1:]):
-        current_time = datetime.fromisoformat(current.fx_time)
-        next_time = datetime.fromisoformat(following.fx_time)
-        if next_time - current_time != timedelta(hours=1):
-            return False
-    return True
+def _append_segment_candidate(
+    candidates: list[RecommendationWindow],
+    segment_hours: list[HourlyAssessment],
+    config: RecommendationConfig,
+) -> None:
+    duration_hours = len(segment_hours)
+    if duration_hours < config.min_window_hours:
+        return
+
+    overall_decision = _summarize_window_decision(segment_hours)
+    risk_score = _calculate_risk_score(segment_hours, overall_decision)
+    reasons = _build_window_reasons(segment_hours, overall_decision)
+    candidates.append(
+        RecommendationWindow(
+            rank=0,
+            start_time=segment_hours[0].fx_time,
+            end_time=_shift_one_hour(segment_hours[-1].fx_time),
+            duration_hours=duration_hours,
+            overall_decision=overall_decision,
+            risk_score=risk_score,
+            reasons=reasons,
+            hourly_assessment=segment_hours,
+        )
+    )
+
+
+def _is_next_hour(current: HourlyAssessment, following: HourlyAssessment) -> bool:
+    current_time = datetime.fromisoformat(current.fx_time)
+    next_time = datetime.fromisoformat(following.fx_time)
+    return next_time - current_time == timedelta(hours=1)
 
 
 def _summarize_window_decision(window_hours: list[HourlyAssessment]) -> RiskDecision:

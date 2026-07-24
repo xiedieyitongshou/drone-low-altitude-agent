@@ -9,7 +9,6 @@ data/drone_agent.db
 data/knowledge/index
 data/samples
 
-tests
 docs
 scripts
 

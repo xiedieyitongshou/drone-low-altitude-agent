@@ -14,6 +14,7 @@ COPY alembic.ini .
 COPY alembic ./alembic
 COPY app ./app
 COPY data/knowledge/advice_rules.json ./data/knowledge/advice_rules.json
+COPY tests ./tests
 COPY main.py .
 COPY docker/entrypoint.sh ./docker/entrypoint.sh
 
