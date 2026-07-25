@@ -1,3 +1,6 @@
+import logging
+import os
+
 from app.schemas import (
     CruiseEvaluateRequest,
     MultiLocationComparisonRequest,
@@ -8,7 +11,8 @@ from app.services.comparison import compare_locations
 from app.services.conversation_history import persist_conversation_record
 from app.services.cruise_evaluator import evaluate_cruise_request_with_artifacts
 from app.services.history_persistence import persist_cruise_evaluation
-from app.services.nl_parser import parse_natural_language_request
+from app.services.llm_task_parser import parse_natural_language_request_with_llm
+from app.services.nl_parser import NaturalLanguageParseError, ParsedTaskRequest, parse_natural_language_request
 from app.services.profile_memory import (
     get_or_create_user_profile,
     merge_profile_context,
@@ -24,6 +28,10 @@ from app.services.response_composer import (
 from app.services.session_memory import build_session_context, session_memory_store
 
 
+logger = logging.getLogger(__name__)
+SUPPORTED_PARSER_MODES = {"rule", "llm", "hybrid"}
+
+
 def orchestrate_task_query(
     query: str,
     *,
@@ -36,7 +44,7 @@ def orchestrate_task_query(
     profile = get_or_create_user_profile(normalized_user_id)
     cached_context = session_memory_store.get(session_id) if session_id else None
     parser_context = merge_profile_context(session_context=cached_context, profile=profile)
-    parsed_result = parse_natural_language_request(query, context=parser_context)
+    parsed_result = _parse_task_query(query, context=parser_context)
 
     try:
         if parsed_result.intent == "evaluate":
@@ -170,6 +178,44 @@ def _save_context(session_id: str | None, intent: str, parsed: dict[str, object]
     if not session_id:
         return
     session_memory_store.set(session_id, build_session_context(intent, parsed))
+
+
+def _parse_task_query(query: str, *, context: dict[str, object] | None = None) -> ParsedTaskRequest:
+    mode = os.getenv("NL_PARSER_MODE", "rule").strip().lower()
+    if mode not in SUPPORTED_PARSER_MODES:
+        logger.warning("Unsupported NL_PARSER_MODE=%s, fallback to rule parser", mode)
+        parsed = parse_natural_language_request(query, context=context)
+        parsed.warnings.append(f"Unsupported NL_PARSER_MODE={mode}, used rule parser")
+        return parsed
+
+    if mode == "rule":
+        return parse_natural_language_request(query, context=context)
+
+    if mode == "llm":
+        parsed = parse_natural_language_request_with_llm(query, context=context)
+        if parsed is None:
+            raise NaturalLanguageParseError(
+                "LLM parser is unavailable or disabled",
+                missing_fields=["llm"],
+            )
+        return parsed
+
+    llm_error: Exception | None = None
+    try:
+        parsed = parse_natural_language_request_with_llm(query, context=context)
+        if parsed is not None:
+            return parsed
+    except Exception as exc:
+        llm_error = exc
+        logger.warning("LLM parser failed, fallback to rule parser: %s", exc)
+
+    parsed = parse_natural_language_request(query, context=context)
+    parsed.parser_source = "llm_fallback_rule"
+    if llm_error:
+        parsed.warnings.append(f"LLM parser failed, used rule parser: {llm_error}")
+    else:
+        parsed.warnings.append("LLM parser unavailable or disabled, used rule parser")
+    return parsed
 
 
 def _with_conversation_record(

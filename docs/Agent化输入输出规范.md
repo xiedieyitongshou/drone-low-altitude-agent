@@ -197,6 +197,10 @@ Agent 层不负责：
 
 - `app/services/nl_parser.py`
 
+DeepSeek 结构化解析的详细接入契约见：
+
+- `docs/Day46-DeepSeek自然语言解析接入方案.md`
+
 ### 6.2 会话记忆
 
 当前：

@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import dateparser
 
 from app.rules.mission_profiles import is_supported_task_type
+from app.utils.timezone import now_in_app_timezone
 
 
 TASK_TYPE_KEYWORDS = {
@@ -145,7 +146,7 @@ def parse_natural_language_request(
             raise NaturalLanguageParseError("推荐请求缺少关键地点信息", missing_fields=["location"])
         if not merged_date:
             warnings.append("未显式识别日期，已默认使用今天")
-            merged_date = datetime.now().date().isoformat()
+            merged_date = now_in_app_timezone().date().isoformat()
 
         parsed = {
             "location": merged_location,
@@ -245,7 +246,7 @@ def _detect_date(text: str) -> str | None:
     if not match:
         return None
     fragment = match.group(0)
-    now = datetime.now()
+    now = now_in_app_timezone()
 
     relative_days = {
         "今天": 0,
