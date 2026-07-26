@@ -135,12 +135,13 @@ docker compose exec app python -m unittest tests.test_recommendation_windows
 - 推荐窗口：线性扫描逐小时评估结果，按禁飞小时和时间断点切分连续可执行窗口，避免重复推荐重叠时间段。
 - 多地点比选：支持多个地点并行评估，并按可飞小时、连续窗口、风险质量等维度排序。
 - 历史记录：使用 SQLite + SQLAlchemy 保存评估请求、天气快照、预警和判断结果。
-- 自然语言入口：支持基于关键词和正则的任务信息解析。
+- 自然语言入口：支持基于关键词/正则和 DeepSeek 结构化输出的任务信息解析，可通过 `NL_PARSER_MODE=rule|llm|hybrid` 控制解析策略。
 - 编排器：通过 `/agent/query` 串起解析、天气、规则、推荐、比选、响应生成。
 - 会话记忆：默认使用 `cachetools.TTLCache` 保存短期上下文，支持省略表达；部署时可通过配置切换为 Redis。
 - Profile Memory：当前采用单用户 `default_user` 版本，使用数据库保存默认任务偏好和常用地点。
 - Conversation History：`/agent/query` 调用后自动保存自然语言请求、解析结果、响应摘要和完整响应。
 - RAG 建议原型：基于本地知识库 JSON 和 TF-IDF 检索风险说明与操作建议。
+- LLM 增强：已引入统一 LLM 客户端，复用于自然语言任务解析和最终结果解释；大模型只负责理解输入和润色表达，不替代规则引擎做安全判断。
 
 ## 系统结构
 
@@ -148,6 +149,8 @@ docker compose exec app python -m unittest tests.test_recommendation_windows
 用户输入
   ↓
 自然语言解析 / 结构化请求
+  ↓
+LLM 结构化解析 / 规则解析 fallback
   ↓
 Orchestrator 编排器
   ↓
@@ -158,6 +161,8 @@ Mapper 转换为内部统一模型
 规则引擎 / 推荐模块 / 多地点比选
   ↓
 历史落库 / RAG 建议检索
+  ↓
+LLM 结果解释 / 模板解释 fallback
   ↓
 统一响应输出
 ```
@@ -309,10 +314,10 @@ http://127.0.0.1:8000/docs
 - 第二阶段：时间提取、预警提取、规则引擎、任务阈值配置、评估接口。
 - 第三阶段：推荐窗口、多地点比选、历史持久化、多任务模板。
 - 第四阶段：自然语言解析、Agent 编排、会话记忆、统一响应。
-- 第五阶段：已接入轻量 RAG 建议检索、Profile Memory 和 Conversation History，后续计划升级 embedding 向量库和 LLM 解释层。
+- 第五阶段：已接入轻量 RAG 建议检索、Profile Memory 和 Conversation History。
+- 第六阶段：已接入 DeepSeek 结构化自然语言解析，保留规则解析作为 fallback；已引入统一 LLM 客户端，用于任务解析和最终结果解释。
 
 ## 后续计划
 
-- 使用大模型结构化输出增强自然语言解析，保留规则解析作为 fallback。
-- 引入统一 LLM 客户端，用于任务解析和最终结果解释。
 - 将 TF-IDF 检索升级为 embedding + FAISS / Chroma。
+- 扩展多用户体系，支持用户登录、历史记录按用户隔离、Session/Profile Memory 持久化管理。
