@@ -78,7 +78,6 @@ export function AgentPage() {
     <section className="page-card agent-page">
       <div className="page-header">
         <div>
-          <p className="eyebrow">Day 37</p>
           <h2>Agent 自然语言入口</h2>
           <p>
             该页面调用 <code>/agent/query</code>

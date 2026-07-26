@@ -65,7 +65,6 @@ export function HistoryPage() {
     <section className="page-card history-page">
       <div className="page-header">
         <div>
-          <p className="eyebrow">Day 41</p>
           <h2>历史查询与复盘</h2>
           <p>
             该页面同时调用 <code>/cruise/history/{'{request_id}'}</code> 和{' '}

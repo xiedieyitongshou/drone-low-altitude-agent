@@ -78,7 +78,6 @@ export function EvaluatePage() {
     <section className="page-card evaluate-page">
       <div className="page-header">
         <div>
-          <p className="eyebrow">Day 38</p>
           <h2>单地点评估</h2>
           <p>
             该页面调用 <code>/cruise/evaluate</code>

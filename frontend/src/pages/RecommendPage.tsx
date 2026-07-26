@@ -79,7 +79,6 @@ export function RecommendPage() {
     <section className="page-card recommend-page">
       <div className="page-header">
         <div>
-          <p className="eyebrow">Day 39</p>
           <h2>推荐执行窗口</h2>
           <p>
             该页面调用 <code>/cruise/recommend</code>
