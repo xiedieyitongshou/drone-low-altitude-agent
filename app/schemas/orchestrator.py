@@ -5,7 +5,7 @@ from app.schemas.composed_response import UnifiedBusinessResponse
 
 class OrchestratorRequest(BaseModel):
     session_id: str | None = Field(default=None, description='会话 ID，用于上下文继承')
-    user_id: str = Field(default="default_user", description="用户 ID；当前单用户版本默认 default_user")
+    user_id: str | None = Field(default=None, description="兼容旧前端的用户 ID；登录链路不信任该字段")
     query: str = Field(..., min_length=2, description='自然语言任务请求')
 
 

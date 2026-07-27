@@ -1,7 +1,8 @@
 from app.db.models.assessment import CruiseAssessment, CruiseHourlyAssessment
 from app.db.models.location import Location
-from app.db.models.memory import ConversationRecord, UserProfile
+from app.db.models.memory import ConversationRecord, SessionRecord, UserProfile
 from app.db.models.task_request import TaskRequest
+from app.db.models.user import User
 from app.db.models.weather_snapshot import (
     WeatherHourlySnapshot,
     WeatherProviderSnapshot,
@@ -13,7 +14,9 @@ __all__ = [
     "CruiseHourlyAssessment",
     "Location",
     "ConversationRecord",
+    "SessionRecord",
     "TaskRequest",
+    "User",
     "UserProfile",
     "WeatherHourlySnapshot",
     "WeatherProviderSnapshot",

@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.db.models import UserProfile
 from app.db.session import SessionLocal
+from app.schemas.profile import UserProfileResponse, UserProfileUpdateRequest
 
 
 DEFAULT_USER_ID = "default_user"
@@ -49,6 +50,42 @@ def update_profile_from_parsed(*, user_id: str | None, parsed: dict[str, object]
         profile = _get_or_create_profile_row(session=session, user_id=normalized_user_id)
         _apply_parsed_preferences(profile=profile, parsed=parsed)
         session.commit()
+
+
+def get_user_profile_response(*, session: Session, user_id: str) -> UserProfileResponse:
+    profile = _get_or_create_profile_row(session=session, user_id=normalize_user_id(user_id))
+    session.flush()
+    return _to_profile_response(profile)
+
+
+def update_user_profile(
+    *,
+    session: Session,
+    user_id: str,
+    payload: UserProfileUpdateRequest,
+) -> UserProfileResponse:
+    profile = _get_or_create_profile_row(session=session, user_id=normalize_user_id(user_id))
+    update_data = payload.model_dump(exclude_unset=True)
+
+    for field in [
+        "default_location",
+        "default_task_type",
+        "default_start_time",
+        "default_end_time",
+        "output_style",
+    ]:
+        if field in update_data:
+            value = update_data[field]
+            setattr(profile, field, _clean_optional_string(value))
+
+    if "common_locations" in update_data:
+        profile.common_locations_json = _clean_string_list(update_data["common_locations"], limit=10)
+    if "common_task_types" in update_data:
+        profile.common_task_types_json = _clean_string_list(update_data["common_task_types"], limit=6)
+
+    session.commit()
+    session.refresh(profile)
+    return _to_profile_response(profile)
 
 
 def merge_profile_context(
@@ -120,3 +157,42 @@ def _to_profile_memory(profile: UserProfile) -> ProfileMemory:
         common_locations=[str(item) for item in profile.common_locations_json or []],
         common_task_types=[str(item) for item in profile.common_task_types_json or []],
     )
+
+
+def _to_profile_response(profile: UserProfile) -> UserProfileResponse:
+    return UserProfileResponse(
+        user_id=profile.user_id,
+        default_location=profile.default_location,
+        default_task_type=profile.default_task_type,
+        default_start_time=profile.default_start_time,
+        default_end_time=profile.default_end_time,
+        output_style=profile.output_style,
+        common_locations=[str(item) for item in profile.common_locations_json or []],
+        common_task_types=[str(item) for item in profile.common_task_types_json or []],
+        created_at=profile.created_at.isoformat(),
+        updated_at=profile.updated_at.isoformat(),
+    )
+
+
+def _clean_optional_string(value: object) -> str | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
+
+
+def _clean_string_list(values: object, *, limit: int) -> list[str]:
+    if not isinstance(values, list):
+        return []
+
+    result: list[str] = []
+    seen: set[str] = set()
+    for value in values:
+        text = str(value).strip()
+        if not text or text in seen:
+            continue
+        result.append(text)
+        seen.add(text)
+        if len(result) >= limit:
+            break
+    return result

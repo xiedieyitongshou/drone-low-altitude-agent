@@ -17,6 +17,7 @@ TASK_TYPE_KEYWORDS = {
 
 COMPARE_HINTS = ["哪个", "哪里", "先去哪", "先去哪一个", "排序", "比较", "对比"]
 RECOMMEND_HINTS = ["什么时候", "何时", "推荐", "最佳时间", "最适合"]
+EVALUATE_HINTS = ["可以飞吗", "能飞吗", "适合飞吗", "适合吗", "可以执行吗"]
 TIME_RANGE_PATTERNS = [
     re.compile(
         r"(?P<start_period>凌晨|早上|上午|中午|下午|晚上)?\s*"
@@ -229,6 +230,8 @@ def _detect_intent(
         return "recommend"
     if has_time_range:
         return "evaluate"
+    if any(word in text for word in EVALUATE_HINTS):
+        return "evaluate"
     if fallback_intent:
         return fallback_intent
     raise NaturalLanguageParseError("未识别到明确任务意图", missing_fields=["intent"])
@@ -362,6 +365,7 @@ def _detect_locations(text: str) -> list[str]:
         "哪个更适合",
         "哪里更适合",
         "可以飞吗",
+        "适合飞吗",
         "可以执行吗",
         "适合吗",
         "能飞吗",
@@ -400,7 +404,7 @@ def _is_valid_location(value: str) -> bool:
 
 
 def _has_intent_hint(text: str) -> bool:
-    return any(word in text for word in COMPARE_HINTS + RECOMMEND_HINTS)
+    return any(word in text for word in COMPARE_HINTS + RECOMMEND_HINTS + EVALUATE_HINTS)
 
 
 def _context_value(context: dict[str, object], key: str, default: object | None = None) -> object | None:

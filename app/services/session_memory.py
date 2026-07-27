@@ -1,20 +1,35 @@
 import json
 import os
 from copy import deepcopy
+from datetime import datetime, timedelta
 from threading import Lock
 from typing import Protocol
 
 from cachetools import TTLCache
+from sqlalchemy import select
+
+from app.db.models import SessionRecord
+from app.db.session import SessionLocal
+
+
+DEFAULT_SESSION_USER_ID = "default_user"
 
 
 class SessionMemoryStore(Protocol):
     """Abstract session memory contract."""
 
-    def get(self, session_id: str) -> dict[str, object] | None: ...
+    def get(self, session_id: str, *, user_id: str | None = None) -> dict[str, object] | None: ...
 
-    def set(self, session_id: str, context: dict[str, object]) -> None: ...
+    def set(
+        self,
+        session_id: str,
+        context: dict[str, object],
+        *,
+        user_id: str | None = None,
+        title: str | None = None,
+    ) -> None: ...
 
-    def delete(self, session_id: str) -> None: ...
+    def delete(self, session_id: str, *, user_id: str | None = None) -> None: ...
 
 
 class TTLSessionMemoryStore:
@@ -24,18 +39,25 @@ class TTLSessionMemoryStore:
         self._cache: TTLCache[str, dict[str, object]] = TTLCache(maxsize=maxsize, ttl=ttl_seconds)
         self._lock = Lock()
 
-    def get(self, session_id: str) -> dict[str, object] | None:
+    def get(self, session_id: str, *, user_id: str | None = None) -> dict[str, object] | None:
         with self._lock:
-            value = self._cache.get(session_id)
+            value = self._cache.get(_scoped_session_key(session_id, user_id))
             return deepcopy(value) if value is not None else None
 
-    def set(self, session_id: str, context: dict[str, object]) -> None:
+    def set(
+        self,
+        session_id: str,
+        context: dict[str, object],
+        *,
+        user_id: str | None = None,
+        title: str | None = None,
+    ) -> None:
         with self._lock:
-            self._cache[session_id] = deepcopy(context)
+            self._cache[_scoped_session_key(session_id, user_id)] = deepcopy(context)
 
-    def delete(self, session_id: str) -> None:
+    def delete(self, session_id: str, *, user_id: str | None = None) -> None:
         with self._lock:
-            self._cache.pop(session_id, None)
+            self._cache.pop(_scoped_session_key(session_id, user_id), None)
 
 
 class RedisSessionMemoryStore:
@@ -55,25 +77,106 @@ class RedisSessionMemoryStore:
         self._ttl_seconds = ttl_seconds
         self._key_prefix = key_prefix
 
-    def get(self, session_id: str) -> dict[str, object] | None:
-        raw_value = self._client.get(self._key(session_id))
+    def get(self, session_id: str, *, user_id: str | None = None) -> dict[str, object] | None:
+        raw_value = self._client.get(self._key(session_id, user_id))
         if raw_value is None:
             return None
         value = json.loads(raw_value)
         return value if isinstance(value, dict) else None
 
-    def set(self, session_id: str, context: dict[str, object]) -> None:
+    def set(
+        self,
+        session_id: str,
+        context: dict[str, object],
+        *,
+        user_id: str | None = None,
+        title: str | None = None,
+    ) -> None:
         self._client.setex(
-            self._key(session_id),
+            self._key(session_id, user_id),
             self._ttl_seconds,
             json.dumps(context, ensure_ascii=False),
         )
 
-    def delete(self, session_id: str) -> None:
-        self._client.delete(self._key(session_id))
+    def delete(self, session_id: str, *, user_id: str | None = None) -> None:
+        self._client.delete(self._key(session_id, user_id))
 
-    def _key(self, session_id: str) -> str:
-        return f"{self._key_prefix}{session_id}"
+    def _key(self, session_id: str, user_id: str | None) -> str:
+        return f"{self._key_prefix}{_scoped_session_key(session_id, user_id)}"
+
+
+class DatabaseSessionMemoryStore:
+    """Database-backed session memory for durable conversation context."""
+
+    def __init__(self, *, ttl_seconds: int = 1800) -> None:
+        self._ttl_seconds = ttl_seconds
+
+    def get(self, session_id: str, *, user_id: str | None = None) -> dict[str, object] | None:
+        normalized_user_id = _normalize_session_user_id(user_id)
+        now = datetime.utcnow()
+        with SessionLocal() as session:
+            record = session.scalar(
+                select(SessionRecord).where(
+                    SessionRecord.user_id == normalized_user_id,
+                    SessionRecord.session_id == session_id,
+                )
+            )
+            if record is None:
+                return None
+            if record.expires_at is not None and record.expires_at <= now:
+                session.delete(record)
+                session.commit()
+                return None
+            return deepcopy(record.last_context)
+
+    def set(
+        self,
+        session_id: str,
+        context: dict[str, object],
+        *,
+        user_id: str | None = None,
+        title: str | None = None,
+    ) -> None:
+        normalized_user_id = _normalize_session_user_id(user_id)
+        now = datetime.utcnow()
+        expires_at = now + timedelta(seconds=self._ttl_seconds) if self._ttl_seconds > 0 else None
+        with SessionLocal() as session:
+            record = session.scalar(
+                select(SessionRecord).where(
+                    SessionRecord.user_id == normalized_user_id,
+                    SessionRecord.session_id == session_id,
+                )
+            )
+            if record is None:
+                record = SessionRecord(
+                    session_id=session_id,
+                    user_id=normalized_user_id,
+                    title=title or _build_session_title(context),
+                    last_context=deepcopy(context),
+                    created_at=now,
+                    updated_at=now,
+                    expires_at=expires_at,
+                )
+                session.add(record)
+            else:
+                record.title = title or record.title or _build_session_title(context)
+                record.last_context = deepcopy(context)
+                record.updated_at = now
+                record.expires_at = expires_at
+            session.commit()
+
+    def delete(self, session_id: str, *, user_id: str | None = None) -> None:
+        normalized_user_id = _normalize_session_user_id(user_id)
+        with SessionLocal() as session:
+            record = session.scalar(
+                select(SessionRecord).where(
+                    SessionRecord.user_id == normalized_user_id,
+                    SessionRecord.session_id == session_id,
+                )
+            )
+            if record is not None:
+                session.delete(record)
+                session.commit()
 
 
 class LazySessionMemoryStore:
@@ -83,14 +186,21 @@ class LazySessionMemoryStore:
         self._store: SessionMemoryStore | None = None
         self._lock = Lock()
 
-    def get(self, session_id: str) -> dict[str, object] | None:
-        return self._get_store().get(session_id)
+    def get(self, session_id: str, *, user_id: str | None = None) -> dict[str, object] | None:
+        return self._get_store().get(session_id, user_id=user_id)
 
-    def set(self, session_id: str, context: dict[str, object]) -> None:
-        self._get_store().set(session_id, context)
+    def set(
+        self,
+        session_id: str,
+        context: dict[str, object],
+        *,
+        user_id: str | None = None,
+        title: str | None = None,
+    ) -> None:
+        self._get_store().set(session_id, context, user_id=user_id, title=title)
 
-    def delete(self, session_id: str) -> None:
-        self._get_store().delete(session_id)
+    def delete(self, session_id: str, *, user_id: str | None = None) -> None:
+        self._get_store().delete(session_id, user_id=user_id)
 
     def _get_store(self) -> SessionMemoryStore:
         if self._store is not None:
@@ -128,8 +238,11 @@ def create_session_memory_store() -> SessionMemoryStore:
             key_prefix=os.getenv("SESSION_MEMORY_REDIS_KEY_PREFIX", "drone_agent:session:"),
         )
 
+    if backend == "database":
+        return DatabaseSessionMemoryStore(ttl_seconds=ttl_seconds)
+
     if backend != "ttlcache":
-        raise ValueError("SESSION_MEMORY_BACKEND must be ttlcache or redis")
+        raise ValueError("SESSION_MEMORY_BACKEND must be ttlcache, redis, or database")
 
     return TTLSessionMemoryStore(
         maxsize=int(os.getenv("SESSION_MEMORY_MAXSIZE", "1024")),
@@ -138,3 +251,22 @@ def create_session_memory_store() -> SessionMemoryStore:
 
 
 session_memory_store: SessionMemoryStore = LazySessionMemoryStore()
+
+
+def _normalize_session_user_id(user_id: str | None) -> str:
+    value = (user_id or "").strip()
+    return value or DEFAULT_SESSION_USER_ID
+
+
+def _scoped_session_key(session_id: str, user_id: str | None) -> str:
+    return f"{_normalize_session_user_id(user_id)}:{session_id}"
+
+
+def _build_session_title(context: dict[str, object]) -> str | None:
+    intent = context.get("intent")
+    location = context.get("location")
+    if isinstance(location, str) and location.strip():
+        return f"{location.strip()} - {intent or 'session'}"
+    if isinstance(intent, str) and intent.strip():
+        return intent.strip()
+    return None

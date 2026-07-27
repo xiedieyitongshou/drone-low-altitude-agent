@@ -42,7 +42,7 @@ def orchestrate_task_query(
 
     normalized_user_id = normalize_user_id(user_id)
     profile = get_or_create_user_profile(normalized_user_id)
-    cached_context = session_memory_store.get(session_id) if session_id else None
+    cached_context = session_memory_store.get(session_id, user_id=normalized_user_id) if session_id else None
     parser_context = merge_profile_context(session_context=cached_context, profile=profile)
     parsed_result = _parse_task_query(query, context=parser_context)
 
@@ -53,7 +53,7 @@ def orchestrate_task_query(
             response = artifacts.response
             request_id = persist_cruise_evaluation(payload=payload, artifacts=artifacts)
             response.request["request_id"] = request_id
-            _save_context(session_id, parsed_result.intent, parsed_result.parsed)
+            _save_context(session_id, normalized_user_id, parsed_result.intent, parsed_result.parsed, query=query)
             update_profile_from_parsed(user_id=normalized_user_id, parsed=parsed_result.parsed)
             return _with_conversation_record(
                 query=query,
@@ -76,7 +76,7 @@ def orchestrate_task_query(
         if parsed_result.intent == "recommend":
             payload = RecommendationRequest.model_validate(parsed_result.parsed)
             response = build_recommendation_response(payload)
-            _save_context(session_id, parsed_result.intent, parsed_result.parsed)
+            _save_context(session_id, normalized_user_id, parsed_result.intent, parsed_result.parsed, query=query)
             update_profile_from_parsed(user_id=normalized_user_id, parsed=parsed_result.parsed)
             windows = response.recommendation.recommended_windows
             if windows:
@@ -108,7 +108,7 @@ def orchestrate_task_query(
         if parsed_result.intent == "compare":
             payload = MultiLocationComparisonRequest.model_validate(parsed_result.parsed)
             response = compare_locations(payload)
-            _save_context(session_id, parsed_result.intent, parsed_result.parsed)
+            _save_context(session_id, normalized_user_id, parsed_result.intent, parsed_result.parsed, query=query)
             update_profile_from_parsed(user_id=normalized_user_id, parsed=parsed_result.parsed)
             recommended = response.recommended_location.location if response.recommended_location else None
             message = (
@@ -174,10 +174,17 @@ def orchestrate_task_query(
         )
 
 
-def _save_context(session_id: str | None, intent: str, parsed: dict[str, object]) -> None:
+def _save_context(
+    session_id: str | None,
+    user_id: str,
+    intent: str,
+    parsed: dict[str, object],
+    *,
+    query: str,
+) -> None:
     if not session_id:
         return
-    session_memory_store.set(session_id, build_session_context(intent, parsed))
+    session_memory_store.set(session_id, build_session_context(intent, parsed), user_id=user_id, title=query[:80])
 
 
 def _parse_task_query(query: str, *, context: dict[str, object] | None = None) -> ParsedTaskRequest:

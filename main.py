@@ -3,17 +3,23 @@ import os
 from contextlib import suppress
 
 import uvicorn
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from app.core.config import load_environment
+from app.db.models import User
+from app.dependencies import get_current_user, get_db
 from app.schemas import (
     CruiseAssessmentResponse,
     CruiseEvaluateRequest,
     CruiseHistoryResponse,
+    ConversationDetailResponse,
+    ConversationListResponse,
     ErrorDetail,
     ErrorResponse,
     KnowledgeRetrievalRequest,
@@ -26,15 +32,24 @@ from app.schemas import (
     OrchestratorResponse,
     RecommendationRequest,
     RecommendationResponse,
+    TokenResponse,
     UnifiedBusinessResponse,
+    UserLoginRequest,
+    UserProfileResponse,
+    UserProfileUpdateRequest,
+    UserRegisterRequest,
+    UserResponse,
     WeatherFetchResponse,
 )
+from app.services.auth_service import create_access_token, hash_password, verify_password
 from app.services.advice_retriever import retrieve_knowledge_by_request
 from app.services.comparison import compare_locations
+from app.services.conversation_query import get_user_conversation_detail, list_user_conversations
 from app.services.cruise_evaluator import evaluate_cruise_request_with_artifacts
 from app.services.history_persistence import persist_cruise_evaluation
 from app.services.history_query import get_cruise_history
 from app.services.nl_parser import NaturalLanguageParseError, parse_natural_language_request
+from app.services.profile_memory import get_user_profile_response, update_user_profile
 from app.services.recommendation_executor import build_recommendation_response
 from app.services.response_composer import compose_history_response
 from app.services.session_memory import build_session_context, session_memory_store
@@ -190,6 +205,115 @@ def health_check() -> dict[str, str]:
     }
 
 
+def to_user_response(user: User) -> UserResponse:
+    return UserResponse(
+        id=user.id,
+        username=user.username,
+        display_name=user.display_name,
+        role=user.role,
+        is_active=user.is_active,
+    )
+
+
+@app.post("/auth/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+def register_user(payload: UserRegisterRequest, db: Session = Depends(get_db)) -> UserResponse:
+    username = payload.username.strip()
+    if not username:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="username cannot be blank")
+
+    existing_user = db.scalar(select(User).where(User.username == username))
+    if existing_user is not None:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="username already exists")
+
+    user = User(
+        username=username,
+        password_hash=hash_password(payload.password),
+        display_name=payload.display_name.strip() if payload.display_name else username,
+        role="user",
+        is_active=True,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    return to_user_response(user)
+
+
+@app.post("/auth/login", response_model=TokenResponse)
+def login_user(payload: UserLoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
+    username = payload.username.strip()
+    user = db.scalar(select(User).where(User.username == username))
+    if user is None or not verify_password(payload.password, user.password_hash):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid username or password")
+
+    if not user.is_active:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="user is disabled")
+
+    return TokenResponse(
+        access_token=create_access_token(user.id),
+        user=to_user_response(user),
+    )
+
+
+@app.get("/auth/me", response_model=UserResponse)
+def get_me(current_user: User = Depends(get_current_user)) -> UserResponse:
+    return to_user_response(current_user)
+
+
+@app.get("/users/me/profile", response_model=UserProfileResponse)
+def get_my_profile(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> UserProfileResponse:
+    profile = get_user_profile_response(session=db, user_id=current_user.id)
+    db.commit()
+    return profile
+
+
+@app.patch("/users/me/profile", response_model=UserProfileResponse)
+def update_my_profile(
+    payload: UserProfileUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> UserProfileResponse:
+    return update_user_profile(session=db, user_id=current_user.id, payload=payload)
+
+
+@app.get("/agent/conversations", response_model=ConversationListResponse)
+def list_conversations(
+    page: int = 1,
+    page_size: int = 20,
+    keyword: str | None = None,
+    session_id: str | None = None,
+    intent: str | None = None,
+    parser_source: str | None = None,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> ConversationListResponse:
+    return list_user_conversations(
+        db=db,
+        user_id=current_user.id,
+        page=page,
+        page_size=page_size,
+        keyword=keyword,
+        session_id=session_id,
+        intent=intent,
+        parser_source=parser_source,
+    )
+
+
+@app.get("/agent/conversations/{conversation_id}", response_model=ConversationDetailResponse)
+def get_conversation_detail(
+    conversation_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> ConversationDetailResponse:
+    detail = get_user_conversation_detail(db=db, user_id=current_user.id, conversation_id=conversation_id)
+    if detail is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="conversation not found")
+    return detail
+
+
 @app.post("/knowledge/advice/retrieve", response_model=KnowledgeRetrievalResponse)
 def retrieve_knowledge(payload: KnowledgeRetrievalRequest) -> KnowledgeRetrievalResponse:
     logger.info("Starting knowledge retrieval", extra={"task_type": payload.task_type, "top_k": payload.top_k})
@@ -227,9 +351,12 @@ def parse_natural_language(payload: NaturalLanguageParseRequest) -> NaturalLangu
 
 
 @app.post("/agent/query", response_model=OrchestratorResponse)
-def orchestrate_task(payload: OrchestratorRequest) -> OrchestratorResponse:
+def orchestrate_task(
+    payload: OrchestratorRequest,
+    current_user: User = Depends(get_current_user),
+) -> OrchestratorResponse:
     logger.info("Starting task orchestration")
-    result = orchestrate_task_query(payload.query, session_id=payload.session_id, user_id=payload.user_id)
+    result = orchestrate_task_query(payload.query, session_id=payload.session_id, user_id=current_user.id)
     logger.info(
         "Task orchestration completed",
         extra={

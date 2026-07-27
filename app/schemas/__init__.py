@@ -18,6 +18,7 @@ from app.schemas.assessment import (
     InputValidationPreviewResponse,
     RiskDecision,
 )
+from app.schemas.auth import TokenResponse, UserLoginRequest, UserRegisterRequest, UserResponse
 from app.schemas.comparison import ComparedLocationResult, MultiLocationComparisonRequest, MultiLocationComparisonResponse
 from app.schemas.composed_response import (
     ComposedHistorySummary,
@@ -25,10 +26,12 @@ from app.schemas.composed_response import (
     ComposedRecommendationWindow,
     UnifiedBusinessResponse,
 )
+from app.schemas.conversation import ConversationDetailResponse, ConversationListResponse, ConversationSummary
 from app.schemas.error import ErrorDetail, ErrorResponse
 from app.schemas.fetch import WeatherFetchErrorContext, WeatherFetchResponse
 from app.schemas.nl import NaturalLanguageParseRequest, NaturalLanguageParseResponse
 from app.schemas.orchestrator import OrchestratorRequest, OrchestratorResponse
+from app.schemas.profile import UserProfileResponse, UserProfileUpdateRequest
 from app.schemas.recommendation import (
     RecommendationRequest,
     RecommendationResponse,
@@ -46,9 +49,13 @@ __all__ = [
     'AdvicePriority',
     'AdviceRetrievalContext',
     'AdviceSuggestion',
+    'TokenResponse',
     'ComposedHistorySummary',
     'ComposedLocationRanking',
     'ComposedRecommendationWindow',
+    'ConversationDetailResponse',
+    'ConversationListResponse',
+    'ConversationSummary',
     'CruiseAssessmentAdvice',
     'CruiseHistoryResponse',
     'CruiseAssessmentResponse',
@@ -79,6 +86,11 @@ __all__ = [
     'RetrievedKnowledgeSnippet',
     'RiskDecision',
     'UnifiedBusinessResponse',
+    'UserLoginRequest',
+    'UserProfileResponse',
+    'UserProfileUpdateRequest',
+    'UserRegisterRequest',
+    'UserResponse',
     'WarningData',
     'WarningDataBundle',
     'WeatherDataBundle',
