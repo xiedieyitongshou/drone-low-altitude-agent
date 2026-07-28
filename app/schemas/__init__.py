@@ -19,6 +19,16 @@ from app.schemas.assessment import (
     RiskDecision,
 )
 from app.schemas.auth import TokenResponse, UserLoginRequest, UserRegisterRequest, UserResponse
+from app.schemas.admin import (
+    AdminConversationDetailResponse,
+    AdminConversationListResponse,
+    AdminConversationSummary,
+    AdminTaskStatsResponse,
+    AdminUserListResponse,
+    AdminUserResponse,
+    AdminUserRoleUpdateRequest,
+    AdminUserStatusUpdateRequest,
+)
 from app.schemas.comparison import ComparedLocationResult, MultiLocationComparisonRequest, MultiLocationComparisonResponse
 from app.schemas.composed_response import (
     ComposedHistorySummary,
@@ -49,6 +59,14 @@ __all__ = [
     'AdvicePriority',
     'AdviceRetrievalContext',
     'AdviceSuggestion',
+    'AdminConversationDetailResponse',
+    'AdminConversationListResponse',
+    'AdminConversationSummary',
+    'AdminTaskStatsResponse',
+    'AdminUserListResponse',
+    'AdminUserResponse',
+    'AdminUserRoleUpdateRequest',
+    'AdminUserStatusUpdateRequest',
     'TokenResponse',
     'ComposedHistorySummary',
     'ComposedLocationRanking',

@@ -14,7 +14,6 @@ function createDefaultSessionId() {
 export function AgentPage() {
   const [query, setQuery] = useState(defaultQuery)
   const [sessionId, setSessionId] = useState(createDefaultSessionId)
-  const [userId, setUserId] = useState('default_user')
   const [messages, setMessages] = useState<AgentMessage[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -45,7 +44,6 @@ export function AgentPage() {
       const response = await queryAgent({
         query: trimmedQuery,
         session_id: sessionId.trim() || null,
-        user_id: userId.trim() || 'default_user',
       })
 
       setMessages((current) =>
@@ -97,14 +95,6 @@ export function AgentPage() {
               value={sessionId}
               onChange={(event) => setSessionId(event.target.value)}
               placeholder="用于多轮上下文继承"
-            />
-          </label>
-          <label>
-            <span>user_id</span>
-            <input
-              value={userId}
-              onChange={(event) => setUserId(event.target.value)}
-              placeholder="默认 default_user"
             />
           </label>
         </div>

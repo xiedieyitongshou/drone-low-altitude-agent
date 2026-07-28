@@ -1,9 +1,19 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { getCruiseHistory, getCruiseHistoryComposed } from '../api/history'
+import {
+  getConversationDetail,
+  getCruiseHistory,
+  getCruiseHistoryComposed,
+  listConversations,
+} from '../api/history'
 import { JsonDetails } from '../components/JsonDetails'
 import { KnowledgeAdvicePanel } from '../components/KnowledgeAdvicePanel'
-import type { CruiseHistoryResponse, UnifiedBusinessResponse } from '../types/history'
+import type {
+  ConversationDetailResponse,
+  ConversationSummary,
+  CruiseHistoryResponse,
+  UnifiedBusinessResponse,
+} from '../types/history'
 
 function getDecisionClass(decision?: string | null) {
   if (decision === '适飞') {
@@ -26,24 +36,79 @@ function getRequestValue(
 }
 
 export function HistoryPage() {
+  const [keyword, setKeyword] = useState('')
+  const [page, setPage] = useState(1)
+  const [conversationList, setConversationList] = useState<ConversationSummary[]>([])
+  const [total, setTotal] = useState(0)
+  const [selectedConversation, setSelectedConversation] =
+    useState<ConversationDetailResponse | null>(null)
   const [requestId, setRequestId] = useState('')
   const [history, setHistory] = useState<CruiseHistoryResponse | null>(null)
   const [composed, setComposed] = useState<UnifiedBusinessResponse | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const hasResult = Boolean(history || composed)
+  const [debugErrorMessage, setDebugErrorMessage] = useState('')
+  const [isLoadingList, setIsLoadingList] = useState(false)
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false)
+  const [isLoadingDebug, setIsLoadingDebug] = useState(false)
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  useEffect(() => {
+    void loadConversationList()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page])
+
+  async function loadConversationList(nextPage = page, nextKeyword = keyword) {
+    setIsLoadingList(true)
+    setErrorMessage('')
+
+    try {
+      const response = await listConversations({
+        page: nextPage,
+        page_size: 10,
+        keyword: nextKeyword.trim() || undefined,
+      })
+      setConversationList(response.items)
+      setTotal(response.total)
+      setPage(response.page)
+      if (response.items.length === 0) {
+        setSelectedConversation(null)
+      }
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : '查询对话历史失败')
+    } finally {
+      setIsLoadingList(false)
+    }
+  }
+
+  async function handleSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    await loadConversationList(1, keyword)
+  }
+
+  async function handleSelectConversation(conversationId: string) {
+    setIsLoadingDetail(true)
+    setErrorMessage('')
+
+    try {
+      const response = await getConversationDetail(conversationId)
+      setSelectedConversation(response)
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : '查询对话详情失败')
+    } finally {
+      setIsLoadingDetail(false)
+    }
+  }
+
+  async function handleDebugSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const trimmedRequestId = requestId.trim()
 
     if (!trimmedRequestId) {
-      setErrorMessage('请输入 request_id。')
+      setDebugErrorMessage('请输入 request_id。')
       return
     }
 
-    setIsLoading(true)
-    setErrorMessage('')
+    setIsLoadingDebug(true)
+    setDebugErrorMessage('')
     setHistory(null)
     setComposed(null)
 
@@ -55,205 +120,224 @@ export function HistoryPage() {
       setHistory(historyResponse)
       setComposed(composedResponse)
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : '查询失败')
+      setDebugErrorMessage(error instanceof Error ? error.message : '查询失败')
     } finally {
-      setIsLoading(false)
+      setIsLoadingDebug(false)
     }
   }
+
+  const totalPages = Math.max(Math.ceil(total / 10), 1)
 
   return (
     <section className="page-card history-page">
       <div className="page-header">
         <div>
-          <h2>历史查询与复盘</h2>
+          <h2>我的历史记录</h2>
           <p>
-            该页面同时调用 <code>/cruise/history/{'{request_id}'}</code> 和{' '}
-            <code>/cruise/history/{'{request_id}'}/composed</code>
-            ，展示任务从输入、判断、落库到复盘的完整链路。
+            默认调用 <code>/agent/conversations</code>
+            查询当前登录用户的对话历史。用户侧通过关键词检索内容，详情由前端使用
+            conversation_id 自动加载。
           </p>
         </div>
       </div>
 
-      <form className="agent-form history-form" onSubmit={handleSubmit}>
+      <form className="agent-form history-search-form" onSubmit={handleSearch}>
         <label>
-          <span>request_id</span>
+          <span>关键词检索</span>
           <input
-            value={requestId}
-            onChange={(event) => setRequestId(event.target.value)}
-            placeholder="从单地点评估页面复制 request_id"
+            value={keyword}
+            onChange={(event) => setKeyword(event.target.value)}
+            placeholder="搜索 query / message / explanation，例如：深圳"
           />
         </label>
         <div className="form-actions">
-          <button type="submit" disabled={isLoading}>
-            {isLoading ? '查询中...' : '查询历史'}
+          <button type="submit" disabled={isLoadingList}>
+            {isLoadingList ? '检索中...' : '检索我的历史'}
+          </button>
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => {
+              setKeyword('')
+              void loadConversationList(1, '')
+            }}
+          >
+            清空条件
           </button>
         </div>
       </form>
 
-      {!hasResult && !isLoading && !errorMessage ? (
-        <div className="empty-panel">
-          暂无历史复盘数据。请先在“单地点评估”页面完成一次评估，并复制返回的
-          request_id。
-        </div>
-      ) : null}
-
-      {isLoading ? <div className="loading-panel">正在查询历史记录...</div> : null}
       {errorMessage ? <div className="error-panel">{errorMessage}</div> : null}
 
-      {history ? (
-        <div className="history-result">
-          <div className={`decision-card ${getDecisionClass(history.advice.overall_decision)}`}>
-            <div>
-              <span>历史任务结论</span>
-              <strong>{history.advice.overall_decision}</strong>
-              <p>{history.advice.allow_cruise ? '该历史任务允许执行' : '该历史任务不建议执行'}</p>
-            </div>
-            <div>
-              <span>request_id</span>
-              <code>{history.request_id}</code>
-            </div>
+      <div className="conversation-layout">
+        <section className="result-section conversation-list-panel">
+          <div className="section-heading-row">
+            <h3>对话列表</h3>
+            <span>
+              共 {total} 条 / 第 {page} 页
+            </span>
           </div>
 
-          <div className="summary-grid">
-            <div>
-              <span>创建时间</span>
-              <strong>{history.created_at}</strong>
-            </div>
-            <div>
-              <span>地点</span>
-              <strong>{getRequestValue(history.request, 'location')}</strong>
-            </div>
-            <div>
-              <span>任务类型</span>
-              <strong>{getRequestValue(history.request, 'task_type')}</strong>
-            </div>
-          </div>
+          {isLoadingList ? <div className="loading-panel">正在加载历史列表...</div> : null}
 
-          {composed ? (
-            <section className="result-section">
-              <h3>统一解释</h3>
-              <div className="explanation-panel">
-                <span>summary</span>
-                <p>{composed.summary}</p>
-              </div>
-              <div className="explanation-panel">
-                <span>explanation</span>
-                <p>{composed.explanation ?? '暂无统一解释。'}</p>
-              </div>
-              <div className="response-badges">
-                <span>scene: {composed.scene}</span>
-                <span>source: {composed.explanation_source}</span>
-                <span>llm_used: {String(composed.llm_used)}</span>
-              </div>
-              <KnowledgeAdvicePanel details={composed.details} />
-            </section>
+          {!isLoadingList && conversationList.length === 0 ? (
+            <div className="empty-panel">暂无对话历史，或当前关键词没有命中记录。</div>
           ) : null}
 
-          <section className="result-section">
-            <h3>历史任务请求</h3>
-            <div className="history-request-grid">
+          <div className="conversation-list">
+            {conversationList.map((item) => (
+              <button
+                key={item.conversation_id}
+                type="button"
+                className={
+                  selectedConversation?.conversation_id === item.conversation_id
+                    ? 'conversation-item active'
+                    : 'conversation-item'
+                }
+                onClick={() => void handleSelectConversation(item.conversation_id)}
+              >
+                <strong>{item.query}</strong>
+                <span>{item.message ?? '暂无摘要'}</span>
+                <small>
+                  {item.intent ?? '-'} / {item.parser_source ?? '-'} / {item.created_at}
+                </small>
+              </button>
+            ))}
+          </div>
+
+          <div className="pagination-row">
+            <button
+              type="button"
+              className="secondary-button"
+              disabled={page <= 1 || isLoadingList}
+              onClick={() => setPage((current) => Math.max(current - 1, 1))}
+            >
+              上一页
+            </button>
+            <span>
+              {page} / {totalPages}
+            </span>
+            <button
+              type="button"
+              className="secondary-button"
+              disabled={page >= totalPages || isLoadingList}
+              onClick={() => setPage((current) => current + 1)}
+            >
+              下一页
+            </button>
+          </div>
+        </section>
+
+        <section className="result-section conversation-detail-panel">
+          <h3>对话详情</h3>
+          {isLoadingDetail ? <div className="loading-panel">正在加载对话详情...</div> : null}
+          {!selectedConversation && !isLoadingDetail ? (
+            <div className="empty-panel">点击左侧某条历史记录查看完整详情。</div>
+          ) : null}
+
+          {selectedConversation ? (
+            <>
+              <div className="message-query">
+                <span>用户输入</span>
+                <p>{selectedConversation.query}</p>
+              </div>
+              <div className="explanation-panel">
+                <span>系统摘要</span>
+                <p>{selectedConversation.message ?? '暂无摘要。'}</p>
+              </div>
+              <div className="response-badges">
+                <span>success: {String(selectedConversation.success)}</span>
+                <span>context_used: {String(selectedConversation.context_used)}</span>
+                <span>intent: {selectedConversation.intent ?? '-'}</span>
+                <span>source: {selectedConversation.parser_source ?? '-'}</span>
+              </div>
+              <JsonDetails title="parsed" data={selectedConversation.parsed ?? {}} />
+              <JsonDetails title="response" data={selectedConversation.response ?? {}} />
+            </>
+          ) : null}
+        </section>
+      </div>
+
+      <section className="result-section debug-history-panel">
+        <h3>request_id 调试复盘</h3>
+        <p>
+          该入口保留给调试和面试展示，用于调用 <code>/cruise/history/{'{request_id}'}</code>
+          和 <code>/cruise/history/{'{request_id}'}/composed</code>。
+        </p>
+
+        <form className="agent-form history-form" onSubmit={handleDebugSubmit}>
+          <label>
+            <span>request_id</span>
+            <input
+              value={requestId}
+              onChange={(event) => setRequestId(event.target.value)}
+              placeholder="从单地点评估结果或对话详情 JSON 中复制 request_id"
+            />
+          </label>
+          <div className="form-actions">
+            <button type="submit" disabled={isLoadingDebug}>
+              {isLoadingDebug ? '查询中...' : '调试查询'}
+            </button>
+          </div>
+        </form>
+
+        {debugErrorMessage ? <div className="error-panel">{debugErrorMessage}</div> : null}
+
+        {history ? (
+          <div className="history-result">
+            <div className={`decision-card ${getDecisionClass(history.advice.overall_decision)}`}>
               <div>
-                <span>日期</span>
-                <strong>{getRequestValue(history.request, 'date')}</strong>
+                <span>历史任务结论</span>
+                <strong>{history.advice.overall_decision}</strong>
+                <p>{history.advice.allow_cruise ? '该历史任务允许执行' : '该历史任务不建议执行'}</p>
               </div>
               <div>
-                <span>开始时间</span>
-                <strong>{getRequestValue(history.request, 'start_time')}</strong>
-              </div>
-              <div>
-                <span>结束时间</span>
-                <strong>{getRequestValue(history.request, 'end_time')}</strong>
-              </div>
-              <div>
-                <span>跨天</span>
-                <strong>{String(history.request.spans_next_day ?? false)}</strong>
+                <span>request_id</span>
+                <code>{history.request_id}</code>
               </div>
             </div>
-          </section>
 
-          <section className="result-section">
-            <h3>风险原因</h3>
-            {history.advice.summary_risk_factors.length > 0 ? (
-              <ul className="risk-list">
-                {history.advice.summary_risk_factors.map((factor) => (
-                  <li key={factor}>{factor}</li>
-                ))}
-              </ul>
-            ) : (
-              <div className="empty-panel">历史记录中未发现明显风险原因。</div>
-            )}
-          </section>
-
-          <section className="result-section">
-            <h3>逐小时评估复盘</h3>
-            <div className="hourly-table-wrap">
-              <table className="hourly-table">
-                <thead>
-                  <tr>
-                    <th>时间</th>
-                    <th>结论</th>
-                    <th>天气</th>
-                    <th>风力</th>
-                    <th>降水</th>
-                    <th>降水概率</th>
-                    <th>风险原因</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {history.advice.hourly_assessment.map((item) => (
-                    <tr key={item.fx_time}>
-                      <td>{item.fx_time}</td>
-                      <td>
-                        <span className={`decision-pill ${getDecisionClass(item.decision)}`}>
-                          {item.decision}
-                        </span>
-                      </td>
-                      <td>{item.weather.text ?? '-'}</td>
-                      <td>{item.weather.wind_scale ?? '-'}</td>
-                      <td>{item.weather.precip ?? '-'}</td>
-                      <td>{item.weather.pop ? `${item.weather.pop}%` : '-'}</td>
-                      <td>
-                        {item.risk_factors.length > 0
-                          ? item.risk_factors.join('；')
-                          : '无明显风险'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <section className="result-section">
-            <h3>天气预警</h3>
-            {history.warnings?.has_warning ? (
-              <div className="warning-list">
-                {history.warnings.warnings.map((warning, index) => (
-                  <article className="warning-card" key={warning.warning_id ?? index}>
-                    <strong>{warning.title ?? warning.event_type ?? '未知预警'}</strong>
-                    <p>
-                      {warning.warning_level ?? '-'} / {warning.status ?? '-'} /{' '}
-                      {warning.publish_time ?? '-'}
-                    </p>
-                    <p>{warning.text ?? '暂无详细说明'}</p>
-                  </article>
-                ))}
+            <div className="summary-grid">
+              <div>
+                <span>创建时间</span>
+                <strong>{history.created_at}</strong>
               </div>
-            ) : (
-              <div className="empty-panel">历史记录中没有天气预警。</div>
-            )}
-          </section>
+              <div>
+                <span>地点</span>
+                <strong>{getRequestValue(history.request, 'location')}</strong>
+              </div>
+              <div>
+                <span>任务类型</span>
+                <strong>{getRequestValue(history.request, 'task_type')}</strong>
+              </div>
+            </div>
 
-          <JsonDetails
-            title="历史评估响应 JSON"
-            data={history as unknown as Record<string, never>}
-          />
-          <JsonDetails
-            title="统一业务响应 JSON"
-            data={composed as unknown as Record<string, never>}
-          />
-        </div>
-      ) : null}
+            {composed ? (
+              <section className="result-section">
+                <h3>统一解释</h3>
+                <div className="explanation-panel">
+                  <span>summary</span>
+                  <p>{composed.summary}</p>
+                </div>
+                <div className="explanation-panel">
+                  <span>explanation</span>
+                  <p>{composed.explanation ?? '暂无统一解释。'}</p>
+                </div>
+                <KnowledgeAdvicePanel details={composed.details} />
+              </section>
+            ) : null}
+
+            <JsonDetails
+              title="历史评估响应 JSON"
+              data={history as unknown as Record<string, never>}
+            />
+            <JsonDetails
+              title="统一业务响应 JSON"
+              data={composed as unknown as Record<string, never>}
+            />
+          </div>
+        ) : null}
+      </section>
     </section>
   )
 }

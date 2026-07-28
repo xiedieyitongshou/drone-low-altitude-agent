@@ -1,10 +1,18 @@
 import { NavLink, Route, Routes } from 'react-router-dom'
+import { useAuth } from './auth/useAuth'
+import { ProtectedRoute } from './components/ProtectedRoute'
+import { AdminConversationsPage } from './pages/AdminConversationsPage'
+import { AdminStatsPage } from './pages/AdminStatsPage'
+import { AdminUsersPage } from './pages/AdminUsersPage'
 import { AgentPage } from './pages/AgentPage'
 import { ComparePage } from './pages/ComparePage'
 import { EvaluatePage } from './pages/EvaluatePage'
 import { HealthPage } from './pages/HealthPage'
 import { HistoryPage } from './pages/HistoryPage'
+import { LoginPage } from './pages/LoginPage'
+import { ProfilePage } from './pages/ProfilePage'
 import { RecommendPage } from './pages/RecommendPage'
+import { RegisterPage } from './pages/RegisterPage'
 import './App.css'
 
 const navItems = [
@@ -14,9 +22,18 @@ const navItems = [
   { to: '/recommend', label: '推荐窗口' },
   { to: '/compare', label: '多地点比选' },
   { to: '/history', label: '历史记录' },
+  { to: '/profile', label: 'Profile 设置' },
+]
+
+const adminNavItems = [
+  { to: '/admin', label: '管理统计' },
+  { to: '/admin/users', label: '用户管理' },
+  { to: '/admin/conversations', label: '任务审计' },
 ]
 
 function App() {
+  const { isAuthenticated, logout, user } = useAuth()
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -41,17 +58,121 @@ function App() {
               {item.label}
             </NavLink>
           ))}
+          {user?.role === 'admin'
+            ? adminNavItems.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.to === '/admin'}
+                  className={({ isActive }) =>
+                    isActive ? 'nav-link active' : 'nav-link'
+                  }
+                >
+                  {item.label}
+                </NavLink>
+              ))
+            : null}
         </nav>
+
+        <div className="auth-panel">
+          {isAuthenticated && user ? (
+            <>
+              <div>
+                <span>当前用户</span>
+                <strong>{user.display_name || user.username}</strong>
+                <small>{user.role}</small>
+              </div>
+              <button type="button" className="logout-button" onClick={logout}>
+                退出登录
+              </button>
+            </>
+          ) : (
+            <div>
+              <span>认证状态</span>
+              <strong>未登录</strong>
+              <small>登录后可使用 Agent 和历史能力</small>
+            </div>
+          )}
+        </div>
       </aside>
 
       <main className="main-panel">
         <Routes>
           <Route path="/" element={<HealthPage />} />
-          <Route path="/agent" element={<AgentPage />} />
-          <Route path="/evaluate" element={<EvaluatePage />} />
-          <Route path="/recommend" element={<RecommendPage />} />
-          <Route path="/compare" element={<ComparePage />} />
-          <Route path="/history" element={<HistoryPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route
+            path="/agent"
+            element={
+              <ProtectedRoute>
+                <AgentPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/evaluate"
+            element={
+              <ProtectedRoute>
+                <EvaluatePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/recommend"
+            element={
+              <ProtectedRoute>
+                <RecommendPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/compare"
+            element={
+              <ProtectedRoute>
+                <ComparePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/history"
+            element={
+              <ProtectedRoute>
+                <HistoryPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminStatsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminUsersPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/conversations"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminConversationsPage />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </main>
     </div>

@@ -80,13 +80,14 @@ VITE_API_BASE_URL=http://localhost:8000
 在项目根目录执行：
 
 ```bash
-docker compose up --build
+copy .env.docker.example .env
+docker compose up -d --build --force-recreate
 ```
 
 后台启动：
 
 ```bash
-docker compose up --build -d
+docker compose up -d --build --force-recreate
 ```
 
 启动后访问：
@@ -100,7 +101,7 @@ docker compose up --build -d
 当前 Compose 服务包括：
 
 - `frontend`：React 前端，Nginx 托管静态资源
-- `app`：FastAPI 后端，镜像内包含核心单元测试，便于容器内验证
+- `app`：FastAPI 后端，启动时自动执行 Alembic 迁移，支持 JWT、多用户记忆、管理员接口和核心单元测试
 - `redis`：会话上下文缓存
 
 前端 Docker 构建时默认注入：
@@ -111,10 +112,42 @@ VITE_API_BASE_URL=http://localhost:8000
 
 因此浏览器打开 `http://localhost:5173` 后，会直接请求本机映射出来的后端 API。
 
-如需在 Docker 后端容器内验证推荐窗口算法，可执行：
+### Docker 下初始化管理员
+
+普通注册接口只能创建 `user` 角色。Docker 演示如果需要管理员后台，先在 `.env` 中配置：
+
+```env
+JWT_SECRET_KEY=replace-with-random-secret
+INITIAL_ADMIN_USERNAME=admin
+INITIAL_ADMIN_PASSWORD=change-me-before-deploy
+```
+
+第一次创建管理员时，显式执行一次初始化服务：
 
 ```bash
-docker compose exec app python -m unittest tests.test_recommendation_windows
+docker compose --profile tools run --rm admin-init
+```
+
+该命令会先执行数据库迁移，再创建或激活 `.env` 中指定的初始管理员。后续正常启动项目：
+
+```bash
+docker compose up -d --build --force-recreate
+```
+
+后续管理员只能由已有管理员在管理页面或 `/admin/users/{user_id}/role` 接口授权产生。`admin-init` 是一次性工具服务，不会随普通 `docker compose up` 自动执行。
+
+说明：
+
+- `INITIAL_ADMIN_PASSWORD` 示例值只用于本地演示，正式使用前必须改成自己的强密码。
+- 如果按本文档示例创建，本地管理员账号为 `admin`，密码为 `.env` 中的 `INITIAL_ADMIN_PASSWORD`。
+- 不要把真实管理员密码提交到 GitHub。
+
+### Docker 内验证
+
+如需在 Docker 后端容器内验证测试，可执行：
+
+```bash
+docker compose exec app python -m pytest
 ```
 
 这是一个从“阿里云百炼工作流原型”重构出来的本地后端项目。原型阶段主要依赖工作流节点完成天气查询和条件判断；重构后，项目改为基于 FastAPI 的模块化后端服务，把天气数据获取、数据标准化、规则判断、推荐、比选、历史记录、自然语言入口和知识库建议拆成可维护的 Python 模块。
@@ -191,6 +224,12 @@ LLM 结果解释 / 模板解释 fallback
 - `GET /auth/me`：获取当前登录用户信息。
 - `GET /users/me/profile`：查看当前用户长期偏好。
 - `PATCH /users/me/profile`：编辑当前用户长期偏好。
+- `GET /admin/users`：管理员查询用户列表，支持用户名、角色、启用状态筛选。
+- `PATCH /admin/users/{user_id}/status`：管理员启用或禁用用户。
+- `PATCH /admin/users/{user_id}/role`：管理员在 `user` 与 `admin` 之间调整用户角色。
+- `GET /admin/stats/tasks`：管理员查看用户、任务、失败、风险和解析失败统计。
+- `GET /admin/conversations`：管理员跨用户查询任务会话历史，支持用户、会话、意图、解析来源、成功状态、关键词和时间范围筛选。
+- `GET /admin/conversations/{conversation_id}`：管理员查看单条任务会话完整详情。
 - `POST /nl/parse`：自然语言任务解析。
 - `POST /agent/query`：Agent 主入口，支持一句话完成任务调用；需要 `Authorization: Bearer <token>`。
 - `GET /agent/conversations`：查询当前用户对话历史，支持分页、关键词、会话、意图和解析来源筛选。
@@ -419,6 +458,47 @@ Authorization: Bearer <access_token>
 - 前端用户通过关键词和历史列表检索内容。
 - 后端继续使用 `conversation_id` 定位单条详情。
 - 普通用户只能查询自己的对话历史，即使知道其他用户的 `conversation_id` 也会返回 `404`。
+
+### 管理员用户管理示例
+
+普通注册接口只能创建 `user` 角色。第一个管理员建议由开发期初始化脚本创建：
+
+```bash
+.\.venv\Scripts\python.exe scripts\create_initial_admin.py
+```
+
+脚本读取 `.env` 中的 `INITIAL_ADMIN_USERNAME` 和 `INITIAL_ADMIN_PASSWORD`。后续管理员只能由已有管理员通过后台接口授权产生。
+
+Docker 环境可以执行：
+
+```bash
+docker compose --profile tools run --rm admin-init
+```
+
+```text
+GET /admin/users?role=user&is_active=true
+Authorization: Bearer <admin_access_token>
+```
+
+权限边界：
+
+- 普通用户访问 `/admin/*` 返回 `403`。
+- 不能禁用最后一个可用管理员。
+- 不能将最后一个可用管理员降级为普通用户。
+
+### 管理员任务审计示例
+
+管理员可以跨用户查看任务运行记录，但接口只提供查询能力，不修改历史任务内容。
+
+```text
+GET /admin/conversations?user_id=<user_id>&intent=evaluate&success=true&page=1&page_size=20
+Authorization: Bearer <admin_access_token>
+```
+
+```text
+GET /admin/conversations/<conversation_id>
+Authorization: Bearer <admin_access_token>
+```
 
 ## 当前阶段
 

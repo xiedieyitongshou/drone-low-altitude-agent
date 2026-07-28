@@ -22,11 +22,14 @@ COPY alembic.ini .
 COPY alembic ./alembic
 COPY app ./app
 COPY data/knowledge/advice_rules.json ./data/knowledge/advice_rules.json
+RUN mkdir -p /app/data/knowledge/index /app/data/samples /app/scripts
+COPY scripts/create_initial_admin.py ./scripts/create_initial_admin.py
 COPY tests ./tests
+COPY pytest.ini .
 COPY main.py .
 COPY docker/entrypoint.sh ./docker/entrypoint.sh
 
-RUN chmod +x ./docker/entrypoint.sh && mkdir -p /app/data/knowledge/index /app/data/samples
+RUN chmod +x ./docker/entrypoint.sh
 
 EXPOSE 8000
 

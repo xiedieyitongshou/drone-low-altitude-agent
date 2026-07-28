@@ -1,6 +1,7 @@
-﻿import logging
+import logging
 import os
 from contextlib import suppress
+from datetime import datetime
 
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Request, status
@@ -14,7 +15,15 @@ from sqlalchemy.orm import Session
 from app.core.config import load_environment
 from app.db.models import User
 from app.dependencies import get_current_user, get_db
+from app.dependencies.auth import require_admin_user
 from app.schemas import (
+    AdminConversationDetailResponse,
+    AdminConversationListResponse,
+    AdminTaskStatsResponse,
+    AdminUserListResponse,
+    AdminUserResponse,
+    AdminUserRoleUpdateRequest,
+    AdminUserStatusUpdateRequest,
     CruiseAssessmentResponse,
     CruiseEvaluateRequest,
     CruiseHistoryResponse,
@@ -40,6 +49,15 @@ from app.schemas import (
     UserRegisterRequest,
     UserResponse,
     WeatherFetchResponse,
+)
+from app.services.admin_conversation_audit import get_admin_conversation_detail, list_admin_conversations
+from app.services.admin_stats import get_admin_task_stats
+from app.services.admin_user_management import (
+    AdminUserNotFoundError,
+    LastActiveAdminError,
+    list_admin_users,
+    update_user_role,
+    update_user_status,
 )
 from app.services.auth_service import create_access_token, hash_password, verify_password
 from app.services.advice_retriever import retrieve_knowledge_by_request
@@ -215,6 +233,19 @@ def to_user_response(user: User) -> UserResponse:
     )
 
 
+def parse_datetime_query(value: str | None, field_name: str) -> datetime | None:
+    if value is None or not value.strip():
+        return None
+
+    try:
+        return datetime.fromisoformat(value.strip())
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"{field_name} must be an ISO datetime",
+        ) from exc
+
+
 @app.post("/auth/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def register_user(payload: UserRegisterRequest, db: Session = Depends(get_db)) -> UserResponse:
     username = payload.username.strip()
@@ -258,6 +289,115 @@ def login_user(payload: UserLoginRequest, db: Session = Depends(get_db)) -> Toke
 @app.get("/auth/me", response_model=UserResponse)
 def get_me(current_user: User = Depends(get_current_user)) -> UserResponse:
     return to_user_response(current_user)
+
+
+@app.get("/admin/users", response_model=AdminUserListResponse)
+def admin_list_users(
+    page: int = 1,
+    page_size: int = 20,
+    username: str | None = None,
+    role: str | None = None,
+    is_active: bool | None = None,
+    current_user: User = Depends(require_admin_user),
+    db: Session = Depends(get_db),
+) -> AdminUserListResponse:
+    _ = current_user
+    if role is not None and role not in {"user", "admin"}:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="role must be user or admin")
+
+    return list_admin_users(
+        db=db,
+        page=page,
+        page_size=page_size,
+        username=username,
+        role=role,
+        is_active=is_active,
+    )
+
+
+@app.patch("/admin/users/{user_id}/status", response_model=AdminUserResponse)
+def admin_update_user_status(
+    user_id: str,
+    payload: AdminUserStatusUpdateRequest,
+    current_user: User = Depends(require_admin_user),
+    db: Session = Depends(get_db),
+) -> AdminUserResponse:
+    _ = current_user
+    try:
+        return update_user_status(db=db, user_id=user_id, is_active=payload.is_active)
+    except AdminUserNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except LastActiveAdminError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+
+
+@app.patch("/admin/users/{user_id}/role", response_model=AdminUserResponse)
+def admin_update_user_role(
+    user_id: str,
+    payload: AdminUserRoleUpdateRequest,
+    current_user: User = Depends(require_admin_user),
+    db: Session = Depends(get_db),
+) -> AdminUserResponse:
+    _ = current_user
+    try:
+        return update_user_role(db=db, user_id=user_id, role=payload.role)
+    except AdminUserNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except LastActiveAdminError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+
+
+@app.get("/admin/stats/tasks", response_model=AdminTaskStatsResponse)
+def admin_get_task_stats(
+    current_user: User = Depends(require_admin_user),
+    db: Session = Depends(get_db),
+) -> AdminTaskStatsResponse:
+    _ = current_user
+    return get_admin_task_stats(db=db)
+
+
+@app.get("/admin/conversations", response_model=AdminConversationListResponse)
+def admin_list_conversations(
+    page: int = 1,
+    page_size: int = 20,
+    user_id: str | None = None,
+    session_id: str | None = None,
+    intent: str | None = None,
+    parser_source: str | None = None,
+    success: bool | None = None,
+    keyword: str | None = None,
+    created_from: str | None = None,
+    created_to: str | None = None,
+    current_user: User = Depends(require_admin_user),
+    db: Session = Depends(get_db),
+) -> AdminConversationListResponse:
+    _ = current_user
+    return list_admin_conversations(
+        db=db,
+        page=page,
+        page_size=page_size,
+        user_id=user_id,
+        session_id=session_id,
+        intent=intent,
+        parser_source=parser_source,
+        success=success,
+        keyword=keyword,
+        created_from=parse_datetime_query(created_from, "created_from"),
+        created_to=parse_datetime_query(created_to, "created_to"),
+    )
+
+
+@app.get("/admin/conversations/{conversation_id}", response_model=AdminConversationDetailResponse)
+def admin_get_conversation_detail(
+    conversation_id: str,
+    current_user: User = Depends(require_admin_user),
+    db: Session = Depends(get_db),
+) -> AdminConversationDetailResponse:
+    _ = current_user
+    detail = get_admin_conversation_detail(db=db, conversation_id=conversation_id)
+    if detail is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="conversation not found")
+    return detail
 
 
 @app.get("/users/me/profile", response_model=UserProfileResponse)
