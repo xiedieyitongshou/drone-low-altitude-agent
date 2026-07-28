@@ -510,10 +510,10 @@ Authorization: Bearer <admin_access_token>
 - 第四阶段：自然语言解析、Agent 编排、会话记忆、统一响应。
 - 第五阶段：已接入轻量 RAG 建议检索、Profile Memory 和 Conversation History。
 - 第六阶段：已接入 DeepSeek 结构化自然语言解析，保留规则解析作为 fallback；已引入统一 LLM 客户端，用于任务解析和最终结果解释。
-- 第九阶段：已接入多用户登录、JWT 鉴权、用户数据隔离、对话历史关键词检索、Session Memory 持久化和用户 Profile 管理。
+- 第七阶段：已接入前端登录注册、请求鉴权、用户历史检索和 Profile 设置页。
+- 第八阶段：已接入多用户登录、JWT 鉴权、用户数据隔离、Session Memory 持久化和用户 Profile 管理。
+- 第九阶段：已接入管理员统计、用户管理、全局任务审计和 Docker 初始化管理员流程。
 
 ## 后续计划
 
 - 将 TF-IDF 检索升级为 embedding + FAISS / Chroma。
-- 补齐前端登录、历史列表、Profile 设置页和管理员审计页面。
-- 增加管理员用户管理、全局任务审计和系统统计能力。
