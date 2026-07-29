@@ -6,7 +6,13 @@ from pathlib import Path
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-from app.schemas.advice import KnowledgeAdviceLibrary, KnowledgeAdviceItem, RetrievedKnowledgeSnippet
+from app.schemas.advice import (
+    KnowledgeAccessContext,
+    KnowledgeAdviceLibrary,
+    KnowledgeAdviceItem,
+    KnowledgeVisibility,
+    RetrievedKnowledgeSnippet,
+)
 
 
 DEFAULT_KNOWLEDGE_PATH = Path("data/knowledge/advice_rules.json")
@@ -51,7 +57,13 @@ class LocalVectorKnowledgeStore:
         )
         return len(documents)
 
-    def retrieve(self, query_text: str, *, top_k: int = 5) -> list[RetrievedKnowledgeSnippet]:
+    def retrieve(
+        self,
+        query_text: str,
+        *,
+        top_k: int = 5,
+        access_context: KnowledgeAccessContext | None = None,
+    ) -> list[RetrievedKnowledgeSnippet]:
         self._ensure_index()
         with self.vectorizer_path.open("rb") as file:
             vectorizer: TfidfVectorizer = pickle.load(file)
@@ -61,14 +73,18 @@ class LocalVectorKnowledgeStore:
 
         query_vector = vectorizer.transform([query_text])
         scores = cosine_similarity(query_vector, matrix).flatten()
-        ranked_indices = scores.argsort()[::-1][:top_k]
+        ranked_indices = scores.argsort()[::-1]
 
         results: list[RetrievedKnowledgeSnippet] = []
         for index in ranked_indices:
+            if len(results) >= top_k:
+                break
             score = float(scores[index])
             if score <= 0:
                 continue
             doc = documents[index]
+            if not is_document_visible(doc.metadata, access_context):
+                continue
             results.append(
                 RetrievedKnowledgeSnippet(
                     id=doc.id,
@@ -99,11 +115,22 @@ class LocalVectorKnowledgeStore:
     def _to_document(self, item: KnowledgeAdviceItem) -> IndexedKnowledgeDocument:
         metadata = {
             "category": item.category.value,
+            "knowledge_type": item.knowledge_type.value,
             "risk_type": item.risk_type,
             "task_type": item.task_type,
             "warning_type": item.warning_type,
             "warning_level": item.warning_level,
             "decision_scope": item.decision_scope,
+            "region": item.region,
+            "province": item.province,
+            "city": item.city,
+            "visibility": item.visibility.value,
+            "tenant_id": item.tenant_id,
+            "user_id": item.user_id,
+            "version": item.version,
+            "effective_at": item.effective_at,
+            "expires_at": item.expires_at,
+            "review_status": item.review_status.value,
             "priority": item.priority.value,
             "action_type": item.action_type.value if item.action_type else None,
             "keywords": item.keywords,
@@ -112,11 +139,13 @@ class LocalVectorKnowledgeStore:
             [
                 f"标题: {item.title}",
                 f"建议: {item.advice_text}",
+                f"知识类型: {item.knowledge_type}",
                 f"任务类型: {' '.join(item.task_type)}",
                 f"风险标签: {' '.join(item.risk_type)}",
                 f"预警类型: {' '.join(item.warning_type)}",
                 f"预警等级: {' '.join(item.warning_level)}",
                 f"适用结论: {' '.join(item.decision_scope)}",
+                f"适用地区: {' '.join(value for value in [item.province, item.city, item.region] if value)}",
                 f"关键词: {' '.join(item.keywords)}",
                 f"备注: {item.notes or ''}",
             ]
@@ -129,6 +158,28 @@ class LocalVectorKnowledgeStore:
             source_url=item.source_url,
             metadata=metadata,
         )
+
+
+def is_document_visible(
+    metadata: dict[str, object],
+    access_context: KnowledgeAccessContext | None = None,
+) -> bool:
+    visibility = str(metadata.get("visibility") or KnowledgeVisibility.PUBLIC.value)
+    if visibility == KnowledgeVisibility.PUBLIC.value:
+        return True
+
+    if access_context is None:
+        return False
+
+    if visibility == KnowledgeVisibility.TENANT.value:
+        document_tenant_id = metadata.get("tenant_id")
+        return bool(access_context.tenant_id) and document_tenant_id == access_context.tenant_id
+
+    if visibility == KnowledgeVisibility.PRIVATE.value:
+        document_user_id = metadata.get("user_id")
+        return bool(access_context.user_id) and document_user_id == access_context.user_id
+
+    return False
 
 
 def build_retrieval_query(

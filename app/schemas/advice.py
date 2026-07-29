@@ -25,14 +25,44 @@ class AdviceActionType(StrEnum):
     CANCEL = "cancel"
 
 
+class KnowledgeType(StrEnum):
+    RISK_ADVICE = "risk_advice"
+    SOP = "sop"
+    POLICY_HINT = "policy_hint"
+    FAQ = "faq"
+
+
+class KnowledgeVisibility(StrEnum):
+    PUBLIC = "public"
+    TENANT = "tenant"
+    PRIVATE = "private"
+
+
+class KnowledgeReviewStatus(StrEnum):
+    DRAFT = "draft"
+    APPROVED = "approved"
+    EXPIRED = "expired"
+
+
 class KnowledgeAdviceItem(BaseModel):
     id: str
     category: AdviceCategory
+    knowledge_type: KnowledgeType = KnowledgeType.RISK_ADVICE
     risk_type: list[str] = Field(default_factory=list)
     task_type: list[str] = Field(default_factory=list)
     warning_type: list[str] = Field(default_factory=list)
     warning_level: list[str] = Field(default_factory=list)
     decision_scope: list[str] = Field(default_factory=list)
+    region: str | None = None
+    province: str | None = None
+    city: str | None = None
+    visibility: KnowledgeVisibility = KnowledgeVisibility.PUBLIC
+    tenant_id: str = "public"
+    user_id: str | None = None
+    version: str = "v1"
+    effective_at: str | None = None
+    expires_at: str | None = None
+    review_status: KnowledgeReviewStatus = KnowledgeReviewStatus.APPROVED
     title: str
     advice_text: str
     priority: AdvicePriority
@@ -76,6 +106,12 @@ class RetrievedKnowledgeSnippet(BaseModel):
     source: str | None = None
     source_url: str | None = None
     metadata: dict[str, object] = Field(default_factory=dict)
+
+
+class KnowledgeAccessContext(BaseModel):
+    user_id: str | None = None
+    tenant_id: str | None = None
+    role: str | None = None
 
 
 class KnowledgeRetrievalRequest(BaseModel):

@@ -6,9 +6,11 @@ from pathlib import Path
 from app.schemas.advice import (
     AdviceRetrievalContext,
     AdviceSuggestion,
+    KnowledgeAccessContext,
     KnowledgeAdviceLibrary,
     KnowledgeRetrievalRequest,
     KnowledgeRetrievalResponse,
+    KnowledgeType,
 )
 from app.services.vector_knowledge_store import LocalVectorKnowledgeStore, build_retrieval_query
 
@@ -67,6 +69,9 @@ def retrieve_advice(context: AdviceRetrievalContext, *, path: str | None = None)
     candidates: list[tuple[int, AdviceSuggestion]] = []
 
     for item in library.items:
+        if item.knowledge_type == KnowledgeType.POLICY_HINT:
+            continue
+
         matched_by: list[str] = []
         score = 0
 
@@ -153,7 +158,11 @@ def build_advice_context(
     )
 
 
-def retrieve_knowledge_by_request(payload: KnowledgeRetrievalRequest) -> KnowledgeRetrievalResponse:
+def retrieve_knowledge_by_request(
+    payload: KnowledgeRetrievalRequest,
+    *,
+    access_context: KnowledgeAccessContext | None = None,
+) -> KnowledgeRetrievalResponse:
     context = AdviceRetrievalContext(
         task_type=payload.task_type,
         overall_decision=payload.overall_decision,
@@ -172,5 +181,5 @@ def retrieve_knowledge_by_request(payload: KnowledgeRetrievalRequest) -> Knowled
         warning_types=context.warning_types,
         warning_levels=context.warning_levels,
     )
-    snippets = vector_store.retrieve(query_text, top_k=payload.top_k)
+    snippets = vector_store.retrieve(query_text, top_k=payload.top_k, access_context=access_context)
     return KnowledgeRetrievalResponse(context=context, snippets=snippets, advice=advice)
