@@ -114,12 +114,23 @@ class KnowledgeAccessContext(BaseModel):
     role: str | None = None
 
 
+class KnowledgeBusinessContext(BaseModel):
+    task_type: str | None = None
+    risk_tags: list[str] = Field(default_factory=list)
+    region: str | None = None
+    province: str | None = None
+    city: str | None = None
+
+
 class KnowledgeRetrievalRequest(BaseModel):
     task_type: str
     overall_decision: str | None = None
     risk_reasons: list[str] = Field(default_factory=list)
     warning_types: list[str] = Field(default_factory=list)
     warning_levels: list[str] = Field(default_factory=list)
+    region: str | None = None
+    province: str | None = None
+    city: str | None = None
     top_k: int = 5
 
 

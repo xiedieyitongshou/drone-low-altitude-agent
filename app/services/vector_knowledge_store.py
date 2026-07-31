@@ -1,6 +1,7 @@
 ﻿import json
 import pickle
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -10,6 +11,8 @@ from app.schemas.advice import (
     KnowledgeAccessContext,
     KnowledgeAdviceLibrary,
     KnowledgeAdviceItem,
+    KnowledgeBusinessContext,
+    KnowledgeReviewStatus,
     KnowledgeVisibility,
     RetrievedKnowledgeSnippet,
 )
@@ -63,6 +66,7 @@ class LocalVectorKnowledgeStore:
         *,
         top_k: int = 5,
         access_context: KnowledgeAccessContext | None = None,
+        business_context: KnowledgeBusinessContext | None = None,
     ) -> list[RetrievedKnowledgeSnippet]:
         self._ensure_index()
         with self.vectorizer_path.open("rb") as file:
@@ -84,6 +88,8 @@ class LocalVectorKnowledgeStore:
                 continue
             doc = documents[index]
             if not is_document_visible(doc.metadata, access_context):
+                continue
+            if not is_document_applicable(doc.metadata, business_context):
                 continue
             results.append(
                 RetrievedKnowledgeSnippet(
@@ -182,6 +188,109 @@ def is_document_visible(
     return False
 
 
+def is_document_applicable(
+    metadata: dict[str, object],
+    business_context: KnowledgeBusinessContext | None = None,
+    *,
+    today: date | None = None,
+) -> bool:
+    if metadata.get("review_status") != KnowledgeReviewStatus.APPROVED.value:
+        return False
+
+    if _is_expired(metadata.get("expires_at"), today=today):
+        return False
+
+    if business_context is None:
+        return True
+
+    if not _matches_task_type(metadata.get("task_type"), business_context.task_type):
+        return False
+
+    if not _matches_risk_tags(metadata.get("risk_type"), business_context.risk_tags):
+        return False
+
+    if not _matches_region(
+        region=metadata.get("region"),
+        province=metadata.get("province"),
+        city=metadata.get("city"),
+        business_context=business_context,
+    ):
+        return False
+
+    return True
+
+
+def _is_expired(value: object, *, today: date | None = None) -> bool:
+    if value in (None, ""):
+        return False
+    if not isinstance(value, str):
+        return True
+    try:
+        expires_at = date.fromisoformat(value)
+    except ValueError:
+        return True
+    return expires_at < (today or date.today())
+
+
+def _matches_task_type(value: object, task_type: str | None) -> bool:
+    task_types = _to_string_list(value)
+    if not task_types or "all" in task_types or not task_type:
+        return True
+    return task_type in task_types
+
+
+def _matches_risk_tags(value: object, risk_tags: list[str]) -> bool:
+    document_risk_tags = set(_to_string_list(value))
+    if not document_risk_tags or not risk_tags:
+        return True
+    return bool(document_risk_tags & set(risk_tags))
+
+
+def _matches_region(
+    *,
+    region: object,
+    province: object,
+    city: object,
+    business_context: KnowledgeBusinessContext,
+) -> bool:
+    document_region = _normalize_text(region)
+    document_province = _normalize_text(province)
+    document_city = _normalize_text(city)
+    if not any([document_region, document_province, document_city]):
+        return True
+    if "\u5168\u56fd" in {document_region, document_province, document_city}:
+        return True
+
+    context_region = _normalize_text(business_context.region)
+    context_province = _normalize_text(business_context.province)
+    context_city = _normalize_text(business_context.city)
+    if not any([context_region, context_province, context_city]):
+        return True
+
+    if document_city:
+        return document_city in {context_city, context_region}
+    if document_region:
+        return document_region in {context_region, context_city, context_province}
+    if document_province:
+        return document_province in {context_province, context_region}
+
+    return True
+
+
+def _normalize_text(value: object) -> str | None:
+    if value in (None, ""):
+        return None
+    return str(value).strip() or None
+
+
+def _to_string_list(value: object) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return [str(item) for item in value if item not in (None, "")]
+    return [str(value)]
+
+
 def build_retrieval_query(
     *,
     task_type: str,
@@ -189,6 +298,9 @@ def build_retrieval_query(
     risk_reasons: list[str],
     warning_types: list[str],
     warning_levels: list[str],
+    region: str | None = None,
+    province: str | None = None,
+    city: str | None = None,
 ) -> str:
     return "\n".join(
         [
@@ -197,5 +309,6 @@ def build_retrieval_query(
             f"风险原因: {' '.join(risk_reasons)}",
             f"预警类型: {' '.join(warning_types)}",
             f"预警等级: {' '.join(warning_levels)}",
+            f"任务地区: {' '.join(value for value in [province, city, region] if value)}",
         ]
     )

@@ -175,7 +175,8 @@ docker compose exec app python -m pytest
 - 会话记忆：支持 `ttlcache`、`redis`、`database` 三种后端，按 `user_id + session_id` 隔离短期上下文。
 - Profile Memory：绑定真实用户，支持查看和编辑默认地点、任务类型、时间段、输出偏好和常用列表。
 - Conversation History：`/agent/query` 调用后自动保存自然语言请求、解析结果、响应摘要和完整响应，并支持按当前用户隔离查询和关键词检索。
-- RAG 建议原型：基于本地知识库 JSON 和 TF-IDF 检索风险说明与操作建议。
+- RAG 建议原型：基于本地知识库 JSON 和 TF-IDF baseline 检索风险说明与操作建议；知识条目已支持类型、地域、权限、租户、用户、版本、时效和审核状态等 metadata。
+- RAG 数据治理：检索前按 `visibility`、`tenant_id`、`user_id` 做用户隔离，按 `region`、`province`、`city`、`task_type`、`risk_tags`、`effective_at`、`expires_at`、`review_status` 做业务过滤，避免不同用户、不同地区、过期知识互相污染。
 - LLM 增强：已引入统一 LLM 客户端，复用于自然语言任务解析和最终结果解释；大模型只负责理解输入和润色表达，不替代规则引擎做安全判断。
 
 ## 系统结构
@@ -197,7 +198,7 @@ Mapper 转换为内部统一模型
   ↓
 规则引擎 / 推荐模块 / 多地点比选
   ↓
-历史落库 / RAG 建议检索
+历史落库 / RAG metadata 过滤与建议检索
   ↓
 Session Memory / Profile Memory 按用户隔离
   ↓
@@ -211,8 +212,9 @@ LLM 结果解释 / 模板解释 fallback
 - Provider 层只负责对接外部 API。
 - Mapper 层负责屏蔽不同数据源格式差异。
 - Rules 层只依赖内部统一数据结构，不直接依赖和风天气原始字段。
-- Service / Orchestrator 负责组织流程，不把规则细节写死在接口中。
+- Service / Orchestrator 负责组织流程，不把规则细节写死在接口中；后续会继续拆分为 Tool Registry、Agent State 和 Agent Loop。
 - Auth / Memory 层只负责身份识别、数据归属和上下文补全，不参与飞行安全判断。
+- RAG 层先完成企业知识库常见的数据治理，再升级为 BM25 + Embedding + Hybrid Retrieval 的可评估检索工具。
 
 ## 主要接口
 
@@ -252,9 +254,9 @@ LLM 结果解释 / 模板解释 fallback
 - 认证鉴权：bcrypt、PyJWT、FastAPI HTTPBearer
 - 会话缓存/持久化：cachetools TTLCache、Redis、Database backend
 - 记忆持久化：users、user_profiles、conversation_records、session_records
-- 知识检索：scikit-learn TF-IDF + cosine similarity
+- 知识检索：当前为 scikit-learn TF-IDF + cosine similarity baseline；已完成 metadata 过滤，计划升级为 BM25 + Embedding + Hybrid Retrieval
 
-当前 RAG 检索是可运行的轻量版本，后续可升级为 `OpenAI Embeddings + FAISS` 或 `OpenAI Embeddings + Chroma`。
+当前 RAG 检索是可运行的轻量版本。项目后续不会只停留在 TF-IDF，而是会把 RAG 做成 Agent 可调用的企业级知识工具：BM25 解决政策名、地名、编号等关键词精确召回；Embedding 解决口语化提问和知识库措辞不一致的语义召回；Hybrid Retrieval 通过融合排序、metadata boost、chunk 策略、rerank 和 RAG Eval 提升可解释性与可验证性。
 
 ## 本地运行
 
@@ -513,7 +515,14 @@ Authorization: Bearer <admin_access_token>
 - 第七阶段：已接入前端登录注册、请求鉴权、用户历史检索和 Profile 设置页。
 - 第八阶段：已接入多用户登录、JWT 鉴权、用户数据隔离、Session Memory 持久化和用户 Profile 管理。
 - 第九阶段：已接入管理员统计、用户管理、全局任务审计和 Docker 初始化管理员流程。
+- 第十阶段：已完成 RAG 知识库 metadata 数据治理，支持知识类型、地域、可见性、租户、用户、版本、有效期和审核状态过滤。
 
 ## 后续计划
 
-- 将 TF-IDF 检索升级为 embedding + FAISS / Chroma。
+- 第 12 周：Agent Runtime 基础，补齐 Tool Registry、Agent State 和 Agent Loop，让系统从固定 workflow 升级为可按意图选择工具的 Agent。
+- 第 13 周：Trace、日志与工具失败恢复，记录 plan、tool_call、tool_result、state_update、final_response 等事件。
+- 第 14 周：混合型业务编排，同一自然语言入口支持查询、评估、推荐、比选、追问和多轮修改。
+- 第 15 周：Agent Eval 与 Tool Calling 质量评估，用样例集评估意图识别、工具选择、多轮状态和失败恢复。
+- 第 16 周：Guardrail、安全边界与 Agent 输出约束，限制越权调用、无依据政策结论和高风险过度承诺。
+- 第 17 周：Hybrid RAG 检索增强，在 Day70 数据治理基础上补齐 BM25、Embedding、Hybrid Retrieval、chunk 策略、rerank、query rewrite、低置信 fallback 和 RAG Eval。
+- 第 18 周：CI/CD、README、面试指南和端到端演示收尾，形成可运行、可解释、可评估、可展示的求职版本。

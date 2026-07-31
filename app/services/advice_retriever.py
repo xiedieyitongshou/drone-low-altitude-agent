@@ -8,6 +8,7 @@ from app.schemas.advice import (
     AdviceSuggestion,
     KnowledgeAccessContext,
     KnowledgeAdviceLibrary,
+    KnowledgeBusinessContext,
     KnowledgeRetrievalRequest,
     KnowledgeRetrievalResponse,
     KnowledgeType,
@@ -171,6 +172,13 @@ def retrieve_knowledge_by_request(
         warning_levels=[level for level in (normalize_warning_level(item) for item in payload.warning_levels) if level],
         limit=payload.top_k,
     )
+    business_context = KnowledgeBusinessContext(
+        task_type=context.task_type,
+        risk_tags=context.risk_tags,
+        region=payload.region,
+        province=payload.province,
+        city=payload.city,
+    )
     advice = retrieve_advice(context)
     vector_store = LocalVectorKnowledgeStore()
     vector_store.build_index()
@@ -180,6 +188,14 @@ def retrieve_knowledge_by_request(
         risk_reasons=payload.risk_reasons,
         warning_types=context.warning_types,
         warning_levels=context.warning_levels,
+        region=payload.region,
+        province=payload.province,
+        city=payload.city,
     )
-    snippets = vector_store.retrieve(query_text, top_k=payload.top_k, access_context=access_context)
+    snippets = vector_store.retrieve(
+        query_text,
+        top_k=payload.top_k,
+        access_context=access_context,
+        business_context=business_context,
+    )
     return KnowledgeRetrievalResponse(context=context, snippets=snippets, advice=advice)
