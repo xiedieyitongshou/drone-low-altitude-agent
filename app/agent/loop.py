@@ -1,8 +1,11 @@
 from collections.abc import Callable
+import logging
 from typing import Any
 
 from pydantic import BaseModel, Field
 
+from app.agent.executor import ToolExecutor
+from app.agent.logging import log_agent_event
 from app.agent.planner import AgentPlan, AgentPlanAction, plan_next_step
 from app.agent.state import (
     AgentState,
@@ -36,10 +39,12 @@ class AgentLoop:
         self,
         *,
         tool_registry: ToolRegistry = default_tool_registry,
+        tool_executor: ToolExecutor | None = None,
         max_iterations: int = 5,
         fallback_handler: FallbackHandler | None = None,
     ) -> None:
         self.tool_registry = tool_registry
+        self.tool_executor = tool_executor or ToolExecutor(tool_registry=tool_registry)
         self.max_iterations = max(max_iterations, 1)
         self.fallback_handler = fallback_handler
 
@@ -56,12 +61,29 @@ class AgentLoop:
         for _ in range(self.max_iterations):
             plan = plan_next_step(current_state, tool_registry=self.tool_registry)
             plans.append(plan)
+            log_agent_event(
+                logging.INFO,
+                "agent plan generated",
+                event="plan",
+                state=current_state,
+                plan_action=plan.action.value,
+                tool_name=plan.tool_name,
+                metadata={"reason": plan.reason, "missing_fields": plan.missing_fields},
+            )
 
             if plan.action == AgentPlanAction.ASK_CLARIFICATION:
                 current_state = mark_needs_clarification(
                     current_state,
                     plan.missing_fields,
                     message=plan.reason,
+                )
+                log_agent_event(
+                    logging.INFO,
+                    "agent clarification required",
+                    event="clarification",
+                    state=current_state,
+                    plan_action=plan.action.value,
+                    metadata={"missing_fields": plan.missing_fields},
                 )
                 return AgentLoopResult(
                     success=True,
@@ -87,7 +109,12 @@ class AgentLoop:
                     tool_name=plan.tool_name,
                     tool_input=plan.tool_input,
                 )
-                tool_result = self.tool_registry.call(plan.tool_name, plan.tool_input, context=execution_context)
+                tool_result = self.tool_executor.execute(
+                    tool_name=plan.tool_name,
+                    tool_input=plan.tool_input,
+                    state=current_state,
+                    context=execution_context,
+                )
                 current_state = record_tool_result(
                     current_state,
                     tool_name=plan.tool_name,
@@ -106,6 +133,14 @@ class AgentLoop:
             if plan.action == AgentPlanAction.RESPOND_DIRECTLY:
                 if current_state.status != AgentStatus.COMPLETED:
                     current_state = mark_completed(current_state, message=plan.reason)
+                log_agent_event(
+                    logging.INFO,
+                    "agent loop completed",
+                    event="final_response",
+                    state=current_state,
+                    plan_action=plan.action.value,
+                    metadata={"tool_results": list(current_state.tool_results.keys())},
+                )
                 return AgentLoopResult(
                     success=True,
                     final_state=current_state,
@@ -147,6 +182,15 @@ class AgentLoop:
             message=message,
         )
         fallback_result = self.fallback_handler(failed_state, plan) if self.fallback_handler else None
+        log_agent_event(
+            logging.WARNING,
+            "agent loop fallback",
+            event="fallback",
+            state=failed_state,
+            plan_action=plan.action.value if plan else None,
+            error_code=error_code,
+            metadata={"fallback_used": self.fallback_handler is not None},
+        )
         return AgentLoopResult(
             success=False,
             final_state=failed_state,

@@ -1,3 +1,5 @@
+from app.agent.executor import ToolExecutor
+from app.agent.logging import build_agent_log_context, log_agent_event, summarize_for_log
 from app.agent.loop import AgentLoop, AgentLoopResult
 from app.agent.planner import AgentPlan, AgentPlanAction, plan_next_step
 from app.agent.state import (
@@ -13,6 +15,7 @@ from app.agent.state import (
     merge_user_input,
     record_tool_result,
 )
+from app.agent.trace import TraceEvent, TraceEventType, build_trace_event, summarize_payload
 from app.agent.tools import (
     ToolExecutionContext,
     ToolNotFoundError,
@@ -33,12 +36,17 @@ __all__ = [
     "AgentLoop",
     "AgentLoopResult",
     "ToolExecutionContext",
+    "ToolExecutor",
     "ToolNotFoundError",
     "ToolRegistry",
     "ToolRegistrationError",
     "ToolResult",
     "ToolSideEffect",
     "ToolSpec",
+    "TraceEvent",
+    "TraceEventType",
+    "build_trace_event",
+    "build_agent_log_context",
     "default_tool_registry",
     "initialize_state",
     "mark_completed",
@@ -47,6 +55,9 @@ __all__ = [
     "mark_parsed",
     "mark_tool_running",
     "merge_user_input",
+    "log_agent_event",
     "plan_next_step",
     "record_tool_result",
+    "summarize_for_log",
+    "summarize_payload",
 ]
