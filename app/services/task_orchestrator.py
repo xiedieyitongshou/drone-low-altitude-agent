@@ -7,6 +7,7 @@ from app.schemas import (
     OrchestratorResponse,
     RecommendationRequest,
 )
+from app.agent import AgentLoop, ToolExecutionContext, initialize_state, mark_parsed
 from app.services.comparison import compare_locations
 from app.services.conversation_history import persist_conversation_record
 from app.services.cruise_evaluator import evaluate_cruise_request_with_artifacts
@@ -30,9 +31,38 @@ from app.services.session_memory import build_session_context, session_memory_st
 
 logger = logging.getLogger(__name__)
 SUPPORTED_PARSER_MODES = {"rule", "llm", "hybrid"}
+SUPPORTED_AGENT_RUNTIME_MODES = {"legacy", "loop"}
 
 
 def orchestrate_task_query(
+    query: str,
+    *,
+    session_id: str | None = None,
+    user_id: str | None = None,
+) -> OrchestratorResponse:
+    mode = os.getenv("AGENT_RUNTIME_MODE", "legacy").strip().lower()
+    if mode not in SUPPORTED_AGENT_RUNTIME_MODES:
+        logger.warning("Unsupported AGENT_RUNTIME_MODE=%s, fallback to legacy runtime", mode)
+        mode = "legacy"
+
+    if mode == "loop":
+        try:
+            return _orchestrate_task_query_with_agent_loop(query, session_id=session_id, user_id=user_id)
+        except Exception as exc:
+            logger.warning("Agent runtime failed, fallback to legacy workflow: %s", exc)
+            return _with_agent_runtime_debug(
+                _orchestrate_task_query_legacy(query, session_id=session_id, user_id=user_id),
+                {
+                    "mode": "loop",
+                    "fallback_used": True,
+                    "error": str(exc),
+                },
+            )
+
+    return _orchestrate_task_query_legacy(query, session_id=session_id, user_id=user_id)
+
+
+def _orchestrate_task_query_legacy(
     query: str,
     *,
     session_id: str | None = None,
@@ -172,6 +202,96 @@ def orchestrate_task_query(
                 },
             ),
         )
+
+
+def _orchestrate_task_query_with_agent_loop(
+    query: str,
+    *,
+    session_id: str | None = None,
+    user_id: str | None = None,
+) -> OrchestratorResponse:
+    normalized_user_id = normalize_user_id(user_id)
+    profile = get_or_create_user_profile(normalized_user_id)
+    cached_context = session_memory_store.get(session_id, user_id=normalized_user_id) if session_id else None
+    parser_context = merge_profile_context(session_context=cached_context, profile=profile)
+    parsed_result = _parse_task_query(query, context=parser_context)
+    state = initialize_state(query, user_id=normalized_user_id, session_id=session_id)
+    state = mark_parsed(state, intent=parsed_result.intent, parsed=parsed_result.parsed)
+
+    def fallback_handler(_, __):
+        return _orchestrate_task_query_legacy(query, session_id=session_id, user_id=user_id)
+
+    loop_result = AgentLoop(fallback_handler=fallback_handler).run(
+        state,
+        context=ToolExecutionContext(user_id=normalized_user_id, tenant_id="public", role="user"),
+    )
+    if isinstance(loop_result.fallback_result, OrchestratorResponse):
+        return _with_agent_runtime_debug(
+            loop_result.fallback_result,
+            _build_agent_runtime_debug(loop_result, mode="loop"),
+        )
+
+    if loop_result.requires_clarification:
+        return OrchestratorResponse(
+            success=False,
+            session_id=session_id,
+            user_id=normalized_user_id,
+            intent=parsed_result.intent,
+            target_endpoint=parsed_result.target_endpoint,
+            parser_source=parsed_result.parser_source,
+            parsed=parsed_result.parsed,
+            context_used=parsed_result.context_used,
+            warnings=parsed_result.warnings,
+            message="需要补充关键信息后才能继续执行。",
+            fallback={"missing_fields": loop_result.final_state.missing_fields},
+            agent_runtime=_build_agent_runtime_debug(loop_result, mode="loop"),
+        )
+
+    response = OrchestratorResponse(
+        success=loop_result.success,
+        session_id=session_id,
+        user_id=normalized_user_id,
+        intent=parsed_result.intent,
+        target_endpoint=parsed_result.target_endpoint,
+        parser_source=parsed_result.parser_source,
+        parsed=parsed_result.parsed,
+        context_used=parsed_result.context_used,
+        warnings=parsed_result.warnings,
+        message=_build_agent_loop_message(loop_result),
+        result=loop_result.output if isinstance(loop_result.output, dict) else {"output": loop_result.output},
+        fallback=None if loop_result.success else {"errors": loop_result.final_state.errors},
+        agent_runtime=_build_agent_runtime_debug(loop_result, mode="loop"),
+    )
+    _save_context(session_id, normalized_user_id, parsed_result.intent, parsed_result.parsed, query=query)
+    update_profile_from_parsed(user_id=normalized_user_id, parsed=parsed_result.parsed)
+    return _with_conversation_record(query=query, user_id=normalized_user_id, response=response)
+
+
+def _build_agent_loop_message(loop_result) -> str:
+    if loop_result.success:
+        tool_names = list(loop_result.final_state.tool_results.keys())
+        if tool_names:
+            return f"Agent Runtime 已完成工具调用：{', '.join(tool_names)}。"
+        return "Agent Runtime 已完成请求处理。"
+    return "Agent Runtime 执行失败，已进入兼容兜底。"
+
+
+def _build_agent_runtime_debug(loop_result, *, mode: str) -> dict[str, object]:
+    return {
+        "mode": mode,
+        "trace_id": loop_result.final_state.trace_id,
+        "run_id": loop_result.final_state.run_id,
+        "status": loop_result.final_state.status.value,
+        "fallback_used": loop_result.fallback_used,
+        "plan_actions": [plan.action.value for plan in loop_result.plans],
+        "tool_results": list(loop_result.final_state.tool_results.keys()),
+        "errors": loop_result.final_state.errors,
+    }
+
+
+def _with_agent_runtime_debug(response: OrchestratorResponse, debug: dict[str, object]) -> OrchestratorResponse:
+    response.agent_runtime = debug
+    return response
 
 
 def _save_context(

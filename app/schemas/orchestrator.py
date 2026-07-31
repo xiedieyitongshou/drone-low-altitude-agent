@@ -24,3 +24,4 @@ class OrchestratorResponse(BaseModel):
     composed: UnifiedBusinessResponse | None = None
     result: dict[str, object] | None = None
     fallback: dict[str, object] | None = None
+    agent_runtime: dict[str, object] | None = None

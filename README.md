@@ -172,6 +172,7 @@ docker compose exec app python -m pytest
 - 自然语言入口：支持基于关键词/正则和 DeepSeek 结构化输出的任务信息解析，可通过 `NL_PARSER_MODE=rule|llm|hybrid` 控制解析策略。
 - 多用户认证：支持用户注册、登录、JWT 鉴权和 `/auth/me` 当前用户识别。
 - 编排器：通过 `/agent/query` 串起解析、天气、规则、推荐、比选、响应生成，并使用 token 用户作为真实数据归属。
+- Agent Runtime 基础：已新增 Tool Registry、AgentState、规则 Planner 和最小 AgentLoop，可通过 `AGENT_RUNTIME_MODE=legacy|loop` 灰度切换；默认保留 legacy workflow，loop 模式失败时可回退旧编排链路。
 - 会话记忆：支持 `ttlcache`、`redis`、`database` 三种后端，按 `user_id + session_id` 隔离短期上下文。
 - Profile Memory：绑定真实用户，支持查看和编辑默认地点、任务类型、时间段、输出偏好和常用列表。
 - Conversation History：`/agent/query` 调用后自动保存自然语言请求、解析结果、响应摘要和完整响应，并支持按当前用户隔离查询和关键词检索。
@@ -191,6 +192,10 @@ JWT 鉴权 / 当前用户识别
 LLM 结构化解析 / 规则解析 fallback
   ↓
 Orchestrator 编排器
+  ↓
+Agent Runtime 开关：legacy workflow / loop runtime
+  ↓
+Tool Registry / AgentState / Rule Planner / AgentLoop
   ↓
 Weather Provider 获取原始天气数据
   ↓
@@ -212,7 +217,7 @@ LLM 结果解释 / 模板解释 fallback
 - Provider 层只负责对接外部 API。
 - Mapper 层负责屏蔽不同数据源格式差异。
 - Rules 层只依赖内部统一数据结构，不直接依赖和风天气原始字段。
-- Service / Orchestrator 负责组织流程，不把规则细节写死在接口中；后续会继续拆分为 Tool Registry、Agent State 和 Agent Loop。
+- Service / Orchestrator 负责组织流程，不把规则细节写死在接口中；Agent Runtime 通过工具注册、状态管理、规则规划和循环执行逐步替代固定 workflow。
 - Auth / Memory 层只负责身份识别、数据归属和上下文补全，不参与飞行安全判断。
 - RAG 层先完成企业知识库常见的数据治理，再升级为 BM25 + Embedding + Hybrid Retrieval 的可评估检索工具。
 
@@ -254,6 +259,7 @@ LLM 结果解释 / 模板解释 fallback
 - 认证鉴权：bcrypt、PyJWT、FastAPI HTTPBearer
 - 会话缓存/持久化：cachetools TTLCache、Redis、Database backend
 - 记忆持久化：users、user_profiles、conversation_records、session_records
+- Agent Runtime：Tool Registry、AgentState、Rule Planner、AgentLoop、legacy fallback
 - 知识检索：当前为 scikit-learn TF-IDF + cosine similarity baseline；已完成 metadata 过滤，计划升级为 BM25 + Embedding + Hybrid Retrieval
 
 当前 RAG 检索是可运行的轻量版本。项目后续不会只停留在 TF-IDF，而是会把 RAG 做成 Agent 可调用的企业级知识工具：BM25 解决政策名、地名、编号等关键词精确召回；Embedding 解决口语化提问和知识库措辞不一致的语义召回；Hybrid Retrieval 通过融合排序、metadata boost、chunk 策略、rerank 和 RAG Eval 提升可解释性与可验证性。
@@ -283,9 +289,34 @@ JWT_ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=1440
 SESSION_MEMORY_BACKEND=ttlcache
 REDIS_URL=redis://localhost:6379/0
+AGENT_RUNTIME_MODE=legacy
 ```
 
 `.env` 不应提交到 GitHub。
+
+### Agent Runtime 配置
+
+当前 `/agent/query` 支持两种运行模式：
+
+```env
+AGENT_RUNTIME_MODE=legacy
+```
+
+默认模式，继续使用原有固定 workflow，适合稳定演示和线上兼容。
+
+```env
+AGENT_RUNTIME_MODE=loop
+```
+
+实验模式，启用 Day71-Day76 实现的 Agent Runtime：
+
+- `Tool Registry`：统一注册风险评估、飞行窗口推荐、多地点比选、RAG 检索、历史查询等工具。
+- `AgentState`：保存当前意图、任务草稿、已确认字段、缺失字段、工具结果、错误和 step 历史。
+- `Rule Planner`：根据状态决定下一步是追问、调用工具、直接回答还是 fallback。
+- `AgentLoop`：执行 Planner 产出的计划，将工具结果写回状态，并通过最大轮次限制避免无限循环。
+- `legacy fallback`：loop 模式失败时可回退原始编排链路，保证现有接口兼容。
+
+响应中会额外返回可选 `agent_runtime` 字段，用于查看 `trace_id`、`run_id`、状态、计划动作和工具结果。该字段是调试增强，不影响旧前端使用原有字段。
 
 ### Session Memory 配置
 
@@ -340,6 +371,12 @@ http://127.0.0.1:8000/docs
 
 ```bash
 .\.venv\Scripts\python.exe -m pytest tests/test_auth_service.py tests/test_auth_api.py tests/test_agent_auth_binding.py tests/test_conversation_history_api.py tests/test_session_memory.py tests/test_user_profile_api.py
+```
+
+Agent Runtime、Tool Registry、状态机、Planner、Loop 和灰度接入相关测试：
+
+```bash
+.\.venv\Scripts\python.exe -m pytest tests/test_tool_registry.py tests/test_agent_state.py tests/test_agent_planner.py tests/test_agent_loop.py tests/test_task_orchestrator_agent_runtime.py
 ```
 
 检查 Alembic 模型和迁移是否一致：
@@ -516,10 +553,10 @@ Authorization: Bearer <admin_access_token>
 - 第八阶段：已接入多用户登录、JWT 鉴权、用户数据隔离、Session Memory 持久化和用户 Profile 管理。
 - 第九阶段：已接入管理员统计、用户管理、全局任务审计和 Docker 初始化管理员流程。
 - 第十阶段：已完成 RAG 知识库 metadata 数据治理，支持知识类型、地域、可见性、租户、用户、版本、有效期和审核状态过滤。
+- 第十一阶段：已完成 Agent Runtime 基础改造，包含 Tool Registry、AgentState、规则 Planner、最小 AgentLoop、`AGENT_RUNTIME_MODE` 灰度接入和完整回归测试。
 
 ## 后续计划
 
-- 第 12 周：Agent Runtime 基础，补齐 Tool Registry、Agent State 和 Agent Loop，让系统从固定 workflow 升级为可按意图选择工具的 Agent。
 - 第 13 周：Trace、日志与工具失败恢复，记录 plan、tool_call、tool_result、state_update、final_response 等事件。
 - 第 14 周：混合型业务编排，同一自然语言入口支持查询、评估、推荐、比选、追问和多轮修改。
 - 第 15 周：Agent Eval 与 Tool Calling 质量评估，用样例集评估意图识别、工具选择、多轮状态和失败恢复。
