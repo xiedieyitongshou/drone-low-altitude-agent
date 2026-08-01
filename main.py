@@ -24,6 +24,7 @@ from app.schemas import (
     AdminUserResponse,
     AdminUserRoleUpdateRequest,
     AdminUserStatusUpdateRequest,
+    AgentTraceDetailResponse,
     CruiseAssessmentResponse,
     CruiseEvaluateRequest,
     CruiseHistoryResponse,
@@ -61,6 +62,7 @@ from app.services.admin_user_management import (
 )
 from app.services.auth_service import create_access_token, hash_password, verify_password
 from app.services.advice_retriever import retrieve_knowledge_by_request
+from app.services.agent_trace import get_user_trace_detail
 from app.services.comparison import compare_locations
 from app.services.conversation_query import get_user_conversation_detail, list_user_conversations
 from app.services.cruise_evaluator import evaluate_cruise_request_with_artifacts
@@ -451,6 +453,18 @@ def get_conversation_detail(
     detail = get_user_conversation_detail(db=db, user_id=current_user.id, conversation_id=conversation_id)
     if detail is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="conversation not found")
+    return detail
+
+
+@app.get("/agent/traces/{trace_id}", response_model=AgentTraceDetailResponse)
+def get_agent_trace_detail(
+    trace_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> AgentTraceDetailResponse:
+    detail = get_user_trace_detail(db=db, trace_id=trace_id, user_id=current_user.id)
+    if detail is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="trace not found")
     return detail
 
 

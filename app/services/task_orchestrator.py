@@ -242,8 +242,8 @@ def _orchestrate_task_query_with_agent_loop(
             parsed=parsed_result.parsed,
             context_used=parsed_result.context_used,
             warnings=parsed_result.warnings,
-            message="需要补充关键信息后才能继续执行。",
-            fallback={"missing_fields": loop_result.final_state.missing_fields},
+            message=loop_result.message,
+            fallback=loop_result.output if isinstance(loop_result.output, dict) else {"missing_fields": loop_result.final_state.missing_fields},
             agent_runtime=_build_agent_runtime_debug(loop_result, mode="loop"),
         )
 
@@ -259,7 +259,7 @@ def _orchestrate_task_query_with_agent_loop(
         warnings=parsed_result.warnings,
         message=_build_agent_loop_message(loop_result),
         result=loop_result.output if isinstance(loop_result.output, dict) else {"output": loop_result.output},
-        fallback=None if loop_result.success else {"errors": loop_result.final_state.errors},
+        fallback=None if loop_result.success else loop_result.output if isinstance(loop_result.output, dict) else {"errors": loop_result.final_state.errors},
         agent_runtime=_build_agent_runtime_debug(loop_result, mode="loop"),
     )
     _save_context(session_id, normalized_user_id, parsed_result.intent, parsed_result.parsed, query=query)
@@ -268,6 +268,8 @@ def _orchestrate_task_query_with_agent_loop(
 
 
 def _build_agent_loop_message(loop_result) -> str:
+    if loop_result.requires_clarification or not loop_result.success:
+        return loop_result.message
     if loop_result.success:
         tool_names = list(loop_result.final_state.tool_results.keys())
         if tool_names:

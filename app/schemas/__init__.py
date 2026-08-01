@@ -55,6 +55,7 @@ from app.schemas.recommendation import (
     RecommendationWindow,
 )
 from app.schemas.request import CruiseEvaluateRequest
+from app.schemas.trace import AgentTraceDetailResponse, AgentTraceEventResponse
 from app.schemas.warning import WarningData, WarningDataBundle
 from app.schemas.weather import LocationInfo, WeatherDataBundle, WeatherHourData
 
@@ -72,6 +73,8 @@ __all__ = [
     'AdminUserResponse',
     'AdminUserRoleUpdateRequest',
     'AdminUserStatusUpdateRequest',
+    'AgentTraceDetailResponse',
+    'AgentTraceEventResponse',
     'TokenResponse',
     'ComposedHistorySummary',
     'ComposedLocationRanking',

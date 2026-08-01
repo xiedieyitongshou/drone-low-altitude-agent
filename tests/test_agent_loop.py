@@ -125,6 +125,62 @@ def test_agent_loop_fallback_when_tool_requires_auth_context():
     assert result.success is False
     assert result.final_state.status == AgentStatus.FAILED
     assert result.final_state.errors[-1]["error_code"] == "AUTH_CONTEXT_REQUIRED"
+    assert result.message == "缺少登录上下文，已尝试使用兼容链路处理。"
+    assert result.output["recovery_action"] == "fallback_legacy"
+    assert result.output["fallback_used"] is False
+
+
+def test_agent_loop_denies_permission_error_without_legacy_fallback():
+    registry = ToolRegistry()
+    registry.register(
+        ToolSpec(
+            name="query_user_history",
+            description="Requires admin user.",
+            side_effect="read_only",
+            risk_level="low",
+            requires_admin=True,
+        ),
+        lambda payload, context: {"items": []},
+    )
+    fallback_calls = []
+    state = initialize_state("查询历史", user_id="user-1")
+    state = mark_parsed(state, intent="history", parsed={"keyword": "深圳"})
+
+    result = AgentLoop(tool_registry=registry, fallback_handler=lambda state, plan: fallback_calls.append(plan)).run(
+        state,
+        context=ToolExecutionContext(user_id="user-1", role="user"),
+    )
+
+    assert result.success is False
+    assert result.fallback_used is False
+    assert fallback_calls == []
+    assert result.message == "当前用户没有权限执行该工具。"
+    assert result.final_state.errors[-1]["error_code"] == "ADMIN_CONTEXT_REQUIRED"
+    assert result.output["recovery_action"] == "deny"
+    assert result.output["fallback_used"] is False
+
+
+def test_agent_loop_returns_user_readable_direct_response_for_not_found():
+    registry = ToolRegistry()
+    registry.register(
+        ToolSpec(
+            name="query_user_history",
+            description="History tool not found result.",
+            side_effect="read_only",
+            risk_level="low",
+            requires_auth=False,
+        ),
+        lambda payload, context: (_ for _ in ()).throw(KeyError("not found")),
+    )
+    state = initialize_state("查询历史")
+    state = mark_parsed(state, intent="history", parsed={"keyword": "不存在"})
+
+    result = AgentLoop(tool_registry=registry).run(state)
+
+    assert result.success is True
+    assert "历史记录" in result.message
+    assert result.output["recovery_action"] == "direct_response"
+    assert result.output["failure_type"] == "not_found"
 
 
 def test_agent_loop_protects_against_infinite_loop():

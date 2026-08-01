@@ -2,6 +2,7 @@ from collections.abc import Callable
 import logging
 from time import perf_counter
 
+from app.agent.failure_policy import classify_tool_failure, failure_policy_metadata
 from app.agent.logging import log_agent_event
 from app.agent.state import AgentState, AgentStatus
 from app.agent.tools import ToolExecutionContext, ToolRegistry, ToolResult, default_tool_registry
@@ -60,6 +61,8 @@ class ToolExecutor:
         result = self.tool_registry.call(tool_name, tool_input, context=context)
         latency_ms = max(round((perf_counter() - start_time) * 1000), 0)
         status_after = AgentStatus.TOOL_COMPLETED if result.success else AgentStatus.FAILED
+        failure_policy = classify_tool_failure(result)
+        policy_metadata = failure_policy_metadata(failure_policy)
         log_agent_event(
             logging.INFO if result.success else logging.WARNING,
             "agent tool result",
@@ -70,7 +73,7 @@ class ToolExecutor:
             latency_ms=latency_ms,
             error_code=result.error_code,
             raw_payload=result,
-            metadata=_tool_metadata(self.tool_registry, tool_name),
+            metadata={**_tool_metadata(self.tool_registry, tool_name), **policy_metadata},
         )
 
         self._record_event(
@@ -89,7 +92,7 @@ class ToolExecutor:
                 output_payload=result,
                 error_code=result.error_code,
                 message=result.message,
-                metadata=_tool_metadata(self.tool_registry, tool_name),
+                metadata={**_tool_metadata(self.tool_registry, tool_name), **policy_metadata},
             )
         )
 
@@ -103,6 +106,7 @@ class ToolExecutor:
                 success=False,
                 latency_ms=latency_ms,
                 error_code=result.error_code,
+                metadata=policy_metadata,
             )
             self._record_event(
                 build_trace_event(
@@ -119,8 +123,8 @@ class ToolExecutor:
                     input_payload=tool_input,
                     output_payload=result,
                     error_code=result.error_code,
-                    message=result.message,
-                    metadata={"source": "tool_executor"},
+                    message=failure_policy.user_message if failure_policy else result.message,
+                    metadata={"source": "tool_executor", **policy_metadata},
                 )
             )
 

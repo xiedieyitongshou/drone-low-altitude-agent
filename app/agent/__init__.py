@@ -1,4 +1,18 @@
+from app.agent.trace import TraceEvent, TraceEventType, build_trace_event, summarize_payload
 from app.agent.executor import ToolExecutor
+from app.agent.failure_policy import (
+    ToolFailurePolicy,
+    ToolFailureType,
+    ToolRecoveryAction,
+    classify_tool_failure,
+    failure_policy_metadata,
+)
+from app.agent.fallback import (
+    build_agent_fallback_output,
+    build_clarification_message,
+    build_empty_result_message,
+    build_tool_failure_message,
+)
 from app.agent.logging import build_agent_log_context, log_agent_event, summarize_for_log
 from app.agent.loop import AgentLoop, AgentLoopResult
 from app.agent.planner import AgentPlan, AgentPlanAction, plan_next_step
@@ -15,7 +29,6 @@ from app.agent.state import (
     merge_user_input,
     record_tool_result,
 )
-from app.agent.trace import TraceEvent, TraceEventType, build_trace_event, summarize_payload
 from app.agent.tools import (
     ToolExecutionContext,
     ToolNotFoundError,
@@ -37,17 +50,26 @@ __all__ = [
     "AgentLoopResult",
     "ToolExecutionContext",
     "ToolExecutor",
+    "ToolFailurePolicy",
+    "ToolFailureType",
     "ToolNotFoundError",
     "ToolRegistry",
     "ToolRegistrationError",
     "ToolResult",
     "ToolSideEffect",
     "ToolSpec",
+    "ToolRecoveryAction",
     "TraceEvent",
     "TraceEventType",
     "build_trace_event",
+    "classify_tool_failure",
+    "build_agent_fallback_output",
     "build_agent_log_context",
+    "build_clarification_message",
+    "build_empty_result_message",
+    "build_tool_failure_message",
     "default_tool_registry",
+    "failure_policy_metadata",
     "initialize_state",
     "mark_completed",
     "mark_failed",

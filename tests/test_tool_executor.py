@@ -82,8 +82,12 @@ def test_tool_executor_records_error_event_when_tool_fails():
     ]
     assert events[1].error_code == "RuntimeError"
     assert events[1].status_after == AgentStatus.FAILED.value
+    assert events[1].metadata["failure_type"] == "internal_error"
+    assert events[1].metadata["recovery_action"] == "fallback_legacy"
+    assert events[1].metadata["retryable"] is False
     assert events[2].error_code == "RuntimeError"
-    assert events[2].message == "weather failed"
+    assert events[2].message == "工具执行出现内部错误，已尝试使用兼容链路处理。"
+    assert events[2].metadata["failure_type"] == "internal_error"
 
 
 def test_tool_executor_ignores_trace_recorder_failure():
