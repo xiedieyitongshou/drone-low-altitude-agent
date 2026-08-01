@@ -3,6 +3,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from app.agent.business_routes import build_route_tool_input, get_business_route, normalize_business_intent, resolve_route_missing_fields
 from app.agent.state import AgentState, AgentStatus
 from app.agent.tools import ToolRegistry, default_tool_registry
 
@@ -21,31 +22,6 @@ class AgentPlan(BaseModel):
     tool_input: dict[str, Any] = Field(default_factory=dict)
     missing_fields: list[str] = Field(default_factory=list)
     metadata: dict[str, Any] = Field(default_factory=dict)
-
-
-INTENT_TOOL_MAPPING: dict[str, str] = {
-    "evaluate": "evaluate_flight_risk",
-    "recommend": "recommend_flight_windows",
-    "compare": "compare_flight_locations",
-    "knowledge": "retrieve_rag_advice",
-    "rag": "retrieve_rag_advice",
-    "advice": "retrieve_rag_advice",
-    "explain": "retrieve_rag_advice",
-    "history": "query_user_history",
-    "query_history": "query_user_history",
-}
-
-INTENT_REQUIRED_FIELDS: dict[str, list[str]] = {
-    "evaluate": ["location", "date", "start_time", "end_time", "task_type"],
-    "recommend": ["location", "date", "task_type"],
-    "compare": ["locations", "date", "start_time", "end_time", "task_type"],
-    "knowledge": ["task_type"],
-    "rag": ["task_type"],
-    "advice": ["task_type"],
-    "explain": ["task_type"],
-    "history": [],
-    "query_history": [],
-}
 
 
 def plan_next_step(
@@ -87,20 +63,21 @@ def plan_next_step(
             missing_fields=missing_fields,
         )
 
-    intent = _normalize_intent(state.current_intent)
+    intent = normalize_business_intent(state.current_intent)
     if intent is None:
         return AgentPlan(
             action=AgentPlanAction.FALLBACK,
             reason="intent is not available in agent state",
         )
 
-    tool_name = INTENT_TOOL_MAPPING.get(intent)
-    if tool_name is None:
+    route = get_business_route(intent)
+    if route is None:
         return AgentPlan(
             action=AgentPlanAction.FALLBACK,
             reason=f"unsupported intent: {intent}",
             metadata={"intent": intent},
         )
+    tool_name = route.primary_tool
 
     if tool_name in state.tool_results:
         return AgentPlan(
@@ -121,10 +98,12 @@ def plan_next_step(
     return AgentPlan(
         action=AgentPlanAction.CALL_TOOL,
         tool_name=tool_name,
-        tool_input=_build_tool_input(intent, state.task_draft),
+        tool_input=build_route_tool_input(route, state.task_draft),
         reason=f"intent={intent} is ready and maps to tool={tool_name}",
         metadata={
             "intent": intent,
+            "route_kind": route.route_kind.value,
+            "target_endpoint": route.target_endpoint,
             "side_effect": tool_spec.side_effect,
             "risk_level": tool_spec.risk_level,
         },
@@ -136,55 +115,8 @@ def _resolve_missing_fields(state: AgentState) -> list[str]:
     if explicit_missing_fields:
         return explicit_missing_fields
 
-    intent = _normalize_intent(state.current_intent)
-    required_fields = INTENT_REQUIRED_FIELDS.get(intent or "", [])
-    return [field for field in required_fields if _is_missing(state.task_draft.get(field))]
-
-
-def _build_tool_input(intent: str, task_draft: dict[str, object]) -> dict[str, Any]:
-    required_fields = INTENT_REQUIRED_FIELDS.get(intent, [])
-    optional_fields = _optional_fields_for_intent(intent)
-    allowed_fields = set(required_fields + optional_fields)
-    if not allowed_fields:
-        return dict(task_draft)
-    return {field: task_draft[field] for field in allowed_fields if field in task_draft}
-
-
-def _optional_fields_for_intent(intent: str) -> list[str]:
-    if intent == "evaluate":
-        return [
-            "purpose",
-            "normalized_date",
-            "normalized_start_time",
-            "normalized_end_time",
-            "spans_next_day",
-            "start_datetime",
-            "end_datetime",
-        ]
-    if intent == "recommend":
-        return ["purpose", "scan_hours", "min_window_hours"]
-    if intent == "compare":
-        return ["purpose", "top_k", "comparison_mode"]
-    if intent in {"knowledge", "rag", "advice", "explain"}:
-        return [
-            "overall_decision",
-            "risk_reasons",
-            "warning_types",
-            "warning_levels",
-            "region",
-            "province",
-            "city",
-            "top_k",
-        ]
-    return []
-
-
-def _normalize_intent(intent: str | None) -> str | None:
-    if intent is None:
-        return None
-    normalized = intent.strip().lower()
-    return normalized or None
-
-
-def _is_missing(value: object) -> bool:
-    return value in (None, "", [])
+    intent = normalize_business_intent(state.current_intent)
+    route = get_business_route(intent)
+    if route is None:
+        return []
+    return resolve_route_missing_fields(route, state.task_draft)

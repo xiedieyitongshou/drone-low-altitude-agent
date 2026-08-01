@@ -135,7 +135,7 @@ def test_plan_maps_knowledge_intent_to_rag_tool_with_metadata_context():
     plan = plan_next_step(state)
 
     assert plan.action == AgentPlanAction.CALL_TOOL
-    assert plan.tool_name == "retrieve_rag_advice"
+    assert plan.tool_name == "query_knowledge_snippets"
     assert plan.tool_input == {
         "task_type": "inspection",
         "risk_reasons": ["强风"],
@@ -144,6 +144,30 @@ def test_plan_maps_knowledge_intent_to_rag_tool_with_metadata_context():
         "top_k": 3,
     }
     assert plan.metadata["side_effect"] == "read_only"
+    assert plan.metadata["route_kind"] == "knowledge_query"
+    assert plan.metadata["target_endpoint"] == "/knowledge/advice/retrieve"
+
+
+def test_plan_maps_explain_intent_to_rule_explanation_tool():
+    state = initialize_state("为什么判高风险")
+    state = mark_parsed(
+        state,
+        intent="explain",
+        parsed={
+            "query": "为什么判高风险",
+            "task_type": "inspection",
+            "overall_decision": "禁飞",
+            "risk_reasons": ["风速偏高"],
+        },
+    )
+
+    plan = plan_next_step(state)
+
+    assert plan.action == AgentPlanAction.CALL_TOOL
+    assert plan.tool_name == "explain_risk_rules"
+    assert plan.tool_input["overall_decision"] == "禁飞"
+    assert plan.tool_input["risk_reasons"] == ["风速偏高"]
+    assert plan.metadata["route_kind"] == "explanation_query"
 
 
 def test_plan_maps_history_intent_to_history_tool():
@@ -159,6 +183,7 @@ def test_plan_maps_history_intent_to_history_tool():
     assert plan.action == AgentPlanAction.CALL_TOOL
     assert plan.tool_name == "query_user_history"
     assert plan.tool_input["keyword"] == "深圳"
+    assert plan.metadata["route_kind"] == "history_query"
 
 
 def test_plan_responds_directly_when_tool_result_already_exists():

@@ -1,4 +1,20 @@
 from app.agent.trace import TraceEvent, TraceEventType, build_trace_event, summarize_payload
+from app.agent.business_routes import (
+    AgentBusinessRoute,
+    AgentRouteKind,
+    build_route_tool_input,
+    get_business_route,
+    list_business_routes,
+    normalize_business_intent,
+    resolve_route_missing_fields,
+)
+from app.agent.context_manager import (
+    AgentContextMergeResult,
+    build_agent_parser_context,
+    build_pending_task_context,
+    merge_agent_context,
+    resolve_invalidated_tools,
+)
 from app.agent.executor import ToolExecutor
 from app.agent.failure_policy import (
     ToolFailurePolicy,
@@ -46,6 +62,9 @@ __all__ = [
     "AgentStep",
     "AgentPlan",
     "AgentPlanAction",
+    "AgentBusinessRoute",
+    "AgentContextMergeResult",
+    "AgentRouteKind",
     "AgentLoop",
     "AgentLoopResult",
     "ToolExecutionContext",
@@ -62,6 +81,9 @@ __all__ = [
     "TraceEvent",
     "TraceEventType",
     "build_trace_event",
+    "build_route_tool_input",
+    "build_agent_parser_context",
+    "build_pending_task_context",
     "classify_tool_failure",
     "build_agent_fallback_output",
     "build_agent_log_context",
@@ -70,6 +92,7 @@ __all__ = [
     "build_tool_failure_message",
     "default_tool_registry",
     "failure_policy_metadata",
+    "get_business_route",
     "initialize_state",
     "mark_completed",
     "mark_failed",
@@ -77,9 +100,14 @@ __all__ = [
     "mark_parsed",
     "mark_tool_running",
     "merge_user_input",
+    "merge_agent_context",
     "log_agent_event",
+    "list_business_routes",
     "plan_next_step",
     "record_tool_result",
+    "normalize_business_intent",
+    "resolve_route_missing_fields",
+    "resolve_invalidated_tools",
     "summarize_for_log",
     "summarize_payload",
 ]

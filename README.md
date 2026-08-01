@@ -173,6 +173,9 @@ docker compose exec app python -m pytest
 - 多用户认证：支持用户注册、登录、JWT 鉴权和 `/auth/me` 当前用户识别。
 - 编排器：通过 `/agent/query` 串起解析、天气、规则、推荐、比选、响应生成，并使用 token 用户作为真实数据归属。
 - Agent Runtime 基础：已新增 Tool Registry、AgentState、规则 Planner 和最小 AgentLoop，可通过 `AGENT_RUNTIME_MODE=legacy|loop` 灰度切换；默认保留 legacy workflow，loop 模式失败时可回退旧编排链路。
+- Agent 业务路由：已将自然语言入口拆分为 `evaluate`、`recommend`、`compare`、`knowledge`、`history`、`explain` 等业务路径，并通过 Business Route 映射到最小必要工具。
+- Agent 多轮状态：loop 模式支持 pending task、缺字段追问、Session Memory 上下文合并、Profile 兼容补齐和用户修改字段覆盖。
+- Agent 查询工具：已新增知识片段查询和规则来源解释能力，查询类问题不会触发完整风险评估链路。
 - Agent 错误恢复：已引入工具失败分类、恢复策略和兜底输出，支持参数缺失追问、空结果提示、工具异常转 legacy fallback、权限错误直接拒绝等路径。
 - Agent Trace 闭环：已记录 plan、tool_call、tool_result、error、fallback、final_response 等事件，并支持按当前登录用户查询自己的执行链路。
 - 会话记忆：支持 `ttlcache`、`redis`、`database` 三种后端，按 `user_id + session_id` 隔离短期上下文。
@@ -199,7 +202,7 @@ Agent Runtime 开关：legacy workflow / loop runtime
   ↓
 Tool Registry / AgentState / Rule Planner / AgentLoop
   ↓
-ToolExecutor / FailurePolicy / TraceEvent
+Business Route / Context Manager / ToolExecutor / FailurePolicy / TraceEvent
   ↓
 Weather Provider 获取原始天气数据
   ↓
@@ -221,7 +224,8 @@ LLM 结果解释 / 模板解释 fallback
 - Provider 层只负责对接外部 API。
 - Mapper 层负责屏蔽不同数据源格式差异。
 - Rules 层只依赖内部统一数据结构，不直接依赖和风天气原始字段。
-- Service / Orchestrator 负责组织流程，不把规则细节写死在接口中；Agent Runtime 通过工具注册、状态管理、规则规划和循环执行逐步替代固定 workflow。
+- Service / Orchestrator 负责组织流程，不把规则细节写死在接口中；Agent Runtime 通过业务路由、工具注册、状态管理、上下文合并和循环执行逐步替代固定 workflow。
+- Context Manager 层处理多轮 pending task、用户输入覆盖、Profile 兼容补齐和受影响工具标记，安全决策类任务缺关键字段时仍优先追问。
 - Trace / Logging 层记录 Agent 状态转换、工具调用、错误分类和兜底路径，用于解释单次请求的执行过程。
 - Auth / Memory 层只负责身份识别、数据归属和上下文补全，不参与飞行安全判断。
 - RAG 层先完成企业知识库常见的数据治理，再升级为 BM25 + Embedding + Hybrid Retrieval 的可评估检索工具。
@@ -265,7 +269,7 @@ LLM 结果解释 / 模板解释 fallback
 - 认证鉴权：bcrypt、PyJWT、FastAPI HTTPBearer
 - 会话缓存/持久化：cachetools TTLCache、Redis、Database backend
 - 记忆持久化：users、user_profiles、conversation_records、session_records
-- Agent Runtime：Tool Registry、AgentState、Rule Planner、AgentLoop、ToolExecutor、FailurePolicy、TraceEvent、legacy fallback
+- Agent Runtime：Business Route、Context Manager、Tool Registry、AgentState、Rule Planner、AgentLoop、ToolExecutor、FailurePolicy、TraceEvent、legacy fallback
 - 知识检索：当前为 scikit-learn TF-IDF + cosine similarity baseline；已完成 metadata 过滤，计划升级为 BM25 + Embedding + Hybrid Retrieval
 
 当前 RAG 检索是可运行的轻量版本。项目后续不会只停留在 TF-IDF，而是会把 RAG 做成 Agent 可调用的企业级知识工具：BM25 解决政策名、地名、编号等关键词精确召回；Embedding 解决口语化提问和知识库措辞不一致的语义召回；Hybrid Retrieval 通过融合排序、metadata boost、chunk 策略、rerank 和 RAG Eval 提升可解释性与可验证性。
@@ -316,6 +320,8 @@ AGENT_RUNTIME_MODE=loop
 
 实验模式，启用 Day71-Day76 实现的 Agent Runtime：
 
+- `Business Route`：把 `evaluate`、`recommend`、`compare`、`knowledge`、`history`、`explain` 映射为不同工具路径。
+- `Context Manager`：合并本轮输入、Session Memory、Profile 和默认值，支持缺字段追问、pending task 和多轮修改。
 - `Tool Registry`：统一注册风险评估、飞行窗口推荐、多地点比选、RAG 检索、历史查询等工具。
 - `AgentState`：保存当前意图、任务草稿、已确认字段、缺失字段、工具结果、错误和 step 历史。
 - `Rule Planner`：根据状态决定下一步是追问、调用工具、直接回答还是 fallback。
@@ -323,6 +329,14 @@ AGENT_RUNTIME_MODE=loop
 - `legacy fallback`：loop 模式失败时可回退原始编排链路，保证现有接口兼容。
 
 响应中会额外返回可选 `agent_runtime` 字段，用于查看 `trace_id`、`run_id`、状态、计划动作和工具结果。该字段是调试增强，不影响旧前端使用原有字段。
+
+Day85-Day88 已在 loop 模式下补充混合业务编排能力：
+
+- 查询类任务可直接走 `query_user_history`、`query_knowledge_snippets`、`explain_risk_rules`，不触发完整风险评估。
+- 缺字段任务会保存 pending task，下一轮用户补充后继续执行。
+- 安全决策类任务不会用 Profile 默认地点直接评估；查询类任务可以使用 Profile 提升体验。
+- 用户修改地点、时间或任务类型后，会重新计算 `AgentState`，并在 `agent_runtime.context_merge` 中展示 `modified_fields` 和 `invalidated_tools`。
+- 典型自然语言输入样例沉淀在 `data/agent_input_samples.json`，后续可扩展为 Agent Eval 数据集。
 
 ### Session Memory 配置
 
@@ -389,6 +403,12 @@ Agent trace、日志、工具失败恢复和兜底输出相关测试：
 
 ```bash
 .\.venv\Scripts\python.exe -m pytest tests/test_agent_trace.py tests/test_agent_trace_api.py tests/test_agent_logging.py tests/test_tool_executor.py tests/test_failure_policy.py tests/test_agent_fallback.py
+```
+
+Agent 业务路由、查询工具、多轮追问和任务修改相关测试：
+
+```bash
+.\.venv\Scripts\python.exe -m pytest tests/test_agent_business_routes.py tests/test_agent_context_manager.py tests/test_agent_input_samples.py tests/test_nl_parser_business_intents.py tests/test_risk_rule_explainer.py tests/test_task_orchestrator_agent_context.py
 ```
 
 检查 Alembic 模型和迁移是否一致：
@@ -568,10 +588,11 @@ Authorization: Bearer <admin_access_token>
 - 第十阶段：已完成 RAG 知识库 metadata 数据治理，支持知识类型、地域、可见性、租户、用户、版本、有效期和审核状态过滤。
 - 第十一阶段：已完成 Agent Runtime 基础改造，包含 Tool Registry、AgentState、规则 Planner、最小 AgentLoop、`AGENT_RUNTIME_MODE` 灰度接入和完整回归测试。
 - 第十二阶段：已完成 Agent Trace、结构化日志、工具失败分类、恢复策略、兜底输出和用户级 trace 查询闭环。
+- 第十三阶段：已完成混合型业务编排前半部分，包含业务路由、查询类工具化、规则解释、多轮 pending task、Profile 兼容补齐和任务修改后的状态重算。
 
 ## 后续计划
 
-- 第 14 周：混合型业务编排，同一自然语言入口支持查询、评估、推荐、比选、追问和多轮修改。
+- 第 14 周后续：继续完善 RAG 作为可选工具接入、组合业务链路和第 14 周演示用例。
 - 第 15 周：Agent Eval 与 Tool Calling 质量评估，用样例集评估意图识别、工具选择、多轮状态和失败恢复。
 - 第 16 周：Guardrail、安全边界与 Agent 输出约束，限制越权调用、无依据政策结论和高风险过度承诺。
 - 第 17 周：Hybrid RAG 检索增强，在 Day70 数据治理基础上补齐 BM25、Embedding、Hybrid Retrieval、chunk 策略、rerank、query rewrite、低置信 fallback 和 RAG Eval。

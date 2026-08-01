@@ -5,6 +5,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field, ValidationError
 from sqlalchemy.orm import Session
 
+from app.db.session import SessionLocal
 from app.schemas import (
     CruiseEvaluateRequest,
     KnowledgeAccessContext,
@@ -17,6 +18,7 @@ from app.services.comparison import compare_locations
 from app.services.conversation_query import get_user_conversation_detail, list_user_conversations
 from app.services.cruise_evaluator import evaluate_cruise_request_with_artifacts
 from app.services.recommendation_executor import build_recommendation_response
+from app.services.risk_rule_explainer import explain_risk_rules
 
 
 ToolSideEffect = Literal["read_only", "compute_only", "write", "external_call"]
@@ -189,6 +191,27 @@ def create_default_tool_registry() -> ToolRegistry:
     )
     registry.register(
         ToolSpec(
+            name="query_knowledge_snippets",
+            description="Query knowledge snippets without running risk evaluation.",
+            side_effect="read_only",
+            risk_level="medium",
+            input_schema_name="KnowledgeRetrievalRequest",
+            output_schema_name="KnowledgeRetrievalResponse",
+        ),
+        _retrieve_rag_advice,
+    )
+    registry.register(
+        ToolSpec(
+            name="explain_risk_rules",
+            description="Explain risk decision rules, thresholds, warning adjustments, and rule source.",
+            side_effect="read_only",
+            risk_level="low",
+            requires_auth=False,
+        ),
+        _explain_risk_rules,
+    )
+    registry.register(
+        ToolSpec(
             name="query_user_history",
             description="Query current user's conversation history by list or detail mode.",
             side_effect="read_only",
@@ -220,9 +243,19 @@ def _retrieve_rag_advice(payload: dict[str, Any], context: ToolExecutionContext)
     return retrieve_knowledge_by_request(request, access_context=access_context)
 
 
+def _explain_risk_rules(payload: dict[str, Any], context: ToolExecutionContext) -> Any:
+    return explain_risk_rules(payload)
+
+
 def _query_user_history(payload: dict[str, Any], context: ToolExecutionContext) -> Any:
-    if context.db is None:
-        raise ValueError("db context is required for query_user_history")
+    if context.db is not None:
+        return _query_user_history_with_db(payload, context, db=context.db)
+
+    with SessionLocal() as db:
+        return _query_user_history_with_db(payload, context, db=db)
+
+
+def _query_user_history_with_db(payload: dict[str, Any], context: ToolExecutionContext, *, db: Session) -> Any:
 
     mode = str(payload.get("mode") or "list")
     if mode == "detail":
@@ -230,13 +263,13 @@ def _query_user_history(payload: dict[str, Any], context: ToolExecutionContext) 
         if not conversation_id:
             raise ValueError("conversation_id is required for detail mode")
         return get_user_conversation_detail(
-            db=context.db,
+            db=db,
             user_id=str(context.user_id),
             conversation_id=str(conversation_id),
         )
 
     return list_user_conversations(
-        db=context.db,
+        db=db,
         user_id=str(context.user_id),
         page=int(payload.get("page") or 1),
         page_size=int(payload.get("page_size") or 20),

@@ -24,7 +24,7 @@ def build_clarification_message(missing_fields: list[str]) -> str:
 
 
 def build_empty_result_message(tool_name: str | None) -> str:
-    if tool_name == "retrieve_rag_advice":
+    if tool_name in {"retrieve_rag_advice", "query_knowledge_snippets"}:
         return "当前知识库没有召回匹配内容，建议补充地区、任务类型或具体风险场景后再试。"
     if tool_name == "query_user_history":
         return "没有查询到匹配的历史记录，可以调整关键词、会话或时间条件后再试。"

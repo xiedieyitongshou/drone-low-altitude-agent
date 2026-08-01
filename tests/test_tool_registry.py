@@ -102,6 +102,8 @@ def test_default_registry_contains_day72_core_tools():
         "recommend_flight_windows",
         "compare_flight_locations",
         "retrieve_rag_advice",
+        "query_knowledge_snippets",
+        "explain_risk_rules",
         "query_user_history",
     }.issubset(names)
 
@@ -125,3 +127,35 @@ def test_retrieve_rag_advice_tool_applies_context_filters():
     assert result.tool_name == "retrieve_rag_advice"
     assert "snippets" in result.data
     assert result.metadata["side_effect"] == "read_only"
+
+
+def test_query_knowledge_snippets_tool_uses_rag_retrieval_without_evaluation():
+    result = default_tool_registry.call(
+        "query_knowledge_snippets",
+        {
+            "task_type": "inspection",
+            "query": "深圳无人机巡检政策",
+            "city": "深圳",
+            "top_k": 2,
+        },
+        context=ToolExecutionContext(user_id="user-1", tenant_id="public", role="user"),
+    )
+
+    assert result.success is True
+    assert result.tool_name == "query_knowledge_snippets"
+    assert "snippets" in result.data
+
+
+def test_explain_risk_rules_tool_does_not_require_auth_context():
+    result = default_tool_registry.call(
+        "explain_risk_rules",
+        {
+            "task_type": "inspection",
+            "overall_decision": "禁飞",
+            "risk_reasons": ["风速偏高"],
+        },
+    )
+
+    assert result.success is True
+    assert result.tool_name == "explain_risk_rules"
+    assert result.data["rule_source"] == "app.rules.mission_profiles + app.rules.cruise"

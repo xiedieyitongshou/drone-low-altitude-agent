@@ -8,6 +8,11 @@ from app.schemas import (
     RecommendationRequest,
 )
 from app.agent import AgentLoop, ToolExecutionContext, initialize_state, mark_parsed
+from app.agent.context_manager import (
+    build_agent_parser_context,
+    build_pending_task_context,
+    merge_agent_context,
+)
 from app.services.comparison import compare_locations
 from app.services.conversation_history import persist_conversation_record
 from app.services.cruise_evaluator import evaluate_cruise_request_with_artifacts
@@ -213,10 +218,37 @@ def _orchestrate_task_query_with_agent_loop(
     normalized_user_id = normalize_user_id(user_id)
     profile = get_or_create_user_profile(normalized_user_id)
     cached_context = session_memory_store.get(session_id, user_id=normalized_user_id) if session_id else None
-    parser_context = merge_profile_context(session_context=cached_context, profile=profile)
-    parsed_result = _parse_task_query(query, context=parser_context)
+    parser_context = build_agent_parser_context(session_context=cached_context, profile=profile)
+    try:
+        parsed_result = _parse_task_query(query, context=parser_context)
+    except NaturalLanguageParseError as exc:
+        return _handle_agent_parse_error(
+            query=query,
+            session_id=session_id,
+            user_id=normalized_user_id,
+            error=exc,
+        )
+    context_result = merge_agent_context(
+        intent=parsed_result.intent,
+        parsed=parsed_result.parsed,
+        session_context=cached_context,
+        profile=profile,
+    )
+    parsed_result = parsed_result.__class__(
+        intent=context_result.intent,
+        target_endpoint=parsed_result.target_endpoint,
+        parsed=context_result.parsed,
+        warnings=parsed_result.warnings,
+        context_used=parsed_result.context_used or context_result.context_used,
+        parser_source=parsed_result.parser_source,
+    )
     state = initialize_state(query, user_id=normalized_user_id, session_id=session_id)
-    state = mark_parsed(state, intent=parsed_result.intent, parsed=parsed_result.parsed)
+    state = mark_parsed(
+        state,
+        intent=parsed_result.intent,
+        parsed=parsed_result.parsed,
+        missing_fields=context_result.missing_fields,
+    )
 
     def fallback_handler(_, __):
         return _orchestrate_task_query_legacy(query, session_id=session_id, user_id=user_id)
@@ -228,10 +260,18 @@ def _orchestrate_task_query_with_agent_loop(
     if isinstance(loop_result.fallback_result, OrchestratorResponse):
         return _with_agent_runtime_debug(
             loop_result.fallback_result,
-            _build_agent_runtime_debug(loop_result, mode="loop"),
+            _build_agent_runtime_debug(loop_result, mode="loop", context_result=context_result),
         )
 
     if loop_result.requires_clarification:
+        _save_pending_task(
+            session_id=session_id,
+            user_id=normalized_user_id,
+            intent=parsed_result.intent,
+            parsed=parsed_result.parsed,
+            missing_fields=loop_result.final_state.missing_fields,
+            query=query,
+        )
         return OrchestratorResponse(
             success=False,
             session_id=session_id,
@@ -244,7 +284,7 @@ def _orchestrate_task_query_with_agent_loop(
             warnings=parsed_result.warnings,
             message=loop_result.message,
             fallback=loop_result.output if isinstance(loop_result.output, dict) else {"missing_fields": loop_result.final_state.missing_fields},
-            agent_runtime=_build_agent_runtime_debug(loop_result, mode="loop"),
+            agent_runtime=_build_agent_runtime_debug(loop_result, mode="loop", context_result=context_result),
         )
 
     response = OrchestratorResponse(
@@ -260,11 +300,82 @@ def _orchestrate_task_query_with_agent_loop(
         message=_build_agent_loop_message(loop_result),
         result=loop_result.output if isinstance(loop_result.output, dict) else {"output": loop_result.output},
         fallback=None if loop_result.success else loop_result.output if isinstance(loop_result.output, dict) else {"errors": loop_result.final_state.errors},
-        agent_runtime=_build_agent_runtime_debug(loop_result, mode="loop"),
+        agent_runtime=_build_agent_runtime_debug(loop_result, mode="loop", context_result=context_result),
     )
     _save_context(session_id, normalized_user_id, parsed_result.intent, parsed_result.parsed, query=query)
     update_profile_from_parsed(user_id=normalized_user_id, parsed=parsed_result.parsed)
     return _with_conversation_record(query=query, user_id=normalized_user_id, response=response)
+
+
+def _handle_agent_parse_error(
+    *,
+    query: str,
+    session_id: str | None,
+    user_id: str,
+    error: NaturalLanguageParseError,
+) -> OrchestratorResponse:
+    intent = error.intent or "unknown"
+    target_endpoint = error.target_endpoint or "/agent/query"
+    parsed = _clean_context_fields(error.parsed)
+    state = initialize_state(query, user_id=user_id, session_id=session_id)
+    state = mark_parsed(state, intent=intent, parsed=parsed, missing_fields=error.missing_fields)
+    loop_result = AgentLoop().run(state, context=ToolExecutionContext(user_id=user_id, tenant_id="public", role="user"))
+
+    _save_pending_task(
+        session_id=session_id,
+        user_id=user_id,
+        intent=intent,
+        parsed=parsed,
+        missing_fields=error.missing_fields,
+        query=query,
+    )
+
+    return _with_conversation_record(
+        query=query,
+        user_id=user_id,
+        response=OrchestratorResponse(
+            success=False,
+            session_id=session_id,
+            user_id=user_id,
+            intent=intent,
+            target_endpoint=target_endpoint,
+            parser_source="rule",
+            parsed=parsed,
+            context_used=False,
+            warnings=error.warnings,
+            message=loop_result.message,
+            fallback=loop_result.output if isinstance(loop_result.output, dict) else {"missing_fields": error.missing_fields},
+            agent_runtime=_build_agent_runtime_debug(loop_result, mode="loop"),
+        ),
+    )
+
+
+def _save_pending_task(
+    *,
+    session_id: str | None,
+    user_id: str,
+    intent: str,
+    parsed: dict[str, object],
+    missing_fields: list[str],
+    query: str,
+) -> None:
+    if not session_id or not missing_fields or intent == "unknown":
+        return
+    session_memory_store.set(
+        session_id,
+        build_pending_task_context(
+            intent=intent,
+            parsed=parsed,
+            missing_fields=missing_fields,
+            query=query,
+        ),
+        user_id=user_id,
+        title=query[:80],
+    )
+
+
+def _clean_context_fields(values: dict[str, object]) -> dict[str, object]:
+    return {key: value for key, value in values.items() if value not in (None, "", [])}
 
 
 def _build_agent_loop_message(loop_result) -> str:
@@ -278,8 +389,8 @@ def _build_agent_loop_message(loop_result) -> str:
     return "Agent Runtime 执行失败，已进入兼容兜底。"
 
 
-def _build_agent_runtime_debug(loop_result, *, mode: str) -> dict[str, object]:
-    return {
+def _build_agent_runtime_debug(loop_result, *, mode: str, context_result=None) -> dict[str, object]:
+    debug = {
         "mode": mode,
         "trace_id": loop_result.final_state.trace_id,
         "run_id": loop_result.final_state.run_id,
@@ -289,6 +400,13 @@ def _build_agent_runtime_debug(loop_result, *, mode: str) -> dict[str, object]:
         "tool_results": list(loop_result.final_state.tool_results.keys()),
         "errors": loop_result.final_state.errors,
     }
+    if context_result is not None:
+        debug["context_merge"] = {
+            "field_sources": context_result.field_sources,
+            "modified_fields": context_result.modified_fields,
+            "invalidated_tools": context_result.invalidated_tools,
+        }
+    return debug
 
 
 def _with_agent_runtime_debug(response: OrchestratorResponse, debug: dict[str, object]) -> OrchestratorResponse:

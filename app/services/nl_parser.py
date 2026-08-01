@@ -18,6 +18,10 @@ TASK_TYPE_KEYWORDS = {
 COMPARE_HINTS = ["哪个", "哪里", "先去哪", "先去哪一个", "排序", "比较", "对比"]
 RECOMMEND_HINTS = ["什么时候", "何时", "推荐", "最佳时间", "最适合"]
 EVALUATE_HINTS = ["可以飞吗", "能飞吗", "适合飞吗", "适合吗", "可以执行吗"]
+HISTORY_HINTS = ["历史", "历史记录", "上次", "之前", "以前", "查记录", "查询记录", "任务记录", "会话记录"]
+KNOWLEDGE_HINTS = ["政策", "规则", "规定", "知识库", "注意事项", "建议", "怎么处理", "SOP", "标准流程", "FAQ", "风险说明"]
+EXPLAIN_HINTS = ["为什么", "为何", "依据是什么", "规则来源", "判定依据", "为什么判", "为什么不能飞", "为什么高风险", "解释一下"]
+MODIFY_HINTS = ["改成", "换成", "改为", "换为", "还是", "不变"]
 TIME_RANGE_PATTERNS = [
     re.compile(
         r"(?P<start_period>凌晨|早上|上午|中午|下午|晚上)?\s*"
@@ -44,9 +48,22 @@ PERIOD_WINDOWS = {
 
 
 class NaturalLanguageParseError(ValueError):
-    def __init__(self, message: str, *, missing_fields: list[str] | None = None) -> None:
+    def __init__(
+        self,
+        message: str,
+        *,
+        missing_fields: list[str] | None = None,
+        intent: str | None = None,
+        target_endpoint: str | None = None,
+        parsed: dict[str, object] | None = None,
+        warnings: list[str] | None = None,
+    ) -> None:
         super().__init__(message)
         self.missing_fields = missing_fields or []
+        self.intent = intent
+        self.target_endpoint = target_endpoint
+        self.parsed = parsed or {}
+        self.warnings = warnings or []
 
 
 @dataclass
@@ -94,7 +111,38 @@ def parse_natural_language_request(
 
     merged_task_type = task_type if task_type_detected else _context_value(context, "task_type", "cruise")
 
-    if intent == "compare":
+    if intent == "history":
+        keyword = _detect_history_keyword(query, locations)
+        parsed = {
+            "mode": "list",
+            "keyword": keyword,
+            "page": 1,
+            "page_size": 10,
+        }
+        target_endpoint = "/agent/conversations"
+    elif intent == "explain":
+        context_used = bool(context)
+        parsed = {
+            "query": query,
+            "task_type": task_type if task_type_detected else _context_value(context, "task_type", "cruise"),
+            "overall_decision": _context_value(context, "overall_decision"),
+            "risk_reasons": _context_value(context, "risk_reasons") or _context_value(context, "summary_risk_factors"),
+        }
+        parsed = {key: value for key, value in parsed.items() if value not in (None, "", [])}
+        target_endpoint = "/agent/rules/explain"
+    elif intent == "knowledge":
+        merged_task_type = task_type if task_type_detected else _context_value(context, "task_type", "cruise")
+        city = locations[0] if locations else _context_value(context, "city") or _context_value(context, "location")
+        context_used = not locations and bool(city)
+        parsed = {
+            "query": query,
+            "task_type": merged_task_type,
+            "city": city,
+            "top_k": 3,
+        }
+        parsed = {key: value for key, value in parsed.items() if value not in (None, "", [])}
+        target_endpoint = "/knowledge/advice/retrieve"
+    elif intent == "compare":
         merged_locations = locations or _context_list(context, "locations")
         merged_date = date_text or _context_value(context, "date")
         merged_start_time = start_time or _context_value(context, "start_time")
@@ -105,6 +153,7 @@ def parse_natural_language_request(
                 not date_text and bool(merged_date),
                 not start_time and bool(merged_start_time),
                 not end_time and bool(merged_end_time),
+                not task_type_detected and bool(context.get("task_type")),
             ]
         )
 
@@ -118,7 +167,23 @@ def parse_natural_language_request(
         if not merged_end_time:
             missing_fields.append("end_time")
         if missing_fields:
-            raise NaturalLanguageParseError("多地点比选请求信息不完整", missing_fields=missing_fields)
+            raise NaturalLanguageParseError(
+                "多地点比选请求信息不完整",
+                missing_fields=missing_fields,
+                intent="compare",
+                target_endpoint="/cruise/compare",
+                parsed={
+                    "locations": merged_locations,
+                    "date": merged_date,
+                    "start_time": merged_start_time,
+                    "end_time": merged_end_time,
+                    "task_type": merged_task_type,
+                    "purpose": query,
+                    "top_k": min(3, len(merged_locations)) if merged_locations else 3,
+                    "comparison_mode": "default",
+                },
+                warnings=warnings,
+            )
 
         parsed = {
             "locations": merged_locations,
@@ -140,11 +205,26 @@ def parse_natural_language_request(
                 not locations and bool(merged_location),
                 not date_text and bool(merged_date),
                 scan_hours is None and merged_scan_hours != 72,
+                not task_type_detected and bool(context.get("task_type")),
             ]
         )
 
         if not merged_location:
-            raise NaturalLanguageParseError("推荐请求缺少关键地点信息", missing_fields=["location"])
+            raise NaturalLanguageParseError(
+                "推荐请求缺少关键地点信息",
+                missing_fields=["location"],
+                intent="recommend",
+                target_endpoint="/cruise/recommend",
+                parsed={
+                    "location": merged_location,
+                    "date": merged_date,
+                    "task_type": merged_task_type,
+                    "purpose": query,
+                    "scan_hours": int(merged_scan_hours),
+                    "min_window_hours": 2,
+                },
+                warnings=warnings,
+            )
         if not merged_date:
             warnings.append("未显式识别日期，已默认使用今天")
             merged_date = now_in_app_timezone().date().isoformat()
@@ -169,6 +249,7 @@ def parse_natural_language_request(
                 not date_text and bool(merged_date),
                 not start_time and bool(merged_start_time),
                 not end_time and bool(merged_end_time),
+                not task_type_detected and bool(context.get("task_type")),
             ]
         )
 
@@ -182,7 +263,21 @@ def parse_natural_language_request(
         if not merged_end_time:
             missing_fields.append("end_time")
         if missing_fields:
-            raise NaturalLanguageParseError("评估请求信息不完整", missing_fields=missing_fields)
+            raise NaturalLanguageParseError(
+                "评估请求信息不完整",
+                missing_fields=missing_fields,
+                intent="evaluate",
+                target_endpoint="/cruise/evaluate",
+                parsed={
+                    "location": merged_location,
+                    "date": merged_date,
+                    "start_time": merged_start_time,
+                    "end_time": merged_end_time,
+                    "task_type": merged_task_type,
+                    "purpose": query,
+                },
+                warnings=warnings,
+            )
 
         parsed = {
             "location": merged_location,
@@ -224,6 +319,14 @@ def _detect_intent(
     has_time_range: bool,
     fallback_intent: str | None,
 ) -> str:
+    if any(word in text for word in HISTORY_HINTS):
+        return "history"
+    if any(word in text for word in EXPLAIN_HINTS):
+        return "explain"
+    if any(word in text for word in KNOWLEDGE_HINTS):
+        return "knowledge"
+    if fallback_intent and any(word in text for word in MODIFY_HINTS):
+        return fallback_intent
     if len(locations) >= 2 or any(word in text for word in COMPARE_HINTS):
         return "compare"
     if scan_hours or any(word in text for word in RECOMMEND_HINTS):
@@ -372,6 +475,50 @@ def _detect_locations(text: str) -> list[str]:
         "好吗",
         "请问",
         "帮我",
+        "任务类型改成",
+        "任务类型换成",
+        "任务类型改为",
+        "任务类型换为",
+        "任务类型",
+        "类型",
+        "时间改成",
+        "时间换成",
+        "时间改为",
+        "时间换为",
+        "时间",
+        "地点改成",
+        "地点换成",
+        "地点改为",
+        "地点换为",
+        "改成",
+        "换成",
+        "改为",
+        "换为",
+        "时间还是",
+        "时间不变",
+        "还是",
+        "不变",
+        "查一下",
+        "查询",
+        "一下",
+        "有哪些",
+        "有什么",
+        "要注意",
+        "注意事项",
+        "建议",
+        "知识库",
+        "政策",
+        "规则",
+        "规定",
+        "历史记录",
+        "任务记录",
+        "会话记录",
+        "历史",
+        "上次",
+        "之前",
+        "以前",
+        "我的",
+        "我",
         "任务",
         "执行",
         "低空",
@@ -404,7 +551,17 @@ def _is_valid_location(value: str) -> bool:
 
 
 def _has_intent_hint(text: str) -> bool:
-    return any(word in text for word in COMPARE_HINTS + RECOMMEND_HINTS + EVALUATE_HINTS)
+    return any(word in text for word in COMPARE_HINTS + RECOMMEND_HINTS + EVALUATE_HINTS + HISTORY_HINTS + KNOWLEDGE_HINTS + EXPLAIN_HINTS)
+
+
+def _detect_history_keyword(query: str, locations: list[str]) -> str | None:
+    if locations:
+        return locations[0]
+    text = _normalize_query(query)
+    for word in HISTORY_HINTS + ["帮我", "查一下", "查询", "一下", "我的", "我"]:
+        text = text.replace(word, "")
+    text = text.strip("在去到从把给问请看一下，。！？,.!?")
+    return text or None
 
 
 def _context_value(context: dict[str, object], key: str, default: object | None = None) -> object | None:

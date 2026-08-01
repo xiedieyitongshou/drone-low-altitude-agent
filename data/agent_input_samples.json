@@ -1,0 +1,74 @@
+[
+  {
+    "id": "evaluate_complete_001",
+    "query": "深圳明天下午2点到5点适合做无人机巡检吗",
+    "expected_intent": "evaluate",
+    "expected_route": "evaluate_flight_risk",
+    "scenario": "单地点风险评估",
+    "required_context": []
+  },
+  {
+    "id": "evaluate_clarification_001",
+    "query": "明天下午能飞吗",
+    "expected_intent": "evaluate",
+    "expected_route": "ask_clarification",
+    "scenario": "缺少地点，需要追问",
+    "required_context": []
+  },
+  {
+    "id": "recommend_001",
+    "query": "广州未来72小时什么时候最适合航测",
+    "expected_intent": "recommend",
+    "expected_route": "recommend_flight_windows",
+    "scenario": "飞行窗口推荐",
+    "required_context": []
+  },
+  {
+    "id": "compare_001",
+    "query": "深圳、广州和珠海明天下午哪个更适合低空巡航",
+    "expected_intent": "compare",
+    "expected_route": "compare_flight_locations",
+    "scenario": "多地点比选",
+    "required_context": []
+  },
+  {
+    "id": "history_001",
+    "query": "查一下我上次深圳任务记录",
+    "expected_intent": "history",
+    "expected_route": "query_user_history",
+    "scenario": "当前用户历史查询",
+    "required_context": ["user_id"]
+  },
+  {
+    "id": "knowledge_policy_001",
+    "query": "深圳无人机巡检政策有什么要注意",
+    "expected_intent": "knowledge",
+    "expected_route": "query_knowledge_snippets",
+    "scenario": "地区政策和知识库提示查询",
+    "required_context": []
+  },
+  {
+    "id": "knowledge_sop_001",
+    "query": "遇到强风预警时无人机巡航 SOP 怎么处理",
+    "expected_intent": "knowledge",
+    "expected_route": "query_knowledge_snippets",
+    "scenario": "风险 SOP 查询",
+    "required_context": []
+  },
+  {
+    "id": "explain_rule_001",
+    "query": "为什么刚才判高风险，依据是什么",
+    "expected_intent": "explain",
+    "expected_route": "explain_risk_rules",
+    "scenario": "规则来源和风险判定解释",
+    "required_context": ["previous_result"]
+  },
+  {
+    "id": "modify_context_001",
+    "query": "把地点改成佛山，时间还是明天下午",
+    "expected_intent": "evaluate",
+    "expected_route": "evaluate_flight_risk",
+    "scenario": "多轮修改上一轮任务条件",
+    "required_context": ["previous_intent", "previous_task_type"]
+  }
+]
