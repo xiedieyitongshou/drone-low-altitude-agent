@@ -29,6 +29,17 @@ from app.agent.fallback import (
     build_empty_result_message,
     build_tool_failure_message,
 )
+from app.agent.guardrail import (
+    GuardrailAction,
+    GuardrailCheckpoint,
+    GuardrailResult,
+    check_input_guardrail,
+    check_output_guardrail,
+    check_output_text_guardrail,
+    check_response_explanation_input_guardrail,
+    check_tool_guardrail,
+    guardrail_metadata,
+)
 from app.agent.logging import build_agent_log_context, log_agent_event, summarize_for_log
 from app.agent.loop import AgentLoop, AgentLoopResult
 from app.agent.planner import AgentPlan, AgentPlanAction, plan_next_step
@@ -75,6 +86,9 @@ __all__ = [
     "RagToolPolicy",
     "AgentLoop",
     "AgentLoopResult",
+    "GuardrailAction",
+    "GuardrailCheckpoint",
+    "GuardrailResult",
     "ToolExecutionContext",
     "ToolExecutor",
     "ToolFailurePolicy",
@@ -98,10 +112,16 @@ __all__ = [
     "build_clarification_message",
     "build_empty_result_message",
     "build_tool_failure_message",
+    "check_input_guardrail",
+    "check_output_guardrail",
+    "check_output_text_guardrail",
+    "check_response_explanation_input_guardrail",
+    "check_tool_guardrail",
     "default_tool_registry",
     "decide_rag_tool_policy",
     "failure_policy_metadata",
     "get_business_route",
+    "guardrail_metadata",
     "initialize_state",
     "mark_completed",
     "mark_failed",

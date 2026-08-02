@@ -3,9 +3,10 @@ import logging
 from time import perf_counter
 
 from app.agent.failure_policy import classify_tool_failure, failure_policy_metadata
+from app.agent.guardrail import check_tool_guardrail, guardrail_metadata
 from app.agent.logging import log_agent_event
 from app.agent.state import AgentState, AgentStatus
-from app.agent.tools import ToolExecutionContext, ToolRegistry, ToolResult, default_tool_registry
+from app.agent.tools import ToolExecutionContext, ToolNotFoundError, ToolRegistry, ToolResult, default_tool_registry
 from app.agent.trace import TraceEvent, TraceEventType, build_trace_event
 from app.services.agent_trace import record_trace_event
 
@@ -56,6 +57,15 @@ class ToolExecutor:
                 metadata=_tool_metadata(self.tool_registry, tool_name),
             )
         )
+
+        guardrail_result = self._check_tool_guardrail(
+            tool_name=tool_name,
+            tool_input=tool_input,
+            state=state,
+            context=context,
+        )
+        if guardrail_result is not None:
+            return guardrail_result
 
         start_time = perf_counter()
         result = self.tool_registry.call(tool_name, tool_input, context=context)
@@ -128,6 +138,69 @@ class ToolExecutor:
                 )
             )
 
+        return result
+
+    def _check_tool_guardrail(
+        self,
+        *,
+        tool_name: str,
+        tool_input: dict[str, object],
+        state: AgentState,
+        context: ToolExecutionContext,
+    ) -> ToolResult | None:
+        try:
+            tool_spec = self.tool_registry.get(tool_name).spec
+        except ToolNotFoundError:
+            return None
+
+        guardrail_result = check_tool_guardrail(
+            tool_spec=tool_spec,
+            tool_input=tool_input,
+            state=state,
+            context=context,
+        )
+        if guardrail_result.allowed:
+            return None
+
+        metadata = guardrail_metadata(guardrail_result)
+        result = ToolResult(
+            success=False,
+            tool_name=tool_name,
+            error_code=guardrail_result.error_code or "TOOL_GUARDRAIL_BLOCKED",
+            message=guardrail_result.reason,
+            metadata=metadata,
+        )
+        failure_policy = classify_tool_failure(result)
+        policy_metadata = failure_policy_metadata(failure_policy)
+        log_agent_event(
+            logging.WARNING,
+            "agent tool guardrail blocked",
+            event="tool_guardrail",
+            state=state,
+            tool_name=tool_name,
+            success=False,
+            error_code=result.error_code,
+            raw_payload=result,
+            metadata={**metadata, **policy_metadata},
+        )
+        self._record_event(
+            build_trace_event(
+                trace_id=state.trace_id,
+                run_id=state.run_id,
+                user_id=context.user_id or state.user_id,
+                session_id=state.session_id,
+                event_type=TraceEventType.ERROR,
+                step_index=state.round_index,
+                status_before=state.status.value,
+                status_after=AgentStatus.FAILED.value,
+                tool_name=tool_name,
+                input_payload=tool_input,
+                output_payload=result,
+                error_code=result.error_code,
+                message=result.message,
+                metadata={"source": "tool_guardrail", **metadata, **policy_metadata},
+            )
+        )
         return result
 
     def _record_event(self, event: TraceEvent) -> None:

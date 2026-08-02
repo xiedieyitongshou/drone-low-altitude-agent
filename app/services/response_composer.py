@@ -11,7 +11,7 @@ from app.schemas.composed_response import (
     UnifiedBusinessResponse,
 )
 from app.services.advice_retriever import build_advice_context, retrieve_advice, retrieve_knowledge_by_request
-from app.services.response_explainer import explain_business_response
+from app.services.response_explainer import build_explanation_guardrail_metadata, explain_business_response
 
 
 def compose_evaluation_response(response: CruiseAssessmentResponse) -> UnifiedBusinessResponse:
@@ -225,6 +225,10 @@ def _with_explanation(response: UnifiedBusinessResponse) -> UnifiedBusinessRespo
     response.explanation = explanation.text
     response.explanation_source = explanation.source
     response.llm_used = explanation.llm_used
+    response.details = {
+        **response.details,
+        "explanation_guardrail": build_explanation_guardrail_metadata(explanation),
+    }
     return response
 
 

@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 from app.agent.executor import ToolExecutor
 from app.agent.failure_policy import ToolRecoveryAction, classify_tool_failure, failure_policy_metadata
 from app.agent.fallback import build_agent_fallback_output, build_clarification_message, build_tool_failure_message
+from app.agent.guardrail import GuardrailAction, check_input_guardrail, check_output_guardrail, guardrail_metadata
 from app.agent.logging import log_agent_event
 from app.agent.planner import AgentPlan, AgentPlanAction, plan_next_step
 from app.agent.state import (
@@ -19,6 +20,8 @@ from app.agent.state import (
     record_tool_result,
 )
 from app.agent.tools import ToolExecutionContext, ToolRegistry, default_tool_registry
+from app.agent.trace import TraceEventType, build_trace_event
+from app.services.agent_trace import record_trace_event
 
 
 FallbackHandler = Callable[[AgentState, AgentPlan | None], Any]
@@ -59,6 +62,34 @@ class AgentLoop:
         plans: list[AgentPlan] = []
         current_state = state
         execution_context = context or ToolExecutionContext(user_id=state.user_id)
+        input_guardrail = check_input_guardrail(current_state)
+        self._record_guardrail_event(current_state, input_guardrail)
+        if not input_guardrail.allowed:
+            if input_guardrail.action == GuardrailAction.ASK_CLARIFICATION:
+                current_state = mark_needs_clarification(
+                    current_state,
+                    [],
+                    message=input_guardrail.reason,
+                )
+                return AgentLoopResult(
+                    success=True,
+                    final_state=current_state,
+                    message=input_guardrail.reason,
+                    output=build_agent_fallback_output(
+                        state=current_state,
+                        message=input_guardrail.reason,
+                    ),
+                    requires_clarification=True,
+                    plans=plans,
+                )
+            return self._fallback(
+                current_state,
+                None,
+                plans=plans,
+                error_code=input_guardrail.error_code or "INPUT_GUARDRAIL_BLOCKED",
+                message=input_guardrail.reason,
+                allow_legacy_fallback=False,
+            )
 
         for _ in range(self.max_iterations):
             plan = plan_next_step(current_state, tool_registry=self.tool_registry)
@@ -178,6 +209,22 @@ class AgentLoop:
             if plan.action == AgentPlanAction.RESPOND_DIRECTLY:
                 if current_state.status != AgentStatus.COMPLETED:
                     current_state = mark_completed(current_state, message=plan.reason)
+                output = _build_loop_output(current_state)
+                output_guardrail = check_output_guardrail(
+                    state=current_state,
+                    output=output,
+                    message=plan.reason,
+                )
+                self._record_guardrail_event(current_state, output_guardrail)
+                if not output_guardrail.allowed:
+                    return self._fallback(
+                        current_state,
+                        plan,
+                        plans=plans,
+                        error_code=output_guardrail.error_code or "OUTPUT_GUARDRAIL_BLOCKED",
+                        message=output_guardrail.reason,
+                        allow_legacy_fallback=False,
+                    )
                 log_agent_event(
                     logging.INFO,
                     "agent loop completed",
@@ -190,7 +237,7 @@ class AgentLoop:
                     success=True,
                     final_state=current_state,
                     message="agent loop completed",
-                    output=_build_loop_output(current_state),
+                    output=output,
                     last_plan=plan,
                     plans=plans,
                 )
@@ -211,6 +258,35 @@ class AgentLoop:
             error_code="AGENT_LOOP_MAX_ITERATIONS",
             message="agent loop exceeded max iterations",
         )
+
+    def _record_guardrail_event(self, state: AgentState, guardrail_result) -> None:
+        log_agent_event(
+            logging.INFO if guardrail_result.allowed else logging.WARNING,
+            "agent guardrail check",
+            event="guardrail",
+            state=state,
+            success=guardrail_result.allowed,
+            error_code=guardrail_result.error_code,
+            metadata=guardrail_metadata(guardrail_result),
+        )
+        try:
+            record_trace_event(
+                build_trace_event(
+                    trace_id=state.trace_id,
+                    run_id=state.run_id,
+                    user_id=state.user_id,
+                    session_id=state.session_id,
+                    event_type=TraceEventType.STATE_UPDATE if guardrail_result.allowed else TraceEventType.ERROR,
+                    step_index=state.round_index,
+                    status_before=state.status.value,
+                    status_after=state.status.value if guardrail_result.allowed else AgentStatus.FAILED.value,
+                    error_code=guardrail_result.error_code,
+                    message=guardrail_result.reason,
+                    metadata={"source": "agent_guardrail", **guardrail_metadata(guardrail_result)},
+                )
+            )
+        except Exception:
+            return
 
     def _fallback(
         self,
