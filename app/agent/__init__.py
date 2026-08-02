@@ -32,6 +32,12 @@ from app.agent.fallback import (
 from app.agent.logging import build_agent_log_context, log_agent_event, summarize_for_log
 from app.agent.loop import AgentLoop, AgentLoopResult
 from app.agent.planner import AgentPlan, AgentPlanAction, plan_next_step
+from app.agent.rag_policy import (
+    RagDecision,
+    RagToolPolicy,
+    decide_rag_tool_policy,
+    rag_policy_metadata,
+)
 from app.agent.state import (
     AgentState,
     AgentStatus,
@@ -65,6 +71,8 @@ __all__ = [
     "AgentBusinessRoute",
     "AgentContextMergeResult",
     "AgentRouteKind",
+    "RagDecision",
+    "RagToolPolicy",
     "AgentLoop",
     "AgentLoopResult",
     "ToolExecutionContext",
@@ -91,6 +99,7 @@ __all__ = [
     "build_empty_result_message",
     "build_tool_failure_message",
     "default_tool_registry",
+    "decide_rag_tool_policy",
     "failure_policy_metadata",
     "get_business_route",
     "initialize_state",
@@ -104,6 +113,7 @@ __all__ = [
     "log_agent_event",
     "list_business_routes",
     "plan_next_step",
+    "rag_policy_metadata",
     "record_tool_result",
     "normalize_business_intent",
     "resolve_route_missing_fields",

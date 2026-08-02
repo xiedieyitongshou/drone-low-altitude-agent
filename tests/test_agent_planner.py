@@ -146,6 +146,8 @@ def test_plan_maps_knowledge_intent_to_rag_tool_with_metadata_context():
     assert plan.metadata["side_effect"] == "read_only"
     assert plan.metadata["route_kind"] == "knowledge_query"
     assert plan.metadata["target_endpoint"] == "/knowledge/advice/retrieve"
+    assert plan.metadata["rag_decision"] == "use_rag"
+    assert plan.metadata["rag_tool_name"] == "query_knowledge_snippets"
 
 
 def test_plan_maps_explain_intent_to_rule_explanation_tool():
@@ -168,6 +170,7 @@ def test_plan_maps_explain_intent_to_rule_explanation_tool():
     assert plan.tool_input["overall_decision"] == "禁飞"
     assert plan.tool_input["risk_reasons"] == ["风速偏高"]
     assert plan.metadata["route_kind"] == "explanation_query"
+    assert plan.metadata["rag_decision"] == "skip_rag"
 
 
 def test_plan_maps_history_intent_to_history_tool():
@@ -184,6 +187,7 @@ def test_plan_maps_history_intent_to_history_tool():
     assert plan.tool_name == "query_user_history"
     assert plan.tool_input["keyword"] == "深圳"
     assert plan.metadata["route_kind"] == "history_query"
+    assert plan.metadata["rag_decision"] == "skip_rag"
 
 
 def test_plan_responds_directly_when_tool_result_already_exists():

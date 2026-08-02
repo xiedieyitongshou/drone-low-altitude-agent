@@ -4,6 +4,7 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from app.agent.business_routes import build_route_tool_input, get_business_route, normalize_business_intent, resolve_route_missing_fields
+from app.agent.rag_policy import decide_rag_tool_policy, rag_policy_metadata
 from app.agent.state import AgentState, AgentStatus
 from app.agent.tools import ToolRegistry, default_tool_registry
 
@@ -78,6 +79,7 @@ def plan_next_step(
             metadata={"intent": intent},
         )
     tool_name = route.primary_tool
+    rag_policy = decide_rag_tool_policy(intent=intent, query=state.query)
 
     if tool_name in state.tool_results:
         return AgentPlan(
@@ -106,6 +108,7 @@ def plan_next_step(
             "target_endpoint": route.target_endpoint,
             "side_effect": tool_spec.side_effect,
             "risk_level": tool_spec.risk_level,
+            **rag_policy_metadata(rag_policy),
         },
     )
 

@@ -411,6 +411,12 @@ Agent 业务路由、查询工具、多轮追问和任务修改相关测试：
 .\.venv\Scripts\python.exe -m pytest tests/test_agent_business_routes.py tests/test_agent_context_manager.py tests/test_agent_input_samples.py tests/test_nl_parser_business_intents.py tests/test_risk_rule_explainer.py tests/test_task_orchestrator_agent_context.py
 ```
 
+混合编排端到端验收测试：
+
+```bash
+.\.venv\Scripts\python.exe -m pytest tests/test_agent_mixed_orchestration_e2e.py
+```
+
 检查 Alembic 模型和迁移是否一致：
 
 ```bash
@@ -588,11 +594,10 @@ Authorization: Bearer <admin_access_token>
 - 第十阶段：已完成 RAG 知识库 metadata 数据治理，支持知识类型、地域、可见性、租户、用户、版本、有效期和审核状态过滤。
 - 第十一阶段：已完成 Agent Runtime 基础改造，包含 Tool Registry、AgentState、规则 Planner、最小 AgentLoop、`AGENT_RUNTIME_MODE` 灰度接入和完整回归测试。
 - 第十二阶段：已完成 Agent Trace、结构化日志、工具失败分类、恢复策略、兜底输出和用户级 trace 查询闭环。
-- 第十三阶段：已完成混合型业务编排前半部分，包含业务路由、查询类工具化、规则解释、多轮 pending task、Profile 兼容补齐和任务修改后的状态重算。
+- 第十三阶段：已完成混合型业务编排，包含业务路由、查询类工具化、规则解释、RAG 可选调用策略、多轮 pending task、Profile 兼容补齐、任务修改后的状态重算和 E2E 验收测试。
 
 ## 后续计划
 
-- 第 14 周后续：继续完善 RAG 作为可选工具接入、组合业务链路和第 14 周演示用例。
 - 第 15 周：Agent Eval 与 Tool Calling 质量评估，用样例集评估意图识别、工具选择、多轮状态和失败恢复。
 - 第 16 周：Guardrail、安全边界与 Agent 输出约束，限制越权调用、无依据政策结论和高风险过度承诺。
 - 第 17 周：Hybrid RAG 检索增强，在 Day70 数据治理基础上补齐 BM25、Embedding、Hybrid Retrieval、chunk 策略、rerank、query rewrite、低置信 fallback 和 RAG Eval。

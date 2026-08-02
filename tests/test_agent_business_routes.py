@@ -18,6 +18,7 @@ def test_business_routes_cover_primary_agent_intents():
     assert routes["explain"].route_kind == AgentRouteKind.EXPLANATION_QUERY
     assert routes["knowledge"].route_kind == AgentRouteKind.KNOWLEDGE_QUERY
     assert routes["history"].route_kind == AgentRouteKind.HISTORY_QUERY
+    assert routes["knowledge"].primary_tool == "query_knowledge_snippets"
 
 
 def test_business_route_aliases_map_to_canonical_intents():
