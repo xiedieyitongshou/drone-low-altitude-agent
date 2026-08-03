@@ -222,5 +222,7 @@ def _tool_metadata(tool_registry: ToolRegistry, tool_name: str) -> dict[str, obj
         "risk_level": spec.risk_level,
         "requires_auth": spec.requires_auth,
         "requires_admin": spec.requires_admin,
+        "allowed_roles": list(spec.allowed_roles),
+        "user_scope": spec.user_scope,
         "timeout_ms": spec.timeout_ms,
     }

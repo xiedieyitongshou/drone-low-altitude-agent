@@ -32,12 +32,15 @@ from app.agent.fallback import (
 from app.agent.guardrail import (
     GuardrailAction,
     GuardrailCheckpoint,
+    GuardrailExplanation,
     GuardrailResult,
+    build_guardrail_explanation,
     check_input_guardrail,
     check_output_guardrail,
     check_output_text_guardrail,
     check_response_explanation_input_guardrail,
     check_tool_guardrail,
+    extract_guardrail_explanation_from_metadata,
     guardrail_metadata,
 )
 from app.agent.logging import build_agent_log_context, log_agent_event, summarize_for_log
@@ -70,6 +73,7 @@ from app.agent.tools import (
     ToolResult,
     ToolSideEffect,
     ToolSpec,
+    ToolUserScope,
     default_tool_registry,
 )
 
@@ -88,6 +92,7 @@ __all__ = [
     "AgentLoopResult",
     "GuardrailAction",
     "GuardrailCheckpoint",
+    "GuardrailExplanation",
     "GuardrailResult",
     "ToolExecutionContext",
     "ToolExecutor",
@@ -99,6 +104,7 @@ __all__ = [
     "ToolResult",
     "ToolSideEffect",
     "ToolSpec",
+    "ToolUserScope",
     "ToolRecoveryAction",
     "TraceEvent",
     "TraceEventType",
@@ -112,6 +118,7 @@ __all__ = [
     "build_clarification_message",
     "build_empty_result_message",
     "build_tool_failure_message",
+    "build_guardrail_explanation",
     "check_input_guardrail",
     "check_output_guardrail",
     "check_output_text_guardrail",
@@ -122,6 +129,7 @@ __all__ = [
     "failure_policy_metadata",
     "get_business_route",
     "guardrail_metadata",
+    "extract_guardrail_explanation_from_metadata",
     "initialize_state",
     "mark_completed",
     "mark_failed",

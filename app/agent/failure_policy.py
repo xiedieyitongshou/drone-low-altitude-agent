@@ -36,6 +36,8 @@ ERROR_CODE_FAILURE_TYPES: dict[str, ToolFailureType] = {
     "INVALID_TOOL_INPUT": ToolFailureType.INVALID_INPUT,
     "AUTH_CONTEXT_REQUIRED": ToolFailureType.AUTH_REQUIRED,
     "ADMIN_CONTEXT_REQUIRED": ToolFailureType.PERMISSION_DENIED,
+    "TOOL_PERMISSION_DENIED": ToolFailureType.PERMISSION_DENIED,
+    "TOOL_USER_SCOPE_VIOLATION": ToolFailureType.PERMISSION_DENIED,
     "TOOL_NOT_FOUND": ToolFailureType.NOT_FOUND,
     "TimeoutError": ToolFailureType.TIMEOUT,
     "TimeoutException": ToolFailureType.TIMEOUT,

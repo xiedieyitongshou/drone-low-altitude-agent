@@ -7,7 +7,13 @@ from pydantic import BaseModel, Field
 from app.agent.executor import ToolExecutor
 from app.agent.failure_policy import ToolRecoveryAction, classify_tool_failure, failure_policy_metadata
 from app.agent.fallback import build_agent_fallback_output, build_clarification_message, build_tool_failure_message
-from app.agent.guardrail import GuardrailAction, check_input_guardrail, check_output_guardrail, guardrail_metadata
+from app.agent.guardrail import (
+    GuardrailAction,
+    GuardrailResult,
+    check_input_guardrail,
+    check_output_guardrail,
+    guardrail_metadata,
+)
 from app.agent.logging import log_agent_event
 from app.agent.planner import AgentPlan, AgentPlanAction, plan_next_step
 from app.agent.state import (
@@ -78,6 +84,7 @@ class AgentLoop:
                     output=build_agent_fallback_output(
                         state=current_state,
                         message=input_guardrail.reason,
+                        guardrail_result=input_guardrail,
                     ),
                     requires_clarification=True,
                     plans=plans,
@@ -89,6 +96,7 @@ class AgentLoop:
                 error_code=input_guardrail.error_code or "INPUT_GUARDRAIL_BLOCKED",
                 message=input_guardrail.reason,
                 allow_legacy_fallback=False,
+                guardrail_result=input_guardrail,
             )
 
         for _ in range(self.max_iterations):
@@ -224,6 +232,7 @@ class AgentLoop:
                         error_code=output_guardrail.error_code or "OUTPUT_GUARDRAIL_BLOCKED",
                         message=output_guardrail.reason,
                         allow_legacy_fallback=False,
+                        guardrail_result=output_guardrail,
                     )
                 log_agent_event(
                     logging.INFO,
@@ -259,7 +268,7 @@ class AgentLoop:
             message="agent loop exceeded max iterations",
         )
 
-    def _record_guardrail_event(self, state: AgentState, guardrail_result) -> None:
+    def _record_guardrail_event(self, state: AgentState, guardrail_result: GuardrailResult) -> None:
         log_agent_event(
             logging.INFO if guardrail_result.allowed else logging.WARNING,
             "agent guardrail check",
@@ -297,6 +306,7 @@ class AgentLoop:
         error_code: str,
         message: str,
         allow_legacy_fallback: bool = True,
+        guardrail_result: GuardrailResult | None = None,
     ) -> AgentLoopResult:
         failed_state = state if state.status == AgentStatus.FAILED else mark_failed(
             state,
@@ -333,6 +343,7 @@ class AgentLoop:
                 policy=failure_policy,
                 tool_name=plan.tool_name if plan else None,
                 fallback_used=fallback_result is not None,
+                guardrail_result=guardrail_result,
             ),
             fallback_used=fallback_result is not None,
             fallback_result=fallback_result,

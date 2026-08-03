@@ -178,13 +178,14 @@ docker compose exec app python -m pytest
 - Agent 查询工具：已新增知识片段查询和规则来源解释能力，查询类问题不会触发完整风险评估链路。
 - Agent 错误恢复：已引入工具失败分类、恢复策略和兜底输出，支持参数缺失追问、空结果提示、工具异常转 legacy fallback、权限错误直接拒绝等路径。
 - Agent Trace 闭环：已记录 plan、tool_call、tool_result、error、fallback、final_response 等事件，并支持按当前登录用户查询自己的执行链路。
-- Agent Guardrail：已接入输入、工具调用前和最终输出三个强制检查点；Guardrail 不作为可选 Tool，而是固定在 Agent Runtime 内部执行。
+- Agent Guardrail：已接入输入、工具调用前和最终输出三个强制检查点；支持角色、用户作用域、payload 用户伪造拦截、拒绝结果解释和 trace 可追溯。
 - 会话记忆：支持 `ttlcache`、`redis`、`database` 三种后端，按 `user_id + session_id` 隔离短期上下文。
 - Profile Memory：绑定真实用户，支持查看和编辑默认地点、任务类型、时间段、输出偏好和常用列表。
 - Conversation History：`/agent/query` 调用后自动保存自然语言请求、解析结果、响应摘要和完整响应，并支持按当前用户隔离查询和关键词检索。
 - RAG 建议原型：基于本地知识库 JSON 和 TF-IDF baseline 检索风险说明与操作建议；知识条目已支持类型、地域、权限、租户、用户、版本、时效和审核状态等 metadata。
 - RAG 数据治理：检索前按 `visibility`、`tenant_id`、`user_id` 做用户隔离，按 `region`、`province`、`city`、`task_type`、`risk_tags`、`effective_at`、`expires_at`、`review_status` 做业务过滤，避免不同用户、不同地区、过期知识互相污染。
 - LLM 增强：已引入统一 LLM 客户端，复用于自然语言任务解析和最终结果解释；输出润色已接入 Pre-LLM / Post-LLM Guardrail，大模型只负责表达优化，不替代规则引擎和安全边界判断。
+- 风险输出模板：已新增固定风险输出模板、官方审批边界说明、高风险关键词复检和快照式测试，避免最终回答出现过度承诺。
 
 ## 系统结构
 
@@ -230,9 +231,10 @@ Pre-LLM Output Guardrail / LLM 结果解释 / 模板解释 fallback / Post-LLM O
 - Service / Orchestrator 负责组织流程，不把规则细节写死在接口中；Agent Runtime 通过业务路由、工具注册、状态管理、上下文合并和循环执行逐步替代固定 workflow。
 - Context Manager 层处理多轮 pending task、用户输入覆盖、Profile 兼容补齐和受影响工具标记，安全决策类任务缺关键字段时仍优先追问。
 - Trace / Logging 层记录 Agent 状态转换、工具调用、错误分类和兜底路径，用于解释单次请求的执行过程。
-- Guardrail 层固定在输入、工具调用前和最终输出阶段执行，负责拦截危险输入、越权工具调用和过度承诺输出。
+- Guardrail 层固定在输入、工具调用前和最终输出阶段执行，负责拦截危险输入、越权工具调用和过度承诺输出；每次拒绝或降级都会生成 `guardrail_explanation`。
 - Auth / Memory 层只负责身份识别、数据归属和上下文补全，不参与飞行安全判断。
-- LLM 解释层只在 Guardrail 允许的范围内润色表达；LLM 输出不合规时会丢弃并回退模板解释。
+- LLM 解释层只在 Guardrail 允许的范围内润色表达；LLM 输出不合规时会丢弃并回退固定风险输出模板。
+- Risk Output Template 层根据结构化业务结果生成稳定输出，使用关键词复检和快照测试约束“禁飞、谨慎飞行、适飞、无推荐窗口”等场景。
 - RAG 层先完成企业知识库常见的数据治理，再升级为 BM25 + Embedding + Hybrid Retrieval 的可评估检索工具。
 
 ## 主要接口
@@ -422,10 +424,10 @@ Agent 业务路由、查询工具、多轮追问和任务修改相关测试：
 .\.venv\Scripts\python.exe -m pytest tests/test_agent_mixed_orchestration_e2e.py
 ```
 
-Agent Guardrail 和 DeepSeek 输出润色联动测试：
+Agent Guardrail、DeepSeek 输出润色联动和风险输出模板测试：
 
 ```bash
-.\.venv\Scripts\python.exe -m pytest tests/test_agent_guardrail.py tests/test_response_explainer_guardrail.py
+.\.venv\Scripts\python.exe -m pytest tests/test_agent_guardrail.py tests/test_response_explainer_guardrail.py tests/test_risk_output_templates.py
 ```
 
 检查 Alembic 模型和迁移是否一致：
@@ -606,11 +608,11 @@ Authorization: Bearer <admin_access_token>
 - 第十一阶段：已完成 Agent Runtime 基础改造，包含 Tool Registry、AgentState、规则 Planner、最小 AgentLoop、`AGENT_RUNTIME_MODE` 灰度接入和完整回归测试。
 - 第十二阶段：已完成 Agent Trace、结构化日志、工具失败分类、恢复策略、兜底输出和用户级 trace 查询闭环。
 - 第十三阶段：已完成混合型业务编排，包含业务路由、查询类工具化、规则解释、RAG 可选调用策略、多轮 pending task、Profile 兼容补齐、任务修改后的状态重算和 E2E 验收测试。
-- 第十四阶段：已完成 Guardrail 基础接入，包含输入拦截、工具调用前认证/权限检查、最终输出约束，以及 DeepSeek 润色前后双重 Output Guardrail。
+- 第十四阶段：已完成 Guardrail 基础接入，包含输入拦截、工具调用前认证/权限检查、用户作用域边界、Guardrail trace 可解释、最终输出约束、DeepSeek 润色前后双重 Output Guardrail，以及风险输出模板和快照测试。
 
 ## 后续计划
 
-- 第 15 周：Guardrail、安全边界与 Agent 输出约束，继续补齐工具权限等级、Prompt/Parser 版本记录、安全回归测试和高风险输出模板。
+- 第 15 周：Guardrail、安全边界与 Agent 输出约束，继续补齐安全与权限回归测试、风险输出模板、拒答策略和周总结文档。
 - 第 16 周：Hybrid RAG 检索增强，在 Day70 数据治理基础上补齐 BM25、Embedding、Hybrid Retrieval、chunk 策略、rerank、query rewrite、低置信 fallback 和 RAG Eval。
 - 第 17 周：Agent Eval 与 Tool Calling / RAG Eval 质量评估，用样例集评估意图识别、工具选择、多轮状态、失败恢复和 RAG 召回效果。
 - 第 18 周：CI/CD、README、面试指南和端到端演示收尾，形成可运行、可解释、可评估、可展示的求职版本。

@@ -23,6 +23,7 @@ from app.services.risk_rule_explainer import explain_risk_rules
 
 ToolSideEffect = Literal["read_only", "compute_only", "write", "external_call"]
 ToolRiskLevel = Literal["low", "medium", "high"]
+ToolUserScope = Literal["public", "current_user", "admin"]
 ToolHandler = Callable[[dict[str, Any], "ToolExecutionContext"], Any]
 
 
@@ -49,6 +50,8 @@ class ToolSpec(BaseModel):
     risk_level: ToolRiskLevel
     requires_auth: bool = True
     requires_admin: bool = False
+    allowed_roles: list[str] = Field(default_factory=lambda: ["user", "admin"])
+    user_scope: ToolUserScope = "current_user"
     timeout_ms: int = 30000
     input_schema_name: str | None = None
     output_schema_name: str | None = None
@@ -139,6 +142,8 @@ class ToolRegistry:
             metadata={
                 "side_effect": tool.spec.side_effect,
                 "risk_level": tool.spec.risk_level,
+                "allowed_roles": list(tool.spec.allowed_roles),
+                "user_scope": tool.spec.user_scope,
             },
         )
 
@@ -207,6 +212,7 @@ def create_default_tool_registry() -> ToolRegistry:
             side_effect="read_only",
             risk_level="low",
             requires_auth=False,
+            user_scope="public",
         ),
         _explain_risk_rules,
     )

@@ -42,6 +42,8 @@ def test_explainer_discards_unsafe_llm_output_and_falls_back_to_template(monkeyp
     assert result.guardrail_results[-1].error_code == "UNSAFE_FINAL_RESPONSE"
     assert "绝对安全" not in result.text
     assert "不能替代官方审批" in result.text
+    assert "当前结论：" in result.text
+    assert "边界说明：" in result.text
 
 
 def test_explainer_keeps_safe_llm_output_when_guardrail_passes(monkeypatch):

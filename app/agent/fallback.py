@@ -1,6 +1,11 @@
 from typing import Any
 
 from app.agent.failure_policy import ToolFailurePolicy, ToolFailureType, ToolRecoveryAction
+from app.agent.guardrail import (
+    GuardrailResult,
+    build_guardrail_explanation,
+    extract_guardrail_explanation_from_metadata,
+)
 from app.agent.state import AgentState
 from app.agent.tools import ToolResult
 
@@ -59,7 +64,12 @@ def build_agent_fallback_output(
     policy: ToolFailurePolicy | None = None,
     tool_name: str | None = None,
     fallback_used: bool = False,
+    guardrail_result: GuardrailResult | None = None,
 ) -> dict[str, Any]:
+    guardrail_explanation = _resolve_guardrail_explanation(
+        state=state,
+        guardrail_result=guardrail_result,
+    )
     return {
         "message": message,
         "trace_id": state.trace_id,
@@ -70,5 +80,19 @@ def build_agent_fallback_output(
         "failure_type": policy.failure_type.value if policy else None,
         "recovery_action": policy.recovery_action.value if policy else None,
         "retryable": policy.retryable if policy else False,
+        "guardrail": guardrail_explanation,
         "errors": state.errors,
     }
+
+
+def _resolve_guardrail_explanation(
+    *,
+    state: AgentState,
+    guardrail_result: GuardrailResult | None,
+) -> dict[str, Any] | None:
+    if guardrail_result is not None:
+        return build_guardrail_explanation(guardrail_result).model_dump(mode="json")
+    if not state.tool_results:
+        return None
+    latest_result = next(reversed(state.tool_results.values()))
+    return extract_guardrail_explanation_from_metadata(latest_result.metadata)
