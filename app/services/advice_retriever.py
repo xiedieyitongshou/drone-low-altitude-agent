@@ -13,7 +13,11 @@ from app.schemas.advice import (
     KnowledgeRetrievalResponse,
     KnowledgeType,
 )
-from app.services.vector_knowledge_store import LocalVectorKnowledgeStore, build_retrieval_query
+from app.services.knowledge_retrievers import (
+    KnowledgeRetriever,
+    build_knowledge_retrieval_query,
+    create_default_knowledge_retriever,
+)
 
 
 DEFAULT_KNOWLEDGE_PATH = Path(os.getenv("ADVICE_KNOWLEDGE_PATH", "data/knowledge/advice_rules.json"))
@@ -163,6 +167,7 @@ def retrieve_knowledge_by_request(
     payload: KnowledgeRetrievalRequest,
     *,
     access_context: KnowledgeAccessContext | None = None,
+    retriever: KnowledgeRetriever | None = None,
 ) -> KnowledgeRetrievalResponse:
     context = AdviceRetrievalContext(
         task_type=payload.task_type,
@@ -180,9 +185,8 @@ def retrieve_knowledge_by_request(
         city=payload.city,
     )
     advice = retrieve_advice(context)
-    vector_store = LocalVectorKnowledgeStore()
-    vector_store.build_index()
-    query_text = build_retrieval_query(
+    active_retriever = retriever or create_default_knowledge_retriever()
+    query_text = build_knowledge_retrieval_query(
         task_type=context.task_type,
         overall_decision=context.overall_decision,
         risk_reasons=payload.risk_reasons,
@@ -192,7 +196,7 @@ def retrieve_knowledge_by_request(
         province=payload.province,
         city=payload.city,
     )
-    snippets = vector_store.retrieve(
+    snippets = active_retriever.retrieve(
         query_text,
         top_k=payload.top_k,
         access_context=access_context,

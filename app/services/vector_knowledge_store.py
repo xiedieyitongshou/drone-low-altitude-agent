@@ -45,7 +45,7 @@ class LocalVectorKnowledgeStore:
 
     def build_index(self) -> int:
         library = self._load_library()
-        documents = [self._to_document(item) for item in library.items]
+        documents = build_indexed_documents(library)
         corpus = [doc.content for doc in documents]
         vectorizer = TfidfVectorizer(analyzer="char_wb", ngram_range=(2, 4), lowercase=False)
         matrix = vectorizer.fit_transform(corpus)
@@ -117,53 +117,6 @@ class LocalVectorKnowledgeStore:
     def _load_library(self) -> KnowledgeAdviceLibrary:
         payload = json.loads(self.knowledge_path.read_text(encoding="utf-8-sig"))
         return KnowledgeAdviceLibrary.model_validate(payload)
-
-    def _to_document(self, item: KnowledgeAdviceItem) -> IndexedKnowledgeDocument:
-        metadata = {
-            "category": item.category.value,
-            "knowledge_type": item.knowledge_type.value,
-            "risk_type": item.risk_type,
-            "task_type": item.task_type,
-            "warning_type": item.warning_type,
-            "warning_level": item.warning_level,
-            "decision_scope": item.decision_scope,
-            "region": item.region,
-            "province": item.province,
-            "city": item.city,
-            "visibility": item.visibility.value,
-            "tenant_id": item.tenant_id,
-            "user_id": item.user_id,
-            "version": item.version,
-            "effective_at": item.effective_at,
-            "expires_at": item.expires_at,
-            "review_status": item.review_status.value,
-            "priority": item.priority.value,
-            "action_type": item.action_type.value if item.action_type else None,
-            "keywords": item.keywords,
-        }
-        content = "\n".join(
-            [
-                f"标题: {item.title}",
-                f"建议: {item.advice_text}",
-                f"知识类型: {item.knowledge_type}",
-                f"任务类型: {' '.join(item.task_type)}",
-                f"风险标签: {' '.join(item.risk_type)}",
-                f"预警类型: {' '.join(item.warning_type)}",
-                f"预警等级: {' '.join(item.warning_level)}",
-                f"适用结论: {' '.join(item.decision_scope)}",
-                f"适用地区: {' '.join(value for value in [item.province, item.city, item.region] if value)}",
-                f"关键词: {' '.join(item.keywords)}",
-                f"备注: {item.notes or ''}",
-            ]
-        )
-        return IndexedKnowledgeDocument(
-            id=item.id,
-            title=item.title,
-            content=content,
-            source=item.source,
-            source_url=item.source_url,
-            metadata=metadata,
-        )
 
 
 def is_document_visible(
@@ -311,4 +264,56 @@ def build_retrieval_query(
             f"预警等级: {' '.join(warning_levels)}",
             f"任务地区: {' '.join(value for value in [province, city, region] if value)}",
         ]
+    )
+
+
+def build_indexed_documents(library: KnowledgeAdviceLibrary) -> list[IndexedKnowledgeDocument]:
+    return [_to_document(item) for item in library.items]
+
+
+def _to_document(item: KnowledgeAdviceItem) -> IndexedKnowledgeDocument:
+    metadata = {
+        "category": item.category.value,
+        "knowledge_type": item.knowledge_type.value,
+        "risk_type": item.risk_type,
+        "task_type": item.task_type,
+        "warning_type": item.warning_type,
+        "warning_level": item.warning_level,
+        "decision_scope": item.decision_scope,
+        "region": item.region,
+        "province": item.province,
+        "city": item.city,
+        "visibility": item.visibility.value,
+        "tenant_id": item.tenant_id,
+        "user_id": item.user_id,
+        "version": item.version,
+        "effective_at": item.effective_at,
+        "expires_at": item.expires_at,
+        "review_status": item.review_status.value,
+        "priority": item.priority.value,
+        "action_type": item.action_type.value if item.action_type else None,
+        "keywords": item.keywords,
+    }
+    content = "\n".join(
+        [
+            f"标题: {item.title}",
+            f"建议: {item.advice_text}",
+            f"知识类型: {item.knowledge_type}",
+            f"任务类型: {' '.join(item.task_type)}",
+            f"风险标签: {' '.join(item.risk_type)}",
+            f"预警类型: {' '.join(item.warning_type)}",
+            f"预警等级: {' '.join(item.warning_level)}",
+            f"适用结论: {' '.join(item.decision_scope)}",
+            f"适用地区: {' '.join(value for value in [item.province, item.city, item.region] if value)}",
+            f"关键词: {' '.join(item.keywords)}",
+            f"备注: {item.notes or ''}",
+        ]
+    )
+    return IndexedKnowledgeDocument(
+        id=item.id,
+        title=item.title,
+        content=content,
+        source=item.source,
+        source_url=item.source_url,
+        metadata=metadata,
     )
