@@ -5,7 +5,13 @@ from app.schemas.advice import (
     KnowledgeBusinessContext,
 )
 from app.services.bm25_knowledge_store import LocalBm25KnowledgeStore, tokenize_text
-from app.services.knowledge_retrievers import Bm25KnowledgeRetriever, TfidfKnowledgeRetriever, create_default_knowledge_retriever
+from app.services.knowledge_retrievers import (
+    Bm25KnowledgeRetriever,
+    EmbeddingKnowledgeRetriever,
+    HybridKnowledgeRetriever,
+    TfidfKnowledgeRetriever,
+    create_default_knowledge_retriever,
+)
 
 
 def test_tokenize_text_supports_chinese_ngrams_and_english_terms():
@@ -35,6 +41,10 @@ def test_bm25_retrieves_keyword_match_and_preserves_metadata_filters(tmp_path):
     assert [item.id for item in result] == ["policy-shenzhen"]
     assert result[0].score > 0
     assert result[0].metadata["retriever"] == "bm25"
+    assert result[0].metadata["knowledge_id"] == "policy-shenzhen"
+    assert result[0].metadata["chunk_id"].startswith("policy-shenzhen::chunk-")
+    assert result[0].metadata["chunk_type"] == "policy_clause"
+    assert result[0].metadata["rerank_boost"] > 0
     assert (index_dir / "bm25_index.pkl").exists()
     assert (index_dir / "bm25_documents.json").exists()
 
@@ -73,6 +83,12 @@ def test_default_retriever_can_switch_between_bm25_and_tfidf(monkeypatch):
 
     monkeypatch.setenv("KNOWLEDGE_RETRIEVER", "tfidf")
     assert isinstance(create_default_knowledge_retriever(), TfidfKnowledgeRetriever)
+
+    monkeypatch.setenv("KNOWLEDGE_RETRIEVER", "embedding")
+    assert isinstance(create_default_knowledge_retriever(), EmbeddingKnowledgeRetriever)
+
+    monkeypatch.setenv("KNOWLEDGE_RETRIEVER", "hybrid")
+    assert isinstance(create_default_knowledge_retriever(), HybridKnowledgeRetriever)
 
     monkeypatch.setenv("KNOWLEDGE_RETRIEVER", "unknown")
     assert isinstance(create_default_knowledge_retriever(), TfidfKnowledgeRetriever)

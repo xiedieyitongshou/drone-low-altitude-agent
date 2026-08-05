@@ -182,7 +182,7 @@ docker compose exec app python -m pytest
 - 会话记忆：支持 `ttlcache`、`redis`、`database` 三种后端，按 `user_id + session_id` 隔离短期上下文。
 - Profile Memory：绑定真实用户，支持查看和编辑默认地点、任务类型、时间段、输出偏好和常用列表。
 - Conversation History：`/agent/query` 调用后自动保存自然语言请求、解析结果、响应摘要和完整响应，并支持按当前用户隔离查询和关键词检索。
-- RAG 检索增强：基于统一 `KnowledgeRetriever` 接口封装检索链路，当前默认使用 BM25 关键词召回，并保留 TF-IDF + cosine similarity 作为 baseline 对照。
+- RAG 检索增强：基于统一 `KnowledgeRetriever` 接口封装检索链路，已支持 BM25、Embedding、Hybrid Retrieval、chunk 级索引、规则 rerank、低置信 query rewrite 和保守 fallback；TF-IDF + cosine similarity 继续作为 baseline 对照。
 - RAG 数据治理：检索前按 `visibility`、`tenant_id`、`user_id` 做用户隔离，按 `region`、`province`、`city`、`task_type`、`risk_tags`、`effective_at`、`expires_at`、`review_status` 做业务过滤，避免不同用户、不同地区、过期知识互相污染。
 - LLM 增强：已引入统一 LLM 客户端，复用于自然语言任务解析和最终结果解释；输出润色已接入 Pre-LLM / Post-LLM Guardrail，大模型只负责表达优化，不替代规则引擎和安全边界判断。
 - 风险输出模板：已新增固定风险输出模板、官方审批边界说明、高风险关键词复检和快照式测试，避免最终回答出现过度承诺。
@@ -235,7 +235,7 @@ Pre-LLM Output Guardrail / LLM 结果解释 / 模板解释 fallback / Post-LLM O
 - Auth / Memory 层只负责身份识别、数据归属和上下文补全，不参与飞行安全判断。
 - LLM 解释层只在 Guardrail 允许的范围内润色表达；LLM 输出不合规时会丢弃并回退固定风险输出模板。
 - Risk Output Template 层根据结构化业务结果生成稳定输出，使用关键词复检和快照测试约束“禁飞、谨慎飞行、适飞、无推荐窗口”等场景。
-- RAG 层已完成 metadata 数据治理、Retriever 抽象、BM25 关键词召回和 TF-IDF baseline 保留，后续继续接入 Embedding 与 Hybrid Retrieval。
+- RAG 层已完成 metadata 数据治理、Retriever 抽象、BM25 关键词召回、Embedding 语义召回、Hybrid 融合排序、按知识类型 chunk、规则 rerank、低置信二次召回和 fallback；召回过程 metadata 可用于后续 trace 与 eval。
 
 ## 主要接口
 
@@ -277,9 +277,9 @@ Pre-LLM Output Guardrail / LLM 结果解释 / 模板解释 fallback / Post-LLM O
 - 会话缓存/持久化：cachetools TTLCache、Redis、Database backend
 - 记忆持久化：users、user_profiles、conversation_records、session_records
 - Agent Runtime：Business Route、Context Manager、Tool Registry、AgentState、Rule Planner、AgentLoop、ToolExecutor、FailurePolicy、TraceEvent、legacy fallback
-- 知识检索：统一 `KnowledgeRetriever` 接口、BM25 默认召回、scikit-learn TF-IDF + cosine similarity baseline、metadata filter
+- 知识检索：统一 `KnowledgeRetriever` 接口、BM25 默认召回、Embedding 语义召回、Hybrid Retrieval、chunk 级索引、规则 rerank、query rewrite、低置信 fallback、scikit-learn TF-IDF baseline、metadata filter
 
-当前 RAG 检索已经从单一 TF-IDF baseline 拆成可替换 Retriever 架构。BM25 用于解决政策名、地名、编号等关键词精确召回；TF-IDF 保留为可对比 baseline；后续 Embedding 解决口语化提问和知识库措辞不一致的语义召回；Hybrid Retrieval 通过融合排序、metadata boost、chunk 策略、rerank 和 RAG Eval 提升可解释性与可验证性。
+当前 RAG 检索已经从单一 TF-IDF baseline 拆成可替换 Retriever 架构。BM25 用于政策名、地名、编号等关键词精确召回；Embedding 用于口语化提问和知识库措辞不一致时的语义召回；Hybrid Retrieval 负责融合两路结果并叠加 metadata boost。索引构建阶段会按 `knowledge_type` 生成 chunk，`policy_hint` 按条款/段落、`sop` 按步骤、`faq` 按问答对、`risk_advice` 保留短块；召回后再根据审核状态、时效、地域精确度、任务类型和风险标签做规则 rerank。低置信或空召回时会进行 query rewrite 和二次召回，仍失败则返回保守说明，避免编造政策依据。
 
 ## 本地运行
 
@@ -356,16 +356,38 @@ KNOWLEDGE_RETRIEVER=bm25
 默认模式，使用 Day100 实现的 BM25 关键词召回。适合政策名、地名、编号、风险词等精确匹配场景。
 
 ```env
+KNOWLEDGE_RETRIEVER=embedding
+```
+
+语义召回模式，使用本地 deterministic `MockEmbeddingProvider` 构建离线可测试向量索引；真实环境可替换为云端或本地 embedding 服务。
+
+```env
+KNOWLEDGE_RETRIEVER=hybrid
+```
+
+混合检索模式，同时召回 BM25 和 Embedding 候选结果，按 `chunk_id` 去重，并融合归一化文本分数与 metadata boost。
+
+```env
 KNOWLEDGE_RETRIEVER=tfidf
 ```
 
 baseline 模式，继续使用原有 TF-IDF + cosine similarity，主要用于后续 RAG Eval 对比。
 
-BM25 和 TF-IDF 都从同一份 `data/knowledge/advice_rules.json` 构建索引，不需要修改原始知识库结构。BM25 会生成独立索引文件：
+```env
+RAG_CONFIDENCE_THRESHOLD=0.2
+KNOWLEDGE_EMBEDDING_MIN_SCORE=0.25
+```
+
+`RAG_CONFIDENCE_THRESHOLD` 用于判断空召回和低置信召回，低于阈值会触发 query rewrite 和二次召回；`KNOWLEDGE_EMBEDDING_MIN_SCORE` 用于过滤低相似度向量召回结果。
+
+BM25、Embedding 和 TF-IDF 都从同一份 `data/knowledge/advice_rules.json` 构建索引，不需要修改原始知识库结构。BM25 与 Embedding 会基于 chunk 构建独立索引文件：
 
 ```text
 data/knowledge/index/bm25_index.pkl
 data/knowledge/index/bm25_documents.json
+data/knowledge/index/embedding_index.pkl
+data/knowledge/index/embedding_documents.json
+data/knowledge/index/embedding_metadata.json
 ```
 - 典型自然语言输入样例沉淀在 `data/agent_input_samples.json`，后续可扩展为 Agent Eval 数据集。
 
@@ -454,10 +476,10 @@ Agent Guardrail、DeepSeek 输出润色联动和风险输出模板测试：
 .\.venv\Scripts\python.exe -m pytest tests/test_agent_guardrail.py tests/test_response_explainer_guardrail.py tests/test_risk_output_templates.py
 ```
 
-RAG Retriever、BM25、TF-IDF baseline 和 metadata filter 测试：
+RAG Retriever、BM25、Embedding、Hybrid、chunk、query rewrite、TF-IDF baseline 和 metadata filter 测试：
 
 ```bash
-.\.venv\Scripts\python.exe -m pytest tests/test_bm25_knowledge_store.py tests/test_knowledge_retrievers.py tests/test_knowledge_access_filter.py tests/test_knowledge_business_filter.py tests/test_rag_policy.py
+.\.venv\Scripts\python.exe -m pytest tests/test_rag_fallback.py tests/test_knowledge_chunker.py tests/test_hybrid_knowledge_retriever.py tests/test_embedding_knowledge_store.py tests/test_bm25_knowledge_store.py tests/test_knowledge_retrievers.py tests/test_knowledge_access_filter.py tests/test_knowledge_business_filter.py tests/test_rag_policy.py
 ```
 
 检查 Alembic 模型和迁移是否一致：
@@ -640,10 +662,11 @@ Authorization: Bearer <admin_access_token>
 - 第十三阶段：已完成混合型业务编排，包含业务路由、查询类工具化、规则解释、RAG 可选调用策略、多轮 pending task、Profile 兼容补齐、任务修改后的状态重算和 E2E 验收测试。
 - 第十四阶段：已完成 Guardrail 基础接入，包含输入拦截、工具调用前认证/权限检查、用户作用域边界、Guardrail trace 可解释、最终输出约束、DeepSeek 润色前后双重 Output Guardrail，以及风险输出模板和快照测试。
 - 第十五阶段：已完成 RAG 检索架构重构和 BM25 关键词召回，包含统一 Retriever 接口、TF-IDF baseline 保留、BM25 独立索引、检索器配置切换和 metadata filter 回归测试。
+- 第十六阶段：已完成 Hybrid RAG 检索增强，包含 Embedding 语义召回、Hybrid 融合排序、metadata boost、按知识类型 chunk、规则 rerank、query rewrite、低置信二次召回和保守 fallback。
 
 ## 后续计划
 
 - 第 15 周：Guardrail、安全边界与 Agent 输出约束，继续补齐安全与权限回归测试、风险输出模板、拒答策略和周总结文档。
-- 第 16 周：Hybrid RAG 检索增强，在 Day70 数据治理和 Day99-Day100 Retriever/BM25 基础上继续补齐 Embedding、Hybrid Retrieval、chunk 策略、rerank、query rewrite、低置信 fallback 和 RAG Eval。
+- 第 16 周：Hybrid RAG 检索增强已完成 Day101-Day104，后续补齐 RAG Eval 和质量样例集。
 - 第 17 周：Agent Eval 与 Tool Calling / RAG Eval 质量评估，用样例集评估意图识别、工具选择、多轮状态、失败恢复和 RAG 召回效果。
 - 第 18 周：CI/CD、README、面试指南和端到端演示收尾，形成可运行、可解释、可评估、可展示的求职版本。

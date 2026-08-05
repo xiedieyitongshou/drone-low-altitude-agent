@@ -18,6 +18,11 @@ from app.services.knowledge_retrievers import (
     build_knowledge_retrieval_query,
     create_default_knowledge_retriever,
 )
+from app.services.rag_fallback import (
+    build_rag_fallback_message,
+    evaluate_rag_confidence,
+    rewrite_rag_query,
+)
 
 
 DEFAULT_KNOWLEDGE_PATH = Path(os.getenv("ADVICE_KNOWLEDGE_PATH", "data/knowledge/advice_rules.json"))
@@ -202,4 +207,92 @@ def retrieve_knowledge_by_request(
         access_context=access_context,
         business_context=business_context,
     )
-    return KnowledgeRetrievalResponse(context=context, snippets=snippets, advice=advice)
+    first_decision = evaluate_rag_confidence(snippets)
+    retrieval_metadata: dict[str, object] = {
+        "retriever": active_retriever.name,
+        "query_rewritten": False,
+        "attempts": [
+            {
+                "attempt": 1,
+                "query": query_text,
+                "status": first_decision.status,
+                "reason": first_decision.reason,
+                "top_score": first_decision.top_score,
+                "result_count": first_decision.result_count,
+                "threshold": first_decision.threshold,
+            }
+        ],
+    }
+    if first_decision.is_confident:
+        return KnowledgeRetrievalResponse(
+            context=context,
+            snippets=_mark_rag_attempt(snippets, attempt=1, query_rewritten=False),
+            advice=advice,
+            retrieval_status=first_decision.status,
+            retrieval_metadata=retrieval_metadata,
+        )
+
+    rewritten_query = rewrite_rag_query(
+        query_text,
+        business_context=business_context,
+        risk_reasons=payload.risk_reasons,
+        warning_types=context.warning_types,
+        warning_levels=context.warning_levels,
+    )
+    rewritten_snippets = active_retriever.retrieve(
+        rewritten_query,
+        top_k=payload.top_k,
+        access_context=access_context,
+        business_context=business_context,
+    )
+    second_decision = evaluate_rag_confidence(rewritten_snippets)
+    retrieval_metadata["query_rewritten"] = True
+    retrieval_metadata["rewrite_query"] = rewritten_query
+    retrieval_metadata["attempts"].append(
+        {
+            "attempt": 2,
+            "query": rewritten_query,
+            "status": second_decision.status,
+            "reason": second_decision.reason,
+            "top_score": second_decision.top_score,
+            "result_count": second_decision.result_count,
+            "threshold": second_decision.threshold,
+        }
+    )
+    if second_decision.is_confident:
+        return KnowledgeRetrievalResponse(
+            context=context,
+            snippets=_mark_rag_attempt(rewritten_snippets, attempt=2, query_rewritten=True),
+            advice=advice,
+            retrieval_status="rewritten_success",
+            retrieval_metadata=retrieval_metadata,
+        )
+
+    return KnowledgeRetrievalResponse(
+        context=context,
+        snippets=[],
+        advice=advice,
+        retrieval_status="fallback",
+        retrieval_message=build_rag_fallback_message(second_decision),
+        retrieval_metadata=retrieval_metadata,
+    )
+
+
+def _mark_rag_attempt(
+    snippets: list,
+    *,
+    attempt: int,
+    query_rewritten: bool,
+) -> list:
+    return [
+        snippet.model_copy(
+            update={
+                "metadata": {
+                    **snippet.metadata,
+                    "rag_attempt": attempt,
+                    "query_rewritten": query_rewritten,
+                }
+            }
+        )
+        for snippet in snippets
+    ]

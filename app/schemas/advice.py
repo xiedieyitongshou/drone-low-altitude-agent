@@ -138,3 +138,6 @@ class KnowledgeRetrievalResponse(BaseModel):
     context: AdviceRetrievalContext
     snippets: list[RetrievedKnowledgeSnippet] = Field(default_factory=list)
     advice: list[AdviceSuggestion] = Field(default_factory=list)
+    retrieval_status: str = "success"
+    retrieval_message: str | None = None
+    retrieval_metadata: dict[str, object] = Field(default_factory=dict)

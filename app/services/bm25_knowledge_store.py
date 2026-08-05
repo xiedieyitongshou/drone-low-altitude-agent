@@ -15,11 +15,11 @@ from app.schemas.advice import (
 from app.services.vector_knowledge_store import (
     DEFAULT_INDEX_DIR,
     DEFAULT_KNOWLEDGE_PATH,
-    IndexedKnowledgeDocument,
-    build_indexed_documents,
     is_document_applicable,
     is_document_visible,
 )
+from app.services.knowledge_chunker import IndexedKnowledgeChunk, build_indexed_chunks
+from app.services.knowledge_reranker import rule_rerank_boost
 
 
 BM25_K1 = 1.5
@@ -48,14 +48,14 @@ class LocalBm25KnowledgeStore:
 
     def build_index(self) -> int:
         library = self._load_library()
-        documents = build_indexed_documents(library)
-        doc_tokens = [_tokenize_document(doc) for doc in documents]
+        chunks = build_indexed_chunks(library)
+        doc_tokens = [_tokenize_chunk(chunk) for chunk in chunks]
         doc_term_freqs = [dict(Counter(tokens)) for tokens in doc_tokens]
         doc_lengths = [len(tokens) for tokens in doc_tokens]
         avg_doc_length = sum(doc_lengths) / len(doc_lengths) if doc_lengths else 0.0
         document_frequency = _document_frequency(doc_tokens)
         idf = {
-            term: math.log(1 + (len(documents) - frequency + 0.5) / (frequency + 0.5))
+            term: math.log(1 + (len(chunks) - frequency + 0.5) / (frequency + 0.5))
             for term, frequency in document_frequency.items()
         }
         index = Bm25Index(
@@ -69,10 +69,10 @@ class LocalBm25KnowledgeStore:
         with self.index_path.open("wb") as file:
             pickle.dump(index, file)
         self.documents_path.write_text(
-            json.dumps([doc.__dict__ for doc in documents], ensure_ascii=False, indent=2),
+            json.dumps([chunk.__dict__ for chunk in chunks], ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
-        return len(documents)
+        return len(chunks)
 
     def retrieve(
         self,
@@ -84,44 +84,45 @@ class LocalBm25KnowledgeStore:
     ) -> list[RetrievedKnowledgeSnippet]:
         self._ensure_index()
         index = self._load_index()
-        documents = [
-            IndexedKnowledgeDocument(**item)
+        chunks = [
+            IndexedKnowledgeChunk(**item)
             for item in json.loads(self.documents_path.read_text(encoding="utf-8-sig"))
         ]
         query_tokens = tokenize_text(query_text)
         if not query_tokens:
             return []
 
-        scored_documents: list[tuple[float, IndexedKnowledgeDocument]] = []
-        for document_index, document in enumerate(documents):
-            if not is_document_visible(document.metadata, access_context):
+        scored_chunks: list[tuple[float, float, IndexedKnowledgeChunk]] = []
+        for chunk_index, chunk in enumerate(chunks):
+            if not is_document_visible(chunk.metadata, access_context):
                 continue
-            if not is_document_applicable(document.metadata, business_context):
+            if not is_document_applicable(chunk.metadata, business_context):
                 continue
 
             score = _bm25_score(
                 query_tokens=query_tokens,
-                term_freqs=index.doc_term_freqs[document_index],
-                doc_length=index.doc_lengths[document_index],
+                term_freqs=index.doc_term_freqs[chunk_index],
+                doc_length=index.doc_lengths[chunk_index],
                 avg_doc_length=index.avg_doc_length,
                 idf=index.idf,
             )
             if score <= 0:
                 continue
-            scored_documents.append((score, document))
+            rerank_boost = rule_rerank_boost(chunk.metadata, business_context)
+            scored_chunks.append((score * (1 + rerank_boost * 0.05), rerank_boost, chunk))
 
-        scored_documents.sort(key=lambda item: (-item[0], item[1].title))
+        scored_chunks.sort(key=lambda item: (-item[0], -item[1], item[2].title))
         return [
             RetrievedKnowledgeSnippet(
-                id=document.id,
-                title=document.title,
-                content=document.content,
+                id=chunk.knowledge_id,
+                title=chunk.title,
+                content=chunk.content,
                 score=round(score, 6),
-                source=document.source,
-                source_url=document.source_url,
-                metadata={**document.metadata, "retriever": "bm25"},
+                source=chunk.source,
+                source_url=chunk.source_url,
+                metadata={**chunk.metadata, "retriever": "bm25", "rerank_boost": round(rerank_boost, 6)},
             )
-            for score, document in scored_documents[:top_k]
+            for score, rerank_boost, chunk in scored_chunks[:top_k]
         ]
 
     def _ensure_index(self) -> None:
@@ -169,10 +170,10 @@ def tokenize_text(text: str) -> list[str]:
     return tokens
 
 
-def _tokenize_document(document: IndexedKnowledgeDocument) -> list[str]:
-    keywords = document.metadata.get("keywords")
+def _tokenize_chunk(chunk: IndexedKnowledgeChunk) -> list[str]:
+    keywords = chunk.metadata.get("keywords")
     keyword_text = " ".join(str(item) for item in keywords) if isinstance(keywords, list) else ""
-    return tokenize_text(f"{document.title}\n{document.content}\n{keyword_text}")
+    return tokenize_text(f"{chunk.title}\n{chunk.content}\n{keyword_text}")
 
 
 def _document_frequency(doc_tokens: list[list[str]]) -> dict[str, int]:
@@ -205,3 +206,4 @@ def _bm25_score(
 
 def _is_chinese_char(value: str) -> bool:
     return len(value) == 1 and "\u4e00" <= value <= "\u9fff"
+
