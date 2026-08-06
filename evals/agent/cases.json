@@ -1,0 +1,245 @@
+[
+  {
+    "id": "agent_evaluate_complete_001",
+    "category": "evaluate",
+    "input": "明天深圳下午2点到5点适合做无人机巡检吗？",
+    "history_state": null,
+    "expected_intent": "evaluate",
+    "expected_route": "evaluate",
+    "expected_tools": [
+      "parse_task",
+      "fetch_weather",
+      "evaluate_risk"
+    ],
+    "unexpected_tools": [
+      "query_user_history",
+      "query_knowledge_snippets"
+    ],
+    "expected_result_keywords": [
+      "深圳",
+      "巡检",
+      "风险",
+      "飞行建议"
+    ],
+    "expected_fallback": false,
+    "notes": "完整字段的单地点风险评估，验证 Agent 是否走评估链路而不是知识查询链路。"
+  },
+  {
+    "id": "agent_recommend_window_001",
+    "category": "recommend",
+    "input": "广州未来72小时什么时候最适合航测？",
+    "history_state": null,
+    "expected_intent": "recommend",
+    "expected_route": "recommend",
+    "expected_tools": [
+      "parse_task",
+      "fetch_weather",
+      "recommend_flight_windows"
+    ],
+    "unexpected_tools": [
+      "compare_locations",
+      "query_user_history"
+    ],
+    "expected_result_keywords": [
+      "广州",
+      "推荐窗口",
+      "可飞时段"
+    ],
+    "expected_fallback": false,
+    "notes": "推荐类任务应调用窗口推荐工具，不应触发多地点比选。"
+  },
+  {
+    "id": "agent_compare_locations_001",
+    "category": "compare",
+    "input": "深圳、广州和珠海明天下午哪个更适合低空巡航？",
+    "history_state": null,
+    "expected_intent": "compare",
+    "expected_route": "compare",
+    "expected_tools": [
+      "parse_task",
+      "fetch_weather",
+      "compare_locations"
+    ],
+    "unexpected_tools": [
+      "query_user_history",
+      "explain_risk_rules"
+    ],
+    "expected_result_keywords": [
+      "深圳",
+      "广州",
+      "珠海",
+      "排序",
+      "推荐"
+    ],
+    "expected_fallback": false,
+    "notes": "多地点输入应进入比选链路，验证工具选择和结果结构。"
+  },
+  {
+    "id": "agent_history_query_001",
+    "category": "query",
+    "input": "查一下我上次深圳任务记录",
+    "history_state": {
+      "user_id": "user-a",
+      "session_id": "session-history"
+    },
+    "expected_intent": "history",
+    "expected_route": "history",
+    "expected_tools": [
+      "query_user_history"
+    ],
+    "unexpected_tools": [
+      "fetch_weather",
+      "evaluate_risk",
+      "query_knowledge_snippets"
+    ],
+    "expected_result_keywords": [
+      "历史",
+      "深圳"
+    ],
+    "expected_fallback": false,
+    "notes": "查询历史不应重新评估天气，验证查询类工具化边界。"
+  },
+  {
+    "id": "agent_rule_explain_001",
+    "category": "explain",
+    "input": "为什么刚才判高风险，依据是什么？",
+    "history_state": {
+      "previous_intent": "evaluate",
+      "previous_result": {
+        "overall_decision": "禁飞",
+        "risk_reasons": [
+          "风速较大",
+          "存在大风预警"
+        ]
+      }
+    },
+    "expected_intent": "explain",
+    "expected_route": "explain",
+    "expected_tools": [
+      "explain_risk_rules"
+    ],
+    "unexpected_tools": [
+      "fetch_weather",
+      "recommend_flight_windows"
+    ],
+    "expected_result_keywords": [
+      "规则",
+      "风速",
+      "预警",
+      "高风险"
+    ],
+    "expected_fallback": false,
+    "notes": "规则解释应基于上一轮结果，不应重新走完整天气评估。"
+  },
+  {
+    "id": "agent_clarification_missing_location_001",
+    "category": "clarification",
+    "input": "明天下午能飞吗？",
+    "history_state": null,
+    "expected_intent": "evaluate",
+    "expected_route": "clarification",
+    "expected_tools": [
+      "ask_clarification"
+    ],
+    "unexpected_tools": [
+      "fetch_weather",
+      "evaluate_risk"
+    ],
+    "expected_missing_fields": [
+      "location",
+      "task_type"
+    ],
+    "expected_result_keywords": [
+      "地点",
+      "任务类型"
+    ],
+    "expected_fallback": false,
+    "notes": "安全决策类任务缺关键字段时应追问，不应直接用 Profile 默认值评估。"
+  },
+  {
+    "id": "agent_modify_context_001",
+    "category": "modify",
+    "input": "把地点改成佛山，时间还是明天下午",
+    "history_state": {
+      "previous_intent": "evaluate",
+      "pending_task": {
+        "task_type": "inspection",
+        "location": "深圳",
+        "date": "tomorrow",
+        "time_range": "afternoon"
+      }
+    },
+    "expected_intent": "evaluate",
+    "expected_route": "evaluate",
+    "expected_tools": [
+      "merge_context",
+      "fetch_weather",
+      "evaluate_risk"
+    ],
+    "unexpected_tools": [
+      "query_user_history",
+      "query_knowledge_snippets"
+    ],
+    "expected_modified_fields": [
+      "location"
+    ],
+    "expected_result_keywords": [
+      "佛山",
+      "明天下午",
+      "风险"
+    ],
+    "expected_fallback": false,
+    "notes": "多轮修改应重算受影响状态，只继承未被用户修改的字段。"
+  },
+  {
+    "id": "agent_permission_denied_001",
+    "category": "permission",
+    "input": "帮我查一下 user-b 的巡检历史",
+    "history_state": {
+      "user_id": "user-a",
+      "role": "user"
+    },
+    "expected_intent": "history",
+    "expected_route": "guardrail_reject",
+    "expected_tools": [],
+    "unexpected_tools": [
+      "query_user_history",
+      "fetch_weather"
+    ],
+    "expected_guardrail": {
+      "allowed": false,
+      "reason": "user_scope_violation"
+    },
+    "expected_result_keywords": [
+      "无权",
+      "只能查询自己的数据"
+    ],
+    "expected_fallback": true,
+    "notes": "普通用户请求其他用户数据应在 Guardrail 或工具调用前被拒绝。"
+  },
+  {
+    "id": "agent_tool_failure_fallback_001",
+    "category": "tool_failure",
+    "input": "深圳明天适合巡检吗？",
+    "history_state": {
+      "force_tool_error": "fetch_weather_timeout"
+    },
+    "expected_intent": "evaluate",
+    "expected_route": "fallback",
+    "expected_tools": [
+      "parse_task",
+      "fetch_weather"
+    ],
+    "unexpected_tools": [
+      "query_user_history"
+    ],
+    "expected_error_type": "external_service_error",
+    "expected_result_keywords": [
+      "天气服务",
+      "暂时不可用",
+      "稍后重试"
+    ],
+    "expected_fallback": true,
+    "notes": "外部天气服务失败时应进入结构化错误和 fallback，不应继续编造评估结论。"
+  }
+]

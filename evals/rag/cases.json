@@ -1,0 +1,224 @@
+[
+  {
+    "id": "rag_policy_shenzhen_001",
+    "category": "policy_hint",
+    "query": "深圳无人机巡检飞行前要不要报备，有哪些政策提示？",
+    "business_context": {
+      "task_type": "inspection",
+      "risk_tags": [],
+      "province": "广东",
+      "city": "深圳"
+    },
+    "access_context": {
+      "user_id": "user-a",
+      "tenant_id": "public",
+      "role": "user"
+    },
+    "expected_knowledge_ids": [
+      "policy-shenzhen"
+    ],
+    "expected_chunk_types": [
+      "policy_clause"
+    ],
+    "expected_retrievers": [
+      "bm25",
+      "embedding",
+      "hybrid"
+    ],
+    "expected_metadata": {
+      "knowledge_type": "policy_hint",
+      "province": "广东",
+      "city": "深圳",
+      "visibility": "public"
+    },
+    "expected_result_keywords": [
+      "审批",
+      "报备",
+      "管制空域"
+    ],
+    "top_k": 3,
+    "notes": "政策类检索应优先命中同城市 policy_hint chunk。"
+  },
+  {
+    "id": "rag_sop_high_wind_001",
+    "category": "sop",
+    "query": "遇到大风预警时无人机巡检 SOP 怎么处理？",
+    "business_context": {
+      "task_type": "inspection",
+      "risk_tags": [
+        "high_wind"
+      ],
+      "province": "广东",
+      "city": "深圳"
+    },
+    "access_context": {
+      "user_id": "user-a",
+      "tenant_id": "public",
+      "role": "user"
+    },
+    "expected_knowledge_types": [
+      "sop",
+      "risk_advice"
+    ],
+    "expected_chunk_types": [
+      "sop_step",
+      "risk_block"
+    ],
+    "expected_result_keywords": [
+      "大风",
+      "暂停",
+      "复核",
+      "返航"
+    ],
+    "top_k": 5,
+    "notes": "SOP 查询应验证步骤级 chunk 是否能被召回。"
+  },
+  {
+    "id": "rag_faq_general_001",
+    "category": "faq",
+    "query": "低空巡检常见问题里，什么情况下需要先查政策？",
+    "business_context": {
+      "task_type": "inspection",
+      "risk_tags": [],
+      "province": null,
+      "city": null
+    },
+    "access_context": {
+      "user_id": "user-a",
+      "tenant_id": "public",
+      "role": "user"
+    },
+    "expected_knowledge_types": [
+      "faq"
+    ],
+    "expected_chunk_types": [
+      "qa_pair"
+    ],
+    "expected_result_keywords": [
+      "常见问题",
+      "政策",
+      "审批"
+    ],
+    "top_k": 5,
+    "notes": "FAQ 类知识应以问答对为召回单位。"
+  },
+  {
+    "id": "rag_private_visibility_block_001",
+    "category": "permission",
+    "query": "查询 user-b 私有禁飞区说明",
+    "business_context": {
+      "task_type": "inspection",
+      "risk_tags": [],
+      "province": "广东",
+      "city": "深圳"
+    },
+    "access_context": {
+      "user_id": "user-a",
+      "tenant_id": "public",
+      "role": "user"
+    },
+    "expected_excluded_knowledge_ids": [
+      "private-user-b"
+    ],
+    "expected_filter": "visibility_private_user_mismatch",
+    "top_k": 5,
+    "notes": "验证 metadata filter 的用户隔离，普通用户不能召回其他用户私有知识。"
+  },
+  {
+    "id": "rag_city_metadata_boost_001",
+    "category": "hybrid_rerank",
+    "query": "深圳大风情况下巡检有什么建议？",
+    "business_context": {
+      "task_type": "inspection",
+      "risk_tags": [
+        "high_wind"
+      ],
+      "province": "广东",
+      "city": "深圳"
+    },
+    "access_context": {
+      "user_id": "user-a",
+      "tenant_id": "public",
+      "role": "user"
+    },
+    "expected_ranking": {
+      "prefer_metadata": {
+        "city": "深圳",
+        "province": "广东",
+        "risk_type": "high_wind"
+      },
+      "over": {
+        "city": null,
+        "province": "全国"
+      }
+    },
+    "expected_metadata_fields": [
+      "metadata_boost",
+      "rerank_boost",
+      "chunk_id",
+      "knowledge_id"
+    ],
+    "top_k": 5,
+    "notes": "验证 Hybrid metadata boost 和 Day103 rerank 是否让同城知识优先。"
+  },
+  {
+    "id": "rag_query_rewrite_empty_001",
+    "category": "fallback",
+    "query": "这个地方飞之前手续麻烦吗？",
+    "business_context": {
+      "task_type": "inspection",
+      "risk_tags": [],
+      "province": "广东",
+      "city": "深圳"
+    },
+    "access_context": {
+      "user_id": "user-a",
+      "tenant_id": "public",
+      "role": "user"
+    },
+    "expected_behavior": {
+      "first_attempt": "empty_or_low_confidence",
+      "second_attempt": "query_rewritten",
+      "final_status": [
+        "rewritten_success",
+        "fallback"
+      ]
+    },
+    "expected_metadata_fields": [
+      "retrieval_status",
+      "retrieval_metadata",
+      "query_rewritten",
+      "attempts"
+    ],
+    "top_k": 3,
+    "notes": "验证空召回或低置信时是否补充业务上下文进行二次召回。"
+  },
+  {
+    "id": "rag_low_confidence_fallback_001",
+    "category": "fallback",
+    "query": "完全无关的电池保养内容能不能当飞行政策依据？",
+    "business_context": {
+      "task_type": "inspection",
+      "risk_tags": [],
+      "province": "广东",
+      "city": "深圳"
+    },
+    "access_context": {
+      "user_id": "user-a",
+      "tenant_id": "public",
+      "role": "user"
+    },
+    "expected_behavior": {
+      "final_status": "fallback",
+      "should_return_snippets": false,
+      "should_not_fabricate_policy": true
+    },
+    "expected_result_keywords": [
+      "没有召回",
+      "置信度较低",
+      "补充地区"
+    ],
+    "top_k": 3,
+    "notes": "验证低置信结果不会被强行当作政策依据。"
+  }
+]

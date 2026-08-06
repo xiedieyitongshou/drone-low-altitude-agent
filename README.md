@@ -179,6 +179,7 @@ docker compose exec app python -m pytest
 - Agent 错误恢复：已引入工具失败分类、恢复策略和兜底输出，支持参数缺失追问、空结果提示、工具异常转 legacy fallback、权限错误直接拒绝等路径。
 - Agent Trace 闭环：已记录 plan、tool_call、tool_result、error、fallback、final_response 等事件，并支持按当前登录用户查询自己的执行链路。
 - Agent Guardrail：已接入输入、工具调用前和最终输出三个强制检查点；支持角色、用户作用域、payload 用户伪造拦截、拒绝结果解释和 trace 可追溯。
+- Agent Eval：已建立 `evals/` 质量评估样例集和 Tool Calling Eval 脚本，可评估意图识别、工具选择、漏调、多调、禁用工具误调、追问和 fallback 行为。
 - 会话记忆：支持 `ttlcache`、`redis`、`database` 三种后端，按 `user_id + session_id` 隔离短期上下文。
 - Profile Memory：绑定真实用户，支持查看和编辑默认地点、任务类型、时间段、输出偏好和常用列表。
 - Conversation History：`/agent/query` 调用后自动保存自然语言请求、解析结果、响应摘要和完整响应，并支持按当前用户隔离查询和关键词检索。
@@ -232,6 +233,7 @@ Pre-LLM Output Guardrail / LLM 结果解释 / 模板解释 fallback / Post-LLM O
 - Context Manager 层处理多轮 pending task、用户输入覆盖、Profile 兼容补齐和受影响工具标记，安全决策类任务缺关键字段时仍优先追问。
 - Trace / Logging 层记录 Agent 状态转换、工具调用、错误分类和兜底路径，用于解释单次请求的执行过程。
 - Guardrail 层固定在输入、工具调用前和最终输出阶段执行，负责拦截危险输入、越权工具调用和过度承诺输出；每次拒绝或降级都会生成 `guardrail_explanation`。
+- Eval 层使用 `evals/agent/cases.json` 和 `evals/rag/cases.json` 保存可版本管理样例，Tool Calling Eval 可在不执行真实外部工具的情况下评估 Planner 选工具质量。
 - Auth / Memory 层只负责身份识别、数据归属和上下文补全，不参与飞行安全判断。
 - LLM 解释层只在 Guardrail 允许的范围内润色表达；LLM 输出不合规时会丢弃并回退固定风险输出模板。
 - Risk Output Template 层根据结构化业务结果生成稳定输出，使用关键词复检和快照测试约束“禁飞、谨慎飞行、适飞、无推荐窗口”等场景。
@@ -276,7 +278,7 @@ Pre-LLM Output Guardrail / LLM 结果解释 / 模板解释 fallback / Post-LLM O
 - 认证鉴权：bcrypt、PyJWT、FastAPI HTTPBearer
 - 会话缓存/持久化：cachetools TTLCache、Redis、Database backend
 - 记忆持久化：users、user_profiles、conversation_records、session_records
-- Agent Runtime：Business Route、Context Manager、Tool Registry、AgentState、Rule Planner、AgentLoop、ToolExecutor、FailurePolicy、TraceEvent、legacy fallback
+- Agent Runtime：Business Route、Context Manager、Tool Registry、AgentState、Rule Planner、AgentLoop、ToolExecutor、FailurePolicy、TraceEvent、legacy fallback、Agent Eval、Tool Calling Eval
 - 知识检索：统一 `KnowledgeRetriever` 接口、BM25 默认召回、Embedding 语义召回、Hybrid Retrieval、chunk 级索引、规则 rerank、query rewrite、低置信 fallback、scikit-learn TF-IDF baseline、metadata filter
 
 当前 RAG 检索已经从单一 TF-IDF baseline 拆成可替换 Retriever 架构。BM25 用于政策名、地名、编号等关键词精确召回；Embedding 用于口语化提问和知识库措辞不一致时的语义召回；Hybrid Retrieval 负责融合两路结果并叠加 metadata boost。索引构建阶段会按 `knowledge_type` 生成 chunk，`policy_hint` 按条款/段落、`sop` 按步骤、`faq` 按问答对、`risk_advice` 保留短块；召回后再根据审核状态、时效、地域精确度、任务类型和风险标签做规则 rerank。低置信或空召回时会进行 query rewrite 和二次召回，仍失败则返回保守说明，避免编造政策依据。
@@ -391,6 +393,31 @@ data/knowledge/index/embedding_metadata.json
 ```
 - 典型自然语言输入样例沉淀在 `data/agent_input_samples.json`，后续可扩展为 Agent Eval 数据集。
 
+### Agent Eval 与 Tool Calling Eval
+
+Day106 已新增可版本管理的质量评估样例：
+
+```text
+evals/agent/cases.json
+evals/rag/cases.json
+evals/README.md
+```
+
+Day107 已新增 Tool Calling Eval 脚本，用于评估 Agent 是否选对工具、是否漏调工具、是否多调工具、是否误调禁用工具，以及追问和 fallback 行为是否符合预期。
+
+```bash
+.\.venv\Scripts\python.exe scripts/tool_calling_eval.py
+```
+
+默认使用 planner-only 模式，不执行真实天气、RAG 或数据库工具，适合本地快速评估工具选择质量。报告输出到：
+
+```text
+evals/reports/tool_calling_eval.json
+evals/reports/tool_calling_eval.md
+```
+
+当前报告包含总通过率、意图准确率、工具选择准确率、精确工具匹配率、多余工具调用率、缺失工具调用率、禁用工具违规率、fallback 准确率、追问通过率和分类通过率。
+
 ### Session Memory 配置
 
 本地默认使用进程内缓存：
@@ -480,6 +507,12 @@ RAG Retriever、BM25、Embedding、Hybrid、chunk、query rewrite、TF-IDF basel
 
 ```bash
 .\.venv\Scripts\python.exe -m pytest tests/test_rag_fallback.py tests/test_knowledge_chunker.py tests/test_hybrid_knowledge_retriever.py tests/test_embedding_knowledge_store.py tests/test_bm25_knowledge_store.py tests/test_knowledge_retrievers.py tests/test_knowledge_access_filter.py tests/test_knowledge_business_filter.py tests/test_rag_policy.py
+```
+
+Tool Calling Eval 脚本测试：
+
+```bash
+.\.venv\Scripts\python.exe -m pytest tests/test_tool_calling_eval.py
 ```
 
 检查 Alembic 模型和迁移是否一致：
@@ -663,10 +696,11 @@ Authorization: Bearer <admin_access_token>
 - 第十四阶段：已完成 Guardrail 基础接入，包含输入拦截、工具调用前认证/权限检查、用户作用域边界、Guardrail trace 可解释、最终输出约束、DeepSeek 润色前后双重 Output Guardrail，以及风险输出模板和快照测试。
 - 第十五阶段：已完成 RAG 检索架构重构和 BM25 关键词召回，包含统一 Retriever 接口、TF-IDF baseline 保留、BM25 独立索引、检索器配置切换和 metadata filter 回归测试。
 - 第十六阶段：已完成 Hybrid RAG 检索增强，包含 Embedding 语义召回、Hybrid 融合排序、metadata boost、按知识类型 chunk、规则 rerank、query rewrite、低置信二次召回和保守 fallback。
+- 第十七阶段：已启动 Agent Eval 与 RAG Eval 质量评估，已完成评测样例集设计和 Tool Calling Eval 脚本，可输出工具选择质量报告。
 
 ## 后续计划
 
 - 第 15 周：Guardrail、安全边界与 Agent 输出约束，继续补齐安全与权限回归测试、风险输出模板、拒答策略和周总结文档。
 - 第 16 周：Hybrid RAG 检索增强已完成 Day101-Day104，后续补齐 RAG Eval 和质量样例集。
-- 第 17 周：Agent Eval 与 Tool Calling / RAG Eval 质量评估，用样例集评估意图识别、工具选择、多轮状态、失败恢复和 RAG 召回效果。
+- 第 17 周：Agent Eval 与 RAG Eval 质量评估已完成 Day106-Day107，后续继续补齐多轮状态 Eval、失败恢复 Eval、RAG Eval 脚本和评测报告。
 - 第 18 周：CI/CD、README、面试指南和端到端演示收尾，形成可运行、可解释、可评估、可展示的求职版本。

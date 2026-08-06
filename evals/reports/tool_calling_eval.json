@@ -1,0 +1,347 @@
+{
+  "summary": {
+    "total_cases": 9,
+    "pass_rate": 0.7778,
+    "intent_accuracy": 1.0,
+    "tool_selection_accuracy": 1.0,
+    "exact_tool_match_rate": 0.8889,
+    "extra_tool_call_rate": 0.1111,
+    "missing_tool_call_rate": 0.0,
+    "unexpected_tool_violation_rate": 0.0714,
+    "fallback_accuracy": 0.8889,
+    "clarification_pass_rate": 0.0,
+    "category_pass_rate": {
+      "clarification": 0.0,
+      "compare": 1.0,
+      "evaluate": 1.0,
+      "explain": 1.0,
+      "modify": 1.0,
+      "permission": 0.0,
+      "query": 1.0,
+      "recommend": 1.0,
+      "tool_failure": 1.0
+    }
+  },
+  "results": [
+    {
+      "case_id": "agent_evaluate_complete_001",
+      "category": "evaluate",
+      "passed": true,
+      "checks": {
+        "intent_pass": true,
+        "expected_tools_hit": true,
+        "no_unexpected_tools": true,
+        "fallback_pass": true,
+        "exact_tool_match": true,
+        "clarification_pass": null
+      },
+      "expected_intent": "evaluate",
+      "actual_intent": "evaluate",
+      "expected_tools": [
+        "evaluate_flight_risk"
+      ],
+      "actual_tools": [
+        "evaluate_flight_risk"
+      ],
+      "unexpected_tools": [
+        "query_user_history",
+        "query_knowledge_snippets"
+      ],
+      "missing_tools": [],
+      "extra_tools": [],
+      "unexpected_called": [],
+      "expected_fallback": false,
+      "actual_fallback": false,
+      "expected_missing_fields": [],
+      "actual_missing_fields": [],
+      "plan_actions": [
+        "call_tool"
+      ],
+      "trace_id": "35622b4f-2d04-4fc7-b86c-237c41016762"
+    },
+    {
+      "case_id": "agent_recommend_window_001",
+      "category": "recommend",
+      "passed": true,
+      "checks": {
+        "intent_pass": true,
+        "expected_tools_hit": true,
+        "no_unexpected_tools": true,
+        "fallback_pass": true,
+        "exact_tool_match": true,
+        "clarification_pass": null
+      },
+      "expected_intent": "recommend",
+      "actual_intent": "recommend",
+      "expected_tools": [
+        "recommend_flight_windows"
+      ],
+      "actual_tools": [
+        "recommend_flight_windows"
+      ],
+      "unexpected_tools": [
+        "compare_flight_locations",
+        "query_user_history"
+      ],
+      "missing_tools": [],
+      "extra_tools": [],
+      "unexpected_called": [],
+      "expected_fallback": false,
+      "actual_fallback": false,
+      "expected_missing_fields": [],
+      "actual_missing_fields": [],
+      "plan_actions": [
+        "call_tool"
+      ],
+      "trace_id": "772361e6-1a4b-47dc-a4e3-a7d326c72a91"
+    },
+    {
+      "case_id": "agent_compare_locations_001",
+      "category": "compare",
+      "passed": true,
+      "checks": {
+        "intent_pass": true,
+        "expected_tools_hit": true,
+        "no_unexpected_tools": true,
+        "fallback_pass": true,
+        "exact_tool_match": true,
+        "clarification_pass": null
+      },
+      "expected_intent": "compare",
+      "actual_intent": "compare",
+      "expected_tools": [
+        "compare_flight_locations"
+      ],
+      "actual_tools": [
+        "compare_flight_locations"
+      ],
+      "unexpected_tools": [
+        "query_user_history",
+        "explain_risk_rules"
+      ],
+      "missing_tools": [],
+      "extra_tools": [],
+      "unexpected_called": [],
+      "expected_fallback": false,
+      "actual_fallback": false,
+      "expected_missing_fields": [],
+      "actual_missing_fields": [],
+      "plan_actions": [
+        "call_tool"
+      ],
+      "trace_id": "8e9e739c-f631-4ded-851a-ef4c3a84ec6d"
+    },
+    {
+      "case_id": "agent_history_query_001",
+      "category": "query",
+      "passed": true,
+      "checks": {
+        "intent_pass": true,
+        "expected_tools_hit": true,
+        "no_unexpected_tools": true,
+        "fallback_pass": true,
+        "exact_tool_match": true,
+        "clarification_pass": null
+      },
+      "expected_intent": "history",
+      "actual_intent": "history",
+      "expected_tools": [
+        "query_user_history"
+      ],
+      "actual_tools": [
+        "query_user_history"
+      ],
+      "unexpected_tools": [
+        "evaluate_flight_risk",
+        "query_knowledge_snippets"
+      ],
+      "missing_tools": [],
+      "extra_tools": [],
+      "unexpected_called": [],
+      "expected_fallback": false,
+      "actual_fallback": false,
+      "expected_missing_fields": [],
+      "actual_missing_fields": [],
+      "plan_actions": [
+        "call_tool"
+      ],
+      "trace_id": "975c058c-3d61-491a-8e2f-fc3717f81c09"
+    },
+    {
+      "case_id": "agent_rule_explain_001",
+      "category": "explain",
+      "passed": true,
+      "checks": {
+        "intent_pass": true,
+        "expected_tools_hit": true,
+        "no_unexpected_tools": true,
+        "fallback_pass": true,
+        "exact_tool_match": true,
+        "clarification_pass": null
+      },
+      "expected_intent": "explain",
+      "actual_intent": "explain",
+      "expected_tools": [
+        "explain_risk_rules"
+      ],
+      "actual_tools": [
+        "explain_risk_rules"
+      ],
+      "unexpected_tools": [
+        "recommend_flight_windows"
+      ],
+      "missing_tools": [],
+      "extra_tools": [],
+      "unexpected_called": [],
+      "expected_fallback": false,
+      "actual_fallback": false,
+      "expected_missing_fields": [],
+      "actual_missing_fields": [],
+      "plan_actions": [
+        "call_tool"
+      ],
+      "trace_id": "75ec9ff5-0d6d-452b-a640-dbb30565ea60"
+    },
+    {
+      "case_id": "agent_clarification_missing_location_001",
+      "category": "clarification",
+      "passed": false,
+      "checks": {
+        "intent_pass": true,
+        "expected_tools_hit": true,
+        "no_unexpected_tools": true,
+        "fallback_pass": true,
+        "exact_tool_match": true,
+        "clarification_pass": false
+      },
+      "expected_intent": "evaluate",
+      "actual_intent": "evaluate",
+      "expected_tools": [],
+      "actual_tools": [],
+      "unexpected_tools": [
+        "evaluate_flight_risk"
+      ],
+      "missing_tools": [],
+      "extra_tools": [],
+      "unexpected_called": [],
+      "expected_fallback": false,
+      "actual_fallback": false,
+      "expected_missing_fields": [
+        "location",
+        "task_type"
+      ],
+      "actual_missing_fields": [
+        "location"
+      ],
+      "plan_actions": [
+        "ask_clarification"
+      ],
+      "trace_id": "985e4ba4-beec-48bd-90a9-749f73893557"
+    },
+    {
+      "case_id": "agent_modify_context_001",
+      "category": "modify",
+      "passed": true,
+      "checks": {
+        "intent_pass": true,
+        "expected_tools_hit": true,
+        "no_unexpected_tools": true,
+        "fallback_pass": true,
+        "exact_tool_match": true,
+        "clarification_pass": null
+      },
+      "expected_intent": "evaluate",
+      "actual_intent": "evaluate",
+      "expected_tools": [
+        "evaluate_flight_risk"
+      ],
+      "actual_tools": [
+        "evaluate_flight_risk"
+      ],
+      "unexpected_tools": [
+        "query_user_history",
+        "query_knowledge_snippets"
+      ],
+      "missing_tools": [],
+      "extra_tools": [],
+      "unexpected_called": [],
+      "expected_fallback": false,
+      "actual_fallback": false,
+      "expected_missing_fields": [],
+      "actual_missing_fields": [],
+      "plan_actions": [
+        "call_tool"
+      ],
+      "trace_id": "32e70fa1-fa3d-48a1-90c1-a6ad82918219"
+    },
+    {
+      "case_id": "agent_permission_denied_001",
+      "category": "permission",
+      "passed": false,
+      "checks": {
+        "intent_pass": true,
+        "expected_tools_hit": true,
+        "no_unexpected_tools": false,
+        "fallback_pass": false,
+        "exact_tool_match": false,
+        "clarification_pass": null
+      },
+      "expected_intent": "history",
+      "actual_intent": "history",
+      "expected_tools": [],
+      "actual_tools": [
+        "query_user_history"
+      ],
+      "unexpected_tools": [
+        "query_user_history"
+      ],
+      "missing_tools": [],
+      "extra_tools": [
+        "query_user_history"
+      ],
+      "unexpected_called": [
+        "query_user_history"
+      ],
+      "expected_fallback": true,
+      "actual_fallback": false,
+      "expected_missing_fields": [],
+      "actual_missing_fields": [],
+      "plan_actions": [
+        "call_tool"
+      ],
+      "trace_id": "427a60d8-cd8d-44b9-a26d-d0f18339bcf5"
+    },
+    {
+      "case_id": "agent_tool_failure_fallback_001",
+      "category": "tool_failure",
+      "passed": true,
+      "checks": {
+        "intent_pass": true,
+        "expected_tools_hit": true,
+        "no_unexpected_tools": true,
+        "fallback_pass": true,
+        "exact_tool_match": true,
+        "clarification_pass": null
+      },
+      "expected_intent": "evaluate",
+      "actual_intent": "evaluate",
+      "expected_tools": [],
+      "actual_tools": [],
+      "unexpected_tools": [
+        "query_user_history"
+      ],
+      "missing_tools": [],
+      "extra_tools": [],
+      "unexpected_called": [],
+      "expected_fallback": true,
+      "actual_fallback": true,
+      "expected_missing_fields": [],
+      "actual_missing_fields": [],
+      "plan_actions": [
+        "call_tool",
+        "fallback"
+      ],
+      "trace_id": "b8b0203d-820f-40a0-a769-799ffe407b9b"
+    }
+  ]
+}
