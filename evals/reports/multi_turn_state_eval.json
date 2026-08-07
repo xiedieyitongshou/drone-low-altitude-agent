@@ -1,0 +1,1509 @@
+{
+  "summary": {
+    "total_dialogues": 7,
+    "total_turns": 15,
+    "pass_rate": 1.0,
+    "intent_accuracy": 1.0,
+    "tool_selection_accuracy": 1.0,
+    "state_match_accuracy": 1.0,
+    "state_inheritance_accuracy": 1.0,
+    "state_override_accuracy": 1.0,
+    "tool_input_consistency": 1.0,
+    "modified_fields_accuracy": 1.0,
+    "invalidated_tools_accuracy": 1.0,
+    "clarification_continuation_pass_rate": 1.0,
+    "context_pollution_rate": 0.0,
+    "session_isolation_pass_rate": 1.0,
+    "category_pass_rate": {
+      "clarification_continuation": 1.0,
+      "context_pollution": 1.0,
+      "field_override": 1.0,
+      "intent_switch": 1.0,
+      "session_isolation": 1.0
+    }
+  },
+  "results": [
+    {
+      "case_id": "multi_turn_modify_location_001",
+      "category": "field_override",
+      "turn_index": 1,
+      "user_id": "eval-user-a",
+      "session_id": "day108-location",
+      "input": "2026年8月8日深圳下午2点到5点适合巡检吗",
+      "passed": true,
+      "checks": {
+        "passed": true,
+        "intent_pass": true,
+        "action_pass": true,
+        "tool_pass": true,
+        "state_pass": true,
+        "tool_input_pass": true,
+        "inheritance_pass": true,
+        "override_pass": true,
+        "modified_fields_pass": true,
+        "invalidated_tools_pass": true,
+        "missing_fields_pass": true,
+        "no_context_pollution": true,
+        "clarification_continuation_pass": null,
+        "session_isolation_pass": null,
+        "state_matches": {
+          "location": true,
+          "date": true,
+          "start_time": true,
+          "end_time": true,
+          "task_type": true
+        },
+        "tool_input_matches": {
+          "location": true,
+          "date": true,
+          "start_time": true,
+          "end_time": true,
+          "task_type": true
+        },
+        "inherited_matches": {},
+        "override_matches": {},
+        "absent_tool_input_matches": {}
+      },
+      "expected_intent": "evaluate",
+      "actual_intent": "evaluate",
+      "expected_action": null,
+      "actual_action": "call_tool",
+      "expected_tool": "evaluate_flight_risk",
+      "actual_tool": "evaluate_flight_risk",
+      "expected_state": {
+        "location": "深圳",
+        "date": "2026-08-08",
+        "start_time": "14:00",
+        "end_time": "17:00",
+        "task_type": "inspection"
+      },
+      "actual_state": {
+        "task_type": "inspection",
+        "location": "深圳",
+        "date": "2026-08-08",
+        "start_time": "14:00",
+        "end_time": "17:00",
+        "purpose": "2026年8月8日深圳下午2点到5点适合巡检吗"
+      },
+      "expected_tool_input": {
+        "location": "深圳",
+        "date": "2026-08-08",
+        "start_time": "14:00",
+        "end_time": "17:00",
+        "task_type": "inspection"
+      },
+      "actual_tool_input": {
+        "task_type": "inspection",
+        "end_time": "17:00",
+        "location": "深圳",
+        "purpose": "2026年8月8日深圳下午2点到5点适合巡检吗",
+        "date": "2026-08-08",
+        "start_time": "14:00"
+      },
+      "expected_modified_fields": [],
+      "actual_modified_fields": [],
+      "expected_invalidated_tools": [],
+      "actual_invalidated_tools": [],
+      "expected_missing_fields": [],
+      "actual_missing_fields": [],
+      "field_sources": {
+        "task_type": "user_input",
+        "location": "user_input",
+        "date": "user_input",
+        "start_time": "user_input",
+        "end_time": "user_input",
+        "purpose": "user_input"
+      },
+      "context_used": false,
+      "trace_id": "f96ff261-f7a2-4400-8040-407c46ba9dd9"
+    },
+    {
+      "case_id": "multi_turn_modify_location_001",
+      "category": "field_override",
+      "turn_index": 2,
+      "user_id": "eval-user-a",
+      "session_id": "day108-location",
+      "input": "地点改成广州，时间不变",
+      "passed": true,
+      "checks": {
+        "passed": true,
+        "intent_pass": true,
+        "action_pass": true,
+        "tool_pass": true,
+        "state_pass": true,
+        "tool_input_pass": true,
+        "inheritance_pass": true,
+        "override_pass": true,
+        "modified_fields_pass": true,
+        "invalidated_tools_pass": true,
+        "missing_fields_pass": true,
+        "no_context_pollution": true,
+        "clarification_continuation_pass": null,
+        "session_isolation_pass": null,
+        "state_matches": {
+          "location": true,
+          "date": true,
+          "start_time": true,
+          "end_time": true,
+          "task_type": true
+        },
+        "tool_input_matches": {
+          "location": true,
+          "date": true,
+          "start_time": true,
+          "end_time": true,
+          "task_type": true
+        },
+        "inherited_matches": {
+          "date": true,
+          "start_time": true,
+          "end_time": true,
+          "task_type": true
+        },
+        "override_matches": {
+          "location": true
+        },
+        "absent_tool_input_matches": {}
+      },
+      "expected_intent": "evaluate",
+      "actual_intent": "evaluate",
+      "expected_action": null,
+      "actual_action": "call_tool",
+      "expected_tool": "evaluate_flight_risk",
+      "actual_tool": "evaluate_flight_risk",
+      "expected_state": {
+        "location": "广州",
+        "date": "2026-08-08",
+        "start_time": "14:00",
+        "end_time": "17:00",
+        "task_type": "inspection"
+      },
+      "actual_state": {
+        "task_type": "inspection",
+        "intent": "evaluate",
+        "date": "2026-08-08",
+        "start_time": "14:00",
+        "end_time": "17:00",
+        "location": "广州",
+        "purpose": "地点改成广州，时间不变"
+      },
+      "expected_tool_input": {
+        "location": "广州",
+        "date": "2026-08-08",
+        "start_time": "14:00",
+        "end_time": "17:00",
+        "task_type": "inspection"
+      },
+      "actual_tool_input": {
+        "task_type": "inspection",
+        "end_time": "17:00",
+        "location": "广州",
+        "purpose": "地点改成广州，时间不变",
+        "date": "2026-08-08",
+        "start_time": "14:00"
+      },
+      "expected_modified_fields": [
+        "location"
+      ],
+      "actual_modified_fields": [
+        "location"
+      ],
+      "expected_invalidated_tools": [
+        "evaluate_flight_risk",
+        "query_knowledge_snippets"
+      ],
+      "actual_invalidated_tools": [
+        "evaluate_flight_risk",
+        "query_knowledge_snippets"
+      ],
+      "expected_missing_fields": [],
+      "actual_missing_fields": [],
+      "field_sources": {
+        "task_type": "user_input",
+        "intent": "session",
+        "date": "user_input",
+        "start_time": "user_input",
+        "end_time": "user_input",
+        "location": "user_input",
+        "purpose": "user_input"
+      },
+      "context_used": true,
+      "trace_id": "10ded9ce-8167-451e-b797-181e12af50d8"
+    },
+    {
+      "case_id": "multi_turn_modify_time_001",
+      "category": "field_override",
+      "turn_index": 1,
+      "user_id": "eval-user-a",
+      "session_id": "day108-time",
+      "input": "2026年8月8日深圳上午9点到11点适合巡检吗",
+      "passed": true,
+      "checks": {
+        "passed": true,
+        "intent_pass": true,
+        "action_pass": true,
+        "tool_pass": true,
+        "state_pass": true,
+        "tool_input_pass": true,
+        "inheritance_pass": true,
+        "override_pass": true,
+        "modified_fields_pass": true,
+        "invalidated_tools_pass": true,
+        "missing_fields_pass": true,
+        "no_context_pollution": true,
+        "clarification_continuation_pass": null,
+        "session_isolation_pass": null,
+        "state_matches": {
+          "location": true,
+          "date": true,
+          "start_time": true,
+          "end_time": true,
+          "task_type": true
+        },
+        "tool_input_matches": {
+          "location": true,
+          "date": true,
+          "start_time": true,
+          "end_time": true,
+          "task_type": true
+        },
+        "inherited_matches": {},
+        "override_matches": {},
+        "absent_tool_input_matches": {}
+      },
+      "expected_intent": "evaluate",
+      "actual_intent": "evaluate",
+      "expected_action": null,
+      "actual_action": "call_tool",
+      "expected_tool": "evaluate_flight_risk",
+      "actual_tool": "evaluate_flight_risk",
+      "expected_state": {
+        "location": "深圳",
+        "date": "2026-08-08",
+        "start_time": "09:00",
+        "end_time": "11:00",
+        "task_type": "inspection"
+      },
+      "actual_state": {
+        "task_type": "inspection",
+        "location": "深圳",
+        "date": "2026-08-08",
+        "start_time": "09:00",
+        "end_time": "11:00",
+        "purpose": "2026年8月8日深圳上午9点到11点适合巡检吗"
+      },
+      "expected_tool_input": {
+        "location": "深圳",
+        "date": "2026-08-08",
+        "start_time": "09:00",
+        "end_time": "11:00",
+        "task_type": "inspection"
+      },
+      "actual_tool_input": {
+        "task_type": "inspection",
+        "end_time": "11:00",
+        "location": "深圳",
+        "purpose": "2026年8月8日深圳上午9点到11点适合巡检吗",
+        "date": "2026-08-08",
+        "start_time": "09:00"
+      },
+      "expected_modified_fields": [],
+      "actual_modified_fields": [],
+      "expected_invalidated_tools": [],
+      "actual_invalidated_tools": [],
+      "expected_missing_fields": [],
+      "actual_missing_fields": [],
+      "field_sources": {
+        "task_type": "user_input",
+        "location": "user_input",
+        "date": "user_input",
+        "start_time": "user_input",
+        "end_time": "user_input",
+        "purpose": "user_input"
+      },
+      "context_used": false,
+      "trace_id": "59d6b733-4b72-4ec6-97a6-0d3702edef82"
+    },
+    {
+      "case_id": "multi_turn_modify_time_001",
+      "category": "field_override",
+      "turn_index": 2,
+      "user_id": "eval-user-a",
+      "session_id": "day108-time",
+      "input": "时间改成2026年8月9日下午",
+      "passed": true,
+      "checks": {
+        "passed": true,
+        "intent_pass": true,
+        "action_pass": true,
+        "tool_pass": true,
+        "state_pass": true,
+        "tool_input_pass": true,
+        "inheritance_pass": true,
+        "override_pass": true,
+        "modified_fields_pass": true,
+        "invalidated_tools_pass": true,
+        "missing_fields_pass": true,
+        "no_context_pollution": true,
+        "clarification_continuation_pass": null,
+        "session_isolation_pass": null,
+        "state_matches": {
+          "location": true,
+          "date": true,
+          "start_time": true,
+          "end_time": true,
+          "task_type": true
+        },
+        "tool_input_matches": {
+          "location": true,
+          "date": true,
+          "start_time": true,
+          "end_time": true,
+          "task_type": true
+        },
+        "inherited_matches": {
+          "location": true,
+          "task_type": true
+        },
+        "override_matches": {
+          "date": true,
+          "start_time": true,
+          "end_time": true
+        },
+        "absent_tool_input_matches": {}
+      },
+      "expected_intent": "evaluate",
+      "actual_intent": "evaluate",
+      "expected_action": null,
+      "actual_action": "call_tool",
+      "expected_tool": "evaluate_flight_risk",
+      "actual_tool": "evaluate_flight_risk",
+      "expected_state": {
+        "location": "深圳",
+        "date": "2026-08-09",
+        "start_time": "13:00",
+        "end_time": "18:00",
+        "task_type": "inspection"
+      },
+      "actual_state": {
+        "task_type": "inspection",
+        "intent": "evaluate",
+        "date": "2026-08-09",
+        "start_time": "13:00",
+        "end_time": "18:00",
+        "location": "深圳",
+        "purpose": "时间改成2026年8月9日下午"
+      },
+      "expected_tool_input": {
+        "location": "深圳",
+        "date": "2026-08-09",
+        "start_time": "13:00",
+        "end_time": "18:00",
+        "task_type": "inspection"
+      },
+      "actual_tool_input": {
+        "task_type": "inspection",
+        "end_time": "18:00",
+        "location": "深圳",
+        "purpose": "时间改成2026年8月9日下午",
+        "date": "2026-08-09",
+        "start_time": "13:00"
+      },
+      "expected_modified_fields": [
+        "date",
+        "start_time",
+        "end_time"
+      ],
+      "actual_modified_fields": [
+        "date",
+        "start_time",
+        "end_time"
+      ],
+      "expected_invalidated_tools": [
+        "evaluate_flight_risk"
+      ],
+      "actual_invalidated_tools": [
+        "evaluate_flight_risk"
+      ],
+      "expected_missing_fields": [],
+      "actual_missing_fields": [],
+      "field_sources": {
+        "task_type": "user_input",
+        "intent": "session",
+        "date": "user_input",
+        "start_time": "user_input",
+        "end_time": "user_input",
+        "location": "user_input",
+        "purpose": "user_input"
+      },
+      "context_used": true,
+      "trace_id": "2f3d1d43-27be-4e2c-a560-e3912569c84b"
+    },
+    {
+      "case_id": "multi_turn_modify_task_type_001",
+      "category": "field_override",
+      "turn_index": 1,
+      "user_id": "eval-user-a",
+      "session_id": "day108-task-type",
+      "input": "2026年8月8日深圳下午2点到5点适合巡检吗",
+      "passed": true,
+      "checks": {
+        "passed": true,
+        "intent_pass": true,
+        "action_pass": true,
+        "tool_pass": true,
+        "state_pass": true,
+        "tool_input_pass": true,
+        "inheritance_pass": true,
+        "override_pass": true,
+        "modified_fields_pass": true,
+        "invalidated_tools_pass": true,
+        "missing_fields_pass": true,
+        "no_context_pollution": true,
+        "clarification_continuation_pass": null,
+        "session_isolation_pass": null,
+        "state_matches": {
+          "location": true,
+          "date": true,
+          "start_time": true,
+          "end_time": true,
+          "task_type": true
+        },
+        "tool_input_matches": {
+          "location": true,
+          "date": true,
+          "start_time": true,
+          "end_time": true,
+          "task_type": true
+        },
+        "inherited_matches": {},
+        "override_matches": {},
+        "absent_tool_input_matches": {}
+      },
+      "expected_intent": "evaluate",
+      "actual_intent": "evaluate",
+      "expected_action": null,
+      "actual_action": "call_tool",
+      "expected_tool": "evaluate_flight_risk",
+      "actual_tool": "evaluate_flight_risk",
+      "expected_state": {
+        "location": "深圳",
+        "date": "2026-08-08",
+        "start_time": "14:00",
+        "end_time": "17:00",
+        "task_type": "inspection"
+      },
+      "actual_state": {
+        "task_type": "inspection",
+        "location": "深圳",
+        "date": "2026-08-08",
+        "start_time": "14:00",
+        "end_time": "17:00",
+        "purpose": "2026年8月8日深圳下午2点到5点适合巡检吗"
+      },
+      "expected_tool_input": {
+        "location": "深圳",
+        "date": "2026-08-08",
+        "start_time": "14:00",
+        "end_time": "17:00",
+        "task_type": "inspection"
+      },
+      "actual_tool_input": {
+        "task_type": "inspection",
+        "end_time": "17:00",
+        "location": "深圳",
+        "purpose": "2026年8月8日深圳下午2点到5点适合巡检吗",
+        "date": "2026-08-08",
+        "start_time": "14:00"
+      },
+      "expected_modified_fields": [],
+      "actual_modified_fields": [],
+      "expected_invalidated_tools": [],
+      "actual_invalidated_tools": [],
+      "expected_missing_fields": [],
+      "actual_missing_fields": [],
+      "field_sources": {
+        "task_type": "user_input",
+        "location": "user_input",
+        "date": "user_input",
+        "start_time": "user_input",
+        "end_time": "user_input",
+        "purpose": "user_input"
+      },
+      "context_used": false,
+      "trace_id": "5106dcf6-6489-43fb-908c-a9552b65cae3"
+    },
+    {
+      "case_id": "multi_turn_modify_task_type_001",
+      "category": "field_override",
+      "turn_index": 2,
+      "user_id": "eval-user-a",
+      "session_id": "day108-task-type",
+      "input": "任务类型改成测绘",
+      "passed": true,
+      "checks": {
+        "passed": true,
+        "intent_pass": true,
+        "action_pass": true,
+        "tool_pass": true,
+        "state_pass": true,
+        "tool_input_pass": true,
+        "inheritance_pass": true,
+        "override_pass": true,
+        "modified_fields_pass": true,
+        "invalidated_tools_pass": true,
+        "missing_fields_pass": true,
+        "no_context_pollution": true,
+        "clarification_continuation_pass": null,
+        "session_isolation_pass": null,
+        "state_matches": {
+          "location": true,
+          "date": true,
+          "start_time": true,
+          "end_time": true,
+          "task_type": true
+        },
+        "tool_input_matches": {
+          "location": true,
+          "date": true,
+          "start_time": true,
+          "end_time": true,
+          "task_type": true
+        },
+        "inherited_matches": {
+          "location": true,
+          "date": true,
+          "start_time": true,
+          "end_time": true
+        },
+        "override_matches": {
+          "task_type": true
+        },
+        "absent_tool_input_matches": {}
+      },
+      "expected_intent": "evaluate",
+      "actual_intent": "evaluate",
+      "expected_action": null,
+      "actual_action": "call_tool",
+      "expected_tool": "evaluate_flight_risk",
+      "actual_tool": "evaluate_flight_risk",
+      "expected_state": {
+        "location": "深圳",
+        "date": "2026-08-08",
+        "start_time": "14:00",
+        "end_time": "17:00",
+        "task_type": "survey"
+      },
+      "actual_state": {
+        "task_type": "survey",
+        "intent": "evaluate",
+        "date": "2026-08-08",
+        "start_time": "14:00",
+        "end_time": "17:00",
+        "location": "深圳",
+        "purpose": "任务类型改成测绘"
+      },
+      "expected_tool_input": {
+        "location": "深圳",
+        "date": "2026-08-08",
+        "start_time": "14:00",
+        "end_time": "17:00",
+        "task_type": "survey"
+      },
+      "actual_tool_input": {
+        "task_type": "survey",
+        "end_time": "17:00",
+        "location": "深圳",
+        "purpose": "任务类型改成测绘",
+        "date": "2026-08-08",
+        "start_time": "14:00"
+      },
+      "expected_modified_fields": [
+        "task_type"
+      ],
+      "actual_modified_fields": [
+        "task_type"
+      ],
+      "expected_invalidated_tools": [
+        "evaluate_flight_risk",
+        "query_knowledge_snippets"
+      ],
+      "actual_invalidated_tools": [
+        "evaluate_flight_risk",
+        "query_knowledge_snippets"
+      ],
+      "expected_missing_fields": [],
+      "actual_missing_fields": [],
+      "field_sources": {
+        "task_type": "user_input",
+        "intent": "session",
+        "date": "user_input",
+        "start_time": "user_input",
+        "end_time": "user_input",
+        "location": "user_input",
+        "purpose": "user_input"
+      },
+      "context_used": true,
+      "trace_id": "7972810a-16a3-4a6f-af77-a7071465c22a"
+    },
+    {
+      "case_id": "multi_turn_clarification_continue_001",
+      "category": "clarification_continuation",
+      "turn_index": 1,
+      "user_id": "eval-user-b",
+      "session_id": "day108-clarification",
+      "input": "2026年8月8日下午能飞吗",
+      "passed": true,
+      "checks": {
+        "passed": true,
+        "intent_pass": true,
+        "action_pass": true,
+        "tool_pass": true,
+        "state_pass": true,
+        "tool_input_pass": true,
+        "inheritance_pass": true,
+        "override_pass": true,
+        "modified_fields_pass": true,
+        "invalidated_tools_pass": true,
+        "missing_fields_pass": true,
+        "no_context_pollution": true,
+        "clarification_continuation_pass": null,
+        "session_isolation_pass": null,
+        "state_matches": {
+          "date": true,
+          "start_time": true,
+          "end_time": true,
+          "task_type": true
+        },
+        "tool_input_matches": {},
+        "inherited_matches": {},
+        "override_matches": {},
+        "absent_tool_input_matches": {}
+      },
+      "expected_intent": "evaluate",
+      "actual_intent": "evaluate",
+      "expected_action": "ask_clarification",
+      "actual_action": "ask_clarification",
+      "expected_tool": null,
+      "actual_tool": null,
+      "expected_state": {
+        "date": "2026-08-08",
+        "start_time": "13:00",
+        "end_time": "18:00",
+        "task_type": "inspection"
+      },
+      "actual_state": {
+        "task_type": "inspection",
+        "date": "2026-08-08",
+        "start_time": "13:00",
+        "end_time": "18:00",
+        "purpose": "2026年8月8日下午能飞吗"
+      },
+      "expected_tool_input": {},
+      "actual_tool_input": {},
+      "expected_modified_fields": [],
+      "actual_modified_fields": [],
+      "expected_invalidated_tools": [],
+      "actual_invalidated_tools": [],
+      "expected_missing_fields": [
+        "location"
+      ],
+      "actual_missing_fields": [
+        "location"
+      ],
+      "field_sources": {
+        "task_type": "user_input",
+        "date": "user_input",
+        "start_time": "user_input",
+        "end_time": "user_input",
+        "purpose": "user_input"
+      },
+      "context_used": false,
+      "trace_id": "1f6bbeaa-a7c5-4ea3-853c-dd029d39a243"
+    },
+    {
+      "case_id": "multi_turn_clarification_continue_001",
+      "category": "clarification_continuation",
+      "turn_index": 2,
+      "user_id": "eval-user-b",
+      "session_id": "day108-clarification",
+      "input": "深圳巡检",
+      "passed": true,
+      "checks": {
+        "passed": true,
+        "intent_pass": true,
+        "action_pass": true,
+        "tool_pass": true,
+        "state_pass": true,
+        "tool_input_pass": true,
+        "inheritance_pass": true,
+        "override_pass": true,
+        "modified_fields_pass": true,
+        "invalidated_tools_pass": true,
+        "missing_fields_pass": true,
+        "no_context_pollution": true,
+        "clarification_continuation_pass": true,
+        "session_isolation_pass": null,
+        "state_matches": {
+          "location": true,
+          "date": true,
+          "start_time": true,
+          "end_time": true,
+          "task_type": true
+        },
+        "tool_input_matches": {
+          "location": true,
+          "date": true,
+          "start_time": true,
+          "end_time": true,
+          "task_type": true
+        },
+        "inherited_matches": {
+          "date": true,
+          "start_time": true,
+          "end_time": true,
+          "task_type": true
+        },
+        "override_matches": {
+          "purpose": true
+        },
+        "absent_tool_input_matches": {}
+      },
+      "expected_intent": "evaluate",
+      "actual_intent": "evaluate",
+      "expected_action": null,
+      "actual_action": "call_tool",
+      "expected_tool": "evaluate_flight_risk",
+      "actual_tool": "evaluate_flight_risk",
+      "expected_state": {
+        "location": "深圳",
+        "date": "2026-08-08",
+        "start_time": "13:00",
+        "end_time": "18:00",
+        "task_type": "inspection"
+      },
+      "actual_state": {
+        "task_type": "inspection",
+        "date": "2026-08-08",
+        "start_time": "13:00",
+        "end_time": "18:00",
+        "purpose": "深圳巡检",
+        "intent": "evaluate",
+        "location": "深圳"
+      },
+      "expected_tool_input": {
+        "location": "深圳",
+        "date": "2026-08-08",
+        "start_time": "13:00",
+        "end_time": "18:00",
+        "task_type": "inspection"
+      },
+      "actual_tool_input": {
+        "task_type": "inspection",
+        "end_time": "18:00",
+        "location": "深圳",
+        "purpose": "深圳巡检",
+        "date": "2026-08-08",
+        "start_time": "13:00"
+      },
+      "expected_modified_fields": [
+        "purpose"
+      ],
+      "actual_modified_fields": [
+        "purpose"
+      ],
+      "expected_invalidated_tools": [
+        "evaluate_flight_risk"
+      ],
+      "actual_invalidated_tools": [
+        "evaluate_flight_risk"
+      ],
+      "expected_missing_fields": [],
+      "actual_missing_fields": [],
+      "field_sources": {
+        "task_type": "user_input",
+        "date": "user_input",
+        "start_time": "user_input",
+        "end_time": "user_input",
+        "purpose": "user_input",
+        "intent": "session",
+        "location": "user_input"
+      },
+      "context_used": true,
+      "trace_id": "3422d261-4f3c-4b32-8f49-a48d35dfa4f9"
+    },
+    {
+      "case_id": "multi_turn_intent_switch_to_recommend_001",
+      "category": "intent_switch",
+      "turn_index": 1,
+      "user_id": "eval-user-c",
+      "session_id": "day108-intent-switch",
+      "input": "2026年8月8日深圳下午2点到5点适合巡检吗",
+      "passed": true,
+      "checks": {
+        "passed": true,
+        "intent_pass": true,
+        "action_pass": true,
+        "tool_pass": true,
+        "state_pass": true,
+        "tool_input_pass": true,
+        "inheritance_pass": true,
+        "override_pass": true,
+        "modified_fields_pass": true,
+        "invalidated_tools_pass": true,
+        "missing_fields_pass": true,
+        "no_context_pollution": true,
+        "clarification_continuation_pass": null,
+        "session_isolation_pass": null,
+        "state_matches": {
+          "location": true,
+          "date": true,
+          "start_time": true,
+          "end_time": true,
+          "task_type": true
+        },
+        "tool_input_matches": {
+          "location": true,
+          "date": true,
+          "start_time": true,
+          "end_time": true,
+          "task_type": true
+        },
+        "inherited_matches": {},
+        "override_matches": {},
+        "absent_tool_input_matches": {}
+      },
+      "expected_intent": "evaluate",
+      "actual_intent": "evaluate",
+      "expected_action": null,
+      "actual_action": "call_tool",
+      "expected_tool": "evaluate_flight_risk",
+      "actual_tool": "evaluate_flight_risk",
+      "expected_state": {
+        "location": "深圳",
+        "date": "2026-08-08",
+        "start_time": "14:00",
+        "end_time": "17:00",
+        "task_type": "inspection"
+      },
+      "actual_state": {
+        "task_type": "inspection",
+        "location": "深圳",
+        "date": "2026-08-08",
+        "start_time": "14:00",
+        "end_time": "17:00",
+        "purpose": "2026年8月8日深圳下午2点到5点适合巡检吗"
+      },
+      "expected_tool_input": {
+        "location": "深圳",
+        "date": "2026-08-08",
+        "start_time": "14:00",
+        "end_time": "17:00",
+        "task_type": "inspection"
+      },
+      "actual_tool_input": {
+        "task_type": "inspection",
+        "end_time": "17:00",
+        "location": "深圳",
+        "purpose": "2026年8月8日深圳下午2点到5点适合巡检吗",
+        "date": "2026-08-08",
+        "start_time": "14:00"
+      },
+      "expected_modified_fields": [],
+      "actual_modified_fields": [],
+      "expected_invalidated_tools": [],
+      "actual_invalidated_tools": [],
+      "expected_missing_fields": [],
+      "actual_missing_fields": [],
+      "field_sources": {
+        "task_type": "user_input",
+        "location": "user_input",
+        "date": "user_input",
+        "start_time": "user_input",
+        "end_time": "user_input",
+        "purpose": "user_input"
+      },
+      "context_used": false,
+      "trace_id": "df866812-3bed-4df1-8278-fa1ff4307685"
+    },
+    {
+      "case_id": "multi_turn_intent_switch_to_recommend_001",
+      "category": "intent_switch",
+      "turn_index": 2,
+      "user_id": "eval-user-c",
+      "session_id": "day108-intent-switch",
+      "input": "那未来72小时什么时候最适合",
+      "passed": true,
+      "checks": {
+        "passed": true,
+        "intent_pass": true,
+        "action_pass": true,
+        "tool_pass": true,
+        "state_pass": true,
+        "tool_input_pass": true,
+        "inheritance_pass": true,
+        "override_pass": true,
+        "modified_fields_pass": true,
+        "invalidated_tools_pass": true,
+        "missing_fields_pass": true,
+        "no_context_pollution": true,
+        "clarification_continuation_pass": null,
+        "session_isolation_pass": null,
+        "state_matches": {
+          "location": true,
+          "task_type": true,
+          "scan_hours": true
+        },
+        "tool_input_matches": {
+          "location": true,
+          "task_type": true,
+          "scan_hours": true
+        },
+        "inherited_matches": {
+          "location": true,
+          "task_type": true
+        },
+        "override_matches": {},
+        "absent_tool_input_matches": {}
+      },
+      "expected_intent": "recommend",
+      "actual_intent": "recommend",
+      "expected_action": null,
+      "actual_action": "call_tool",
+      "expected_tool": "recommend_flight_windows",
+      "actual_tool": "recommend_flight_windows",
+      "expected_state": {
+        "location": "深圳",
+        "task_type": "inspection",
+        "scan_hours": 72
+      },
+      "actual_state": {
+        "task_type": "inspection",
+        "intent": "evaluate",
+        "date": "2026-08-08",
+        "start_time": "14:00",
+        "end_time": "17:00",
+        "location": "深圳",
+        "purpose": "那未来72小时什么时候最适合",
+        "scan_hours": 72,
+        "min_window_hours": 2
+      },
+      "expected_tool_input": {
+        "location": "深圳",
+        "task_type": "inspection",
+        "scan_hours": 72
+      },
+      "actual_tool_input": {
+        "task_type": "inspection",
+        "min_window_hours": 2,
+        "location": "深圳",
+        "purpose": "那未来72小时什么时候最适合",
+        "scan_hours": 72,
+        "date": "2026-08-08"
+      },
+      "expected_modified_fields": [],
+      "actual_modified_fields": [],
+      "expected_invalidated_tools": [],
+      "actual_invalidated_tools": [],
+      "expected_missing_fields": [],
+      "actual_missing_fields": [],
+      "field_sources": {
+        "task_type": "user_input",
+        "intent": "session",
+        "date": "user_input",
+        "start_time": "session",
+        "end_time": "session",
+        "location": "user_input",
+        "purpose": "user_input",
+        "scan_hours": "user_input",
+        "min_window_hours": "user_input"
+      },
+      "context_used": true,
+      "trace_id": "3ac400c4-c495-4337-ba4f-74dfa266271a"
+    },
+    {
+      "case_id": "multi_turn_context_pollution_001",
+      "category": "context_pollution",
+      "turn_index": 1,
+      "user_id": "eval-user-d",
+      "session_id": "day108-pollution",
+      "input": "2026年8月8日深圳下午2点到5点适合巡检吗",
+      "passed": true,
+      "checks": {
+        "passed": true,
+        "intent_pass": true,
+        "action_pass": true,
+        "tool_pass": true,
+        "state_pass": true,
+        "tool_input_pass": true,
+        "inheritance_pass": true,
+        "override_pass": true,
+        "modified_fields_pass": true,
+        "invalidated_tools_pass": true,
+        "missing_fields_pass": true,
+        "no_context_pollution": true,
+        "clarification_continuation_pass": null,
+        "session_isolation_pass": null,
+        "state_matches": {
+          "location": true,
+          "date": true,
+          "start_time": true,
+          "end_time": true,
+          "task_type": true
+        },
+        "tool_input_matches": {
+          "location": true,
+          "date": true,
+          "start_time": true,
+          "end_time": true,
+          "task_type": true
+        },
+        "inherited_matches": {},
+        "override_matches": {},
+        "absent_tool_input_matches": {}
+      },
+      "expected_intent": "evaluate",
+      "actual_intent": "evaluate",
+      "expected_action": null,
+      "actual_action": "call_tool",
+      "expected_tool": "evaluate_flight_risk",
+      "actual_tool": "evaluate_flight_risk",
+      "expected_state": {
+        "location": "深圳",
+        "date": "2026-08-08",
+        "start_time": "14:00",
+        "end_time": "17:00",
+        "task_type": "inspection"
+      },
+      "actual_state": {
+        "task_type": "inspection",
+        "location": "深圳",
+        "date": "2026-08-08",
+        "start_time": "14:00",
+        "end_time": "17:00",
+        "purpose": "2026年8月8日深圳下午2点到5点适合巡检吗"
+      },
+      "expected_tool_input": {
+        "location": "深圳",
+        "date": "2026-08-08",
+        "start_time": "14:00",
+        "end_time": "17:00",
+        "task_type": "inspection"
+      },
+      "actual_tool_input": {
+        "task_type": "inspection",
+        "end_time": "17:00",
+        "location": "深圳",
+        "purpose": "2026年8月8日深圳下午2点到5点适合巡检吗",
+        "date": "2026-08-08",
+        "start_time": "14:00"
+      },
+      "expected_modified_fields": [],
+      "actual_modified_fields": [],
+      "expected_invalidated_tools": [],
+      "actual_invalidated_tools": [],
+      "expected_missing_fields": [],
+      "actual_missing_fields": [],
+      "field_sources": {
+        "task_type": "user_input",
+        "location": "user_input",
+        "date": "user_input",
+        "start_time": "user_input",
+        "end_time": "user_input",
+        "purpose": "user_input"
+      },
+      "context_used": false,
+      "trace_id": "18b7bd64-4082-46ff-91cf-200fc8c174db"
+    },
+    {
+      "case_id": "multi_turn_context_pollution_001",
+      "category": "context_pollution",
+      "turn_index": 2,
+      "user_id": "eval-user-d",
+      "session_id": "day108-pollution",
+      "input": "查一下广州低空政策",
+      "passed": true,
+      "checks": {
+        "passed": true,
+        "intent_pass": true,
+        "action_pass": true,
+        "tool_pass": true,
+        "state_pass": true,
+        "tool_input_pass": true,
+        "inheritance_pass": true,
+        "override_pass": true,
+        "modified_fields_pass": true,
+        "invalidated_tools_pass": true,
+        "missing_fields_pass": true,
+        "no_context_pollution": true,
+        "clarification_continuation_pass": null,
+        "session_isolation_pass": null,
+        "state_matches": {
+          "city": true,
+          "task_type": true
+        },
+        "tool_input_matches": {
+          "city": true,
+          "task_type": true
+        },
+        "inherited_matches": {},
+        "override_matches": {},
+        "absent_tool_input_matches": {
+          "date": true,
+          "start_time": true,
+          "end_time": true,
+          "location": true
+        }
+      },
+      "expected_intent": "knowledge",
+      "actual_intent": "knowledge",
+      "expected_action": null,
+      "actual_action": "call_tool",
+      "expected_tool": "query_knowledge_snippets",
+      "actual_tool": "query_knowledge_snippets",
+      "expected_state": {
+        "city": "广州",
+        "task_type": "inspection"
+      },
+      "actual_state": {
+        "task_type": "inspection",
+        "top_k": 3,
+        "intent": "evaluate",
+        "date": "2026-08-08",
+        "start_time": "14:00",
+        "end_time": "17:00",
+        "location": "深圳",
+        "query": "查一下广州低空政策",
+        "city": "广州"
+      },
+      "expected_tool_input": {
+        "city": "广州",
+        "task_type": "inspection"
+      },
+      "actual_tool_input": {
+        "task_type": "inspection",
+        "city": "广州",
+        "top_k": 3,
+        "query": "查一下广州低空政策"
+      },
+      "expected_modified_fields": [],
+      "actual_modified_fields": [],
+      "expected_invalidated_tools": [],
+      "actual_invalidated_tools": [],
+      "expected_missing_fields": [],
+      "actual_missing_fields": [],
+      "field_sources": {
+        "task_type": "user_input",
+        "top_k": "user_input",
+        "intent": "session",
+        "date": "session",
+        "start_time": "session",
+        "end_time": "session",
+        "location": "session",
+        "query": "user_input",
+        "city": "user_input"
+      },
+      "context_used": true,
+      "trace_id": "4afb4fc5-43ee-499e-97a8-fbef8a23281f"
+    },
+    {
+      "case_id": "multi_turn_session_isolation_001",
+      "category": "session_isolation",
+      "turn_index": 1,
+      "user_id": "eval-user-x",
+      "session_id": "shared-session",
+      "input": "2026年8月8日深圳下午2点到5点适合巡检吗",
+      "passed": true,
+      "checks": {
+        "passed": true,
+        "intent_pass": true,
+        "action_pass": true,
+        "tool_pass": true,
+        "state_pass": true,
+        "tool_input_pass": true,
+        "inheritance_pass": true,
+        "override_pass": true,
+        "modified_fields_pass": true,
+        "invalidated_tools_pass": true,
+        "missing_fields_pass": true,
+        "no_context_pollution": true,
+        "clarification_continuation_pass": null,
+        "session_isolation_pass": null,
+        "state_matches": {
+          "location": true,
+          "date": true,
+          "start_time": true,
+          "end_time": true,
+          "task_type": true
+        },
+        "tool_input_matches": {
+          "location": true,
+          "date": true,
+          "start_time": true,
+          "end_time": true,
+          "task_type": true
+        },
+        "inherited_matches": {},
+        "override_matches": {},
+        "absent_tool_input_matches": {}
+      },
+      "expected_intent": "evaluate",
+      "actual_intent": "evaluate",
+      "expected_action": null,
+      "actual_action": "call_tool",
+      "expected_tool": "evaluate_flight_risk",
+      "actual_tool": "evaluate_flight_risk",
+      "expected_state": {
+        "location": "深圳",
+        "date": "2026-08-08",
+        "start_time": "14:00",
+        "end_time": "17:00",
+        "task_type": "inspection"
+      },
+      "actual_state": {
+        "task_type": "inspection",
+        "location": "深圳",
+        "date": "2026-08-08",
+        "start_time": "14:00",
+        "end_time": "17:00",
+        "purpose": "2026年8月8日深圳下午2点到5点适合巡检吗"
+      },
+      "expected_tool_input": {
+        "location": "深圳",
+        "date": "2026-08-08",
+        "start_time": "14:00",
+        "end_time": "17:00",
+        "task_type": "inspection"
+      },
+      "actual_tool_input": {
+        "task_type": "inspection",
+        "end_time": "17:00",
+        "location": "深圳",
+        "purpose": "2026年8月8日深圳下午2点到5点适合巡检吗",
+        "date": "2026-08-08",
+        "start_time": "14:00"
+      },
+      "expected_modified_fields": [],
+      "actual_modified_fields": [],
+      "expected_invalidated_tools": [],
+      "actual_invalidated_tools": [],
+      "expected_missing_fields": [],
+      "actual_missing_fields": [],
+      "field_sources": {
+        "task_type": "user_input",
+        "location": "user_input",
+        "date": "user_input",
+        "start_time": "user_input",
+        "end_time": "user_input",
+        "purpose": "user_input"
+      },
+      "context_used": false,
+      "trace_id": "5dc604a9-32b8-4c25-9b08-02bd542f2c1b"
+    },
+    {
+      "case_id": "multi_turn_session_isolation_001",
+      "category": "session_isolation",
+      "turn_index": 2,
+      "user_id": "eval-user-y",
+      "session_id": "shared-session",
+      "input": "2026年8月8日广州上午9点到11点适合巡检吗",
+      "passed": true,
+      "checks": {
+        "passed": true,
+        "intent_pass": true,
+        "action_pass": true,
+        "tool_pass": true,
+        "state_pass": true,
+        "tool_input_pass": true,
+        "inheritance_pass": true,
+        "override_pass": true,
+        "modified_fields_pass": true,
+        "invalidated_tools_pass": true,
+        "missing_fields_pass": true,
+        "no_context_pollution": true,
+        "clarification_continuation_pass": null,
+        "session_isolation_pass": null,
+        "state_matches": {
+          "location": true,
+          "date": true,
+          "start_time": true,
+          "end_time": true,
+          "task_type": true
+        },
+        "tool_input_matches": {
+          "location": true,
+          "date": true,
+          "start_time": true,
+          "end_time": true,
+          "task_type": true
+        },
+        "inherited_matches": {},
+        "override_matches": {},
+        "absent_tool_input_matches": {}
+      },
+      "expected_intent": "evaluate",
+      "actual_intent": "evaluate",
+      "expected_action": null,
+      "actual_action": "call_tool",
+      "expected_tool": "evaluate_flight_risk",
+      "actual_tool": "evaluate_flight_risk",
+      "expected_state": {
+        "location": "广州",
+        "date": "2026-08-08",
+        "start_time": "09:00",
+        "end_time": "11:00",
+        "task_type": "inspection"
+      },
+      "actual_state": {
+        "task_type": "inspection",
+        "location": "广州",
+        "date": "2026-08-08",
+        "start_time": "09:00",
+        "end_time": "11:00",
+        "purpose": "2026年8月8日广州上午9点到11点适合巡检吗"
+      },
+      "expected_tool_input": {
+        "location": "广州",
+        "date": "2026-08-08",
+        "start_time": "09:00",
+        "end_time": "11:00",
+        "task_type": "inspection"
+      },
+      "actual_tool_input": {
+        "task_type": "inspection",
+        "end_time": "11:00",
+        "location": "广州",
+        "purpose": "2026年8月8日广州上午9点到11点适合巡检吗",
+        "date": "2026-08-08",
+        "start_time": "09:00"
+      },
+      "expected_modified_fields": [],
+      "actual_modified_fields": [],
+      "expected_invalidated_tools": [],
+      "actual_invalidated_tools": [],
+      "expected_missing_fields": [],
+      "actual_missing_fields": [],
+      "field_sources": {
+        "task_type": "user_input",
+        "location": "user_input",
+        "date": "user_input",
+        "start_time": "user_input",
+        "end_time": "user_input",
+        "purpose": "user_input"
+      },
+      "context_used": false,
+      "trace_id": "73268649-26f4-4b64-a031-469e4bcd33a7"
+    },
+    {
+      "case_id": "multi_turn_session_isolation_001",
+      "category": "session_isolation",
+      "turn_index": 3,
+      "user_id": "eval-user-x",
+      "session_id": "shared-session",
+      "input": "时间改成下午",
+      "passed": true,
+      "checks": {
+        "passed": true,
+        "intent_pass": true,
+        "action_pass": true,
+        "tool_pass": true,
+        "state_pass": true,
+        "tool_input_pass": true,
+        "inheritance_pass": true,
+        "override_pass": true,
+        "modified_fields_pass": true,
+        "invalidated_tools_pass": true,
+        "missing_fields_pass": true,
+        "no_context_pollution": true,
+        "clarification_continuation_pass": null,
+        "session_isolation_pass": true,
+        "state_matches": {
+          "location": true,
+          "date": true,
+          "start_time": true,
+          "end_time": true,
+          "task_type": true
+        },
+        "tool_input_matches": {
+          "location": true,
+          "date": true,
+          "start_time": true,
+          "end_time": true,
+          "task_type": true
+        },
+        "inherited_matches": {
+          "location": true,
+          "date": true,
+          "task_type": true
+        },
+        "override_matches": {
+          "start_time": true,
+          "end_time": true
+        },
+        "absent_tool_input_matches": {}
+      },
+      "expected_intent": "evaluate",
+      "actual_intent": "evaluate",
+      "expected_action": null,
+      "actual_action": "call_tool",
+      "expected_tool": "evaluate_flight_risk",
+      "actual_tool": "evaluate_flight_risk",
+      "expected_state": {
+        "location": "深圳",
+        "date": "2026-08-08",
+        "start_time": "13:00",
+        "end_time": "18:00",
+        "task_type": "inspection"
+      },
+      "actual_state": {
+        "task_type": "inspection",
+        "intent": "evaluate",
+        "date": "2026-08-08",
+        "start_time": "13:00",
+        "end_time": "18:00",
+        "location": "深圳",
+        "purpose": "时间改成下午"
+      },
+      "expected_tool_input": {
+        "location": "深圳",
+        "date": "2026-08-08",
+        "start_time": "13:00",
+        "end_time": "18:00",
+        "task_type": "inspection"
+      },
+      "actual_tool_input": {
+        "task_type": "inspection",
+        "end_time": "18:00",
+        "location": "深圳",
+        "purpose": "时间改成下午",
+        "date": "2026-08-08",
+        "start_time": "13:00"
+      },
+      "expected_modified_fields": [
+        "start_time",
+        "end_time"
+      ],
+      "actual_modified_fields": [
+        "start_time",
+        "end_time"
+      ],
+      "expected_invalidated_tools": [],
+      "actual_invalidated_tools": [
+        "evaluate_flight_risk"
+      ],
+      "expected_missing_fields": [],
+      "actual_missing_fields": [],
+      "field_sources": {
+        "task_type": "user_input",
+        "intent": "session",
+        "date": "user_input",
+        "start_time": "user_input",
+        "end_time": "user_input",
+        "location": "user_input",
+        "purpose": "user_input"
+      },
+      "context_used": true,
+      "trace_id": "8bc8e8d3-906f-4db9-b1ee-0997313814b8"
+    }
+  ]
+}

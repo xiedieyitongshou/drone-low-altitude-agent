@@ -1,0 +1,296 @@
+[
+  {
+    "id": "multi_turn_modify_location_001",
+    "category": "field_override",
+    "user_id": "eval-user-a",
+    "session_id": "day108-location",
+    "profile": {
+      "default_task_type": "inspection"
+    },
+    "turns": [
+      {
+        "input": "2026年8月8日深圳下午2点到5点适合巡检吗",
+        "expected_intent": "evaluate",
+        "expected_tool": "evaluate_flight_risk",
+        "expected_state": {
+          "location": "深圳",
+          "date": "2026-08-08",
+          "start_time": "14:00",
+          "end_time": "17:00",
+          "task_type": "inspection"
+        },
+        "expected_tool_input": {
+          "location": "深圳",
+          "date": "2026-08-08",
+          "start_time": "14:00",
+          "end_time": "17:00",
+          "task_type": "inspection"
+        }
+      },
+      {
+        "input": "地点改成广州，时间不变",
+        "expected_intent": "evaluate",
+        "expected_tool": "evaluate_flight_risk",
+        "expected_inherited_fields": ["date", "start_time", "end_time", "task_type"],
+        "expected_modified_fields": ["location"],
+        "expected_invalidated_tools": ["evaluate_flight_risk", "query_knowledge_snippets"],
+        "expected_state": {
+          "location": "广州",
+          "date": "2026-08-08",
+          "start_time": "14:00",
+          "end_time": "17:00",
+          "task_type": "inspection"
+        },
+        "expected_tool_input": {
+          "location": "广州",
+          "date": "2026-08-08",
+          "start_time": "14:00",
+          "end_time": "17:00",
+          "task_type": "inspection"
+        }
+      }
+    ]
+  },
+  {
+    "id": "multi_turn_modify_time_001",
+    "category": "field_override",
+    "user_id": "eval-user-a",
+    "session_id": "day108-time",
+    "profile": {
+      "default_task_type": "inspection"
+    },
+    "turns": [
+      {
+        "input": "2026年8月8日深圳上午9点到11点适合巡检吗",
+        "expected_intent": "evaluate",
+        "expected_tool": "evaluate_flight_risk",
+        "expected_state": {
+          "location": "深圳",
+          "date": "2026-08-08",
+          "start_time": "09:00",
+          "end_time": "11:00",
+          "task_type": "inspection"
+        }
+      },
+      {
+        "input": "时间改成2026年8月9日下午",
+        "expected_intent": "evaluate",
+        "expected_tool": "evaluate_flight_risk",
+        "expected_inherited_fields": ["location", "task_type"],
+        "expected_modified_fields": ["date", "start_time", "end_time"],
+        "expected_invalidated_tools": ["evaluate_flight_risk"],
+        "expected_state": {
+          "location": "深圳",
+          "date": "2026-08-09",
+          "start_time": "13:00",
+          "end_time": "18:00",
+          "task_type": "inspection"
+        }
+      }
+    ]
+  },
+  {
+    "id": "multi_turn_modify_task_type_001",
+    "category": "field_override",
+    "user_id": "eval-user-a",
+    "session_id": "day108-task-type",
+    "profile": {
+      "default_task_type": "inspection"
+    },
+    "turns": [
+      {
+        "input": "2026年8月8日深圳下午2点到5点适合巡检吗",
+        "expected_intent": "evaluate",
+        "expected_tool": "evaluate_flight_risk",
+        "expected_state": {
+          "location": "深圳",
+          "date": "2026-08-08",
+          "start_time": "14:00",
+          "end_time": "17:00",
+          "task_type": "inspection"
+        }
+      },
+      {
+        "input": "任务类型改成测绘",
+        "expected_intent": "evaluate",
+        "expected_tool": "evaluate_flight_risk",
+        "expected_inherited_fields": ["location", "date", "start_time", "end_time"],
+        "expected_modified_fields": ["task_type"],
+        "expected_invalidated_tools": ["evaluate_flight_risk", "query_knowledge_snippets"],
+        "expected_state": {
+          "location": "深圳",
+          "date": "2026-08-08",
+          "start_time": "14:00",
+          "end_time": "17:00",
+          "task_type": "survey"
+        }
+      }
+    ]
+  },
+  {
+    "id": "multi_turn_clarification_continue_001",
+    "category": "clarification_continuation",
+    "user_id": "eval-user-b",
+    "session_id": "day108-clarification",
+    "profile": {
+      "default_task_type": "inspection"
+    },
+    "turns": [
+      {
+        "input": "2026年8月8日下午能飞吗",
+        "expected_intent": "evaluate",
+        "expected_action": "ask_clarification",
+        "expected_missing_fields": ["location"],
+        "expected_state": {
+          "date": "2026-08-08",
+          "start_time": "13:00",
+          "end_time": "18:00",
+          "task_type": "inspection"
+        },
+        "expected_tool_input": {}
+      },
+      {
+        "input": "深圳巡检",
+        "expected_intent": "evaluate",
+        "expected_tool": "evaluate_flight_risk",
+        "expected_continues_after_clarification": true,
+        "expected_inherited_fields": ["date", "start_time", "end_time", "task_type"],
+        "expected_modified_fields": ["purpose"],
+        "expected_invalidated_tools": ["evaluate_flight_risk"],
+        "expected_state": {
+          "location": "深圳",
+          "date": "2026-08-08",
+          "start_time": "13:00",
+          "end_time": "18:00",
+          "task_type": "inspection"
+        }
+      }
+    ]
+  },
+  {
+    "id": "multi_turn_intent_switch_to_recommend_001",
+    "category": "intent_switch",
+    "user_id": "eval-user-c",
+    "session_id": "day108-intent-switch",
+    "profile": {
+      "default_task_type": "inspection"
+    },
+    "turns": [
+      {
+        "input": "2026年8月8日深圳下午2点到5点适合巡检吗",
+        "expected_intent": "evaluate",
+        "expected_tool": "evaluate_flight_risk",
+        "expected_state": {
+          "location": "深圳",
+          "date": "2026-08-08",
+          "start_time": "14:00",
+          "end_time": "17:00",
+          "task_type": "inspection"
+        }
+      },
+      {
+        "input": "那未来72小时什么时候最适合",
+        "expected_intent": "recommend",
+        "expected_tool": "recommend_flight_windows",
+        "expected_inherited_fields": ["location", "task_type"],
+        "expected_state": {
+          "location": "深圳",
+          "task_type": "inspection",
+          "scan_hours": 72
+        },
+        "expected_tool_input": {
+          "location": "深圳",
+          "task_type": "inspection",
+          "scan_hours": 72
+        }
+      }
+    ]
+  },
+  {
+    "id": "multi_turn_context_pollution_001",
+    "category": "context_pollution",
+    "user_id": "eval-user-d",
+    "session_id": "day108-pollution",
+    "profile": {
+      "default_task_type": "inspection"
+    },
+    "turns": [
+      {
+        "input": "2026年8月8日深圳下午2点到5点适合巡检吗",
+        "expected_intent": "evaluate",
+        "expected_tool": "evaluate_flight_risk",
+        "expected_state": {
+          "location": "深圳",
+          "date": "2026-08-08",
+          "start_time": "14:00",
+          "end_time": "17:00",
+          "task_type": "inspection"
+        }
+      },
+      {
+        "input": "查一下广州低空政策",
+        "expected_intent": "knowledge",
+        "expected_tool": "query_knowledge_snippets",
+        "expected_state": {
+          "city": "广州",
+          "task_type": "inspection"
+        },
+        "expected_absent_tool_input_fields": ["date", "start_time", "end_time", "location"]
+      }
+    ]
+  },
+  {
+    "id": "multi_turn_session_isolation_001",
+    "category": "session_isolation",
+    "profile": {
+      "default_task_type": "inspection"
+    },
+    "turns": [
+      {
+        "user_id": "eval-user-x",
+        "session_id": "shared-session",
+        "input": "2026年8月8日深圳下午2点到5点适合巡检吗",
+        "expected_intent": "evaluate",
+        "expected_tool": "evaluate_flight_risk",
+        "expected_state": {
+          "location": "深圳",
+          "date": "2026-08-08",
+          "start_time": "14:00",
+          "end_time": "17:00",
+          "task_type": "inspection"
+        }
+      },
+      {
+        "user_id": "eval-user-y",
+        "session_id": "shared-session",
+        "input": "2026年8月8日广州上午9点到11点适合巡检吗",
+        "expected_intent": "evaluate",
+        "expected_tool": "evaluate_flight_risk",
+        "expected_state": {
+          "location": "广州",
+          "date": "2026-08-08",
+          "start_time": "09:00",
+          "end_time": "11:00",
+          "task_type": "inspection"
+        }
+      },
+      {
+        "user_id": "eval-user-x",
+        "session_id": "shared-session",
+        "input": "时间改成下午",
+        "expected_intent": "evaluate",
+        "expected_tool": "evaluate_flight_risk",
+        "expected_inherited_fields": ["location", "date", "task_type"],
+        "expected_modified_fields": ["start_time", "end_time"],
+        "expected_state": {
+          "location": "深圳",
+          "date": "2026-08-08",
+          "start_time": "13:00",
+          "end_time": "18:00",
+          "task_type": "inspection"
+        },
+        "expected_isolation": true
+      }
+    ]
+  }
+]

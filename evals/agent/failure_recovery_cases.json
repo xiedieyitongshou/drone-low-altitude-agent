@@ -1,0 +1,227 @@
+[
+  {
+    "id": "failure_timeout_weather_001",
+    "category": "timeout",
+    "intent": "evaluate",
+    "tool_name": "evaluate_flight_risk",
+    "parsed": {
+      "location": "深圳",
+      "date": "2026-08-08",
+      "start_time": "14:00",
+      "end_time": "17:00",
+      "task_type": "inspection"
+    },
+    "failure": {
+      "mode": "raise",
+      "exception": "TimeoutError",
+      "message": "weather timeout"
+    },
+    "context": {
+      "user_id": "eval-user",
+      "role": "user"
+    },
+    "expected": {
+      "success": false,
+      "failure_type": "timeout",
+      "recovery_action": "retry",
+      "retryable": true,
+      "fallback_used": true,
+      "error_code": "TimeoutError",
+      "message_keywords": ["超时", "重试"],
+      "trace_event_types": ["tool_call", "tool_result", "error"],
+      "no_fabrication": true,
+      "structured_error_fields": ["trace_id", "run_id", "tool_name", "failure_type", "recovery_action", "retryable", "errors"]
+    }
+  },
+  {
+    "id": "failure_external_dependency_001",
+    "category": "external_dependency",
+    "intent": "evaluate",
+    "tool_name": "evaluate_flight_risk",
+    "parsed": {
+      "location": "广州",
+      "date": "2026-08-08",
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "task_type": "inspection"
+    },
+    "failure": {
+      "mode": "raise",
+      "exception": "ConnectionError",
+      "message": "weather service unavailable"
+    },
+    "context": {
+      "user_id": "eval-user",
+      "role": "user"
+    },
+    "expected": {
+      "success": false,
+      "failure_type": "external_dependency_failed",
+      "recovery_action": "retry",
+      "retryable": true,
+      "fallback_used": true,
+      "error_code": "ConnectionError",
+      "message_keywords": ["外部", "重试"],
+      "trace_event_types": ["tool_call", "tool_result", "error"],
+      "no_fabrication": true,
+      "structured_error_fields": ["trace_id", "run_id", "tool_name", "failure_type", "recovery_action", "retryable", "errors"]
+    }
+  },
+  {
+    "id": "failure_invalid_tool_input_001",
+    "category": "invalid_input",
+    "intent": "evaluate",
+    "tool_name": "evaluate_flight_risk",
+    "parsed": {
+      "location": "深圳",
+      "date": "2026-08-08",
+      "start_time": "14:00",
+      "end_time": "17:00",
+      "task_type": "inspection"
+    },
+    "failure": {
+      "mode": "raise",
+      "exception": "ValueError",
+      "message": "missing location"
+    },
+    "context": {
+      "user_id": "eval-user",
+      "role": "user"
+    },
+    "expected": {
+      "success": false,
+      "failure_type": "invalid_input",
+      "recovery_action": "ask_clarification",
+      "retryable": false,
+      "fallback_used": true,
+      "error_code": "ValueError",
+      "message_keywords": ["补充"],
+      "trace_event_types": ["tool_call", "tool_result", "error"],
+      "no_fabrication": true,
+      "structured_error_fields": ["trace_id", "run_id", "tool_name", "failure_type", "recovery_action", "retryable", "errors"]
+    }
+  },
+  {
+    "id": "failure_permission_denied_001",
+    "category": "permission",
+    "intent": "history",
+    "tool_name": "query_user_history",
+    "parsed": {
+      "keyword": "深圳"
+    },
+    "failure": {
+      "mode": "tool_spec",
+      "requires_admin": true
+    },
+    "context": {
+      "user_id": "eval-user",
+      "role": "user"
+    },
+    "expected": {
+      "success": false,
+      "failure_type": "permission_denied",
+      "recovery_action": "deny",
+      "retryable": false,
+      "fallback_used": false,
+      "error_code": "ADMIN_CONTEXT_REQUIRED",
+      "message_keywords": ["权限"],
+      "trace_event_types": ["tool_call", "error"],
+      "no_fabrication": true,
+      "permission_bypass": false,
+      "structured_error_fields": ["trace_id", "run_id", "tool_name", "failure_type", "recovery_action", "retryable", "errors"]
+    }
+  },
+  {
+    "id": "failure_auth_required_001",
+    "category": "auth_required",
+    "intent": "history",
+    "tool_name": "query_user_history",
+    "parsed": {
+      "keyword": "深圳"
+    },
+    "failure": {
+      "mode": "tool_spec",
+      "requires_auth": true
+    },
+    "context": {
+      "user_id": null,
+      "role": "user"
+    },
+    "expected": {
+      "success": false,
+      "failure_type": "auth_required",
+      "recovery_action": "fallback_legacy",
+      "retryable": false,
+      "fallback_used": true,
+      "error_code": "AUTH_CONTEXT_REQUIRED",
+      "message_keywords": ["登录", "兼容"],
+      "trace_event_types": ["tool_call", "error"],
+      "no_fabrication": true,
+      "structured_error_fields": ["trace_id", "run_id", "tool_name", "failure_type", "recovery_action", "retryable", "errors"]
+    }
+  },
+  {
+    "id": "failure_not_found_history_001",
+    "category": "not_found",
+    "intent": "history",
+    "tool_name": "query_user_history",
+    "parsed": {
+      "keyword": "不存在的任务"
+    },
+    "failure": {
+      "mode": "raise",
+      "exception": "KeyError",
+      "message": "not found"
+    },
+    "context": {
+      "user_id": "eval-user",
+      "role": "user"
+    },
+    "expected": {
+      "success": true,
+      "failure_type": "not_found",
+      "recovery_action": "direct_response",
+      "retryable": false,
+      "fallback_used": false,
+      "error_code": "KeyError",
+      "message_keywords": ["历史", "记录"],
+      "trace_event_types": ["tool_call", "tool_result", "error"],
+      "no_fabrication": true,
+      "structured_error_fields": ["trace_id", "run_id", "tool_name", "failure_type", "recovery_action", "retryable", "errors"]
+    }
+  },
+  {
+    "id": "failure_internal_error_001",
+    "category": "internal_error",
+    "intent": "evaluate",
+    "tool_name": "evaluate_flight_risk",
+    "parsed": {
+      "location": "深圳",
+      "date": "2026-08-08",
+      "start_time": "14:00",
+      "end_time": "17:00",
+      "task_type": "inspection"
+    },
+    "failure": {
+      "mode": "raise",
+      "exception": "RuntimeError",
+      "message": "unexpected rule engine error"
+    },
+    "context": {
+      "user_id": "eval-user",
+      "role": "user"
+    },
+    "expected": {
+      "success": false,
+      "failure_type": "internal_error",
+      "recovery_action": "fallback_legacy",
+      "retryable": false,
+      "fallback_used": true,
+      "error_code": "RuntimeError",
+      "message_keywords": ["内部", "兼容"],
+      "trace_event_types": ["tool_call", "tool_result", "error"],
+      "no_fabrication": true,
+      "structured_error_fields": ["trace_id", "run_id", "tool_name", "failure_type", "recovery_action", "retryable", "errors"]
+    }
+  }
+]

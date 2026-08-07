@@ -1,0 +1,1572 @@
+{
+  "summary": {
+    "total_cases": 7,
+    "pass_rate": 1.0,
+    "failure_classification_accuracy": 1.0,
+    "recovery_action_accuracy": 1.0,
+    "fallback_decision_accuracy": 1.0,
+    "retryability_accuracy": 1.0,
+    "no_fabrication_pass_rate": 1.0,
+    "user_message_quality_pass_rate": 1.0,
+    "trace_error_coverage": 1.0,
+    "trace_tool_coverage": 1.0,
+    "structured_error_completeness": 1.0,
+    "permission_bypass_rate": 0.0,
+    "category_pass_rate": {
+      "auth_required": 1.0,
+      "external_dependency": 1.0,
+      "internal_error": 1.0,
+      "invalid_input": 1.0,
+      "not_found": 1.0,
+      "permission": 1.0,
+      "timeout": 1.0
+    }
+  },
+  "results": [
+    {
+      "case_id": "failure_timeout_weather_001",
+      "category": "timeout",
+      "passed": true,
+      "checks": {
+        "success_pass": true,
+        "failure_type_pass": true,
+        "recovery_action_pass": true,
+        "retryable_pass": true,
+        "fallback_decision_pass": true,
+        "error_code_pass": true,
+        "message_keywords_pass": true,
+        "no_fabrication_pass": true,
+        "trace_event_pass": true,
+        "trace_error_pass": true,
+        "trace_tool_pass": true,
+        "structured_error_pass": true,
+        "permission_bypass_pass": true,
+        "missing_trace_events": [],
+        "missing_structured_fields": [],
+        "passed": true
+      },
+      "expected": {
+        "success": false,
+        "failure_type": "timeout",
+        "recovery_action": "retry",
+        "retryable": true,
+        "fallback_used": true,
+        "error_code": "TimeoutError",
+        "message_keywords": [
+          "超时",
+          "重试"
+        ],
+        "trace_event_types": [
+          "tool_call",
+          "tool_result",
+          "error"
+        ],
+        "no_fabrication": true,
+        "structured_error_fields": [
+          "trace_id",
+          "run_id",
+          "tool_name",
+          "failure_type",
+          "recovery_action",
+          "retryable",
+          "errors"
+        ]
+      },
+      "actual": {
+        "success": false,
+        "failure_type": "timeout",
+        "recovery_action": "retry",
+        "retryable": true,
+        "fallback_used": true,
+        "error_code": "TimeoutError",
+        "message": "工具调用超时，可重试一次；仍失败时进入兼容兜底。",
+        "output": {
+          "message": "工具调用超时，可重试一次；仍失败时进入兼容兜底。",
+          "trace_id": "077eaacb-2c67-4d84-af48-37bef1e4dbe8",
+          "run_id": "f9da36c6-5458-4258-b8cf-6b9077d35148",
+          "status": "failed",
+          "tool_name": "evaluate_flight_risk",
+          "fallback_used": true,
+          "failure_type": "timeout",
+          "recovery_action": "retry",
+          "retryable": true,
+          "guardrail": null,
+          "errors": [
+            {
+              "tool_name": "evaluate_flight_risk",
+              "error_code": "TimeoutError",
+              "message": "weather timeout"
+            }
+          ]
+        },
+        "trace_event_types": [
+          "tool_call",
+          "tool_result",
+          "error"
+        ],
+        "trace_error_codes": [
+          "TimeoutError",
+          "TimeoutError"
+        ]
+      },
+      "trace_events": [
+        {
+          "trace_id": "077eaacb-2c67-4d84-af48-37bef1e4dbe8",
+          "run_id": "f9da36c6-5458-4258-b8cf-6b9077d35148",
+          "event_type": "tool_call",
+          "step_index": 3,
+          "user_id": "eval-user",
+          "session_id": "failure-failure_timeout_weather_001",
+          "status_before": "tool_running",
+          "status_after": "tool_running",
+          "tool_name": "evaluate_flight_risk",
+          "latency_ms": null,
+          "input_summary": {
+            "location": "深圳",
+            "date": "2026-08-08",
+            "start_time": "14:00",
+            "end_time": "17:00",
+            "task_type": "inspection"
+          },
+          "output_summary": null,
+          "error_code": null,
+          "message": null,
+          "metadata": {
+            "side_effect": "compute_only",
+            "risk_level": "high",
+            "requires_auth": true,
+            "requires_admin": false,
+            "allowed_roles": [
+              "user",
+              "admin"
+            ],
+            "user_scope": "current_user",
+            "timeout_ms": 30000
+          }
+        },
+        {
+          "trace_id": "077eaacb-2c67-4d84-af48-37bef1e4dbe8",
+          "run_id": "f9da36c6-5458-4258-b8cf-6b9077d35148",
+          "event_type": "tool_result",
+          "step_index": 3,
+          "user_id": "eval-user",
+          "session_id": "failure-failure_timeout_weather_001",
+          "status_before": "tool_running",
+          "status_after": "failed",
+          "tool_name": "evaluate_flight_risk",
+          "latency_ms": 0,
+          "input_summary": {
+            "location": "深圳",
+            "date": "2026-08-08",
+            "start_time": "14:00",
+            "end_time": "17:00",
+            "task_type": "inspection"
+          },
+          "output_summary": {
+            "success": false,
+            "tool_name": "evaluate_flight_risk",
+            "data": null,
+            "error_code": "TimeoutError",
+            "message": "weather timeout",
+            "metadata": {}
+          },
+          "error_code": "TimeoutError",
+          "message": "weather timeout",
+          "metadata": {
+            "side_effect": "compute_only",
+            "risk_level": "high",
+            "requires_auth": true,
+            "requires_admin": false,
+            "allowed_roles": [
+              "user",
+              "admin"
+            ],
+            "user_scope": "current_user",
+            "timeout_ms": 30000,
+            "failure_type": "timeout",
+            "recovery_action": "retry",
+            "retryable": true,
+            "user_message": "工具调用超时，可重试一次；仍失败时进入兼容兜底。"
+          }
+        },
+        {
+          "trace_id": "077eaacb-2c67-4d84-af48-37bef1e4dbe8",
+          "run_id": "f9da36c6-5458-4258-b8cf-6b9077d35148",
+          "event_type": "error",
+          "step_index": 3,
+          "user_id": "eval-user",
+          "session_id": "failure-failure_timeout_weather_001",
+          "status_before": "tool_running",
+          "status_after": "failed",
+          "tool_name": "evaluate_flight_risk",
+          "latency_ms": 0,
+          "input_summary": {
+            "location": "深圳",
+            "date": "2026-08-08",
+            "start_time": "14:00",
+            "end_time": "17:00",
+            "task_type": "inspection"
+          },
+          "output_summary": {
+            "success": false,
+            "tool_name": "evaluate_flight_risk",
+            "data": null,
+            "error_code": "TimeoutError",
+            "message": "weather timeout",
+            "metadata": {}
+          },
+          "error_code": "TimeoutError",
+          "message": "工具调用超时，可重试一次；仍失败时进入兼容兜底。",
+          "metadata": {
+            "source": "tool_executor",
+            "failure_type": "timeout",
+            "recovery_action": "retry",
+            "retryable": true,
+            "user_message": "工具调用超时，可重试一次；仍失败时进入兼容兜底。"
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "failure_external_dependency_001",
+      "category": "external_dependency",
+      "passed": true,
+      "checks": {
+        "success_pass": true,
+        "failure_type_pass": true,
+        "recovery_action_pass": true,
+        "retryable_pass": true,
+        "fallback_decision_pass": true,
+        "error_code_pass": true,
+        "message_keywords_pass": true,
+        "no_fabrication_pass": true,
+        "trace_event_pass": true,
+        "trace_error_pass": true,
+        "trace_tool_pass": true,
+        "structured_error_pass": true,
+        "permission_bypass_pass": true,
+        "missing_trace_events": [],
+        "missing_structured_fields": [],
+        "passed": true
+      },
+      "expected": {
+        "success": false,
+        "failure_type": "external_dependency_failed",
+        "recovery_action": "retry",
+        "retryable": true,
+        "fallback_used": true,
+        "error_code": "ConnectionError",
+        "message_keywords": [
+          "外部",
+          "重试"
+        ],
+        "trace_event_types": [
+          "tool_call",
+          "tool_result",
+          "error"
+        ],
+        "no_fabrication": true,
+        "structured_error_fields": [
+          "trace_id",
+          "run_id",
+          "tool_name",
+          "failure_type",
+          "recovery_action",
+          "retryable",
+          "errors"
+        ]
+      },
+      "actual": {
+        "success": false,
+        "failure_type": "external_dependency_failed",
+        "recovery_action": "retry",
+        "retryable": true,
+        "fallback_used": true,
+        "error_code": "ConnectionError",
+        "message": "外部依赖暂时不可用，可重试一次；仍失败时进入兼容兜底。",
+        "output": {
+          "message": "外部依赖暂时不可用，可重试一次；仍失败时进入兼容兜底。",
+          "trace_id": "831789a5-2e1d-4b07-8a3a-219df91b60d3",
+          "run_id": "83b920d0-3b63-4590-a8f9-a05421de2138",
+          "status": "failed",
+          "tool_name": "evaluate_flight_risk",
+          "fallback_used": true,
+          "failure_type": "external_dependency_failed",
+          "recovery_action": "retry",
+          "retryable": true,
+          "guardrail": null,
+          "errors": [
+            {
+              "tool_name": "evaluate_flight_risk",
+              "error_code": "ConnectionError",
+              "message": "weather service unavailable"
+            }
+          ]
+        },
+        "trace_event_types": [
+          "tool_call",
+          "tool_result",
+          "error"
+        ],
+        "trace_error_codes": [
+          "ConnectionError",
+          "ConnectionError"
+        ]
+      },
+      "trace_events": [
+        {
+          "trace_id": "831789a5-2e1d-4b07-8a3a-219df91b60d3",
+          "run_id": "83b920d0-3b63-4590-a8f9-a05421de2138",
+          "event_type": "tool_call",
+          "step_index": 3,
+          "user_id": "eval-user",
+          "session_id": "failure-failure_external_dependency_001",
+          "status_before": "tool_running",
+          "status_after": "tool_running",
+          "tool_name": "evaluate_flight_risk",
+          "latency_ms": null,
+          "input_summary": {
+            "location": "广州",
+            "date": "2026-08-08",
+            "start_time": "09:00",
+            "end_time": "11:00",
+            "task_type": "inspection"
+          },
+          "output_summary": null,
+          "error_code": null,
+          "message": null,
+          "metadata": {
+            "side_effect": "compute_only",
+            "risk_level": "high",
+            "requires_auth": true,
+            "requires_admin": false,
+            "allowed_roles": [
+              "user",
+              "admin"
+            ],
+            "user_scope": "current_user",
+            "timeout_ms": 30000
+          }
+        },
+        {
+          "trace_id": "831789a5-2e1d-4b07-8a3a-219df91b60d3",
+          "run_id": "83b920d0-3b63-4590-a8f9-a05421de2138",
+          "event_type": "tool_result",
+          "step_index": 3,
+          "user_id": "eval-user",
+          "session_id": "failure-failure_external_dependency_001",
+          "status_before": "tool_running",
+          "status_after": "failed",
+          "tool_name": "evaluate_flight_risk",
+          "latency_ms": 0,
+          "input_summary": {
+            "location": "广州",
+            "date": "2026-08-08",
+            "start_time": "09:00",
+            "end_time": "11:00",
+            "task_type": "inspection"
+          },
+          "output_summary": {
+            "success": false,
+            "tool_name": "evaluate_flight_risk",
+            "data": null,
+            "error_code": "ConnectionError",
+            "message": "weather service unavailable",
+            "metadata": {}
+          },
+          "error_code": "ConnectionError",
+          "message": "weather service unavailable",
+          "metadata": {
+            "side_effect": "compute_only",
+            "risk_level": "high",
+            "requires_auth": true,
+            "requires_admin": false,
+            "allowed_roles": [
+              "user",
+              "admin"
+            ],
+            "user_scope": "current_user",
+            "timeout_ms": 30000,
+            "failure_type": "external_dependency_failed",
+            "recovery_action": "retry",
+            "retryable": true,
+            "user_message": "外部依赖暂时不可用，可重试一次；仍失败时进入兼容兜底。"
+          }
+        },
+        {
+          "trace_id": "831789a5-2e1d-4b07-8a3a-219df91b60d3",
+          "run_id": "83b920d0-3b63-4590-a8f9-a05421de2138",
+          "event_type": "error",
+          "step_index": 3,
+          "user_id": "eval-user",
+          "session_id": "failure-failure_external_dependency_001",
+          "status_before": "tool_running",
+          "status_after": "failed",
+          "tool_name": "evaluate_flight_risk",
+          "latency_ms": 0,
+          "input_summary": {
+            "location": "广州",
+            "date": "2026-08-08",
+            "start_time": "09:00",
+            "end_time": "11:00",
+            "task_type": "inspection"
+          },
+          "output_summary": {
+            "success": false,
+            "tool_name": "evaluate_flight_risk",
+            "data": null,
+            "error_code": "ConnectionError",
+            "message": "weather service unavailable",
+            "metadata": {}
+          },
+          "error_code": "ConnectionError",
+          "message": "外部依赖暂时不可用，可重试一次；仍失败时进入兼容兜底。",
+          "metadata": {
+            "source": "tool_executor",
+            "failure_type": "external_dependency_failed",
+            "recovery_action": "retry",
+            "retryable": true,
+            "user_message": "外部依赖暂时不可用，可重试一次；仍失败时进入兼容兜底。"
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "failure_invalid_tool_input_001",
+      "category": "invalid_input",
+      "passed": true,
+      "checks": {
+        "success_pass": true,
+        "failure_type_pass": true,
+        "recovery_action_pass": true,
+        "retryable_pass": true,
+        "fallback_decision_pass": true,
+        "error_code_pass": true,
+        "message_keywords_pass": true,
+        "no_fabrication_pass": true,
+        "trace_event_pass": true,
+        "trace_error_pass": true,
+        "trace_tool_pass": true,
+        "structured_error_pass": true,
+        "permission_bypass_pass": true,
+        "missing_trace_events": [],
+        "missing_structured_fields": [],
+        "passed": true
+      },
+      "expected": {
+        "success": false,
+        "failure_type": "invalid_input",
+        "recovery_action": "ask_clarification",
+        "retryable": false,
+        "fallback_used": true,
+        "error_code": "ValueError",
+        "message_keywords": [
+          "补充"
+        ],
+        "trace_event_types": [
+          "tool_call",
+          "tool_result",
+          "error"
+        ],
+        "no_fabrication": true,
+        "structured_error_fields": [
+          "trace_id",
+          "run_id",
+          "tool_name",
+          "failure_type",
+          "recovery_action",
+          "retryable",
+          "errors"
+        ]
+      },
+      "actual": {
+        "success": false,
+        "failure_type": "invalid_input",
+        "recovery_action": "ask_clarification",
+        "retryable": false,
+        "fallback_used": true,
+        "error_code": "ValueError",
+        "message": "工具输入参数不完整或格式不正确，需要补充关键信息后重试。",
+        "output": {
+          "message": "工具输入参数不完整或格式不正确，需要补充关键信息后重试。",
+          "trace_id": "a863090b-2dff-4b6b-b4d3-c79da0316fb0",
+          "run_id": "89e71128-ad88-44d9-8f84-ee90091d59f6",
+          "status": "failed",
+          "tool_name": "evaluate_flight_risk",
+          "fallback_used": true,
+          "failure_type": "invalid_input",
+          "recovery_action": "ask_clarification",
+          "retryable": false,
+          "guardrail": null,
+          "errors": [
+            {
+              "tool_name": "evaluate_flight_risk",
+              "error_code": "ValueError",
+              "message": "missing location"
+            }
+          ]
+        },
+        "trace_event_types": [
+          "tool_call",
+          "tool_result",
+          "error"
+        ],
+        "trace_error_codes": [
+          "ValueError",
+          "ValueError"
+        ]
+      },
+      "trace_events": [
+        {
+          "trace_id": "a863090b-2dff-4b6b-b4d3-c79da0316fb0",
+          "run_id": "89e71128-ad88-44d9-8f84-ee90091d59f6",
+          "event_type": "tool_call",
+          "step_index": 3,
+          "user_id": "eval-user",
+          "session_id": "failure-failure_invalid_tool_input_001",
+          "status_before": "tool_running",
+          "status_after": "tool_running",
+          "tool_name": "evaluate_flight_risk",
+          "latency_ms": null,
+          "input_summary": {
+            "location": "深圳",
+            "date": "2026-08-08",
+            "start_time": "14:00",
+            "end_time": "17:00",
+            "task_type": "inspection"
+          },
+          "output_summary": null,
+          "error_code": null,
+          "message": null,
+          "metadata": {
+            "side_effect": "compute_only",
+            "risk_level": "high",
+            "requires_auth": true,
+            "requires_admin": false,
+            "allowed_roles": [
+              "user",
+              "admin"
+            ],
+            "user_scope": "current_user",
+            "timeout_ms": 30000
+          }
+        },
+        {
+          "trace_id": "a863090b-2dff-4b6b-b4d3-c79da0316fb0",
+          "run_id": "89e71128-ad88-44d9-8f84-ee90091d59f6",
+          "event_type": "tool_result",
+          "step_index": 3,
+          "user_id": "eval-user",
+          "session_id": "failure-failure_invalid_tool_input_001",
+          "status_before": "tool_running",
+          "status_after": "failed",
+          "tool_name": "evaluate_flight_risk",
+          "latency_ms": 0,
+          "input_summary": {
+            "location": "深圳",
+            "date": "2026-08-08",
+            "start_time": "14:00",
+            "end_time": "17:00",
+            "task_type": "inspection"
+          },
+          "output_summary": {
+            "success": false,
+            "tool_name": "evaluate_flight_risk",
+            "data": null,
+            "error_code": "ValueError",
+            "message": "missing location",
+            "metadata": {}
+          },
+          "error_code": "ValueError",
+          "message": "missing location",
+          "metadata": {
+            "side_effect": "compute_only",
+            "risk_level": "high",
+            "requires_auth": true,
+            "requires_admin": false,
+            "allowed_roles": [
+              "user",
+              "admin"
+            ],
+            "user_scope": "current_user",
+            "timeout_ms": 30000,
+            "failure_type": "invalid_input",
+            "recovery_action": "ask_clarification",
+            "retryable": false,
+            "user_message": "工具输入参数不完整或格式不正确，需要补充关键信息后重试。"
+          }
+        },
+        {
+          "trace_id": "a863090b-2dff-4b6b-b4d3-c79da0316fb0",
+          "run_id": "89e71128-ad88-44d9-8f84-ee90091d59f6",
+          "event_type": "error",
+          "step_index": 3,
+          "user_id": "eval-user",
+          "session_id": "failure-failure_invalid_tool_input_001",
+          "status_before": "tool_running",
+          "status_after": "failed",
+          "tool_name": "evaluate_flight_risk",
+          "latency_ms": 0,
+          "input_summary": {
+            "location": "深圳",
+            "date": "2026-08-08",
+            "start_time": "14:00",
+            "end_time": "17:00",
+            "task_type": "inspection"
+          },
+          "output_summary": {
+            "success": false,
+            "tool_name": "evaluate_flight_risk",
+            "data": null,
+            "error_code": "ValueError",
+            "message": "missing location",
+            "metadata": {}
+          },
+          "error_code": "ValueError",
+          "message": "工具输入参数不完整或格式不正确，需要补充关键信息后重试。",
+          "metadata": {
+            "source": "tool_executor",
+            "failure_type": "invalid_input",
+            "recovery_action": "ask_clarification",
+            "retryable": false,
+            "user_message": "工具输入参数不完整或格式不正确，需要补充关键信息后重试。"
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "failure_permission_denied_001",
+      "category": "permission",
+      "passed": true,
+      "checks": {
+        "success_pass": true,
+        "failure_type_pass": true,
+        "recovery_action_pass": true,
+        "retryable_pass": true,
+        "fallback_decision_pass": true,
+        "error_code_pass": true,
+        "message_keywords_pass": true,
+        "no_fabrication_pass": true,
+        "trace_event_pass": true,
+        "trace_error_pass": true,
+        "trace_tool_pass": true,
+        "structured_error_pass": true,
+        "permission_bypass_pass": true,
+        "missing_trace_events": [],
+        "missing_structured_fields": [],
+        "passed": true
+      },
+      "expected": {
+        "success": false,
+        "failure_type": "permission_denied",
+        "recovery_action": "deny",
+        "retryable": false,
+        "fallback_used": false,
+        "error_code": "ADMIN_CONTEXT_REQUIRED",
+        "message_keywords": [
+          "权限"
+        ],
+        "trace_event_types": [
+          "tool_call",
+          "error"
+        ],
+        "no_fabrication": true,
+        "permission_bypass": false,
+        "structured_error_fields": [
+          "trace_id",
+          "run_id",
+          "tool_name",
+          "failure_type",
+          "recovery_action",
+          "retryable",
+          "errors"
+        ]
+      },
+      "actual": {
+        "success": false,
+        "failure_type": "permission_denied",
+        "recovery_action": "deny",
+        "retryable": false,
+        "fallback_used": false,
+        "error_code": "ADMIN_CONTEXT_REQUIRED",
+        "message": "当前用户没有权限执行该工具。",
+        "output": {
+          "message": "当前用户没有权限执行该工具。",
+          "trace_id": "2c7ccb40-01d9-47cb-9a65-d43467904117",
+          "run_id": "667fa542-7da1-4796-838a-f10f52f07839",
+          "status": "failed",
+          "tool_name": "query_user_history",
+          "fallback_used": false,
+          "failure_type": "permission_denied",
+          "recovery_action": "deny",
+          "retryable": false,
+          "guardrail": {
+            "checkpoint": "tool",
+            "action": "block",
+            "allowed": false,
+            "error_code": "ADMIN_CONTEXT_REQUIRED",
+            "reason": "工具需要管理员权限，当前用户无权调用。",
+            "user_message": "当前工具需要管理员权限，普通用户不能调用。",
+            "violation_type": "admin_required",
+            "tool_name": "query_user_history",
+            "metadata": {
+              "tool_name": "query_user_history",
+              "side_effect": "read_only",
+              "risk_level": "low",
+              "requires_auth": true,
+              "requires_admin": true,
+              "allowed_roles": [
+                "user",
+                "admin"
+              ],
+              "actual_role": "user",
+              "user_scope": "current_user",
+              "input_fields": [
+                "keyword"
+              ],
+              "violation_type": "admin_required"
+            }
+          },
+          "errors": [
+            {
+              "tool_name": "query_user_history",
+              "error_code": "ADMIN_CONTEXT_REQUIRED",
+              "message": "工具需要管理员权限，当前用户无权调用。"
+            }
+          ]
+        },
+        "trace_event_types": [
+          "tool_call",
+          "error"
+        ],
+        "trace_error_codes": [
+          "ADMIN_CONTEXT_REQUIRED"
+        ]
+      },
+      "trace_events": [
+        {
+          "trace_id": "2c7ccb40-01d9-47cb-9a65-d43467904117",
+          "run_id": "667fa542-7da1-4796-838a-f10f52f07839",
+          "event_type": "tool_call",
+          "step_index": 3,
+          "user_id": "eval-user",
+          "session_id": "failure-failure_permission_denied_001",
+          "status_before": "tool_running",
+          "status_after": "tool_running",
+          "tool_name": "query_user_history",
+          "latency_ms": null,
+          "input_summary": {
+            "keyword": "深圳"
+          },
+          "output_summary": null,
+          "error_code": null,
+          "message": null,
+          "metadata": {
+            "side_effect": "read_only",
+            "risk_level": "low",
+            "requires_auth": true,
+            "requires_admin": true,
+            "allowed_roles": [
+              "user",
+              "admin"
+            ],
+            "user_scope": "current_user",
+            "timeout_ms": 30000
+          }
+        },
+        {
+          "trace_id": "2c7ccb40-01d9-47cb-9a65-d43467904117",
+          "run_id": "667fa542-7da1-4796-838a-f10f52f07839",
+          "event_type": "error",
+          "step_index": 3,
+          "user_id": "eval-user",
+          "session_id": "failure-failure_permission_denied_001",
+          "status_before": "tool_running",
+          "status_after": "failed",
+          "tool_name": "query_user_history",
+          "latency_ms": null,
+          "input_summary": {
+            "keyword": "深圳"
+          },
+          "output_summary": {
+            "success": false,
+            "tool_name": "query_user_history",
+            "data": null,
+            "error_code": "ADMIN_CONTEXT_REQUIRED",
+            "message": "工具需要管理员权限，当前用户无权调用。",
+            "metadata": {
+              "guardrail_checkpoint": "tool",
+              "guardrail_action": "block",
+              "guardrail_allowed": false,
+              "guardrail_reason": "工具需要管理员权限，当前用户无权调用。",
+              "guardrail_user_message": "当前工具需要管理员权限，普通用户不能调用。",
+              "guardrail_explanation": {
+                "checkpoint": "tool",
+                "action": "block",
+                "allowed": false,
+                "error_code": "ADMIN_CONTEXT_REQUIRED",
+                "reason": "工具需要管理员权限，当前用户无权调用。",
+                "user_message": "当前工具需要管理员权限，普通用户不能调用。",
+                "violation_type": "admin_required",
+                "tool_name": "query_user_history",
+                "metadata": {
+                  "tool_name": "query_user_history",
+                  "side_effect": "read_only",
+                  "risk_level": "low",
+                  "requires_auth": true,
+                  "requires_admin": true,
+                  "allowed_roles": [
+                    "user",
+                    "admin"
+                  ],
+                  "actual_role": "user",
+                  "user_scope": "current_user",
+                  "input_fields": [
+                    "keyword"
+                  ],
+                  "violation_type": "admin_required"
+                }
+              },
+              "tool_name": "query_user_history",
+              "side_effect": "read_only",
+              "risk_level": "low",
+              "requires_auth": true,
+              "requires_admin": true,
+              "allowed_roles": [
+                "user",
+                "admin"
+              ],
+              "actual_role": "user",
+              "user_scope": "current_user",
+              "input_fields": [
+                "keyword"
+              ],
+              "violation_type": "admin_required"
+            }
+          },
+          "error_code": "ADMIN_CONTEXT_REQUIRED",
+          "message": "工具需要管理员权限，当前用户无权调用。",
+          "metadata": {
+            "source": "tool_guardrail",
+            "guardrail_checkpoint": "tool",
+            "guardrail_action": "block",
+            "guardrail_allowed": false,
+            "guardrail_reason": "工具需要管理员权限，当前用户无权调用。",
+            "guardrail_user_message": "当前工具需要管理员权限，普通用户不能调用。",
+            "guardrail_explanation": {
+              "checkpoint": "tool",
+              "action": "block",
+              "allowed": false,
+              "error_code": "ADMIN_CONTEXT_REQUIRED",
+              "reason": "工具需要管理员权限，当前用户无权调用。",
+              "user_message": "当前工具需要管理员权限，普通用户不能调用。",
+              "violation_type": "admin_required",
+              "tool_name": "query_user_history",
+              "metadata": {
+                "tool_name": "query_user_history",
+                "side_effect": "read_only",
+                "risk_level": "low",
+                "requires_auth": true,
+                "requires_admin": true,
+                "allowed_roles": [
+                  "user",
+                  "admin"
+                ],
+                "actual_role": "user",
+                "user_scope": "current_user",
+                "input_fields": [
+                  "keyword"
+                ],
+                "violation_type": "admin_required"
+              }
+            },
+            "tool_name": "query_user_history",
+            "side_effect": "read_only",
+            "risk_level": "low",
+            "requires_auth": true,
+            "requires_admin": true,
+            "allowed_roles": [
+              "user",
+              "admin"
+            ],
+            "actual_role": "user",
+            "user_scope": "current_user",
+            "input_fields": [
+              "keyword"
+            ],
+            "violation_type": "admin_required",
+            "failure_type": "permission_denied",
+            "recovery_action": "deny",
+            "retryable": false,
+            "user_message": "当前用户没有权限执行该工具。"
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "failure_auth_required_001",
+      "category": "auth_required",
+      "passed": true,
+      "checks": {
+        "success_pass": true,
+        "failure_type_pass": true,
+        "recovery_action_pass": true,
+        "retryable_pass": true,
+        "fallback_decision_pass": true,
+        "error_code_pass": true,
+        "message_keywords_pass": true,
+        "no_fabrication_pass": true,
+        "trace_event_pass": true,
+        "trace_error_pass": true,
+        "trace_tool_pass": true,
+        "structured_error_pass": true,
+        "permission_bypass_pass": true,
+        "missing_trace_events": [],
+        "missing_structured_fields": [],
+        "passed": true
+      },
+      "expected": {
+        "success": false,
+        "failure_type": "auth_required",
+        "recovery_action": "fallback_legacy",
+        "retryable": false,
+        "fallback_used": true,
+        "error_code": "AUTH_CONTEXT_REQUIRED",
+        "message_keywords": [
+          "登录",
+          "兼容"
+        ],
+        "trace_event_types": [
+          "tool_call",
+          "error"
+        ],
+        "no_fabrication": true,
+        "structured_error_fields": [
+          "trace_id",
+          "run_id",
+          "tool_name",
+          "failure_type",
+          "recovery_action",
+          "retryable",
+          "errors"
+        ]
+      },
+      "actual": {
+        "success": false,
+        "failure_type": "auth_required",
+        "recovery_action": "fallback_legacy",
+        "retryable": false,
+        "fallback_used": true,
+        "error_code": "AUTH_CONTEXT_REQUIRED",
+        "message": "缺少登录上下文，已尝试使用兼容链路处理。",
+        "output": {
+          "message": "缺少登录上下文，已尝试使用兼容链路处理。",
+          "trace_id": "a6109459-fb70-4532-8348-32f918273808",
+          "run_id": "f44ea239-a5b5-4092-b89b-571160a601f1",
+          "status": "failed",
+          "tool_name": "query_user_history",
+          "fallback_used": true,
+          "failure_type": "auth_required",
+          "recovery_action": "fallback_legacy",
+          "retryable": false,
+          "guardrail": {
+            "checkpoint": "tool",
+            "action": "fallback",
+            "allowed": false,
+            "error_code": "AUTH_CONTEXT_REQUIRED",
+            "reason": "工具需要登录上下文，但当前请求缺少用户身份。",
+            "user_message": "当前操作需要登录后才能继续。",
+            "violation_type": "missing_auth_context",
+            "tool_name": "query_user_history",
+            "metadata": {
+              "tool_name": "query_user_history",
+              "side_effect": "read_only",
+              "risk_level": "low",
+              "requires_auth": true,
+              "requires_admin": false,
+              "allowed_roles": [
+                "user",
+                "admin"
+              ],
+              "actual_role": "user",
+              "user_scope": "current_user",
+              "input_fields": [
+                "keyword"
+              ],
+              "violation_type": "missing_auth_context"
+            }
+          },
+          "errors": [
+            {
+              "tool_name": "query_user_history",
+              "error_code": "AUTH_CONTEXT_REQUIRED",
+              "message": "工具需要登录上下文，但当前请求缺少用户身份。"
+            }
+          ]
+        },
+        "trace_event_types": [
+          "tool_call",
+          "error"
+        ],
+        "trace_error_codes": [
+          "AUTH_CONTEXT_REQUIRED"
+        ]
+      },
+      "trace_events": [
+        {
+          "trace_id": "a6109459-fb70-4532-8348-32f918273808",
+          "run_id": "f44ea239-a5b5-4092-b89b-571160a601f1",
+          "event_type": "tool_call",
+          "step_index": 3,
+          "user_id": null,
+          "session_id": "failure-failure_auth_required_001",
+          "status_before": "tool_running",
+          "status_after": "tool_running",
+          "tool_name": "query_user_history",
+          "latency_ms": null,
+          "input_summary": {
+            "keyword": "深圳"
+          },
+          "output_summary": null,
+          "error_code": null,
+          "message": null,
+          "metadata": {
+            "side_effect": "read_only",
+            "risk_level": "low",
+            "requires_auth": true,
+            "requires_admin": false,
+            "allowed_roles": [
+              "user",
+              "admin"
+            ],
+            "user_scope": "current_user",
+            "timeout_ms": 30000
+          }
+        },
+        {
+          "trace_id": "a6109459-fb70-4532-8348-32f918273808",
+          "run_id": "f44ea239-a5b5-4092-b89b-571160a601f1",
+          "event_type": "error",
+          "step_index": 3,
+          "user_id": null,
+          "session_id": "failure-failure_auth_required_001",
+          "status_before": "tool_running",
+          "status_after": "failed",
+          "tool_name": "query_user_history",
+          "latency_ms": null,
+          "input_summary": {
+            "keyword": "深圳"
+          },
+          "output_summary": {
+            "success": false,
+            "tool_name": "query_user_history",
+            "data": null,
+            "error_code": "AUTH_CONTEXT_REQUIRED",
+            "message": "工具需要登录上下文，但当前请求缺少用户身份。",
+            "metadata": {
+              "guardrail_checkpoint": "tool",
+              "guardrail_action": "fallback",
+              "guardrail_allowed": false,
+              "guardrail_reason": "工具需要登录上下文，但当前请求缺少用户身份。",
+              "guardrail_user_message": "当前操作需要登录后才能继续。",
+              "guardrail_explanation": {
+                "checkpoint": "tool",
+                "action": "fallback",
+                "allowed": false,
+                "error_code": "AUTH_CONTEXT_REQUIRED",
+                "reason": "工具需要登录上下文，但当前请求缺少用户身份。",
+                "user_message": "当前操作需要登录后才能继续。",
+                "violation_type": "missing_auth_context",
+                "tool_name": "query_user_history",
+                "metadata": {
+                  "tool_name": "query_user_history",
+                  "side_effect": "read_only",
+                  "risk_level": "low",
+                  "requires_auth": true,
+                  "requires_admin": false,
+                  "allowed_roles": [
+                    "user",
+                    "admin"
+                  ],
+                  "actual_role": "user",
+                  "user_scope": "current_user",
+                  "input_fields": [
+                    "keyword"
+                  ],
+                  "violation_type": "missing_auth_context"
+                }
+              },
+              "tool_name": "query_user_history",
+              "side_effect": "read_only",
+              "risk_level": "low",
+              "requires_auth": true,
+              "requires_admin": false,
+              "allowed_roles": [
+                "user",
+                "admin"
+              ],
+              "actual_role": "user",
+              "user_scope": "current_user",
+              "input_fields": [
+                "keyword"
+              ],
+              "violation_type": "missing_auth_context"
+            }
+          },
+          "error_code": "AUTH_CONTEXT_REQUIRED",
+          "message": "工具需要登录上下文，但当前请求缺少用户身份。",
+          "metadata": {
+            "source": "tool_guardrail",
+            "guardrail_checkpoint": "tool",
+            "guardrail_action": "fallback",
+            "guardrail_allowed": false,
+            "guardrail_reason": "工具需要登录上下文，但当前请求缺少用户身份。",
+            "guardrail_user_message": "当前操作需要登录后才能继续。",
+            "guardrail_explanation": {
+              "checkpoint": "tool",
+              "action": "fallback",
+              "allowed": false,
+              "error_code": "AUTH_CONTEXT_REQUIRED",
+              "reason": "工具需要登录上下文，但当前请求缺少用户身份。",
+              "user_message": "当前操作需要登录后才能继续。",
+              "violation_type": "missing_auth_context",
+              "tool_name": "query_user_history",
+              "metadata": {
+                "tool_name": "query_user_history",
+                "side_effect": "read_only",
+                "risk_level": "low",
+                "requires_auth": true,
+                "requires_admin": false,
+                "allowed_roles": [
+                  "user",
+                  "admin"
+                ],
+                "actual_role": "user",
+                "user_scope": "current_user",
+                "input_fields": [
+                  "keyword"
+                ],
+                "violation_type": "missing_auth_context"
+              }
+            },
+            "tool_name": "query_user_history",
+            "side_effect": "read_only",
+            "risk_level": "low",
+            "requires_auth": true,
+            "requires_admin": false,
+            "allowed_roles": [
+              "user",
+              "admin"
+            ],
+            "actual_role": "user",
+            "user_scope": "current_user",
+            "input_fields": [
+              "keyword"
+            ],
+            "violation_type": "missing_auth_context",
+            "failure_type": "auth_required",
+            "recovery_action": "fallback_legacy",
+            "retryable": false,
+            "user_message": "缺少登录上下文，已尝试使用兼容链路处理。"
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "failure_not_found_history_001",
+      "category": "not_found",
+      "passed": true,
+      "checks": {
+        "success_pass": true,
+        "failure_type_pass": true,
+        "recovery_action_pass": true,
+        "retryable_pass": true,
+        "fallback_decision_pass": true,
+        "error_code_pass": true,
+        "message_keywords_pass": true,
+        "no_fabrication_pass": true,
+        "trace_event_pass": true,
+        "trace_error_pass": true,
+        "trace_tool_pass": true,
+        "structured_error_pass": true,
+        "permission_bypass_pass": true,
+        "missing_trace_events": [],
+        "missing_structured_fields": [],
+        "passed": true
+      },
+      "expected": {
+        "success": true,
+        "failure_type": "not_found",
+        "recovery_action": "direct_response",
+        "retryable": false,
+        "fallback_used": false,
+        "error_code": "KeyError",
+        "message_keywords": [
+          "历史",
+          "记录"
+        ],
+        "trace_event_types": [
+          "tool_call",
+          "tool_result",
+          "error"
+        ],
+        "no_fabrication": true,
+        "structured_error_fields": [
+          "trace_id",
+          "run_id",
+          "tool_name",
+          "failure_type",
+          "recovery_action",
+          "retryable",
+          "errors"
+        ]
+      },
+      "actual": {
+        "success": true,
+        "failure_type": "not_found",
+        "recovery_action": "direct_response",
+        "retryable": false,
+        "fallback_used": false,
+        "error_code": "KeyError",
+        "message": "没有查询到匹配的历史记录，可以调整关键词、会话或时间条件后再试。",
+        "output": {
+          "message": "没有查询到匹配的历史记录，可以调整关键词、会话或时间条件后再试。",
+          "trace_id": "fe2f02de-1429-4717-949e-d2ed838d1c99",
+          "run_id": "62f92209-0e90-4b7e-95b9-d8f7614e44b4",
+          "status": "completed",
+          "tool_name": "query_user_history",
+          "fallback_used": false,
+          "failure_type": "not_found",
+          "recovery_action": "direct_response",
+          "retryable": false,
+          "guardrail": null,
+          "errors": [
+            {
+              "tool_name": "query_user_history",
+              "error_code": "KeyError",
+              "message": "'not found'"
+            }
+          ]
+        },
+        "trace_event_types": [
+          "tool_call",
+          "tool_result",
+          "error"
+        ],
+        "trace_error_codes": [
+          "KeyError",
+          "KeyError"
+        ]
+      },
+      "trace_events": [
+        {
+          "trace_id": "fe2f02de-1429-4717-949e-d2ed838d1c99",
+          "run_id": "62f92209-0e90-4b7e-95b9-d8f7614e44b4",
+          "event_type": "tool_call",
+          "step_index": 3,
+          "user_id": "eval-user",
+          "session_id": "failure-failure_not_found_history_001",
+          "status_before": "tool_running",
+          "status_after": "tool_running",
+          "tool_name": "query_user_history",
+          "latency_ms": null,
+          "input_summary": {
+            "keyword": "不存在的任务"
+          },
+          "output_summary": null,
+          "error_code": null,
+          "message": null,
+          "metadata": {
+            "side_effect": "read_only",
+            "risk_level": "low",
+            "requires_auth": true,
+            "requires_admin": false,
+            "allowed_roles": [
+              "user",
+              "admin"
+            ],
+            "user_scope": "current_user",
+            "timeout_ms": 30000
+          }
+        },
+        {
+          "trace_id": "fe2f02de-1429-4717-949e-d2ed838d1c99",
+          "run_id": "62f92209-0e90-4b7e-95b9-d8f7614e44b4",
+          "event_type": "tool_result",
+          "step_index": 3,
+          "user_id": "eval-user",
+          "session_id": "failure-failure_not_found_history_001",
+          "status_before": "tool_running",
+          "status_after": "failed",
+          "tool_name": "query_user_history",
+          "latency_ms": 0,
+          "input_summary": {
+            "keyword": "不存在的任务"
+          },
+          "output_summary": {
+            "success": false,
+            "tool_name": "query_user_history",
+            "data": null,
+            "error_code": "KeyError",
+            "message": "'not found'",
+            "metadata": {}
+          },
+          "error_code": "KeyError",
+          "message": "'not found'",
+          "metadata": {
+            "side_effect": "read_only",
+            "risk_level": "low",
+            "requires_auth": true,
+            "requires_admin": false,
+            "allowed_roles": [
+              "user",
+              "admin"
+            ],
+            "user_scope": "current_user",
+            "timeout_ms": 30000,
+            "failure_type": "not_found",
+            "recovery_action": "direct_response",
+            "retryable": false,
+            "user_message": "未找到匹配结果，请调整查询条件。"
+          }
+        },
+        {
+          "trace_id": "fe2f02de-1429-4717-949e-d2ed838d1c99",
+          "run_id": "62f92209-0e90-4b7e-95b9-d8f7614e44b4",
+          "event_type": "error",
+          "step_index": 3,
+          "user_id": "eval-user",
+          "session_id": "failure-failure_not_found_history_001",
+          "status_before": "tool_running",
+          "status_after": "failed",
+          "tool_name": "query_user_history",
+          "latency_ms": 0,
+          "input_summary": {
+            "keyword": "不存在的任务"
+          },
+          "output_summary": {
+            "success": false,
+            "tool_name": "query_user_history",
+            "data": null,
+            "error_code": "KeyError",
+            "message": "'not found'",
+            "metadata": {}
+          },
+          "error_code": "KeyError",
+          "message": "未找到匹配结果，请调整查询条件。",
+          "metadata": {
+            "source": "tool_executor",
+            "failure_type": "not_found",
+            "recovery_action": "direct_response",
+            "retryable": false,
+            "user_message": "未找到匹配结果，请调整查询条件。"
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "failure_internal_error_001",
+      "category": "internal_error",
+      "passed": true,
+      "checks": {
+        "success_pass": true,
+        "failure_type_pass": true,
+        "recovery_action_pass": true,
+        "retryable_pass": true,
+        "fallback_decision_pass": true,
+        "error_code_pass": true,
+        "message_keywords_pass": true,
+        "no_fabrication_pass": true,
+        "trace_event_pass": true,
+        "trace_error_pass": true,
+        "trace_tool_pass": true,
+        "structured_error_pass": true,
+        "permission_bypass_pass": true,
+        "missing_trace_events": [],
+        "missing_structured_fields": [],
+        "passed": true
+      },
+      "expected": {
+        "success": false,
+        "failure_type": "internal_error",
+        "recovery_action": "fallback_legacy",
+        "retryable": false,
+        "fallback_used": true,
+        "error_code": "RuntimeError",
+        "message_keywords": [
+          "内部",
+          "兼容"
+        ],
+        "trace_event_types": [
+          "tool_call",
+          "tool_result",
+          "error"
+        ],
+        "no_fabrication": true,
+        "structured_error_fields": [
+          "trace_id",
+          "run_id",
+          "tool_name",
+          "failure_type",
+          "recovery_action",
+          "retryable",
+          "errors"
+        ]
+      },
+      "actual": {
+        "success": false,
+        "failure_type": "internal_error",
+        "recovery_action": "fallback_legacy",
+        "retryable": false,
+        "fallback_used": true,
+        "error_code": "RuntimeError",
+        "message": "工具执行出现内部错误，已尝试使用兼容链路处理。",
+        "output": {
+          "message": "工具执行出现内部错误，已尝试使用兼容链路处理。",
+          "trace_id": "4a99379c-43e0-41e0-a514-7a02183d11a8",
+          "run_id": "30ba3be4-0a05-4d6a-b1f7-54dec08542f7",
+          "status": "failed",
+          "tool_name": "evaluate_flight_risk",
+          "fallback_used": true,
+          "failure_type": "internal_error",
+          "recovery_action": "fallback_legacy",
+          "retryable": false,
+          "guardrail": null,
+          "errors": [
+            {
+              "tool_name": "evaluate_flight_risk",
+              "error_code": "RuntimeError",
+              "message": "unexpected rule engine error"
+            }
+          ]
+        },
+        "trace_event_types": [
+          "tool_call",
+          "tool_result",
+          "error"
+        ],
+        "trace_error_codes": [
+          "RuntimeError",
+          "RuntimeError"
+        ]
+      },
+      "trace_events": [
+        {
+          "trace_id": "4a99379c-43e0-41e0-a514-7a02183d11a8",
+          "run_id": "30ba3be4-0a05-4d6a-b1f7-54dec08542f7",
+          "event_type": "tool_call",
+          "step_index": 3,
+          "user_id": "eval-user",
+          "session_id": "failure-failure_internal_error_001",
+          "status_before": "tool_running",
+          "status_after": "tool_running",
+          "tool_name": "evaluate_flight_risk",
+          "latency_ms": null,
+          "input_summary": {
+            "location": "深圳",
+            "date": "2026-08-08",
+            "start_time": "14:00",
+            "end_time": "17:00",
+            "task_type": "inspection"
+          },
+          "output_summary": null,
+          "error_code": null,
+          "message": null,
+          "metadata": {
+            "side_effect": "compute_only",
+            "risk_level": "high",
+            "requires_auth": true,
+            "requires_admin": false,
+            "allowed_roles": [
+              "user",
+              "admin"
+            ],
+            "user_scope": "current_user",
+            "timeout_ms": 30000
+          }
+        },
+        {
+          "trace_id": "4a99379c-43e0-41e0-a514-7a02183d11a8",
+          "run_id": "30ba3be4-0a05-4d6a-b1f7-54dec08542f7",
+          "event_type": "tool_result",
+          "step_index": 3,
+          "user_id": "eval-user",
+          "session_id": "failure-failure_internal_error_001",
+          "status_before": "tool_running",
+          "status_after": "failed",
+          "tool_name": "evaluate_flight_risk",
+          "latency_ms": 0,
+          "input_summary": {
+            "location": "深圳",
+            "date": "2026-08-08",
+            "start_time": "14:00",
+            "end_time": "17:00",
+            "task_type": "inspection"
+          },
+          "output_summary": {
+            "success": false,
+            "tool_name": "evaluate_flight_risk",
+            "data": null,
+            "error_code": "RuntimeError",
+            "message": "unexpected rule engine error",
+            "metadata": {}
+          },
+          "error_code": "RuntimeError",
+          "message": "unexpected rule engine error",
+          "metadata": {
+            "side_effect": "compute_only",
+            "risk_level": "high",
+            "requires_auth": true,
+            "requires_admin": false,
+            "allowed_roles": [
+              "user",
+              "admin"
+            ],
+            "user_scope": "current_user",
+            "timeout_ms": 30000,
+            "failure_type": "internal_error",
+            "recovery_action": "fallback_legacy",
+            "retryable": false,
+            "user_message": "工具执行出现内部错误，已尝试使用兼容链路处理。"
+          }
+        },
+        {
+          "trace_id": "4a99379c-43e0-41e0-a514-7a02183d11a8",
+          "run_id": "30ba3be4-0a05-4d6a-b1f7-54dec08542f7",
+          "event_type": "error",
+          "step_index": 3,
+          "user_id": "eval-user",
+          "session_id": "failure-failure_internal_error_001",
+          "status_before": "tool_running",
+          "status_after": "failed",
+          "tool_name": "evaluate_flight_risk",
+          "latency_ms": 0,
+          "input_summary": {
+            "location": "深圳",
+            "date": "2026-08-08",
+            "start_time": "14:00",
+            "end_time": "17:00",
+            "task_type": "inspection"
+          },
+          "output_summary": {
+            "success": false,
+            "tool_name": "evaluate_flight_risk",
+            "data": null,
+            "error_code": "RuntimeError",
+            "message": "unexpected rule engine error",
+            "metadata": {}
+          },
+          "error_code": "RuntimeError",
+          "message": "工具执行出现内部错误，已尝试使用兼容链路处理。",
+          "metadata": {
+            "source": "tool_executor",
+            "failure_type": "internal_error",
+            "recovery_action": "fallback_legacy",
+            "retryable": false,
+            "user_message": "工具执行出现内部错误，已尝试使用兼容链路处理。"
+          }
+        }
+      ]
+    }
+  ]
+}
