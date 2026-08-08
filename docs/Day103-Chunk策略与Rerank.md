@@ -47,9 +47,3 @@
 - Day101：Embedding 解决语义匹配。
 - Day102：Hybrid 解决两路结果融合。
 - Day103：Chunk 解决检索粒度问题，Rerank 解决业务排序问题。
-
-## 面试表达
-
-可以这样解释：
-
-> 项目早期 RAG 是文档级召回，长政策或 SOP 中的局部关键信息容易被稀释。后来我引入了按知识类型的固定 chunk 策略，policy 按条款、SOP 按步骤、FAQ 按问答对、risk advice 保留短块。BM25 和 Embedding 都基于 chunk 建索引，召回后再根据审核状态、时效、地域精确度、任务类型和风险标签做规则 rerank，提升业务相关性，同时保留 `knowledge_id` 和 `chunk_id` 保证可溯源。

@@ -212,7 +212,8 @@ NL_PARSER_MODE=hybrid
 NL_PARSER_MODE=hybrid
 ```
 
-原因�?- 面试演示时能展示 LLM 增强能力
+原因：
+- 可以展示 LLM 增强能力
 - API 失败、余额不足、网络超时时仍有规则解析兜底
 - 不影响项目离线可运行�?
 ## 8. 环境变量契约
@@ -260,13 +261,3 @@ NL_PARSER_MODE=hybrid
 
 `llm` 模式下不 fallback�?- 直接返回 `NaturalLanguageParseError`
 - 便于开发阶段暴�?LLM prompt �?schema 问题
-
-## 10. Day 46 完成标准
-
-本日完成后，后续实现应满足：
-- LLM 输出契约清晰
-- 三类意图必要字段清晰
-- 缺参策略清晰
-- 上下文继承规则清�?- fallback 策略清晰
-- 不改变规则引擎和核心业务接口
-

@@ -77,9 +77,3 @@ Trace 记录路由、工具、状态和结果
 - 多轮修改依赖已有 session context，例如“把地点改成佛山，时间还是明天下午”
 
 后续如果要增强，可以把 `data/agent_input_samples.json` 作为评估集，再逐步引入 LLM intent classifier 或 reranker，而不是直接替换规则链路。
-
-## 面试表达
-
-可以这样描述 Day85：
-
-> 我把 Agent 的自然语言入口从固定 workflow 进一步抽象成业务路由。用户仍然只面对一个 `/agent/query`，但系统内部会先识别任务意图，再通过配置化的 Business Route 映射到具体工具。这样既保留了工程可控性，也让 Agent 能根据业务目标选择最小必要工具，而不是每次都执行完整链路。

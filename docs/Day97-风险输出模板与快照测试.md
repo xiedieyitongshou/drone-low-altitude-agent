@@ -105,9 +105,3 @@ DeepSeek 仍然只做表达润色，最终安全边界由以下机制控制：
 ```bash
 .\.venv\Scripts\python.exe -m pytest tests/test_risk_output_templates.py tests/test_response_explainer_guardrail.py tests/test_agent_guardrail.py
 ```
-
-## 面试解释口径
-
-我没有把输出安全交给另一个大模型判断，而是采用“结构化状态 + 固定模板 + 关键词复检 + 快照测试”的方式。
-
-结构化状态决定该用什么模板，关键词复检防止过度承诺，快照测试保证后续改动不会破坏关键输出。这比 LLM-as-Judge 更稳定，也更容易在工程上回归验证。

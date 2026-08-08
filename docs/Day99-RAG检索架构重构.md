@@ -155,9 +155,3 @@ KnowledgeRetriever
 ```bash
 .\.venv\Scripts\python.exe -m pytest tests/test_knowledge_retrievers.py tests/test_knowledge_access_filter.py tests/test_knowledge_business_filter.py
 ```
-
-## 面试解释口径
-
-当前项目没有直接把 BM25、Embedding 写进业务入口，而是先抽象统一 Retriever 接口。TF-IDF 作为 baseline 保留，BM25、Embedding、Hybrid 后续作为并列实现接入。
-
-这样可以说明项目不是简单堆算法，而是先把检索架构做成可替换、可测试、可评估的工程结构。

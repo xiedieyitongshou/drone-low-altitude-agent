@@ -99,9 +99,3 @@ response_composer 写回 explanation 与 guardrail metadata
 ```bash
 .\.venv\Scripts\python.exe -m pytest tests/test_agent_guardrail.py tests/test_response_explainer_guardrail.py
 ```
-
-## 面试解释口径
-
-这个项目里，LLM 不是安全判断器，而是表达层组件。
-
-规则引擎、RAG metadata filter 和 Guardrail 决定“依据是什么、能不能说、是否需要降级”；DeepSeek 只在这些边界内做自然语言润色。这样可以降低幻觉风险，也便于通过测试和 trace 解释最终回答为什么被允许、降级或回退。

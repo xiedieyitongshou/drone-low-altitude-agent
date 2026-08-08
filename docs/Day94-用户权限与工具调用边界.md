@@ -129,12 +129,3 @@ ToolExecutionContext.user_id
 ```bash
 .\.venv\Scripts\python.exe -m pytest tests/test_agent_guardrail.py tests/test_agent_loop.py tests/test_tool_registry.py
 ```
-
-## 面试解释口径
-
-权限隔离分两层实现：
-
-1. 数据层：通过 metadata 标记知识和记录的归属、可见性、地域和有效期。
-2. 工具层：通过 Tool Guardrail 在 Agent 调用工具前检查当前用户、角色和工具作用域。
-
-这样即使 Agent 是动态规划和调用工具，也不能绕过底层数据隔离和当前登录用户边界。

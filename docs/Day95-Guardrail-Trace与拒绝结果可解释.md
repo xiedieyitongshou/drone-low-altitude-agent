@@ -137,9 +137,3 @@ fallback 输出新增：
 ```bash
 .\.venv\Scripts\python.exe -m pytest tests/test_agent_guardrail.py tests/test_agent_loop.py tests/test_tool_executor.py
 ```
-
-## 面试解释口径
-
-Guardrail 不是黑盒规则过滤，而是 Agent Runtime 的可观测边界层。
-
-每次输入拦截、工具拒绝和输出降级都会写入 trace，并在响应中携带 `guardrail_explanation`。这样可以解释 Agent 为什么没有调用工具、为什么拒绝用户请求、为什么丢弃 LLM 润色结果，也能为后续 Eval 提供可回归字段。

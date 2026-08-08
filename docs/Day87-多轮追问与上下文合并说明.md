@@ -79,9 +79,3 @@ Profile 仍然保留原有能力：
 - Agent loop 下安全决策类任务只使用 Profile 的 `task_type`
 
 这样既兼容之前的 Profile 设计，又避免 Agent 在安全评估场景下过度自动补全关键字段。
-
-## 面试表达
-
-可以这样描述：
-
-> 我没有让 Agent 随意猜测缺失参数，而是做了字段来源分层。用户本轮输入优先，其次是 session pending task，再是 Profile 和系统默认值。安全决策类任务缺地点、日期、时间会追问；查询类任务可以使用 Profile 提升体验。底层会话存储继续复用现有 `session_memory_store`，所以本地可以用 TTLCache，部署时可以切 Redis 或数据库。
