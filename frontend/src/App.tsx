@@ -33,6 +33,7 @@ const adminNavItems = [
 
 function App() {
   const { isAuthenticated, logout, user } = useAuth()
+  const canViewAdmin = user?.role === 'admin' || user?.role === 'super_admin'
 
   return (
     <div className="app-shell">
@@ -58,7 +59,7 @@ function App() {
               {item.label}
             </NavLink>
           ))}
-          {user?.role === 'admin'
+          {canViewAdmin
             ? adminNavItems.map((item) => (
                 <NavLink
                   key={item.to}
@@ -80,7 +81,10 @@ function App() {
               <div>
                 <span>当前用户</span>
                 <strong>{user.display_name || user.username}</strong>
-                <small>{user.role}</small>
+                <small>
+                  {user.role}
+                  {user.tenant_id ? ` / tenant: ${user.tenant_id}` : ''}
+                </small>
               </div>
               <button type="button" className="logout-button" onClick={logout}>
                 退出登录
@@ -90,7 +94,7 @@ function App() {
             <div>
               <span>认证状态</span>
               <strong>未登录</strong>
-              <small>登录后可使用 Agent 和历史能力</small>
+              <small>登录后可使用 Agent、历史记录和 Profile 能力。</small>
             </div>
           )}
         </div>

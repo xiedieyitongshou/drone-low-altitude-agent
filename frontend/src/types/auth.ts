@@ -1,8 +1,11 @@
+export type UserRole = 'user' | 'admin' | 'super_admin'
+
 export interface User {
   id: string
   username: string
   display_name: string | null
-  role: string
+  role: UserRole
+  tenant_id?: string | null
   is_active: boolean
 }
 

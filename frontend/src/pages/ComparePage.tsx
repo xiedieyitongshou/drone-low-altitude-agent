@@ -64,7 +64,7 @@ function buildRankingReason(item: ComparedLocationResult) {
     reasons.push(`主要风险：${item.summary_risk_factors.join('；')}`)
   }
 
-  return reasons.join('，')
+  return reasons.join('；')
 }
 
 export function ComparePage() {
@@ -231,11 +231,7 @@ export function ComparePage() {
       {result ? (
         <div className="comparison-result">
           {result.recommended_location ? (
-            <div
-              className={`decision-card ${getDecisionClass(
-                result.recommended_location.overall_decision,
-              )}`}
-            >
+            <div className={`decision-card ${getDecisionClass(result.recommended_location.overall_decision)}`}>
               <div>
                 <span>推荐地点</span>
                 <strong>{result.recommended_location.location}</strong>

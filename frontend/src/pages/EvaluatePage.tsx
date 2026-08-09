@@ -199,11 +199,7 @@ export function EvaluatePage() {
 
       {result ? (
         <div className="evaluation-result">
-          <div
-            className={`decision-card ${getDecisionClass(
-              result.advice.overall_decision,
-            )}`}
-          >
+          <div className={`decision-card ${getDecisionClass(result.advice.overall_decision)}`}>
             <div>
               <span>整体结论</span>
               <strong>{result.advice.overall_decision}</strong>
@@ -264,16 +260,12 @@ export function EvaluatePage() {
                     <tr key={item.fx_time}>
                       <td>{item.fx_time}</td>
                       <td>
-                        <span
-                          className={`decision-pill ${getDecisionClass(
-                            item.decision,
-                          )}`}
-                        >
+                        <span className={`decision-pill ${getDecisionClass(item.decision)}`}>
                           {item.decision}
                         </span>
                       </td>
                       <td>{item.weather.text ?? '-'}</td>
-                      <td>{formatWeatherValue(item.weather.temp, '℃')}</td>
+                      <td>{formatWeatherValue(item.weather.temp, '°C')}</td>
                       <td>{formatWeatherValue(item.weather.wind_scale, '级')}</td>
                       <td>{formatWeatherValue(item.weather.precip, 'mm')}</td>
                       <td>{formatWeatherValue(item.weather.pop, '%')}</td>

@@ -6,13 +6,11 @@ __pycache__
 .env
 
 data/drone_agent.db
-data/knowledge/index
 data/samples
 
 docs
-scripts
-!scripts/
-!scripts/create_initial_admin.py
+!docs/
+!docs/Day*.md
 
 项目面试指南.md
 开发计划与时间表.md

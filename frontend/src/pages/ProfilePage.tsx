@@ -108,8 +108,7 @@ export function ProfilePage() {
           <h2>用户 Profile 设置</h2>
           <p>
             该页面调用 <code>/users/me/profile</code>
-            ，用于维护当前用户长期偏好。自然语言缺少地点、任务类型或时间段时，Agent
-            可以从这里补全。
+            ，用于维护当前用户长期偏好。自然语言缺少地点、任务类型或时间段时，Agent 可以从这里补全。
           </p>
         </div>
       </div>

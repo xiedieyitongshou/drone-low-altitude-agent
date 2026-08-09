@@ -5,11 +5,12 @@ import {
   updateAdminUserStatus,
 } from '../api/admin'
 import type { AdminUser } from '../types/admin'
+import type { UserRole } from '../types/auth'
 
 export function AdminUsersPage() {
   const [users, setUsers] = useState<AdminUser[]>([])
   const [username, setUsername] = useState('')
-  const [role, setRole] = useState<'user' | 'admin' | ''>('')
+  const [role, setRole] = useState<UserRole | ''>('')
   const [isActive, setIsActive] = useState<boolean | ''>('')
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
@@ -59,7 +60,7 @@ export function AdminUsersPage() {
     setSuccessMessage('')
     setErrorMessage('')
     try {
-      const nextRole = user.role === 'admin' ? 'user' : 'admin'
+      const nextRole: UserRole = user.role === 'admin' ? 'user' : 'admin'
       const updated = await updateAdminUserRole(user.id, nextRole)
       setUsers((current) => current.map((item) => (item.id === updated.id ? updated : item)))
       setSuccessMessage('用户角色已更新。')
@@ -92,10 +93,11 @@ export function AdminUsersPage() {
         </label>
         <label>
           <span>角色</span>
-          <select value={role} onChange={(event) => setRole(event.target.value as 'user' | 'admin' | '')}>
+          <select value={role} onChange={(event) => setRole(event.target.value as UserRole | '')}>
             <option value="">全部</option>
             <option value="user">user</option>
             <option value="admin">admin</option>
+            <option value="super_admin">super_admin</option>
           </select>
         </label>
         <label>
@@ -129,6 +131,7 @@ export function AdminUsersPage() {
               <th>用户名</th>
               <th>展示名</th>
               <th>角色</th>
+              <th>租户</th>
               <th>状态</th>
               <th>创建时间</th>
               <th>操作</th>
@@ -140,6 +143,7 @@ export function AdminUsersPage() {
                 <td>{user.username}</td>
                 <td>{user.display_name ?? '-'}</td>
                 <td>{user.role}</td>
+                <td>{user.tenant_id ?? 'public'}</td>
                 <td>{user.is_active ? '启用' : '禁用'}</td>
                 <td>{user.created_at}</td>
                 <td>
@@ -147,9 +151,11 @@ export function AdminUsersPage() {
                     <button type="button" className="secondary-button" onClick={() => void handleStatusChange(user)}>
                       {user.is_active ? '禁用' : '启用'}
                     </button>
-                    <button type="button" className="secondary-button" onClick={() => void handleRoleChange(user)}>
-                      {user.role === 'admin' ? '降为 user' : '升为 admin'}
-                    </button>
+                    {user.role !== 'super_admin' ? (
+                      <button type="button" className="secondary-button" onClick={() => void handleRoleChange(user)}>
+                        {user.role === 'admin' ? '降为 user' : '升为 admin'}
+                      </button>
+                    ) : null}
                   </div>
                 </td>
               </tr>

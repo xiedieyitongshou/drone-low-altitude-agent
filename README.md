@@ -1,3 +1,41 @@
+# 第十八周更新：Agent 前端展示与 Docker 同步
+
+本阶段重点完善 `/agent/query` 的前端对话体验，并同步 Docker 部署能力。
+
+## Agent 对话展示
+
+- Agent 对话卡片现在优先展示可读业务结论，不再只把后端 JSON 放在折叠详情里。
+- 单地点评估结果会直接展示“是否建议执行 / 能否飞”的结论。
+- 在结论基础上新增“判断原因”，展示规则引擎返回的 `summary_risk_factors`。
+- 新增“对应时段天气”，按小时展示结论、天气、温度、风速、风力、湿度、降水和该小时命中的风险原因。
+- 推荐窗口、地点比选和历史查询也会从 `result.tool_results.<tool>.data` 中提取摘要信息，JSON 仍保留在详情区便于调试。
+- Agent Runtime、parsed、composed、result、fallback 仍作为调试信息折叠展示，避免干扰主回答阅读。
+
+## Docker 同步
+
+- 后端 Docker 镜像已同步 `data/knowledge`、`scripts`、`evals` 和 `tests`，便于在容器内运行 RAG、Agent Runtime 和评测脚本。
+- Docker Compose 默认启用 `AGENT_RUNTIME_MODE=loop`、`KNOWLEDGE_RETRIEVER=bm25`，并暴露 RAG 置信度、Embedding 阈值和 Agent 原始 payload 日志开关。
+- 前端 Docker 镜像通过 `frontend/Dockerfile` 执行生产构建，最新 Agent 对话展示会随镜像一起发布。
+
+## Docker 验证命令
+
+```bash
+docker compose build
+docker compose up -d redis app frontend
+docker compose exec app python -m pytest
+docker compose exec frontend wget -qO- http://127.0.0.1/health
+```
+
+针对第十八周 Agent/RAG/评测能力，可在后端容器内执行：
+
+```bash
+docker compose run --rm --no-deps --entrypoint sh app -c "AGENT_RUNTIME_MODE=loop NL_PARSER_MODE=rule LLM_ENABLED=false KNOWLEDGE_RETRIEVER=bm25 python -m pytest tests/test_tool_registry.py tests/test_tool_executor.py tests/test_agent_loop.py tests/test_agent_trace.py tests/test_agent_guardrail.py tests/test_bm25_knowledge_store.py tests/test_hybrid_knowledge_retriever.py tests/test_rag_fallback.py tests/test_eval_regression.py"
+docker compose run --rm --no-deps --entrypoint sh app -c "AGENT_RUNTIME_MODE=loop NL_PARSER_MODE=rule LLM_ENABLED=false KNOWLEDGE_RETRIEVER=bm25 python scripts/multi_turn_state_eval.py --report-dir /app/data/eval-reports/docker-smoke"
+docker compose run --rm --no-deps --entrypoint sh app -c "AGENT_RUNTIME_MODE=loop NL_PARSER_MODE=rule LLM_ENABLED=false KNOWLEDGE_RETRIEVER=bm25 python scripts/failure_recovery_eval.py --report-dir /app/data/eval-reports/docker-smoke"
+docker compose run --rm --no-deps --entrypoint sh app -c "AGENT_RUNTIME_MODE=loop NL_PARSER_MODE=rule LLM_ENABLED=false KNOWLEDGE_RETRIEVER=bm25 python scripts/rag_eval.py --retrievers bm25 --report-dir /app/data/eval-reports/docker-smoke"
+```
+
+---
 # 无人机低空巡航任务决策系统
 
 ## 前后端本地启动

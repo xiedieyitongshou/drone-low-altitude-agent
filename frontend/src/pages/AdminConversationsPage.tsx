@@ -3,6 +3,10 @@ import {
   getAdminConversationDetail,
   listAdminConversations,
 } from '../api/admin'
+import {
+  AgentRuntimeSummary,
+  getTraceIdFromResponse,
+} from '../components/AgentRuntimeSummary'
 import { JsonDetails } from '../components/JsonDetails'
 import type {
   AdminConversationDetail,
@@ -67,13 +71,17 @@ export function AdminConversationsPage() {
   }
 
   const totalPages = Math.max(Math.ceil(total / 10), 1)
+  const selectedTraceId = getTraceIdFromResponse(selected?.response)
 
   return (
     <section className="page-card admin-page">
       <div className="page-header">
         <div>
           <h2>管理员任务审计</h2>
-          <p>跨用户只读查看任务输入、解析结果、业务响应和 explanation，用于排查异常和复盘风险任务。</p>
+          <p>
+            管理员可只读查看任务输入、解析结果、Runtime 摘要、fallback 决策和 trace_id。
+            前端只做入口和展示控制，真实权限仍由后端鉴权和数据库查询过滤保证。
+          </p>
         </div>
       </div>
 
@@ -220,6 +228,17 @@ export function AdminConversationsPage() {
                   <strong>{selected.parser_source ?? '-'}</strong>
                 </div>
               </div>
+              <div className="response-badges">
+                <span>context_used: {String(selected.context_used)}</span>
+                <span>intent: {selected.intent ?? '-'}</span>
+                <span>target: {selected.target_endpoint ?? '-'}</span>
+                <span>trace_id: {selectedTraceId || '-'}</span>
+              </div>
+              {selectedTraceId ? (
+                <div className="trace-placeholder">
+                  Trace 明细查询入口已保留：{selectedTraceId}。当前页面展示 runtime 摘要，完整时间线由 Day116 TraceTimeline 接入。
+                </div>
+              ) : null}
               <div className="message-query">
                 <span>用户输入</span>
                 <p>{selected.query}</p>
@@ -228,6 +247,7 @@ export function AdminConversationsPage() {
                 <span>explanation</span>
                 <p>{selected.explanation ?? selected.message ?? '暂无说明'}</p>
               </div>
+              <AgentRuntimeSummary response={selected.response} />
               <JsonDetails title="parsed" data={selected.parsed ?? {}} />
               <JsonDetails title="response" data={selected.response ?? {}} />
             </>

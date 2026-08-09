@@ -1,10 +1,12 @@
 import type { JsonValue } from './agent'
+import type { UserRole } from './auth'
 
 export type AdminUser = {
   id: string
   username: string
   display_name: string | null
-  role: 'user' | 'admin'
+  role: UserRole
+  tenant_id?: string | null
   is_active: boolean
   created_at: string
   updated_at: string

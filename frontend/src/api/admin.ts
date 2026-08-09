@@ -6,12 +6,13 @@ import type {
   AdminUser,
   AdminUserListResponse,
 } from '../types/admin'
+import type { UserRole } from '../types/auth'
 
 type ListUsersParams = {
   page?: number
   page_size?: number
   username?: string
-  role?: 'user' | 'admin' | ''
+  role?: UserRole | ''
   is_active?: boolean | ''
 }
 
@@ -47,7 +48,7 @@ export async function updateAdminUserStatus(userId: string, isActive: boolean) {
   return response.data
 }
 
-export async function updateAdminUserRole(userId: string, role: 'user' | 'admin') {
+export async function updateAdminUserRole(userId: string, role: UserRole) {
   const response = await apiClient.patch<AdminUser>(`/admin/users/${userId}/role`, { role })
   return response.data
 }

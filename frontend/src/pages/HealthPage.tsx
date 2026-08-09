@@ -32,7 +32,7 @@ export function HealthPage() {
     <section className="page-card">
       <div className="page-header">
         <div>
-          <h2>前端框架初始化</h2>
+          <h2>系统状态</h2>
           <p>
             当前页面用于验证 React 前端已经能够请求 FastAPI 后端
             <code>/health</code> 接口。

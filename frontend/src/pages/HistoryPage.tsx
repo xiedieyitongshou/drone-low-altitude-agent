@@ -6,6 +6,10 @@ import {
   getCruiseHistoryComposed,
   listConversations,
 } from '../api/history'
+import {
+  AgentRuntimeSummary,
+  getTraceIdFromResponse,
+} from '../components/AgentRuntimeSummary'
 import { JsonDetails } from '../components/JsonDetails'
 import { KnowledgeAdvicePanel } from '../components/KnowledgeAdvicePanel'
 import type {
@@ -127,6 +131,7 @@ export function HistoryPage() {
   }
 
   const totalPages = Math.max(Math.ceil(total / 10), 1)
+  const selectedTraceId = getTraceIdFromResponse(selectedConversation?.response)
 
   return (
     <section className="page-card history-page">
@@ -135,8 +140,7 @@ export function HistoryPage() {
           <h2>我的历史记录</h2>
           <p>
             默认调用 <code>/agent/conversations</code>
-            查询当前登录用户的对话历史。用户侧通过关键词检索内容，详情由前端使用
-            conversation_id 自动加载。
+            查询当前登录用户自己的对话历史。trace 和 runtime 信息来自后端保存的历史响应，前端只展示入口和摘要。
           </p>
         </div>
       </div>
@@ -249,8 +253,15 @@ export function HistoryPage() {
                 <span>success: {String(selectedConversation.success)}</span>
                 <span>context_used: {String(selectedConversation.context_used)}</span>
                 <span>intent: {selectedConversation.intent ?? '-'}</span>
-                <span>source: {selectedConversation.parser_source ?? '-'}</span>
+                <span>parser_source: {selectedConversation.parser_source ?? '-'}</span>
+                <span>trace_id: {selectedTraceId || '-'}</span>
               </div>
+              {selectedTraceId ? (
+                <div className="trace-placeholder">
+                  Trace 明细查询入口已保留：{selectedTraceId}。当前页面只展示摘要，时间线查询由 Day116 TraceTimeline 接入。
+                </div>
+              ) : null}
+              <AgentRuntimeSummary response={selectedConversation.response} compact />
               <JsonDetails title="parsed" data={selectedConversation.parsed ?? {}} />
               <JsonDetails title="response" data={selectedConversation.response ?? {}} />
             </>
