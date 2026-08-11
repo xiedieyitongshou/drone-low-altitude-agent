@@ -1,4 +1,4 @@
-# Day92 Guardrail 架构设计
+﻿# Day92 Guardrail 架构设计
 
 Day92 的目标是为 Agent Runtime 增加强制边界层，而不是一次性写满所有安全规则。
 
@@ -83,6 +83,20 @@ OutputGuardrail.check()
 Final Response
 ```
 
+## Rule Planner、Agent State 与 Guardrail 的关系
+
+当前 Agent Runtime 中的 Planner 是规则型 Planner，不是 LLM Planner。Planner 和 AgentState 的完整说明已拆到：
+
+- [Day72：Rule Planner 运行逻辑说明](Day72-Rule-Planner运行逻辑说明.md)
+- [Day73：Agent State 结构与状态转换说明](Day73-Agent-State结构与状态转换说明.md)
+
+从 Guardrail 视角看，关键边界是：
+
+- Planner 可以决定下一步是追问、调用工具、直接响应或 fallback。
+- Guardrail 不注册成普通工具，不允许被 Planner 跳过。
+- Tool Guardrail 必须在 ToolExecutor 真正执行工具前检查权限、角色、认证上下文和风险边界。
+- Output Guardrail 必须在最终回答返回用户前检查高风险表达和无依据政策结论。
+- 后续即使引入 LLM Planner，也只能生成候选 plan，仍必须经过 Rule Planner / Plan Validator 和 Guardrail 校验。
 ## 当前代码落点
 
 - `app/agent/guardrail.py`：定义 Guardrail 数据结构、动作类型和轻量规则
@@ -96,3 +110,4 @@ Final Response
 - Day94：细化 Tool Guardrail，增加工具权限等级、租户隔离、用户隔离和角色校验
 - Day96：把 Guardrail、RAG metadata filter、工具权限做成回归测试
 - Day97：补充风险输出模板、拒答策略和保守说明
+

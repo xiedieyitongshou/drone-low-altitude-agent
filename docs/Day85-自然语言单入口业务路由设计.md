@@ -1,4 +1,4 @@
-# Day85：自然语言单入口业务路由设计
+﻿# Day85：自然语言单入口业务路由设计
 
 ## 目标
 
@@ -44,6 +44,16 @@ Trace 记录路由、工具、状态和结果
 
 这里不是把完整流程重新写死，而是把“任务类型 → 必要字段 → 工具路径 → 兜底方式”配置化。后续增加新的业务任务时，优先新增业务路由和工具，而不是在 `/agent/query` 中堆 if/else。
 
+## Rule Planner 与 Agent State 说明
+
+当前 `/agent/query` 后面的 Agent Runtime 不是 LLM 自由规划，而是规则 Planner 驱动的可控运行时。
+
+详细说明已拆到 Day72 和 Day73：
+
+- [Day72：Rule Planner 运行逻辑说明](Day72-Rule-Planner运行逻辑说明.md)
+- [Day73：Agent State 结构与状态转换说明](Day73-Agent-State结构与状态转换说明.md)
+
+Day85 只保留业务路由入口视角：自然语言输入先识别 `intent`，再通过 Business Route 映射到必填字段和主工具，最后交给 Planner 与 AgentLoop 执行。
 ## 用户输入样例集
 
 已新增 `data/agent_input_samples.json`，用于沉淀典型自然语言输入。
@@ -77,3 +87,4 @@ Trace 记录路由、工具、状态和结果
 - 多轮修改依赖已有 session context，例如“把地点改成佛山，时间还是明天下午”
 
 后续如果要增强，可以把 `data/agent_input_samples.json` 作为评估集，再逐步引入 LLM intent classifier 或 reranker，而不是直接替换规则链路。
+

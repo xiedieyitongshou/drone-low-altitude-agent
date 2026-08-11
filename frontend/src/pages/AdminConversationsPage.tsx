@@ -5,9 +5,9 @@ import {
 } from '../api/admin'
 import {
   AgentRuntimeSummary,
-  getTraceIdFromResponse,
 } from '../components/AgentRuntimeSummary'
 import { JsonDetails } from '../components/JsonDetails'
+import { getTraceIdFromResponse } from '../utils/agentRuntime'
 import type {
   AdminConversationDetail,
   AdminConversationSummary,

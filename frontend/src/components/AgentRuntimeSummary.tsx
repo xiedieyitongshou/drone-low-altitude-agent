@@ -1,17 +1,15 @@
 import { JsonDetails } from './JsonDetails'
 import type { AgentRuntimeDebug, JsonValue } from '../types/agent'
+import {
+  formatFallback,
+  formatRuntimeErrors,
+  readObject,
+  type RuntimeFallback,
+} from '../utils/agentRuntime'
 
 type AgentRuntimeSummaryProps = {
   response?: Record<string, JsonValue> | null
   compact?: boolean
-}
-
-type RuntimeFallback = {
-  message?: JsonValue
-  suggestion?: JsonValue
-  missing_fields?: JsonValue
-  errors?: JsonValue
-  [key: string]: JsonValue | undefined
 }
 
 export function AgentRuntimeSummary({ response, compact = false }: AgentRuntimeSummaryProps) {
@@ -89,11 +87,6 @@ export function AgentRuntimeSummary({ response, compact = false }: AgentRuntimeS
   )
 }
 
-export function getTraceIdFromResponse(response?: Record<string, JsonValue> | null) {
-  const runtime = readObject<AgentRuntimeDebug>(response?.agent_runtime)
-  return runtime?.trace_id ?? ''
-}
-
 function RuntimeChips({ title, items }: { title: string; items?: string[] }) {
   if (!items?.length) {
     return null
@@ -109,61 +102,4 @@ function RuntimeChips({ title, items }: { title: string; items?: string[] }) {
       </div>
     </div>
   )
-}
-
-function readObject<T>(value: unknown): T | null {
-  return value && typeof value === 'object' && !Array.isArray(value) ? (value as T) : null
-}
-
-function formatRuntimeErrors(runtime: AgentRuntimeDebug | null) {
-  if (!runtime) {
-    return []
-  }
-
-  const errors = runtime.errors?.map((item) => formatJsonValue(item)).filter(Boolean) ?? []
-  if (runtime.error) {
-    errors.unshift(runtime.error)
-  }
-  return errors
-}
-
-function formatFallback(fallback: RuntimeFallback) {
-  const message = formatJsonValue(fallback.message)
-  const suggestion = formatJsonValue(fallback.suggestion)
-  const missingFields = formatJsonValue(fallback.missing_fields)
-  const errors = formatJsonValue(fallback.errors)
-
-  if (message) {
-    return message
-  }
-
-  if (missingFields) {
-    return `缺少必要字段：${missingFields}`
-  }
-
-  if (errors) {
-    return `错误信息：${errors}`
-  }
-
-  if (suggestion) {
-    return suggestion
-  }
-
-  return '存在 fallback 输出，请展开原始 response JSON 查看完整内容。'
-}
-
-function formatJsonValue(value: JsonValue | undefined) {
-  if (value === undefined || value === null) {
-    return ''
-  }
-
-  if (Array.isArray(value)) {
-    return value.map((item) => String(item)).join('、')
-  }
-
-  if (typeof value === 'object') {
-    return JSON.stringify(value)
-  }
-
-  return String(value)
 }

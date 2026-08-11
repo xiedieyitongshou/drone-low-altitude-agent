@@ -98,3 +98,21 @@ LLM_MAX_TOKENS=600
 ```
 
 不要对同一条输入反复高频调用。Day 50 的批量样例测试建议先做少量手动验证，再决定是否写自动化测试�?
+
+## 7. 前端 timeout 说明
+
+Agent 链路会调用 DeepSeek、天气 API、RAG/解释增强等服务，单次请求可能超过 10 秒。
+
+如果 Docker 日志中后端最终返回 `200 OK`，但前端显示 timeout，通常不是后端失败，而是前端 axios 超时设置过短。
+
+当前前端超时由构建变量控制：
+
+```env
+VITE_API_TIMEOUT_MS=60000
+```
+
+`docker-compose.yml` 默认会把该值注入前端构建流程。修改后需要重新构建前端镜像：
+
+```powershell
+docker compose up --build frontend
+```

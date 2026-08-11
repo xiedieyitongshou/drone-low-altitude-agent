@@ -8,10 +8,10 @@ import {
 } from '../api/history'
 import {
   AgentRuntimeSummary,
-  getTraceIdFromResponse,
 } from '../components/AgentRuntimeSummary'
 import { JsonDetails } from '../components/JsonDetails'
 import { KnowledgeAdvicePanel } from '../components/KnowledgeAdvicePanel'
+import { getTraceIdFromResponse } from '../utils/agentRuntime'
 import type {
   ConversationDetailResponse,
   ConversationSummary,
