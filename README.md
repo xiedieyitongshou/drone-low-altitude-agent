@@ -1,55 +1,244 @@
-# 第十八周更新：Agent 前端展示与 Docker 同步
+# 低空作业气象决策 Agent
 
-本阶段重点完善 `/agent/query` 的前端对话体验，并同步 Docker 部署能力。
+一个面向无人机低空作业场景的气象决策 Agent 项目。系统接入天气数据，结合任务类型、逐小时天气、预警信息和业务规则，判断指定地点和时间段是否适合执行低空巡航、测绘、巡检等任务，并提供推荐执行窗口、多地点比选、历史复盘、RAG 操作建议、多轮上下文和管理员审计能力。
 
-## Agent 对话展示
+项目核心原则是将业务安全判断与 AI 增强能力解耦：LLM、RAG 和 Memory 负责理解、补全、解释和检索增强，最终适飞 / 慎飞 / 禁飞结论由确定性规则引擎给出，保证结果可复现、可测试、可追踪。
 
-- Agent 对话卡片现在优先展示可读业务结论，不再只把后端 JSON 放在折叠详情里。
-- 单地点评估结果会直接展示“是否建议执行 / 能否飞”的结论。
-- 在结论基础上新增“判断原因”，展示规则引擎返回的 `summary_risk_factors`。
-- 新增“对应时段天气”，按小时展示结论、天气、温度、风速、风力、湿度、降水和该小时命中的风险原因。
-- 推荐窗口、地点比选和历史查询也会从 `result.tool_results.<tool>.data` 中提取摘要信息，JSON 仍保留在详情区便于调试。
-- Agent Runtime、parsed、composed、result、fallback 仍作为调试信息折叠展示，避免干扰主回答阅读。
+## 项目状态
 
-## Docker 同步
+当前版本支持本地运行和 Docker Compose 联调。默认配置使用规则解析、SQLite 和 TTLCache；Docker 环境可切换到 Redis 会话记忆。LLM 解析默认关闭，需要配置 API Key 后通过 `NL_PARSER_MODE=hybrid` 启用。
 
-- 后端 Docker 镜像已同步 `data/knowledge`、`scripts`、`evals` 和 `tests`，便于在容器内运行 RAG、Agent Runtime 和评测脚本。
-- Docker Compose 默认启用 `AGENT_RUNTIME_MODE=loop`、`KNOWLEDGE_RETRIEVER=bm25`，并暴露 RAG 置信度、Embedding 阈值和 Agent 原始 payload 日志开关。
-- 前端 Docker 镜像通过 `frontend/Dockerfile` 执行生产构建，最新 Agent 对话展示会随镜像一起发布。
+## 项目亮点
 
-## Docker 验证命令
+- 业务闭环：支持单地点评估、推荐窗口、多地点比选、历史复盘和自然语言统一入口。
+- Agent Runtime：通过 Business Route、Planner、Tool Registry、Tool Executor 和 Agent State 组织工具调用，而不是固定串行 workflow。
+- 安全边界：LLM 不直接判断飞行安全，RAG 不覆盖规则结论，Guardrail 固定在输入、工具调用和最终输出阶段。
+- 可解释 Trace：记录 plan、tool_call、tool_result、error、fallback、final_response 等事件，支持按用户查询执行链路。
+- 多轮上下文：支持 pending task、字段继承、字段覆盖、会话隔离和 Profile Memory 补全。
+- 多用户体系：支持注册、登录、JWT 鉴权、普通用户数据隔离、管理员用户治理和会话审计。
+- RAG 数据治理：支持知识类型、地域、租户、用户、可见性、时效、审核状态等 metadata 过滤。
+- Eval 体系：包含 Tool Calling Eval、Multi-turn State Eval、Failure Recovery Eval 和 RAG Eval，用样例集量化 Agent 行为。
+- 前后端控制台：React + Vite 页面覆盖 Agent 对话、评估、推荐、比选、历史、Profile 和管理员功能。
+- Docker 化：提供后端、前端和 Redis 的 Docker Compose 联调环境，便于本地运行和服务器部署前验证。
 
-```bash
-docker compose build
-docker compose up -d redis app frontend
-docker compose exec app python -m pytest
-docker compose exec frontend wget -qO- http://127.0.0.1/health
+## 系统架构
+
+```text
+Browser / React Console
+  -> Auth / Axios Client
+  -> FastAPI API Layer
+      -> Auth Dependency / User Scope
+      -> Agent Orchestrator
+          -> NL Parser: rule / llm / hybrid
+          -> Context Manager: session + profile + pending task
+          -> Business Route / Planner
+          -> Tool Registry / Tool Executor
+          -> Guardrail / Failure Policy / Trace
+      -> Business Services
+          -> Weather Provider / Mapper
+          -> Rule Engine
+          -> Recommendation Engine
+          -> Location Comparison
+          -> Conversation History
+          -> RAG Retriever
+      -> Storage
+          -> SQLite / SQLAlchemy / Alembic
+          -> Redis Session Memory
 ```
 
-针对第十八周 Agent/RAG/评测能力，可在后端容器内执行：
+核心原则：业务安全判断沉淀在规则层，Agent 只负责编排业务服务。自然语言、LLM、RAG、记忆和前端控制台都可以增强交互体验，但不会覆盖最终安全结论。
 
-```bash
-docker compose run --rm --no-deps --entrypoint sh app -c "AGENT_RUNTIME_MODE=loop NL_PARSER_MODE=rule LLM_ENABLED=false KNOWLEDGE_RETRIEVER=bm25 python -m pytest tests/test_tool_registry.py tests/test_tool_executor.py tests/test_agent_loop.py tests/test_agent_trace.py tests/test_agent_guardrail.py tests/test_bm25_knowledge_store.py tests/test_hybrid_knowledge_retriever.py tests/test_rag_fallback.py tests/test_eval_regression.py"
-docker compose run --rm --no-deps --entrypoint sh app -c "AGENT_RUNTIME_MODE=loop NL_PARSER_MODE=rule LLM_ENABLED=false KNOWLEDGE_RETRIEVER=bm25 python scripts/multi_turn_state_eval.py --report-dir /app/data/eval-reports/docker-smoke"
-docker compose run --rm --no-deps --entrypoint sh app -c "AGENT_RUNTIME_MODE=loop NL_PARSER_MODE=rule LLM_ENABLED=false KNOWLEDGE_RETRIEVER=bm25 python scripts/failure_recovery_eval.py --report-dir /app/data/eval-reports/docker-smoke"
-docker compose run --rm --no-deps --entrypoint sh app -c "AGENT_RUNTIME_MODE=loop NL_PARSER_MODE=rule LLM_ENABLED=false KNOWLEDGE_RETRIEVER=bm25 python scripts/rag_eval.py --retrievers bm25 --report-dir /app/data/eval-reports/docker-smoke"
+## 核心能力
+
+### 1. 低空作业风险评估
+
+输入地点、日期、时间段和任务类型后，系统会获取逐小时天气和天气预警，并按规则输出整体结论和逐小时风险因素。
+
+典型输入：
+
+```text
+深圳湾明天下午 2 点到 5 点适合做低空巡航吗？
 ```
 
----
-# 无人机低空巡航任务决策系统
+输出重点：
 
-## 前后端本地启动
+- 整体结论：适飞 / 慎飞 / 禁飞
+- 判断原因：风速、风力、降水、能见度、天气预警等风险因素
+- 小时级结果：每个小时的风险等级和命中的规则
+- 操作建议：来自规则解释和 RAG 检索的保守建议
 
-本项目现在包含 FastAPI 后端和 React 前端。本地开发时建议开两个终端分别启动。
+### 2. 推荐执行窗口
 
-### 1. 启动后端
+系统可以扫描未来一段时间，找出连续低风险时间窗口，辅助任务调度。
 
-在项目根目录执行：
+典型输入：
 
-```bash
-cd D:\desktop\drone-low-altitude-agent
+```text
+深圳未来 72 小时哪个时间段更适合巡检？
+```
+
+排序考虑：
+
+- 可飞小时数
+- 风险等级
+- 连续性
+- 任务类型要求
+- 预警影响
+
+### 3. 多地点比选
+
+系统支持对多个候选地点进行统一评估，并输出推荐地点和排序原因。
+
+典型输入：
+
+```text
+深圳湾、南山区、宝安机场附近明天下午哪个更适合先巡检？
+```
+
+输出重点：
+
+- 推荐地点
+- 综合排序
+- 各地点可飞小时数
+- 最长连续可飞窗口
+- 主要风险差异
+
+### 4. 自然语言 Agent 入口
+
+`/agent/query` 是统一自然语言入口，负责把用户输入转换为业务任务，并调用必要工具完成结果生成。
+
+支持能力：
+
+- 单地点评估
+- 推荐窗口
+- 多地点比选
+- 历史查询
+- 知识检索
+- 多轮追问
+- 任务条件修改
+- 工具失败恢复
+
+多轮示例：
+
+```text
+用户：帮我看看深圳湾明天下午适不适合巡航
+系统：解析地点、时间段和任务类型，调用天气与规则工具，返回评估结论
+
+用户：那换成后天上午呢
+系统：继承上一轮地点和任务类型，只覆盖日期和时间段，重新评估
+```
+
+### 5. RAG 操作建议增强
+
+RAG 不负责改变适飞结论，只根据业务结果、风险标签、地区和权限过滤知识库，补充操作建议、SOP 提示和政策边界说明。
+
+当前支持：
+
+- TF-IDF baseline
+- BM25 关键词召回
+- Embedding 语义召回
+- Hybrid Retrieval
+- chunk 策略
+- metadata filter
+- rerank
+- query rewrite
+- 低置信 fallback
+
+重要边界：如果知识库空召回或低置信，系统应返回保守说明，而不是编造政策依据。
+
+### 6. Trace、Guardrail 与失败恢复
+
+Agent 执行过程中会记录结构化 trace，便于解释一次请求为什么调用某个工具、在哪里失败、如何 fallback。
+
+覆盖场景：
+
+- 参数缺失：追问用户，不直接生成安全结论
+- 外部依赖失败：返回可解释错误，不编造天气数据
+- 权限不足：拒绝访问，不能通过 fallback 绕过权限
+- RAG 空召回：返回保守提示
+- LLM 失败：回退规则解析或固定模板输出
+
+### 7. 多用户、权限和审计
+
+项目支持真实登录用户，不再依赖固定 `default_user`。
+
+权限模型：
+
+- 普通用户只能访问自己的历史、会话、Profile 和 trace
+- 管理员可以查看用户列表、系统统计和全局会话审计
+- `/agent/query` 不信任前端传入的 `user_id`，以后端 token 解析出的当前用户为准
+- RAG 检索按 `visibility`、`tenant_id`、`user_id` 和 metadata 做过滤
+
+## 技术栈
+
+后端：
+
+- FastAPI
+- SQLAlchemy
+- Alembic
+- Pydantic
+- PyJWT
+- Redis
+- httpx
+- scikit-learn
+- pytest
+
+前端：
+
+- React
+- Vite
+- TypeScript
+- React Router
+- Axios
+- Nginx
+
+工程化：
+
+- Docker
+- Docker Compose
+- Alembic migration
+- Agent Eval scripts
+- RAG Eval reports
+- 单元测试与回归测试
+
+## 目录结构
+
+```text
+app/
+  agent/                 Agent Runtime、Planner、Tool、Guardrail、Trace、Failure Policy
+  core/                  环境变量和基础配置
+  db/                    SQLAlchemy session、ORM models
+  dependencies/          FastAPI 依赖注入和鉴权
+  rules/                 低空作业规则引擎和任务类型配置
+  schemas/               API 请求响应模型
+  services/              天气、评估、推荐、比选、RAG、记忆、审计等业务服务
+alembic/                 数据库迁移
+frontend/                React + Vite 前端控制台
+tests/                   后端单元测试和集成测试
+evals/                   Agent/RAG 评测样例和报告
+scripts/                 Eval、管理员初始化和辅助脚本
+docs/                    设计文档、部署说明和阶段总结
+data/                    本地 SQLite、样例数据和知识库索引
+```
+
+## 前置依赖
+
+- Python 3.11
+- Node.js 与 npm
+- Docker 与 Docker Compose
+- 和风天气 API Key
+- 可选：DeepSeek / OpenAI 兼容 API Key，用于 LLM 结构化解析
+
+## 快速启动
+
+### 1. 后端本地启动
+
+```powershell
+Copy-Item .env.example .env
 .\.venv\Scripts\activate
-uvicorn main:app --reload
+python -m pip install -r requirements.txt
+python -m alembic upgrade head
+python -m uvicorn main:app --reload
 ```
 
 后端默认地址：
@@ -58,711 +247,252 @@ uvicorn main:app --reload
 http://localhost:8000
 ```
 
-常用检查地址：
+常用入口：
 
 ```text
 http://localhost:8000/health
 http://localhost:8000/docs
 ```
 
-如果是第一次启动，先安装依赖并初始化数据库：
+### 2. 前端本地启动
 
-```bash
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -m alembic upgrade head
-```
-
-### 2. 启动前端
-
-再打开一个新终端：
-
-```bash
-cd D:\desktop\drone-low-altitude-agent\frontend
+```powershell
+cd frontend
 npm install
 npm run dev
 ```
 
-前端默认地址通常是：
+前端默认地址：
 
 ```text
 http://localhost:5173
 ```
 
-说明：
-
-- `npm install` 只需要第一次安装依赖时执行
-- 后续日常启动前端只需要执行 `npm run dev`
-- 前端默认请求 `http://localhost:8000`
-- 如需修改后端地址，在 `frontend/.env.local` 中配置 `VITE_API_BASE_URL`
-
-示例：
-
-```env
-VITE_API_BASE_URL=http://localhost:8000
-```
-
-### 3. 启动顺序
-
-推荐顺序：
-
-```text
-先启动后端 -> 再启动前端 -> 打开 http://localhost:5173
-```
-
-也可以只启动前端查看页面骨架，但涉及 `/health`、`/agent/query` 等接口的页面会提示后端连接失败。
-
-## Docker Compose 完整启动
-
-本项目也支持通过 Docker Compose 同时启动前端、后端和 Redis。
-
-在项目根目录执行：
-
-```bash
-copy .env.docker.example .env
-docker compose up -d --build --force-recreate
-```
-
-后台启动：
-
-```bash
-docker compose up -d --build --force-recreate
-```
-
-启动后访问：
-
-```text
-前端展示页面：http://localhost:5173
-后端 OpenAPI：http://localhost:8000/docs
-后端健康检查：http://localhost:8000/health
-```
-
-当前 Compose 服务包括：
-
-- `frontend`：React 前端，Nginx 托管静态资源
-- `app`：FastAPI 后端，启动时自动执行 Alembic 迁移，支持 JWT、多用户记忆、管理员接口和核心单元测试
-- `redis`：会话上下文缓存
-
-前端 Docker 构建时默认注入：
-
-```env
-VITE_API_BASE_URL=http://localhost:8000
-```
-
-因此浏览器打开 `http://localhost:5173` 后，会直接请求本机映射出来的后端 API。
-
-### Docker 下初始化管理员
-
-普通注册接口只能创建 `user` 角色。Docker 演示如果需要管理员后台，先在 `.env` 中配置：
-
-```env
-JWT_SECRET_KEY=replace-with-random-secret
-INITIAL_ADMIN_USERNAME=admin
-INITIAL_ADMIN_PASSWORD=change-me-before-deploy
-```
-
-第一次创建管理员时，显式执行一次初始化服务：
-
-```bash
-docker compose --profile tools run --rm admin-init
-```
-
-该命令会先执行数据库迁移，再创建或激活 `.env` 中指定的初始管理员。后续正常启动项目：
-
-```bash
-docker compose up -d --build --force-recreate
-```
-
-后续管理员只能由已有管理员在管理页面或 `/admin/users/{user_id}/role` 接口授权产生。`admin-init` 是一次性工具服务，不会随普通 `docker compose up` 自动执行。
-
-说明：
-
-- `INITIAL_ADMIN_PASSWORD` 示例值只用于本地演示，正式使用前必须改成自己的强密码。
-- 如果按本文档示例创建，本地管理员账号为 `admin`，密码为 `.env` 中的 `INITIAL_ADMIN_PASSWORD`。
-- 不要把真实管理员密码提交到 GitHub。
-
-### Docker 内验证
-
-如需在 Docker 后端容器内验证测试，可执行：
-
-```bash
-docker compose exec app python -m pytest
-```
-
-这是一个从“阿里云百炼工作流原型”重构出来的本地后端项目。原型阶段主要依赖工作流节点完成天气查询和条件判断；重构后，项目改为基于 FastAPI 的模块化后端服务，把天气数据获取、数据标准化、规则判断、推荐、比选、历史记录、自然语言入口和知识库建议拆成可维护的 Python 模块。
-
-项目目标不是简单查询天气，而是面向无人机低空任务，回答这类问题：
-
-- 当前地点和时间段是否适合飞行？
-- 未来什么时候更适合执行任务？
-- 多个地点中哪个地点优先级更高？
-- 风险原因是什么？有什么操作建议？
-- 用户连续追问时，能否复用上一轮上下文？
-- 不同登录用户之间的历史、会话和长期偏好能否安全隔离？
-
-## 当前功能
-
-- 天气服务：接入和风天气，支持地点解析、逐小时天气、天气预警获取。
-- 数据标准化：通过 mapper 层把外部 API 数据转换为内部统一结构。
-- 规则引擎：根据任务类型、天气指标和预警信息输出逐小时风险判断。
-- 推荐窗口：线性扫描逐小时评估结果，按禁飞小时和时间断点切分连续可执行窗口，避免重复推荐重叠时间段。
-- 多地点比选：支持多个地点并行评估，并按可飞小时、连续窗口、风险质量等维度排序。
-- 历史记录：使用 SQLite + SQLAlchemy 保存评估请求、天气快照、预警和判断结果。
-- 自然语言入口：支持基于关键词/正则和 DeepSeek 结构化输出的任务信息解析，可通过 `NL_PARSER_MODE=rule|llm|hybrid` 控制解析策略。
-- 多用户认证：支持用户注册、登录、JWT 鉴权和 `/auth/me` 当前用户识别。
-- 编排器：通过 `/agent/query` 串起解析、天气、规则、推荐、比选、响应生成，并使用 token 用户作为真实数据归属。
-- Agent Runtime 基础：已新增 Tool Registry、AgentState、规则 Planner 和最小 AgentLoop，可通过 `AGENT_RUNTIME_MODE=legacy|loop` 灰度切换；默认保留 legacy workflow，loop 模式失败时可回退旧编排链路。
-- Agent 业务路由：已将自然语言入口拆分为 `evaluate`、`recommend`、`compare`、`knowledge`、`history`、`explain` 等业务路径，并通过 Business Route 映射到最小必要工具。
-- Agent 多轮状态：loop 模式支持 pending task、缺字段追问、Session Memory 上下文合并、Profile 兼容补齐和用户修改字段覆盖。
-- Agent 查询工具：已新增知识片段查询和规则来源解释能力，查询类问题不会触发完整风险评估链路。
-- Agent 错误恢复：已引入工具失败分类、恢复策略和兜底输出，支持参数缺失追问、空结果提示、工具异常转 legacy fallback、权限错误直接拒绝等路径。
-- Agent Trace 闭环：已记录 plan、tool_call、tool_result、error、fallback、final_response 等事件，并支持按当前登录用户查询自己的执行链路。
-- Agent Guardrail：已接入输入、工具调用前和最终输出三个强制检查点；支持角色、用户作用域、payload 用户伪造拦截、拒绝结果解释和 trace 可追溯。
-- Agent Eval：已建立 `evals/` 质量评估样例集和 Tool Calling / Multi-turn State / Failure Recovery / RAG Eval 脚本，可评估意图识别、工具选择、多轮状态继承与覆盖、工具失败恢复、RAG 召回和 fallback 行为。
-- 会话记忆：支持 `ttlcache`、`redis`、`database` 三种后端，按 `user_id + session_id` 隔离短期上下文。
-- Profile Memory：绑定真实用户，支持查看和编辑默认地点、任务类型、时间段、输出偏好和常用列表。
-- Conversation History：`/agent/query` 调用后自动保存自然语言请求、解析结果、响应摘要和完整响应，并支持按当前用户隔离查询和关键词检索。
-- RAG 检索增强：基于统一 `KnowledgeRetriever` 接口封装检索链路，已支持 BM25、Embedding、Hybrid Retrieval、chunk 级索引、规则 rerank、低置信 query rewrite 和保守 fallback；TF-IDF + cosine similarity 继续作为 baseline 对照。
-- RAG 数据治理：检索前按 `visibility`、`tenant_id`、`user_id` 做用户隔离，按 `region`、`province`、`city`、`task_type`、`risk_tags`、`effective_at`、`expires_at`、`review_status` 做业务过滤，避免不同用户、不同地区、过期知识互相污染。
-- LLM 增强：已引入统一 LLM 客户端，复用于自然语言任务解析和最终结果解释；输出润色已接入 Pre-LLM / Post-LLM Guardrail，大模型只负责表达优化，不替代规则引擎和安全边界判断。
-- 风险输出模板：已新增固定风险输出模板、官方审批边界说明、高风险关键词复检和快照式测试，避免最终回答出现过度承诺。
-
-## 系统结构
-
-```text
-用户输入
-  ↓
-JWT 鉴权 / 当前用户识别
-  ↓
-Input Guardrail
-  ↓
-自然语言解析 / 结构化请求
-  ↓
-LLM 结构化解析 / 规则解析 fallback
-  ↓
-Orchestrator 编排器
-  ↓
-Agent Runtime 开关：legacy workflow / loop runtime
-  ↓
-Tool Registry / AgentState / Rule Planner / AgentLoop
-  ↓
-Business Route / Context Manager / ToolExecutor / Tool Guardrail / FailurePolicy / TraceEvent
-  ↓
-Weather Provider 获取原始天气数据
-  ↓
-Mapper 转换为内部统一模型
-  ↓
-规则引擎 / 推荐模块 / 多地点比选
-  ↓
-历史落库 / RAG metadata 过滤与建议检索
-  ↓
-Session Memory / Profile Memory 按用户隔离
-  ↓
-Pre-LLM Output Guardrail / LLM 结果解释 / 模板解释 fallback / Post-LLM Output Guardrail
-  ↓
-统一响应输出
-```
-
-核心设计思路：
-
-- Provider 层只负责对接外部 API。
-- Mapper 层负责屏蔽不同数据源格式差异。
-- Rules 层只依赖内部统一数据结构，不直接依赖和风天气原始字段。
-- Service / Orchestrator 负责组织流程，不把规则细节写死在接口中；Agent Runtime 通过业务路由、工具注册、状态管理、上下文合并和循环执行逐步替代固定 workflow。
-- Context Manager 层处理多轮 pending task、用户输入覆盖、Profile 兼容补齐和受影响工具标记，安全决策类任务缺关键字段时仍优先追问。
-- Trace / Logging 层记录 Agent 状态转换、工具调用、错误分类和兜底路径，用于解释单次请求的执行过程。
-- Guardrail 层固定在输入、工具调用前和最终输出阶段执行，负责拦截危险输入、越权工具调用和过度承诺输出；每次拒绝或降级都会生成 `guardrail_explanation`。
-- Eval 层使用 `evals/agent/cases.json`、`evals/agent/multi_turn_cases.json`、`evals/agent/failure_recovery_cases.json` 和 `evals/rag/cases.json` 保存可版本管理样例；快速回归集可作为 CI 门禁，完整评测集可生成 Markdown/JSON 报告。
-- Auth / Memory 层只负责身份识别、数据归属和上下文补全，不参与飞行安全判断。
-- LLM 解释层只在 Guardrail 允许的范围内润色表达；LLM 输出不合规时会丢弃并回退固定风险输出模板。
-- Risk Output Template 层根据结构化业务结果生成稳定输出，使用关键词复检和快照测试约束“禁飞、谨慎飞行、适飞、无推荐窗口”等场景。
-- RAG 层已完成 metadata 数据治理、Retriever 抽象、BM25 关键词召回、Embedding 语义召回、Hybrid 融合排序、按知识类型 chunk、规则 rerank、低置信二次召回和 fallback；召回过程 metadata 可用于后续 trace 与 eval。
-
-## 主要接口
-
-启动服务后可访问 `http://127.0.0.1:8000/docs` 查看 OpenAPI 文档。
-
-- `GET /health`：健康检查。
-- `POST /auth/register`：注册普通用户。
-- `POST /auth/login`：登录并返回 JWT access token。
-- `GET /auth/me`：获取当前登录用户信息。
-- `GET /users/me/profile`：查看当前用户长期偏好。
-- `PATCH /users/me/profile`：编辑当前用户长期偏好。
-- `GET /admin/users`：管理员查询用户列表，支持用户名、角色、启用状态筛选。
-- `PATCH /admin/users/{user_id}/status`：管理员启用或禁用用户。
-- `PATCH /admin/users/{user_id}/role`：管理员在 `user` 与 `admin` 之间调整用户角色。
-- `GET /admin/stats/tasks`：管理员查看用户、任务、失败、风险和解析失败统计。
-- `GET /admin/conversations`：管理员跨用户查询任务会话历史，支持用户、会话、意图、解析来源、成功状态、关键词和时间范围筛选。
-- `GET /admin/conversations/{conversation_id}`：管理员查看单条任务会话完整详情。
-- `POST /nl/parse`：自然语言任务解析。
-- `POST /agent/query`：Agent 主入口，支持一句话完成任务调用；需要 `Authorization: Bearer <token>`。
-- `GET /agent/conversations`：查询当前用户对话历史，支持分页、关键词、会话、意图和解析来源筛选。
-- `GET /agent/conversations/{conversation_id}`：查询当前用户单条对话详情；前端通常通过历史列表点击进入。
-- `GET /agent/traces/{trace_id}`：查询当前用户自己的 Agent trace，查看状态转换、工具调用、错误分类和兜底路径。
-- `POST /cruise/weather-fetch`：获取地点、天气和预警原始数据。
-- `POST /cruise/evaluate`：单地点、指定时间段巡航风险评估。
-- `POST /cruise/recommend`：推荐未来合适执行窗口。
-- `POST /cruise/compare`：多地点任务风险比选。
-- `GET /cruise/history/{request_id}`：查询历史评估记录。
-- `GET /cruise/history/{request_id}/composed`：查询统一业务响应格式的历史记录。
-- `POST /knowledge/advice/retrieve`：根据风险结果检索知识库建议。
-
-## 技术栈
-
-- Web 框架：FastAPI、Uvicorn
-- 数据校验：Pydantic
-- HTTP 请求：httpx
-- 配置管理：python-dotenv
-- 数据库：SQLite、SQLAlchemy、Alembic
-- 认证鉴权：bcrypt、PyJWT、FastAPI HTTPBearer
-- 会话缓存/持久化：cachetools TTLCache、Redis、Database backend
-- 记忆持久化：users、user_profiles、conversation_records、session_records
-- Agent Runtime：Business Route、Context Manager、Tool Registry、AgentState、Rule Planner、AgentLoop、ToolExecutor、FailurePolicy、TraceEvent、legacy fallback、Agent Eval、Tool Calling Eval、Multi-turn State Eval、Failure Recovery Eval
-- 知识检索：统一 `KnowledgeRetriever` 接口、BM25 默认召回、Embedding 语义召回、Hybrid Retrieval、chunk 级索引、规则 rerank、query rewrite、低置信 fallback、scikit-learn TF-IDF baseline、metadata filter
-
-当前 RAG 检索已经从单一 TF-IDF baseline 拆成可替换 Retriever 架构。BM25 用于政策名、地名、编号等关键词精确召回；Embedding 用于口语化提问和知识库措辞不一致时的语义召回；Hybrid Retrieval 负责融合两路结果并叠加 metadata boost。索引构建阶段会按 `knowledge_type` 生成 chunk，`policy_hint` 按条款/段落、`sop` 按步骤、`faq` 按问答对、`risk_advice` 保留短块；召回后再根据审核状态、时效、地域精确度、任务类型和风险标签做规则 rerank。低置信或空召回时会进行 query rewrite 和二次召回，仍失败则返回保守说明，避免编造政策依据。
-
-## 本地运行
-
-### 1. 安装依赖
-
-```bash
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-```
-
-### 2. 配置环境变量
-
-复制 `.env.example` 为 `.env`，并填写自己的和风天气配置。
-
-常用配置项包括：
-
-```env
-QWEATHER_API_KEY=你的和风天气Key
-QWEATHER_GEO_BASE_URL=https://你的专属host
-QWEATHER_WEATHER_BASE_URL=https://你的专属host
-QWEATHER_WARNING_BASE_URL=https://你的专属host
-DATABASE_URL=sqlite:///./data/drone_agent.db
-JWT_SECRET_KEY=请替换为随机密钥
-JWT_ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=1440
-SESSION_MEMORY_BACKEND=ttlcache
-REDIS_URL=redis://localhost:6379/0
-AGENT_RUNTIME_MODE=legacy
-KNOWLEDGE_RETRIEVER=bm25
-```
-
-`.env` 不应提交到 GitHub。
-
-### Agent Runtime 配置
-
-当前 `/agent/query` 支持两种运行模式：
-
-```env
-AGENT_RUNTIME_MODE=legacy
-```
-
-默认模式，继续使用原有固定 workflow，适合稳定演示和线上兼容。
-
-```env
-AGENT_RUNTIME_MODE=loop
-```
-
-实验模式，启用 Day71-Day76 实现的 Agent Runtime：
-
-- `Business Route`：把 `evaluate`、`recommend`、`compare`、`knowledge`、`history`、`explain` 映射为不同工具路径。
-- `Context Manager`：合并本轮输入、Session Memory、Profile 和默认值，支持缺字段追问、pending task 和多轮修改。
-- `Tool Registry`：统一注册风险评估、飞行窗口推荐、多地点比选、RAG 检索、历史查询等工具。
-- `AgentState`：保存当前意图、任务草稿、已确认字段、缺失字段、工具结果、错误和 step 历史。
-- `Rule Planner`：根据状态决定下一步是追问、调用工具、直接回答还是 fallback。
-- `AgentLoop`：执行 Planner 产出的计划，将工具结果写回状态，并通过最大轮次限制避免无限循环。
-- `legacy fallback`：loop 模式失败时可回退原始编排链路，保证现有接口兼容。
-
-响应中会额外返回可选 `agent_runtime` 字段，用于查看 `trace_id`、`run_id`、状态、计划动作和工具结果。该字段是调试增强，不影响旧前端使用原有字段。
-
-Day85-Day88 已在 loop 模式下补充混合业务编排能力：
-
-- 查询类任务可直接走 `query_user_history`、`query_knowledge_snippets`、`explain_risk_rules`，不触发完整风险评估。
-- 缺字段任务会保存 pending task，下一轮用户补充后继续执行。
-- 安全决策类任务不会用 Profile 默认地点直接评估；查询类任务可以使用 Profile 提升体验。
-- 用户修改地点、时间或任务类型后，会重新计算 `AgentState`，并在 `agent_runtime.context_merge` 中展示 `modified_fields` 和 `invalidated_tools`。
-
-### RAG 检索配置
-
-当前知识检索支持通过环境变量切换检索器：
-
-```env
-KNOWLEDGE_RETRIEVER=bm25
-```
-
-默认模式，使用 Day100 实现的 BM25 关键词召回。适合政策名、地名、编号、风险词等精确匹配场景。
-
-```env
-KNOWLEDGE_RETRIEVER=embedding
-```
-
-语义召回模式，使用本地 deterministic `MockEmbeddingProvider` 构建离线可测试向量索引；真实环境可替换为云端或本地 embedding 服务。
-
-```env
-KNOWLEDGE_RETRIEVER=hybrid
-```
-
-混合检索模式，同时召回 BM25 和 Embedding 候选结果，按 `chunk_id` 去重，并融合归一化文本分数与 metadata boost。
-
-```env
-KNOWLEDGE_RETRIEVER=tfidf
-```
-
-baseline 模式，继续使用原有 TF-IDF + cosine similarity，主要用于后续 RAG Eval 对比。
-
-```env
-RAG_CONFIDENCE_THRESHOLD=0.2
-KNOWLEDGE_EMBEDDING_MIN_SCORE=0.25
-```
-
-`RAG_CONFIDENCE_THRESHOLD` 用于判断空召回和低置信召回，低于阈值会触发 query rewrite 和二次召回；`KNOWLEDGE_EMBEDDING_MIN_SCORE` 用于过滤低相似度向量召回结果。
-
-BM25、Embedding 和 TF-IDF 都从同一份 `data/knowledge/advice_rules.json` 构建索引，不需要修改原始知识库结构。BM25 与 Embedding 会基于 chunk 构建独立索引文件：
-
-```text
-data/knowledge/index/bm25_index.pkl
-data/knowledge/index/bm25_documents.json
-data/knowledge/index/embedding_index.pkl
-data/knowledge/index/embedding_documents.json
-data/knowledge/index/embedding_metadata.json
-```
-- 典型自然语言输入样例沉淀在 `data/agent_input_samples.json`，后续可扩展为 Agent Eval 数据集。
-
-### Agent Eval 与 Tool Calling Eval
-
-Day106-Day111 已新增可版本管理的质量评估样例、评测脚本、报告和快速回归门禁：
-
-```text
-evals/agent/cases.json
-evals/agent/multi_turn_cases.json
-evals/agent/failure_recovery_cases.json
-evals/rag/cases.json
-evals/README.md
-```
-
-当前支持四类完整评测：
-
-```bash
-.\.venv\Scripts\python.exe scripts/tool_calling_eval.py
-.\.venv\Scripts\python.exe scripts/multi_turn_state_eval.py
-.\.venv\Scripts\python.exe scripts/failure_recovery_eval.py
-.\.venv\Scripts\python.exe scripts/rag_eval.py
-```
-
-默认评测尽量使用 planner-only、mock 或本地数据路径，避免强依赖真实天气 API 或大模型输出。报告输出到：
-
-```text
-evals/reports/tool_calling_eval.json
-evals/reports/tool_calling_eval.md
-evals/reports/multi_turn_state_eval.json
-evals/reports/multi_turn_state_eval.md
-evals/reports/failure_recovery_eval.json
-evals/reports/failure_recovery_eval.md
-evals/reports/rag_eval.json
-evals/reports/rag_eval.md
-```
-
-当前报告覆盖工具选择准确率、多余/缺失/禁用工具调用率、多轮状态继承与覆盖、session 隔离、失败分类与恢复策略、trace 覆盖、RAG Recall@K、Hit@K、MRR、metadata filter、权限泄漏率、fallback 和 P95 延迟。
-
-快速回归门禁：
-
-```bash
-.\.venv\Scripts\python.exe -m pytest tests/test_eval_regression.py -q
-.\.venv\Scripts\python.exe -m pytest -m eval_fast -q
-```
-
-### Session Memory 配置
-
-本地默认使用进程内缓存：
-
-```env
-SESSION_MEMORY_BACKEND=ttlcache
-SESSION_MEMORY_TTL_SECONDS=1800
-SESSION_MEMORY_MAXSIZE=1024
-```
-
-如果 Docker 或服务器环境中启动了 Redis，可以切换为：
-
-```env
-SESSION_MEMORY_BACKEND=redis
-REDIS_URL=redis://redis:6379/0
-SESSION_MEMORY_REDIS_KEY_PREFIX=drone_agent:session:
-```
-
-注意：`redis://redis:6379/0` 中的 `redis` 是 `docker-compose.yml` 里的 Redis 服务名；如果在本机直接连接 Redis，通常使用 `redis://localhost:6379/0`。
-
-如果希望刷新页面或重启进程后仍能恢复会话上下文，可以切换为数据库持久化：
-
-```env
-SESSION_MEMORY_BACKEND=database
-SESSION_MEMORY_TTL_SECONDS=1800
-```
-
-无论使用 `ttlcache`、`redis` 还是 `database`，Session Memory 都按 `user_id + session_id` 隔离，避免不同用户使用相同 `session_id` 时互相污染。
-
-### 3. 初始化数据库
-
-```bash
-.\.venv\Scripts\python.exe -m alembic upgrade head
-```
-
-### 4. 启动服务
-
-```bash
-.\.venv\Scripts\python.exe -m uvicorn main:app --reload
+### 3. Docker Compose 启动
+
+```powershell
+Copy-Item .env.docker.example .env
+docker compose up -d --build
 ```
 
 访问：
 
 ```text
-http://127.0.0.1:8000/docs
+前端：http://localhost:5173
+后端：http://localhost:8000
+OpenAPI：http://localhost:8000/docs
 ```
 
-### 5. 运行关键测试
+如需初始化管理员账号：
 
-多用户、认证、对话历史、Session Memory 和 Profile Memory 相关测试：
+```powershell
+docker compose --profile tools run --rm admin-init
+```
+
+管理员账号读取 `.env` 中的：
+
+```env
+INITIAL_ADMIN_USERNAME=admin
+INITIAL_ADMIN_PASSWORD=change-me-before-deploy
+```
+
+首次运行前应替换默认 JWT secret 和管理员密码。
+
+## 环境变量
+
+核心配置：
+
+```env
+APP_ENV=local
+APP_PORT=8000
+CORS_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+DATABASE_URL=sqlite:///./data/drone_agent.db
+JWT_SECRET_KEY=replace-with-random-secret
+SESSION_MEMORY_BACKEND=ttlcache
+REDIS_URL=redis://localhost:6379/0
+```
+
+天气服务配置：
+
+```env
+QWEATHER_API_KEY=your_qweather_api_key
+QWEATHER_GEO_BASE_URL=https://geoapi.qweather.com
+QWEATHER_WEATHER_BASE_URL=https://devapi.qweather.com
+QWEATHER_WARNING_BASE_URL=https://devapi.qweather.com
+```
+
+LLM 可选配置：
+
+```env
+LLM_ENABLED=false
+LLM_PROVIDER=deepseek
+LLM_MODEL=deepseek-v4-flash
+DEEPSEEK_API_KEY=your_deepseek_api_key
+NL_PARSER_MODE=rule
+```
+
+默认建议保持：
+
+```env
+LLM_ENABLED=false
+NL_PARSER_MODE=rule
+```
+
+需要启用 DeepSeek 结构化解析时，可以切换为：
+
+```env
+LLM_ENABLED=true
+NL_PARSER_MODE=hybrid
+```
+
+## API 示例
+
+鉴权说明：
+
+- `/auth/register`、`/auth/login` 用于创建普通用户和获取 token。
+- `/agent/*`、`/users/*`、`/admin/*` 需要登录鉴权。
+- `/admin/*` 仅允许管理员访问。
+- 部分 `/cruise/*` 结构化接口保留为业务调试和服务集成入口，具体权限策略以代码实现为准。
+- 普通用户可通过注册接口创建；管理员通过 `admin-init` 初始化，或由已有管理员授权。
+
+### 注册
 
 ```bash
-.\.venv\Scripts\python.exe -m pytest tests/test_auth_service.py tests/test_auth_api.py tests/test_agent_auth_binding.py tests/test_conversation_history_api.py tests/test_session_memory.py tests/test_user_profile_api.py
+curl -X POST http://localhost:8000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"demo","password":"demo123456","display_name":"Demo User"}'
 ```
 
-Agent Runtime、Tool Registry、状态机、Planner、Loop 和灰度接入相关测试：
+### 登录
 
 ```bash
-.\.venv\Scripts\python.exe -m pytest tests/test_tool_registry.py tests/test_agent_state.py tests/test_agent_planner.py tests/test_agent_loop.py tests/test_task_orchestrator_agent_runtime.py
-```
-
-Agent trace、日志、工具失败恢复和兜底输出相关测试：
-
-```bash
-.\.venv\Scripts\python.exe -m pytest tests/test_agent_trace.py tests/test_agent_trace_api.py tests/test_agent_logging.py tests/test_tool_executor.py tests/test_failure_policy.py tests/test_agent_fallback.py
-```
-
-Agent 业务路由、查询工具、多轮追问和任务修改相关测试：
-
-```bash
-.\.venv\Scripts\python.exe -m pytest tests/test_agent_business_routes.py tests/test_agent_context_manager.py tests/test_agent_input_samples.py tests/test_nl_parser_business_intents.py tests/test_risk_rule_explainer.py tests/test_task_orchestrator_agent_context.py
-```
-
-混合编排端到端验收测试：
-
-```bash
-.\.venv\Scripts\python.exe -m pytest tests/test_agent_mixed_orchestration_e2e.py
-```
-
-Agent Guardrail、DeepSeek 输出润色联动和风险输出模板测试：
-
-```bash
-.\.venv\Scripts\python.exe -m pytest tests/test_agent_guardrail.py tests/test_response_explainer_guardrail.py tests/test_risk_output_templates.py
-```
-
-RAG Retriever、BM25、Embedding、Hybrid、chunk、query rewrite、TF-IDF baseline 和 metadata filter 测试：
-
-```bash
-.\.venv\Scripts\python.exe -m pytest tests/test_rag_fallback.py tests/test_knowledge_chunker.py tests/test_hybrid_knowledge_retriever.py tests/test_embedding_knowledge_store.py tests/test_bm25_knowledge_store.py tests/test_knowledge_retrievers.py tests/test_knowledge_access_filter.py tests/test_knowledge_business_filter.py tests/test_rag_policy.py
-```
-
-Tool Calling Eval 脚本测试：
-
-```bash
-.\.venv\Scripts\python.exe -m pytest tests/test_tool_calling_eval.py
-```
-
-Agent/RAG Eval 回归测试：
-
-```bash
-.\.venv\Scripts\python.exe -m pytest tests/test_multi_turn_state_eval.py tests/test_failure_recovery_eval.py tests/test_rag_eval.py tests/test_eval_regression.py
-```
-
-检查 Alembic 模型和迁移是否一致：
-
-```bash
-.\.venv\Scripts\python.exe -m alembic check
-```
-
-### 6. 使用 DBeaver 查看数据库
-
-当前本地默认数据库文件：
-
-```text
-data/drone_agent.db
-```
-
-可以用 DBeaver 建立 SQLite 连接查看这些表：
-
-- `users`
-- `user_profiles`
-- `conversation_records`
-- `session_records`
-- `agent_trace_events`
-
-DBeaver 只用于数据查看、调试和人工核查；正式表结构变更仍通过 `SQLAlchemy + Alembic migration` 完成。
-
-## 示例请求
-
-### 单地点评估
-
-```json
-{
-  "location": "Shenzhen",
-  "date": "2026-07-14",
-  "start_time": "09:00",
-  "end_time": "12:00",
-  "task_type": "cruise",
-  "purpose": "日常巡航任务"
-}
-```
-
-### 推荐执行窗口
-
-```json
-{
-  "location": "Shenzhen",
-  "date": "2026-07-14",
-  "task_type": "cruise",
-  "purpose": "日常巡航任务",
-  "scan_hours": 72,
-  "min_window_hours": 2
-}
+curl -X POST http://localhost:8000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"demo","password":"demo123456"}'
 ```
 
 ### Agent 自然语言入口
 
-先登录获取 token：
-
-```json
-{
-  "username": "demo",
-  "password": "demo123456"
-}
+```bash
+curl -X POST http://localhost:8000/agent/query \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d '{
+    "query": "帮我判断明天下午深圳湾适不适合巡航",
+    "session_id": "demo-session-001"
+  }'
 ```
 
-请求：
-
-```text
-POST /auth/login
-```
-
-后续调用 `/agent/query` 时在请求头携带：
-
-```text
-Authorization: Bearer <access_token>
-```
-
-```json
-{
-  "query": "帮我看一下深圳明天下午适不适合做无人机巡航",
-  "session_id": "demo-session"
-}
-```
-
-`/agent/query` 不再信任请求体中的 `user_id`，业务数据归属以后端 token 解析出的当前用户为准。
-
-### 用户 Profile 示例
-
-```json
-{
-  "default_location": "深圳湾",
-  "default_task_type": "inspection",
-  "default_start_time": "14:00",
-  "default_end_time": "17:00",
-  "output_style": "detailed",
-  "common_locations": ["深圳湾", "南山区"],
-  "common_task_types": ["inspection", "survey"]
-}
-```
-
-请求：
-
-```text
-PATCH /users/me/profile
-Authorization: Bearer <access_token>
-```
-
-当用户后续输入“明天适合飞吗”这类缺少地点、任务类型和时间段的表达时，系统可以从当前用户 Profile 中补全默认地点、任务类型和时间段。
-
-### 对话历史检索示例
-
-```text
-GET /agent/conversations?keyword=深圳&page=1&page_size=20
-Authorization: Bearer <access_token>
-```
-
-说明：
-
-- 前端用户通过关键词和历史列表检索内容。
-- 后端继续使用 `conversation_id` 定位单条详情。
-- 普通用户只能查询自己的对话历史，即使知道其他用户的 `conversation_id` 也会返回 `404`。
-
-### 管理员用户管理示例
-
-普通注册接口只能创建 `user` 角色。第一个管理员建议由开发期初始化脚本创建：
+### 单地点评估
 
 ```bash
-.\.venv\Scripts\python.exe scripts\create_initial_admin.py
+curl -X POST http://localhost:8000/cruise/evaluate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "location": "深圳湾",
+    "date": "2026-08-11",
+    "start_time": "14:00",
+    "end_time": "17:00",
+    "task_type": "巡航"
+  }'
 ```
 
-脚本读取 `.env` 中的 `INITIAL_ADMIN_USERNAME` 和 `INITIAL_ADMIN_PASSWORD`。后续管理员只能由已有管理员通过后台接口授权产生。
-
-Docker 环境可以执行：
+### 知识检索
 
 ```bash
-docker compose --profile tools run --rm admin-init
+curl -X POST http://localhost:8000/knowledge/advice/retrieve \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d '{
+    "query": "强风天气下无人机巡航有什么操作建议",
+    "location": "深圳",
+    "task_type": "巡航",
+    "top_k": 5
+  }'
 ```
 
-```text
-GET /admin/users?role=user&is_active=true
-Authorization: Bearer <admin_access_token>
+## 测试与 Eval
+
+项目包含后端单元测试、前端构建检查、Agent Eval 和 RAG Eval。Eval 脚本用于评估工具选择、多轮状态、失败恢复和 RAG 召回质量，可输出 Markdown / JSON 报告。
+
+### 后端测试
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q
 ```
 
-权限边界：
+### 前端构建
 
-- 普通用户访问 `/admin/*` 返回 `403`。
-- 不能禁用最后一个可用管理员。
-- 不能将最后一个可用管理员降级为普通用户。
-
-### 管理员任务审计示例
-
-管理员可以跨用户查看任务运行记录，但接口只提供查询能力，不修改历史任务内容。
-
-```text
-GET /admin/conversations?user_id=<user_id>&intent=evaluate&success=true&page=1&page_size=20
-Authorization: Bearer <admin_access_token>
+```powershell
+cd frontend
+npm run build
 ```
 
-```text
-GET /admin/conversations/<conversation_id>
-Authorization: Bearer <admin_access_token>
+### Agent Eval
+
+```powershell
+.\.venv\Scripts\python.exe scripts/tool_calling_eval.py
+.\.venv\Scripts\python.exe scripts/multi_turn_state_eval.py
+.\.venv\Scripts\python.exe scripts/failure_recovery_eval.py
 ```
 
-## 当前阶段
+### RAG Eval
 
-项目已经完成从基础天气判断工具到任务决策系统的主体升级：
+```powershell
+.\.venv\Scripts\python.exe scripts/rag_eval.py
+```
 
-- 第一阶段：后端服务、天气服务、Schema、输入校验、数据 mapper。
-- 第二阶段：时间提取、预警提取、规则引擎、任务阈值配置、评估接口。
-- 第三阶段：推荐窗口、多地点比选、历史持久化、多任务模板。
-- 第四阶段：自然语言解析、Agent 编排、会话记忆、统一响应。
-- 第五阶段：已接入轻量 RAG 建议检索、Profile Memory 和 Conversation History。
-- 第六阶段：已接入 DeepSeek 结构化自然语言解析，保留规则解析作为 fallback；已引入统一 LLM 客户端，用于任务解析和最终结果解释。
-- 第七阶段：已接入前端登录注册、请求鉴权、用户历史检索和 Profile 设置页。
-- 第八阶段：已接入多用户登录、JWT 鉴权、用户数据隔离、Session Memory 持久化和用户 Profile 管理。
-- 第九阶段：已接入管理员统计、用户管理、全局任务审计和 Docker 初始化管理员流程。
-- 第十阶段：已完成 RAG 知识库 metadata 数据治理，支持知识类型、地域、可见性、租户、用户、版本、有效期和审核状态过滤。
-- 第十一阶段：已完成 Agent Runtime 基础改造，包含 Tool Registry、AgentState、规则 Planner、最小 AgentLoop、`AGENT_RUNTIME_MODE` 灰度接入和完整回归测试。
-- 第十二阶段：已完成 Agent Trace、结构化日志、工具失败分类、恢复策略、兜底输出和用户级 trace 查询闭环。
-- 第十三阶段：已完成混合型业务编排，包含业务路由、查询类工具化、规则解释、RAG 可选调用策略、多轮 pending task、Profile 兼容补齐、任务修改后的状态重算和 E2E 验收测试。
-- 第十四阶段：已完成 Guardrail 基础接入，包含输入拦截、工具调用前认证/权限检查、用户作用域边界、Guardrail trace 可解释、最终输出约束、DeepSeek 润色前后双重 Output Guardrail，以及风险输出模板和快照测试。
-- 第十五阶段：已完成 RAG 检索架构重构和 BM25 关键词召回，包含统一 Retriever 接口、TF-IDF baseline 保留、BM25 独立索引、检索器配置切换和 metadata filter 回归测试。
-- 第十六阶段：已完成 Hybrid RAG 检索增强，包含 Embedding 语义召回、Hybrid 融合排序、metadata boost、按知识类型 chunk、规则 rerank、query rewrite、低置信二次召回和保守 fallback。
-- 第十七阶段：已完成 Agent Eval 与 RAG Eval 质量评估闭环，包含 Tool Calling Eval、多轮状态 Eval、失败恢复 Eval、RAG Eval、Markdown/JSON 报告、快速回归门禁和 CI 预留 marker。
+详细指标建议查看 `evals/reports/` 下生成的报告。
 
-## 后续计划
+## 关键设计取舍
 
-- 第 15 周：Guardrail、安全边界与 Agent 输出约束，继续补齐安全与权限回归测试、风险输出模板、拒答策略和周总结文档。
-- 第 16 周：Hybrid RAG 检索增强已完成 Day101-Day104，后续补齐 RAG Eval 和质量样例集。
-- 第 17 周：Agent Eval 与 RAG Eval 质量评估已完成 Day106-Day111，后续进入第 18 周 CI/CD、README、面试指南和端到端演示收尾。
-- 第 18 周：CI/CD、README、面试指南和端到端演示收尾，形成可运行、可解释、可评估、可展示的求职版本。
+### 规则引擎 vs LLM
+
+适飞判断必须稳定、可复现、可测试，所以由规则引擎负责。LLM 只负责自然语言解析和表达优化，不能直接生成安全结论。
+
+### RAG vs 规则结论
+
+RAG 用于补充操作建议和政策提示，不改变适飞 / 慎飞 / 禁飞结论。低置信或空召回时返回保守提示。
+
+### 自然语言入口 vs 结构化接口
+
+自然语言入口提升交互体验，但结构化 API 保留，便于测试、前端调用和系统集成。
+
+### TTLCache vs Redis vs Database Memory
+
+TTLCache 适合本地单进程开发，Redis 适合 Docker 和多实例共享短期上下文，Database 适合持久化会话上下文。业务层通过统一接口使用，不直接耦合底层实现。
+
+### SQLite vs PostgreSQL
+
+SQLite 适合本地运行和功能验证。生产部署和高并发写入场景更适合 PostgreSQL，并需要连接池、备份和迁移流程。
+
+## 当前边界
+
+这个项目应被定义为“可运行的低空作业气象决策原型”，不是生产级航空安全系统。
+
+当前限制：
+
+- 天气数据只接入一个第三方来源，气象准确性依赖外部服务。
+- 规则阈值是工程化原型，不等同于权威适航标准或监管审批结论。
+- RAG 知识库是样例知识库，不应包装成实时权威政策库。
+- LLM 默认关闭，主要用于结构化解析和解释增强。
+- SQLite 适合本地运行和功能验证，不适合高并发写入场景。
+- 当前 Docker Compose 更适合本地联调和服务器部署前验证，生产化还需要独立 Nginx 反代、HTTPS、PostgreSQL、监控告警和备份策略。
+
+## Roadmap
+
+工程化方向：
+
+- 增加 GitHub Actions，运行后端测试、前端构建和最小 Agent/RAG Eval。
+- 补充架构图、Agent 执行链路图和安全边界图。
+- 增加 `docs/eval-summary.md`，把 Eval 指标整理成可读质量报告。
+- 将服务器部署配置拆分为 `docker-compose.prod.yml`。
+- 迁移高并发验证环境数据库到 PostgreSQL。
+
+功能方向：
+
+- 增加可配置规则集，支持通过结构化表格维护任务阈值。
+- 在评估结果中输出 `rule_hits`，展示实际值、阈值、命中规则和风险等级。
+- 增加规则版本管理和规则来源字段，历史评估保存当时规则快照。
+- 将 RAG 知识库从静态 JSON 升级为可维护后台。
+- 增加更多异常场景和权限场景的自动化测试。
