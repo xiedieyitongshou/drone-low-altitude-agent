@@ -31,7 +31,7 @@ export function AgentRuntimeSummary({ response, compact = false }: AgentRuntimeS
       <div className="runtime-summary-header">
         <div>
           <h3>Agent Runtime 摘要</h3>
-          <p>这里展示历史响应中已保存的运行摘要；Trace 明细查询留给 Day116 的时间线能力。</p>
+          <p>这里展示历史响应中已保存的运行摘要；如存在 trace_id，可在页面 Trace 面板查看完整时间线。</p>
         </div>
         {traceId ? <span className="trace-id-badge">trace_id: {traceId}</span> : null}
       </div>

@@ -4,6 +4,7 @@ import { queryAgent } from '../api/agent'
 import { AgentRuntimePanel } from '../components/AgentRuntimePanel'
 import { JsonDetails } from '../components/JsonDetails'
 import { KnowledgeAdvicePanel } from '../components/KnowledgeAdvicePanel'
+import { TraceTimeline } from '../components/TraceTimeline'
 import type {
   AgentMessage,
   AgentQueryResponse,
@@ -643,13 +644,11 @@ export function AgentPage() {
                     <span>target: {message.response.target_endpoint ?? '-'}</span>
                     <ParserSourceBadge source={message.response.parser_source} />
                     <span>conversation_id: {message.response.conversation_id ?? '-'}</span>
-                    {message.response.agent_runtime?.trace_id ? (
-                      <span>trace_id: {message.response.agent_runtime.trace_id}</span>
-                    ) : null}
                   </div>
 
                   <WarningPanel warnings={message.response.warnings} />
                   <FallbackPanel response={message.response} />
+                  <TraceTimeline traceId={message.response.agent_runtime?.trace_id} />
                   <AgentRuntimePanel response={message.response} />
 
                   <KnowledgeAdvicePanel details={getObjectDetails(message.response.composed?.details)} />

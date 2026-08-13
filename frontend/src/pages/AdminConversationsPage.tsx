@@ -7,6 +7,7 @@ import {
   AgentRuntimeSummary,
 } from '../components/AgentRuntimeSummary'
 import { JsonDetails } from '../components/JsonDetails'
+import { TraceTimeline } from '../components/TraceTimeline'
 import { getTraceIdFromResponse } from '../utils/agentRuntime'
 import type {
   AdminConversationDetail,
@@ -234,11 +235,7 @@ export function AdminConversationsPage() {
                 <span>target: {selected.target_endpoint ?? '-'}</span>
                 <span>trace_id: {selectedTraceId || '-'}</span>
               </div>
-              {selectedTraceId ? (
-                <div className="trace-placeholder">
-                  Trace 明细查询入口已保留：{selectedTraceId}。当前页面展示 runtime 摘要，完整时间线由 Day116 TraceTimeline 接入。
-                </div>
-              ) : null}
+              <TraceTimeline traceId={selectedTraceId} />
               <div className="message-query">
                 <span>用户输入</span>
                 <p>{selected.query}</p>

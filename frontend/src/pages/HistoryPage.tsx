@@ -11,6 +11,7 @@ import {
 } from '../components/AgentRuntimeSummary'
 import { JsonDetails } from '../components/JsonDetails'
 import { KnowledgeAdvicePanel } from '../components/KnowledgeAdvicePanel'
+import { TraceTimeline } from '../components/TraceTimeline'
 import { getTraceIdFromResponse } from '../utils/agentRuntime'
 import type {
   ConversationDetailResponse,
@@ -256,11 +257,7 @@ export function HistoryPage() {
                 <span>parser_source: {selectedConversation.parser_source ?? '-'}</span>
                 <span>trace_id: {selectedTraceId || '-'}</span>
               </div>
-              {selectedTraceId ? (
-                <div className="trace-placeholder">
-                  Trace 明细查询入口已保留：{selectedTraceId}。当前页面只展示摘要，时间线查询由 Day116 TraceTimeline 接入。
-                </div>
-              ) : null}
+              <TraceTimeline traceId={selectedTraceId} />
               <AgentRuntimeSummary response={selectedConversation.response} compact />
               <JsonDetails title="parsed" data={selectedConversation.parsed ?? {}} />
               <JsonDetails title="response" data={selectedConversation.response ?? {}} />
