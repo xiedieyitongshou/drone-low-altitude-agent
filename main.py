@@ -4,7 +4,7 @@ from contextlib import suppress
 from datetime import datetime
 
 import uvicorn
-from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi import Depends, FastAPI, HTTPException, Query, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -42,6 +42,12 @@ from app.schemas import (
     OrchestratorResponse,
     RecommendationRequest,
     RecommendationResponse,
+    RuleItemCreate,
+    RuleItemUpdate,
+    RuleSetCreate,
+    RuleSetListResponse,
+    RuleSetResponse,
+    RuleSetUpdate,
     TokenResponse,
     UnifiedBusinessResponse,
     UserLoginRequest,
@@ -72,6 +78,20 @@ from app.services.nl_parser import NaturalLanguageParseError, parse_natural_lang
 from app.services.profile_memory import get_user_profile_response, update_user_profile
 from app.services.recommendation_executor import build_recommendation_response
 from app.services.response_composer import compose_history_response
+from app.services.rule_set_management import (
+    RuleSetActivationError,
+    RuleSetNotFoundError,
+    RuleSetPermissionError,
+    activate_rule_set,
+    add_rule_item,
+    create_rule_set,
+    delete_rule_item,
+    get_rule_set,
+    list_rule_sets,
+    update_rule_item,
+    update_rule_set,
+    validate_and_store_rule_set,
+)
 from app.services.session_memory import build_session_context, session_memory_store
 from app.services.task_orchestrator import orchestrate_task_query
 from app.services.weather import (
@@ -291,6 +311,147 @@ def login_user(payload: UserLoginRequest, db: Session = Depends(get_db)) -> Toke
 @app.get("/auth/me", response_model=UserResponse)
 def get_me(current_user: User = Depends(get_current_user)) -> UserResponse:
     return to_user_response(current_user)
+
+
+def handle_rule_set_error(exc: Exception) -> None:
+    if isinstance(exc, RuleSetNotFoundError):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    if isinstance(exc, RuleSetPermissionError):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)) from exc
+    if isinstance(exc, RuleSetActivationError):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"message": str(exc), "errors": exc.errors},
+        ) from exc
+    raise exc
+
+
+@app.get("/rule-sets", response_model=RuleSetListResponse)
+def list_my_rule_sets(
+    page: int = 1,
+    page_size: int = 20,
+    rule_status: str | None = Query(default=None, alias="status"),
+    visibility: str | None = None,
+    task_type: str | None = None,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> RuleSetListResponse:
+    return list_rule_sets(
+        db=db,
+        current_user=current_user,
+        page=page,
+        page_size=page_size,
+        status=rule_status,
+        visibility=visibility,
+        task_type=task_type,
+    )
+
+
+@app.post("/rule-sets", response_model=RuleSetResponse, status_code=status.HTTP_201_CREATED)
+def create_my_rule_set(
+    payload: RuleSetCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> RuleSetResponse:
+    try:
+        return create_rule_set(db=db, current_user=current_user, payload=payload)
+    except Exception as exc:
+        handle_rule_set_error(exc)
+
+
+@app.get("/rule-sets/{rule_set_id}", response_model=RuleSetResponse)
+def get_my_rule_set(
+    rule_set_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> RuleSetResponse:
+    try:
+        return get_rule_set(db=db, current_user=current_user, rule_set_id=rule_set_id)
+    except Exception as exc:
+        handle_rule_set_error(exc)
+
+
+@app.patch("/rule-sets/{rule_set_id}", response_model=RuleSetResponse)
+def patch_my_rule_set(
+    rule_set_id: str,
+    payload: RuleSetUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> RuleSetResponse:
+    try:
+        return update_rule_set(db=db, current_user=current_user, rule_set_id=rule_set_id, payload=payload)
+    except Exception as exc:
+        handle_rule_set_error(exc)
+
+
+@app.post("/rule-sets/{rule_set_id}/items", response_model=RuleSetResponse, status_code=status.HTTP_201_CREATED)
+def create_rule_set_item(
+    rule_set_id: str,
+    payload: RuleItemCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> RuleSetResponse:
+    try:
+        return add_rule_item(db=db, current_user=current_user, rule_set_id=rule_set_id, payload=payload)
+    except Exception as exc:
+        handle_rule_set_error(exc)
+
+
+@app.patch("/rule-sets/{rule_set_id}/items/{item_id}", response_model=RuleSetResponse)
+def patch_rule_set_item(
+    rule_set_id: str,
+    item_id: str,
+    payload: RuleItemUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> RuleSetResponse:
+    try:
+        return update_rule_item(
+            db=db,
+            current_user=current_user,
+            rule_set_id=rule_set_id,
+            item_id=item_id,
+            payload=payload,
+        )
+    except Exception as exc:
+        handle_rule_set_error(exc)
+
+
+@app.delete("/rule-sets/{rule_set_id}/items/{item_id}", response_model=RuleSetResponse)
+def remove_rule_set_item(
+    rule_set_id: str,
+    item_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> RuleSetResponse:
+    try:
+        return delete_rule_item(db=db, current_user=current_user, rule_set_id=rule_set_id, item_id=item_id)
+    except Exception as exc:
+        handle_rule_set_error(exc)
+
+
+@app.post("/rule-sets/{rule_set_id}/validate", response_model=RuleSetResponse)
+def validate_my_rule_set(
+    rule_set_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> RuleSetResponse:
+    try:
+        return validate_and_store_rule_set(db=db, current_user=current_user, rule_set_id=rule_set_id)
+    except Exception as exc:
+        handle_rule_set_error(exc)
+
+
+@app.post("/rule-sets/{rule_set_id}/activate", response_model=RuleSetResponse)
+def activate_my_rule_set(
+    rule_set_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> RuleSetResponse:
+    try:
+        return activate_rule_set(db=db, current_user=current_user, rule_set_id=rule_set_id)
+    except Exception as exc:
+        handle_rule_set_error(exc)
 
 
 @app.get("/admin/users", response_model=AdminUserListResponse)

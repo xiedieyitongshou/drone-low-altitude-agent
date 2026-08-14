@@ -21,6 +21,7 @@ from app.schemas.assessment import (
     CruiseAssessmentResponse,
     HourlyAssessment,
     InputValidationPreviewResponse,
+    RuleHit,
     RiskDecision,
 )
 from app.schemas.auth import TokenResponse, UserLoginRequest, UserRegisterRequest, UserResponse
@@ -55,6 +56,20 @@ from app.schemas.recommendation import (
     RecommendationWindow,
 )
 from app.schemas.request import CruiseEvaluateRequest
+from app.schemas.rule_set import (
+    RuleDecision,
+    RuleItemCreate,
+    RuleItemResponse,
+    RuleItemUpdate,
+    RuleOperator,
+    RuleSetCreate,
+    RuleSetListResponse,
+    RuleSetResponse,
+    RuleSetSource,
+    RuleSetStatus,
+    RuleSetUpdate,
+    RuleSetVisibility,
+)
 from app.schemas.trace import AgentTraceDetailResponse, AgentTraceEventResponse
 from app.schemas.warning import WarningData, WarningDataBundle
 from app.schemas.weather import LocationInfo, WeatherDataBundle, WeatherHourData
@@ -115,6 +130,19 @@ __all__ = [
     'RecommendationStrategy',
     'RecommendationWindow',
     'RetrievedKnowledgeSnippet',
+    'RuleDecision',
+    'RuleItemCreate',
+    'RuleItemResponse',
+    'RuleItemUpdate',
+    'RuleOperator',
+    'RuleSetCreate',
+    'RuleSetListResponse',
+    'RuleSetResponse',
+    'RuleSetSource',
+    'RuleSetStatus',
+    'RuleSetUpdate',
+    'RuleSetVisibility',
+    'RuleHit',
     'RiskDecision',
     'UnifiedBusinessResponse',
     'UserLoginRequest',

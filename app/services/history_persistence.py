@@ -2,6 +2,7 @@ from uuid import uuid4
 
 from sqlalchemy.orm import Session
 
+from app.rules.mission_profiles import get_mission_rule_profile
 from app.db.models import (
     CruiseAssessment,
     CruiseHourlyAssessment,
@@ -121,12 +122,20 @@ def _persist_cruise_evaluation(
             )
         )
 
+    rule_snapshot = _build_system_rule_snapshot(payload.task_type)
+    rule_set_id = getattr(payload, "rule_set_id", None) or str(rule_snapshot["rule_set_id"])
+    rule_set_version = getattr(payload, "rule_set_version", None) or int(rule_snapshot["rule_set_version"])
+
     assessment = CruiseAssessment(
         request_id=request_id,
         location_id=location.id,
         allow_cruise=artifacts.response.advice.allow_cruise,
         overall_decision=artifacts.response.advice.overall_decision,
         summary_risk_factors_json=list(artifacts.response.advice.summary_risk_factors),
+        rule_set_id=rule_set_id,
+        rule_set_version=rule_set_version,
+        rule_snapshot_json=rule_snapshot,
+        rule_hits_json=[hit.model_dump(mode="json") for hit in artifacts.response.advice.rule_hits],
     )
     session.add(assessment)
     session.flush()
@@ -138,6 +147,7 @@ def _persist_cruise_evaluation(
                 fx_time=item.fx_time,
                 decision=item.decision,
                 risk_factors_json=list(item.risk_factors),
+                rule_hits_json=[hit.model_dump(mode="json") for hit in item.rule_hits],
                 weather_snapshot_id=weather_snapshot_by_fx_time.get(item.fx_time),
             )
         )
@@ -170,3 +180,29 @@ def _get_or_create_location(*, session: Session, artifacts: CruiseEvaluationArti
     session.add(location)
     session.flush()
     return location
+
+
+def _build_system_rule_snapshot(task_type: str) -> dict[str, object]:
+    profile = get_mission_rule_profile(task_type)
+    return {
+        "rule_set_id": f"system_default:{profile.task_type}",
+        "rule_set_version": 1,
+        "source": "system_default",
+        "task_type": profile.task_type,
+        "display_name": profile.display_name,
+        "description": profile.description,
+        "hourly": _serialize_profile_section(profile.hourly),
+        "warning": _serialize_profile_section(profile.warning),
+    }
+
+
+def _serialize_profile_section(section: object) -> dict[str, object]:
+    return {key: _json_safe_rule_value(value) for key, value in section.__dict__.items()}
+
+
+def _json_safe_rule_value(value: object) -> object:
+    if isinstance(value, frozenset):
+        return sorted(value)
+    if isinstance(value, set):
+        return sorted(value)
+    return value

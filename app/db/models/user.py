@@ -24,3 +24,4 @@ class User(Base):
     profile: Mapped["UserProfile | None"] = relationship(back_populates="user", uselist=False)
     conversations: Mapped[list["ConversationRecord"]] = relationship(back_populates="user")
     sessions: Mapped[list["SessionRecord"]] = relationship(back_populates="user")
+    rule_sets: Mapped[list["RuleSet"]] = relationship(back_populates="owner")

@@ -48,6 +48,14 @@ class RuleEngineTestCase(unittest.TestCase):
         self.assertFalse(result.allow_cruise)
         self.assertIn("天气为雷阵雨", result.hourly_assessment[0].risk_factors)
         self.assertIn("降水概率高", result.hourly_assessment[0].risk_factors)
+        self.assertEqual(result.hourly_assessment[0].rule_hits[0].metric, "weather_text")
+        self.assertEqual(result.hourly_assessment[0].rule_hits[0].fx_time, "2026-07-05T06:00:00+08:00")
+        self.assertEqual(result.hourly_assessment[0].rule_hits[0].operator, "in")
+        self.assertEqual(result.hourly_assessment[0].rule_hits[0].actual_value, "雷阵雨")
+        self.assertEqual(result.hourly_assessment[0].rule_hits[0].decision, RiskDecision.PROHIBITED)
+        self.assertEqual(result.hourly_assessment[0].rule_hits[0].label, "天气为雷阵雨")
+        self.assertEqual(result.hourly_assessment[0].rule_hits[0].risk_tag, "severe_weather")
+        self.assertEqual(result.rule_hits, result.hourly_assessment[0].rule_hits)
 
     def test_weather_rule_marks_caution(self) -> None:
         result = assess_cruise_window(
@@ -69,6 +77,13 @@ class RuleEngineTestCase(unittest.TestCase):
         self.assertIn("天气为阴", result.hourly_assessment[0].risk_factors)
         self.assertIn("存在轻中度降水", result.hourly_assessment[0].risk_factors)
         self.assertIn("降水概率中等", result.hourly_assessment[0].risk_factors)
+        precip_hit = next(hit for hit in result.hourly_assessment[0].rule_hits if hit.metric == "precip")
+        self.assertEqual(precip_hit.operator, "range")
+        self.assertEqual(precip_hit.actual_value, 0.1)
+        self.assertEqual(precip_hit.threshold, [0.0, 0.3])
+        self.assertEqual(precip_hit.unit, "mm")
+        self.assertEqual(precip_hit.decision, RiskDecision.CAUTION)
+        self.assertEqual(precip_hit.label, "存在轻中度降水")
 
     def test_warning_adjustment_yellow_upgrades_suitable_to_caution(self) -> None:
         result = assess_cruise_window(
@@ -89,6 +104,14 @@ class RuleEngineTestCase(unittest.TestCase):
         self.assertEqual(result.overall_decision, RiskDecision.CAUTION)
         self.assertEqual(result.hourly_assessment[0].decision, RiskDecision.CAUTION)
         self.assertIn("高风险预警：雷电yellow", result.hourly_assessment[0].risk_factors)
+        warning_hit = result.hourly_assessment[0].rule_hits[0]
+        self.assertEqual(warning_hit.metric, "warning_type")
+        self.assertEqual(warning_hit.fx_time, "2026-07-05T08:00:00+08:00")
+        self.assertEqual(warning_hit.operator, "in")
+        self.assertEqual(warning_hit.actual_value, "雷电")
+        self.assertEqual(warning_hit.decision, RiskDecision.CAUTION)
+        self.assertEqual(warning_hit.label, "高风险预警：雷电yellow")
+        self.assertEqual(warning_hit.risk_tag, "weather_warning")
 
     def test_warning_adjustment_orange_forces_prohibited(self) -> None:
         result = assess_cruise_window(
@@ -109,6 +132,7 @@ class RuleEngineTestCase(unittest.TestCase):
         self.assertEqual(result.overall_decision, RiskDecision.PROHIBITED)
         self.assertEqual(result.hourly_assessment[0].decision, RiskDecision.PROHIBITED)
         self.assertIn("高风险预警：雷电orange", result.hourly_assessment[0].risk_factors)
+        self.assertEqual(result.hourly_assessment[0].rule_hits[0].decision, RiskDecision.PROHIBITED)
 
     def test_non_high_risk_warning_does_not_change_result(self) -> None:
         result = assess_cruise_window(
@@ -128,6 +152,7 @@ class RuleEngineTestCase(unittest.TestCase):
 
         self.assertEqual(result.overall_decision, RiskDecision.SUITABLE)
         self.assertEqual(result.hourly_assessment[0].risk_factors, [])
+        self.assertEqual(result.hourly_assessment[0].rule_hits, [])
 
     def test_wind_scale_range_one_to_three_is_treated_as_level_two(self) -> None:
         result = assess_cruise_window(
@@ -226,6 +251,7 @@ class RuleEngineTestCase(unittest.TestCase):
         self.assertTrue(result.allow_cruise)
         self.assertEqual(result.hourly_assessment, [])
         self.assertEqual(result.summary_risk_factors, [])
+        self.assertEqual(result.rule_hits, [])
 
 
 if __name__ == "__main__":

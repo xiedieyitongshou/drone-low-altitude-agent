@@ -111,11 +111,16 @@ def get_cruise_history(request_id: str) -> CruiseHistoryResponse:
             allow_cruise=assessment.allow_cruise,
             overall_decision=assessment.overall_decision,
             summary_risk_factors=list(assessment.summary_risk_factors_json or []),
+            rule_set_id=assessment.rule_set_id,
+            rule_set_version=assessment.rule_set_version,
+            rule_snapshot=dict(assessment.rule_snapshot_json or {}),
+            rule_hits=list(assessment.rule_hits_json or []),
             hourly_assessment=[
                 HourlyAssessment(
                     fx_time=item.fx_time,
                     decision=item.decision,
                     risk_factors=list(item.risk_factors_json or []),
+                    rule_hits=list(item.rule_hits_json or []),
                     weather=_build_hourly_weather_dict(weather_by_id.get(item.weather_snapshot_id)),
                 )
                 for item in hourly_assessments
