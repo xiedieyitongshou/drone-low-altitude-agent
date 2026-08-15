@@ -1,4 +1,4 @@
-﻿import json
+import json
 import os
 from functools import lru_cache
 from pathlib import Path
@@ -18,6 +18,7 @@ from app.services.knowledge_retrievers import (
     build_knowledge_retrieval_query,
     create_default_knowledge_retriever,
 )
+from app.services.vector_knowledge_store import get_default_knowledge_path
 from app.services.rag_fallback import (
     build_rag_fallback_message,
     evaluate_rag_confidence,
@@ -53,7 +54,7 @@ WARNING_LEVEL_MAP = {
 
 @lru_cache(maxsize=1)
 def load_advice_library(path: str | None = None) -> KnowledgeAdviceLibrary:
-    knowledge_path = Path(path) if path else DEFAULT_KNOWLEDGE_PATH
+    knowledge_path = Path(path) if path else get_default_knowledge_path()
     payload = json.loads(knowledge_path.read_text(encoding="utf-8-sig"))
     return KnowledgeAdviceLibrary.model_validate(payload)
 
@@ -65,6 +66,16 @@ def infer_risk_tags(risk_reasons: list[str]) -> list[str]:
         if any(keyword in joined for keyword in keywords):
             inferred.append(risk_tag)
     return inferred
+
+
+def merge_risk_tags(*tag_groups: list[str]) -> list[str]:
+    merged: list[str] = []
+    for tags in tag_groups:
+        for tag in tags:
+            normalized = str(tag).strip()
+            if normalized and normalized not in merged:
+                merged.append(normalized)
+    return merged
 
 
 def normalize_warning_level(level: str | None) -> str | None:
@@ -177,7 +188,7 @@ def retrieve_knowledge_by_request(
     context = AdviceRetrievalContext(
         task_type=payload.task_type,
         overall_decision=payload.overall_decision,
-        risk_tags=infer_risk_tags(payload.risk_reasons),
+        risk_tags=merge_risk_tags(payload.risk_tags, infer_risk_tags(payload.risk_reasons)),
         warning_types=payload.warning_types,
         warning_levels=[level for level in (normalize_warning_level(item) for item in payload.warning_levels) if level],
         limit=payload.top_k,

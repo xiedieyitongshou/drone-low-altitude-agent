@@ -21,7 +21,7 @@ from app.services.knowledge_chunker import IndexedKnowledgeChunk, build_indexed_
 from app.services.knowledge_reranker import rule_rerank_boost
 from app.services.vector_knowledge_store import (
     DEFAULT_INDEX_DIR,
-    DEFAULT_KNOWLEDGE_PATH,
+    get_default_knowledge_path,
     is_document_applicable,
     is_document_visible,
 )
@@ -48,7 +48,7 @@ class LocalEmbeddingKnowledgeStore:
         min_score: float | None = None,
     ) -> None:
         self.provider = provider or MockEmbeddingProvider()
-        self.knowledge_path = knowledge_path or DEFAULT_KNOWLEDGE_PATH
+        self.knowledge_path = knowledge_path or get_default_knowledge_path()
         self.index_dir = index_dir or DEFAULT_INDEX_DIR
         self.index_dir.mkdir(parents=True, exist_ok=True)
         self.index_path = self.index_dir / "embedding_index.pkl"

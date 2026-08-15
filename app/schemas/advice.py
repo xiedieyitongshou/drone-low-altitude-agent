@@ -1,4 +1,4 @@
-﻿from enum import StrEnum
+from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
@@ -41,6 +41,7 @@ class KnowledgeVisibility(StrEnum):
 class KnowledgeReviewStatus(StrEnum):
     DRAFT = "draft"
     APPROVED = "approved"
+    REJECTED = "rejected"
     EXPIRED = "expired"
 
 
@@ -126,6 +127,7 @@ class KnowledgeRetrievalRequest(BaseModel):
     task_type: str
     overall_decision: str | None = None
     risk_reasons: list[str] = Field(default_factory=list)
+    risk_tags: list[str] = Field(default_factory=list)
     warning_types: list[str] = Field(default_factory=list)
     warning_levels: list[str] = Field(default_factory=list)
     region: str | None = None

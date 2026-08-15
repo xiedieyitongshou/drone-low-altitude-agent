@@ -32,6 +32,13 @@ from app.schemas import (
     ConversationListResponse,
     ErrorDetail,
     ErrorResponse,
+    KnowledgeDocumentCreate,
+    KnowledgeDocumentListResponse,
+    KnowledgeDocumentResponse,
+    KnowledgeDocumentStatusUpdate,
+    KnowledgeDocumentUpdate,
+    KnowledgeIndexJobListResponse,
+    KnowledgeIndexJobResponse,
     KnowledgeRetrievalRequest,
     KnowledgeRetrievalResponse,
     MultiLocationComparisonRequest,
@@ -58,6 +65,16 @@ from app.schemas import (
     WeatherFetchResponse,
 )
 from app.services.admin_conversation_audit import get_admin_conversation_detail, list_admin_conversations
+from app.services.admin_knowledge_management import (
+    KnowledgeDocumentNotFoundError,
+    create_knowledge_document,
+    get_knowledge_document,
+    list_knowledge_documents,
+    soft_delete_knowledge_document,
+    update_knowledge_document,
+    update_knowledge_document_status,
+)
+from app.services.admin_knowledge_indexing import list_knowledge_index_jobs, reindex_knowledge_documents
 from app.services.admin_stats import get_admin_task_stats
 from app.services.admin_user_management import (
     AdminUserNotFoundError,
@@ -452,6 +469,120 @@ def activate_my_rule_set(
         return activate_rule_set(db=db, current_user=current_user, rule_set_id=rule_set_id)
     except Exception as exc:
         handle_rule_set_error(exc)
+
+
+@app.get("/admin/knowledge", response_model=KnowledgeDocumentListResponse)
+def admin_list_knowledge(
+    page: int = 1,
+    page_size: int = 20,
+    keyword: str | None = None,
+    knowledge_type: str | None = None,
+    review_status: str | None = None,
+    is_active: bool | None = None,
+    visibility: str | None = None,
+    tenant_id: str | None = None,
+    city: str | None = None,
+    index_dirty: bool | None = None,
+    current_user: User = Depends(require_admin_user),
+    db: Session = Depends(get_db),
+) -> KnowledgeDocumentListResponse:
+    _ = current_user
+    return list_knowledge_documents(
+        db=db,
+        page=page,
+        page_size=page_size,
+        keyword=keyword,
+        knowledge_type=knowledge_type,
+        review_status=review_status,
+        is_active=is_active,
+        visibility=visibility,
+        tenant_id=tenant_id,
+        city=city,
+        index_dirty=index_dirty,
+    )
+
+
+@app.post("/admin/knowledge", response_model=KnowledgeDocumentResponse, status_code=status.HTTP_201_CREATED)
+def admin_create_knowledge(
+    payload: KnowledgeDocumentCreate,
+    current_user: User = Depends(require_admin_user),
+    db: Session = Depends(get_db),
+) -> KnowledgeDocumentResponse:
+    _ = current_user
+    return create_knowledge_document(db=db, payload=payload)
+
+
+@app.post("/admin/knowledge/reindex", response_model=KnowledgeIndexJobResponse)
+def admin_reindex_knowledge(
+    current_user: User = Depends(require_admin_user),
+    db: Session = Depends(get_db),
+) -> KnowledgeIndexJobResponse:
+    return reindex_knowledge_documents(db=db, triggered_by_user_id=current_user.id)
+
+
+@app.get("/admin/knowledge/index-jobs", response_model=KnowledgeIndexJobListResponse)
+def admin_list_knowledge_index_jobs(
+    page: int = 1,
+    page_size: int = 20,
+    current_user: User = Depends(require_admin_user),
+    db: Session = Depends(get_db),
+) -> KnowledgeIndexJobListResponse:
+    _ = current_user
+    return list_knowledge_index_jobs(db=db, page=page, page_size=page_size)
+
+
+@app.get("/admin/knowledge/{knowledge_id}", response_model=KnowledgeDocumentResponse)
+def admin_get_knowledge(
+    knowledge_id: str,
+    current_user: User = Depends(require_admin_user),
+    db: Session = Depends(get_db),
+) -> KnowledgeDocumentResponse:
+    _ = current_user
+    try:
+        return get_knowledge_document(db=db, knowledge_id=knowledge_id)
+    except KnowledgeDocumentNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+
+
+@app.patch("/admin/knowledge/{knowledge_id}", response_model=KnowledgeDocumentResponse)
+def admin_update_knowledge(
+    knowledge_id: str,
+    payload: KnowledgeDocumentUpdate,
+    current_user: User = Depends(require_admin_user),
+    db: Session = Depends(get_db),
+) -> KnowledgeDocumentResponse:
+    _ = current_user
+    try:
+        return update_knowledge_document(db=db, knowledge_id=knowledge_id, payload=payload)
+    except KnowledgeDocumentNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+
+
+@app.delete("/admin/knowledge/{knowledge_id}", response_model=KnowledgeDocumentResponse)
+def admin_delete_knowledge(
+    knowledge_id: str,
+    current_user: User = Depends(require_admin_user),
+    db: Session = Depends(get_db),
+) -> KnowledgeDocumentResponse:
+    _ = current_user
+    try:
+        return soft_delete_knowledge_document(db=db, knowledge_id=knowledge_id)
+    except KnowledgeDocumentNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+
+
+@app.post("/admin/knowledge/{knowledge_id}/status", response_model=KnowledgeDocumentResponse)
+def admin_update_knowledge_status(
+    knowledge_id: str,
+    payload: KnowledgeDocumentStatusUpdate,
+    current_user: User = Depends(require_admin_user),
+    db: Session = Depends(get_db),
+) -> KnowledgeDocumentResponse:
+    _ = current_user
+    try:
+        return update_knowledge_document_status(db=db, knowledge_id=knowledge_id, payload=payload)
+    except KnowledgeDocumentNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
 
 
 @app.get("/admin/users", response_model=AdminUserListResponse)

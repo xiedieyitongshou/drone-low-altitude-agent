@@ -1,4 +1,5 @@
-﻿import json
+import json
+import os
 import pickle
 from dataclasses import dataclass
 from datetime import date
@@ -18,8 +19,18 @@ from app.schemas.advice import (
 )
 
 
-DEFAULT_KNOWLEDGE_PATH = Path("data/knowledge/advice_rules.json")
 DEFAULT_INDEX_DIR = Path("data/knowledge/index")
+DEFAULT_KNOWLEDGE_PATH = Path("data/knowledge/advice_rules.json")
+DEFAULT_DB_KNOWLEDGE_PATH = DEFAULT_INDEX_DIR / "knowledge_documents_source.json"
+
+
+def get_default_knowledge_path() -> Path:
+    configured_path = os.getenv("KNOWLEDGE_SOURCE_PATH") or os.getenv("ADVICE_KNOWLEDGE_PATH")
+    if configured_path:
+        return Path(configured_path)
+    if DEFAULT_DB_KNOWLEDGE_PATH.exists():
+        return DEFAULT_DB_KNOWLEDGE_PATH
+    return DEFAULT_KNOWLEDGE_PATH
 
 
 @dataclass
@@ -36,7 +47,7 @@ class LocalVectorKnowledgeStore:
     """Lightweight local vector index based on TF-IDF for Day 30."""
 
     def __init__(self, *, knowledge_path: Path | None = None, index_dir: Path | None = None) -> None:
-        self.knowledge_path = knowledge_path or DEFAULT_KNOWLEDGE_PATH
+        self.knowledge_path = knowledge_path or get_default_knowledge_path()
         self.index_dir = index_dir or DEFAULT_INDEX_DIR
         self.index_dir.mkdir(parents=True, exist_ok=True)
         self.vectorizer_path = self.index_dir / "tfidf_vectorizer.pkl"
@@ -46,6 +57,14 @@ class LocalVectorKnowledgeStore:
     def build_index(self) -> int:
         library = self._load_library()
         documents = build_indexed_documents(library)
+        if not documents:
+            with self.vectorizer_path.open("wb") as file:
+                pickle.dump(None, file)
+            with self.matrix_path.open("wb") as file:
+                pickle.dump(None, file)
+            self.metadata_path.write_text("[]", encoding="utf-8")
+            return 0
+
         corpus = [doc.content for doc in documents]
         vectorizer = TfidfVectorizer(analyzer="char_wb", ngram_range=(2, 4), lowercase=False)
         matrix = vectorizer.fit_transform(corpus)
@@ -69,11 +88,15 @@ class LocalVectorKnowledgeStore:
         business_context: KnowledgeBusinessContext | None = None,
     ) -> list[RetrievedKnowledgeSnippet]:
         self._ensure_index()
+        documents = [IndexedKnowledgeDocument(**item) for item in json.loads(self.metadata_path.read_text(encoding="utf-8-sig"))]
+        if not documents:
+            return []
         with self.vectorizer_path.open("rb") as file:
             vectorizer: TfidfVectorizer = pickle.load(file)
         with self.matrix_path.open("rb") as file:
             matrix = pickle.load(file)
-        documents = [IndexedKnowledgeDocument(**item) for item in json.loads(self.metadata_path.read_text(encoding="utf-8-sig"))]
+        if vectorizer is None or matrix is None:
+            return []
 
         query_vector = vectorizer.transform([query_text])
         scores = cosine_similarity(query_vector, matrix).flatten()

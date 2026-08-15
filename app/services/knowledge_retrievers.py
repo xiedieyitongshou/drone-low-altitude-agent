@@ -44,7 +44,6 @@ class TfidfKnowledgeRetriever:
         access_context: KnowledgeAccessContext | None = None,
         business_context: KnowledgeBusinessContext | None = None,
     ) -> list[RetrievedKnowledgeSnippet]:
-        self.store.build_index()
         return self.store.retrieve(
             query,
             top_k=top_k,
@@ -66,7 +65,6 @@ class Bm25KnowledgeRetriever:
         access_context: KnowledgeAccessContext | None = None,
         business_context: KnowledgeBusinessContext | None = None,
     ) -> list[RetrievedKnowledgeSnippet]:
-        self.store.build_index()
         return self.store.retrieve(
             query,
             top_k=top_k,
@@ -88,7 +86,6 @@ class EmbeddingKnowledgeRetriever:
         access_context: KnowledgeAccessContext | None = None,
         business_context: KnowledgeBusinessContext | None = None,
     ) -> list[RetrievedKnowledgeSnippet]:
-        self.store.build_index()
         return self.store.retrieve(
             query,
             top_k=top_k,

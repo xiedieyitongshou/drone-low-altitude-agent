@@ -14,7 +14,7 @@ from app.schemas.advice import (
 )
 from app.services.vector_knowledge_store import (
     DEFAULT_INDEX_DIR,
-    DEFAULT_KNOWLEDGE_PATH,
+    get_default_knowledge_path,
     is_document_applicable,
     is_document_visible,
 )
@@ -40,7 +40,7 @@ class LocalBm25KnowledgeStore:
     """Lightweight BM25 index for keyword-oriented knowledge retrieval."""
 
     def __init__(self, *, knowledge_path: Path | None = None, index_dir: Path | None = None) -> None:
-        self.knowledge_path = knowledge_path or DEFAULT_KNOWLEDGE_PATH
+        self.knowledge_path = knowledge_path or get_default_knowledge_path()
         self.index_dir = index_dir or DEFAULT_INDEX_DIR
         self.index_dir.mkdir(parents=True, exist_ok=True)
         self.index_path = self.index_dir / "bm25_index.pkl"
@@ -206,4 +206,3 @@ def _bm25_score(
 
 def _is_chinese_char(value: str) -> bool:
     return len(value) == 1 and "\u4e00" <= value <= "\u9fff"
-

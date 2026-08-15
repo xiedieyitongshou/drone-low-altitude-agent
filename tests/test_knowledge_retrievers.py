@@ -80,6 +80,21 @@ def test_retrieve_knowledge_by_request_uses_injected_retriever_and_preserves_con
     assert "任务地区: 广东 深圳 深圳" in call["query"]
 
 
+def test_retrieve_knowledge_by_request_prefers_explicit_risk_tags_from_mapper():
+    retriever = FakeKnowledgeRetriever()
+    request = KnowledgeRetrievalRequest(
+        task_type="inspection",
+        overall_decision="慎飞",
+        risk_reasons=["规则命中但文本不包含可推断关键词"],
+        risk_tags=["high_wind", "weather_warning"],
+        top_k=3,
+    )
+
+    retrieve_knowledge_by_request(request, retriever=retriever)
+
+    assert retriever.calls[0]["business_context"].risk_tags == ["high_wind", "weather_warning"]
+
+
 def test_build_knowledge_retrieval_query_keeps_existing_query_format():
     query = build_knowledge_retrieval_query(
         task_type="inspection",

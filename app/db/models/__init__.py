@@ -1,5 +1,6 @@
 from app.db.models.agent_trace import AgentTraceEventRecord
 from app.db.models.assessment import CruiseAssessment, CruiseHourlyAssessment
+from app.db.models.knowledge import KnowledgeDocument, KnowledgeIndexJob
 from app.db.models.location import Location
 from app.db.models.memory import ConversationRecord, SessionRecord, UserProfile
 from app.db.models.rule_set import RuleItem, RuleSet
@@ -15,6 +16,8 @@ __all__ = [
     "CruiseAssessment",
     "CruiseHourlyAssessment",
     "AgentTraceEventRecord",
+    "KnowledgeDocument",
+    "KnowledgeIndexJob",
     "Location",
     "ConversationRecord",
     "SessionRecord",

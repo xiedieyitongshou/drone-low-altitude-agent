@@ -45,6 +45,16 @@ from app.schemas.composed_response import (
 from app.schemas.conversation import ConversationDetailResponse, ConversationListResponse, ConversationSummary
 from app.schemas.error import ErrorDetail, ErrorResponse
 from app.schemas.fetch import WeatherFetchErrorContext, WeatherFetchResponse
+from app.schemas.knowledge import (
+    KnowledgeDocumentCreate,
+    KnowledgeDocumentListResponse,
+    KnowledgeDocumentResponse,
+    KnowledgeDocumentStatusUpdate,
+    KnowledgeDocumentUpdate,
+    KnowledgeIndexJobListResponse,
+    KnowledgeIndexJobResponse,
+    KnowledgeIndexJobStatus,
+)
 from app.schemas.nl import NaturalLanguageParseRequest, NaturalLanguageParseResponse
 from app.schemas.orchestrator import OrchestratorRequest, OrchestratorResponse
 from app.schemas.profile import UserProfileResponse, UserProfileUpdateRequest
@@ -112,6 +122,14 @@ __all__ = [
     'KnowledgeAdviceItem',
     'KnowledgeAdviceLibrary',
     'KnowledgeBusinessContext',
+    'KnowledgeDocumentCreate',
+    'KnowledgeDocumentListResponse',
+    'KnowledgeDocumentResponse',
+    'KnowledgeDocumentStatusUpdate',
+    'KnowledgeDocumentUpdate',
+    'KnowledgeIndexJobListResponse',
+    'KnowledgeIndexJobResponse',
+    'KnowledgeIndexJobStatus',
     'KnowledgeReviewStatus',
     'KnowledgeRetrievalRequest',
     'KnowledgeRetrievalResponse',

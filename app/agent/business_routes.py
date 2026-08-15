@@ -67,6 +67,7 @@ BUSINESS_ROUTES: dict[str, AgentBusinessRoute] = {
             "query",
             "overall_decision",
             "risk_reasons",
+            "risk_tags",
             "warning_types",
             "warning_levels",
             "region",
