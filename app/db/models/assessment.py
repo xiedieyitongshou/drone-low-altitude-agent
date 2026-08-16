@@ -11,6 +11,7 @@ class CruiseAssessment(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     request_id: Mapped[str] = mapped_column(String(64), index=True)
+    task_id: Mapped[str | None] = mapped_column(String(64), ForeignKey("mission_tasks.id"), index=True, nullable=True)
     location_id: Mapped[int] = mapped_column(ForeignKey("locations.id"), index=True)
     allow_cruise: Mapped[bool] = mapped_column(Boolean)
     overall_decision: Mapped[str] = mapped_column(String(32), index=True)

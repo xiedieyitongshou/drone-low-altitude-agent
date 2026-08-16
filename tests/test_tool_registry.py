@@ -105,6 +105,11 @@ def test_default_registry_contains_day72_core_tools():
         "query_knowledge_snippets",
         "explain_risk_rules",
         "query_user_history",
+        "create_mission_task",
+        "evaluate_mission_task",
+        "recommend_mission_task_windows",
+        "select_mission_task_window",
+        "preflight_check_mission_task",
     }.issubset(names)
 
 

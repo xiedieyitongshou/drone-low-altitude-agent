@@ -41,6 +41,14 @@ from app.schemas import (
     KnowledgeIndexJobResponse,
     KnowledgeRetrievalRequest,
     KnowledgeRetrievalResponse,
+    MissionTaskCreateRequest,
+    MissionTaskDetailResponse,
+    MissionTaskListResponse,
+    MissionTaskRecommendRequest,
+    MissionTaskResponse,
+    MissionTaskSelectWindowRequest,
+    MissionTaskStatusUpdateRequest,
+    MissionTaskUpdateRequest,
     MultiLocationComparisonRequest,
     MultiLocationComparisonResponse,
     NaturalLanguageParseRequest,
@@ -91,6 +99,25 @@ from app.services.conversation_query import get_user_conversation_detail, list_u
 from app.services.cruise_evaluator import evaluate_cruise_request_with_artifacts
 from app.services.history_persistence import persist_cruise_evaluation
 from app.services.history_query import get_cruise_history
+from app.services.mission_task_execution import (
+    MissionTaskMissingFieldsError,
+    MissionTaskWindowSelectionError,
+    evaluate_mission_task,
+    preflight_check_mission_task,
+    recommend_mission_task_windows,
+    select_mission_task_window,
+)
+from app.services.mission_task_management import (
+    MissionTaskLockedError,
+    MissionTaskNotFoundError,
+    MissionTaskPermissionError,
+    create_mission_task,
+    get_mission_task_detail,
+    list_mission_tasks,
+    update_mission_task,
+    update_mission_task_status,
+)
+from app.services.mission_task_state import MissionTaskStatusTransitionError
 from app.services.nl_parser import NaturalLanguageParseError, parse_natural_language_request
 from app.services.profile_memory import get_user_profile_response, update_user_profile
 from app.services.recommendation_executor import build_recommendation_response
@@ -328,6 +355,154 @@ def login_user(payload: UserLoginRequest, db: Session = Depends(get_db)) -> Toke
 @app.get("/auth/me", response_model=UserResponse)
 def get_me(current_user: User = Depends(get_current_user)) -> UserResponse:
     return to_user_response(current_user)
+
+
+def handle_mission_task_error(exc: Exception) -> None:
+    if isinstance(exc, MissionTaskNotFoundError):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    if isinstance(exc, MissionTaskPermissionError):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)) from exc
+    if isinstance(exc, MissionTaskLockedError):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    if isinstance(exc, MissionTaskStatusTransitionError):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    if isinstance(exc, MissionTaskMissingFieldsError):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={"message": str(exc), "missing_fields": exc.missing_fields},
+        ) from exc
+    if isinstance(exc, MissionTaskWindowSelectionError):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    raise exc
+
+
+@app.get("/tasks", response_model=MissionTaskListResponse)
+def list_my_mission_tasks(
+    page: int = 1,
+    page_size: int = 20,
+    task_status: str | None = Query(default=None, alias="status"),
+    keyword: str | None = None,
+    user_id: str | None = None,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> MissionTaskListResponse:
+    try:
+        return list_mission_tasks(
+            db=db,
+            current_user=current_user,
+            page=page,
+            page_size=page_size,
+            status=task_status,
+            keyword=keyword,
+            user_id=user_id,
+        )
+    except Exception as exc:
+        handle_mission_task_error(exc)
+
+
+@app.post("/tasks", response_model=MissionTaskResponse, status_code=status.HTTP_201_CREATED)
+def create_my_mission_task(
+    payload: MissionTaskCreateRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> MissionTaskResponse:
+    try:
+        return create_mission_task(db=db, current_user=current_user, payload=payload)
+    except Exception as exc:
+        handle_mission_task_error(exc)
+
+
+@app.get("/tasks/{task_id}", response_model=MissionTaskDetailResponse)
+def get_my_mission_task(
+    task_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> MissionTaskDetailResponse:
+    try:
+        return get_mission_task_detail(db=db, current_user=current_user, task_id=task_id)
+    except Exception as exc:
+        handle_mission_task_error(exc)
+
+
+@app.patch("/tasks/{task_id}", response_model=MissionTaskResponse)
+def patch_my_mission_task(
+    task_id: str,
+    payload: MissionTaskUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> MissionTaskResponse:
+    try:
+        return update_mission_task(db=db, current_user=current_user, task_id=task_id, payload=payload)
+    except Exception as exc:
+        handle_mission_task_error(exc)
+
+
+@app.patch("/tasks/{task_id}/status", response_model=MissionTaskResponse)
+def patch_my_mission_task_status(
+    task_id: str,
+    payload: MissionTaskStatusUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> MissionTaskResponse:
+    try:
+        return update_mission_task_status(db=db, current_user=current_user, task_id=task_id, payload=payload)
+    except Exception as exc:
+        handle_mission_task_error(exc)
+
+
+@app.post("/tasks/{task_id}/evaluate", response_model=CruiseAssessmentResponse)
+def evaluate_my_mission_task(
+    task_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> CruiseAssessmentResponse:
+    try:
+        return evaluate_mission_task(db=db, current_user=current_user, task_id=task_id)
+    except Exception as exc:
+        handle_mission_task_error(exc)
+
+
+@app.post("/tasks/{task_id}/recommend", response_model=RecommendationResponse)
+def recommend_my_mission_task_windows(
+    task_id: str,
+    payload: MissionTaskRecommendRequest | None = None,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> RecommendationResponse:
+    try:
+        return recommend_mission_task_windows(
+            db=db,
+            current_user=current_user,
+            task_id=task_id,
+            payload=payload or MissionTaskRecommendRequest(),
+        )
+    except Exception as exc:
+        handle_mission_task_error(exc)
+
+
+@app.post("/tasks/{task_id}/select-window", response_model=MissionTaskResponse)
+def select_my_mission_task_window(
+    task_id: str,
+    payload: MissionTaskSelectWindowRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> MissionTaskResponse:
+    try:
+        return select_mission_task_window(db=db, current_user=current_user, task_id=task_id, payload=payload)
+    except Exception as exc:
+        handle_mission_task_error(exc)
+
+
+@app.post("/tasks/{task_id}/preflight-check", response_model=CruiseAssessmentResponse)
+def preflight_check_my_mission_task(
+    task_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> CruiseAssessmentResponse:
+    try:
+        return preflight_check_mission_task(db=db, current_user=current_user, task_id=task_id)
+    except Exception as exc:
+        handle_mission_task_error(exc)
 
 
 def handle_rule_set_error(exc: Exception) -> None:
@@ -800,9 +975,10 @@ def parse_natural_language(payload: NaturalLanguageParseRequest) -> NaturalLangu
 def orchestrate_task(
     payload: OrchestratorRequest,
     current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ) -> OrchestratorResponse:
     logger.info("Starting task orchestration")
-    result = orchestrate_task_query(payload.query, session_id=payload.session_id, user_id=current_user.id)
+    result = orchestrate_task_query(payload.query, session_id=payload.session_id, user_id=current_user.id, db=db)
     logger.info(
         "Task orchestration completed",
         extra={

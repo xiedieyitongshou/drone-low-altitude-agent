@@ -50,6 +50,11 @@ ERROR_CODE_FAILURE_TYPES: dict[str, ToolFailureType] = {
     "NaturalLanguageParseError": ToolFailureType.INVALID_INPUT,
     "RuntimeError": ToolFailureType.INTERNAL_ERROR,
     "ValueError": ToolFailureType.INVALID_INPUT,
+    "MissionTaskPermissionError": ToolFailureType.PERMISSION_DENIED,
+    "MissionTaskNotFoundError": ToolFailureType.NOT_FOUND,
+    "MissionTaskLockedError": ToolFailureType.PERMISSION_DENIED,
+    "MissionTaskMissingFieldsError": ToolFailureType.INVALID_INPUT,
+    "MissionTaskWindowSelectionError": ToolFailureType.INVALID_INPUT,
 }
 
 

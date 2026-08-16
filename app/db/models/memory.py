@@ -31,6 +31,7 @@ class ConversationRecord(Base):
     conversation_id: Mapped[str] = mapped_column(String(64), unique=True, index=True)
     session_id: Mapped[str | None] = mapped_column(String(128), index=True, nullable=True)
     user_id: Mapped[str] = mapped_column(String(64), ForeignKey("users.id"), index=True)
+    task_id: Mapped[str | None] = mapped_column(String(64), ForeignKey("mission_tasks.id"), index=True, nullable=True)
     query: Mapped[str] = mapped_column(Text)
     intent: Mapped[str | None] = mapped_column(String(64), index=True, nullable=True)
     target_endpoint: Mapped[str | None] = mapped_column(String(128), nullable=True)
@@ -44,6 +45,7 @@ class ConversationRecord(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     user: Mapped["User"] = relationship(back_populates="conversations")
+    mission_task: Mapped["MissionTask | None"] = relationship(back_populates="conversations")
 
 
 class SessionRecord(Base):

@@ -6,10 +6,14 @@ from pydantic import BaseModel, Field, ValidationError
 from sqlalchemy.orm import Session
 
 from app.db.session import SessionLocal
+from app.db.models import User
 from app.schemas import (
     CruiseEvaluateRequest,
     KnowledgeAccessContext,
     KnowledgeRetrievalRequest,
+    MissionTaskCreateRequest,
+    MissionTaskRecommendRequest,
+    MissionTaskSelectWindowRequest,
     MultiLocationComparisonRequest,
     RecommendationRequest,
 )
@@ -17,6 +21,7 @@ from app.services.advice_retriever import retrieve_knowledge_by_request
 from app.services.comparison import compare_locations
 from app.services.conversation_query import get_user_conversation_detail, list_user_conversations
 from app.services.cruise_evaluator import evaluate_cruise_request_with_artifacts
+from app.services.mission_task_management import create_mission_task
 from app.services.recommendation_executor import build_recommendation_response
 from app.services.risk_rule_explainer import explain_risk_rules
 
@@ -225,6 +230,61 @@ def create_default_tool_registry() -> ToolRegistry:
         ),
         _query_user_history,
     )
+    registry.register(
+        ToolSpec(
+            name="create_mission_task",
+            description="Create a low-altitude mission task for the current user.",
+            side_effect="write",
+            risk_level="medium",
+            input_schema_name="MissionTaskCreateToolInput",
+            output_schema_name="MissionTaskResponse",
+        ),
+        _create_mission_task,
+    )
+    registry.register(
+        ToolSpec(
+            name="evaluate_mission_task",
+            description="Evaluate weather and rule risk for an existing mission task.",
+            side_effect="write",
+            risk_level="high",
+            input_schema_name="MissionTaskActionToolInput",
+            output_schema_name="CruiseAssessmentResponse",
+        ),
+        _evaluate_mission_task,
+    )
+    registry.register(
+        ToolSpec(
+            name="recommend_mission_task_windows",
+            description="Recommend candidate execution windows for an existing mission task.",
+            side_effect="write",
+            risk_level="high",
+            input_schema_name="MissionTaskRecommendToolInput",
+            output_schema_name="RecommendationResponse",
+        ),
+        _recommend_mission_task_windows,
+    )
+    registry.register(
+        ToolSpec(
+            name="select_mission_task_window",
+            description="Select one recommended execution window for an existing mission task.",
+            side_effect="write",
+            risk_level="high",
+            input_schema_name="MissionTaskSelectWindowToolInput",
+            output_schema_name="MissionTaskResponse",
+        ),
+        _select_mission_task_window,
+    )
+    registry.register(
+        ToolSpec(
+            name="preflight_check_mission_task",
+            description="Recheck an existing mission task before execution with fresh weather and rules.",
+            side_effect="write",
+            risk_level="high",
+            input_schema_name="MissionTaskActionToolInput",
+            output_schema_name="CruiseAssessmentResponse",
+        ),
+        _preflight_check_mission_task,
+    )
     return registry
 
 
@@ -284,6 +344,105 @@ def _query_user_history_with_db(payload: dict[str, Any], context: ToolExecutionC
         intent=payload.get("intent"),
         parser_source=payload.get("parser_source"),
     )
+
+
+def _create_mission_task(payload: dict[str, Any], context: ToolExecutionContext) -> Any:
+    def call(db: Session) -> Any:
+        current_user = _get_current_tool_user(db, context)
+        request_payload = {
+            "title": payload.get("title") or payload.get("task_title"),
+            "purpose": payload.get("purpose"),
+            "location": payload.get("location"),
+            "date": payload.get("date"),
+            "start_time": payload.get("start_time"),
+            "end_time": payload.get("end_time"),
+            "task_type": payload.get("task_type"),
+            "candidate_locations": payload.get("candidate_locations") or [],
+            "profile_context": payload.get("profile_context") or {},
+            "metadata": payload.get("metadata") or {},
+        }
+        request = MissionTaskCreateRequest.model_validate(request_payload)
+        return create_mission_task(db=db, current_user=current_user, payload=request)
+
+    return _with_tool_db(context, call)
+
+
+def _evaluate_mission_task(payload: dict[str, Any], context: ToolExecutionContext) -> Any:
+    from app.services.mission_task_execution import evaluate_mission_task
+
+    return _call_task_action(payload, context, evaluate_mission_task)
+
+
+def _recommend_mission_task_windows(payload: dict[str, Any], context: ToolExecutionContext) -> Any:
+    from app.services.mission_task_execution import recommend_mission_task_windows
+
+    def call(db: Session) -> Any:
+        current_user = _get_current_tool_user(db, context)
+        task_id = _require_task_id(payload)
+        request = MissionTaskRecommendRequest.model_validate(
+            {
+                "scan_hours": payload.get("scan_hours") or 72,
+                "min_window_hours": payload.get("min_window_hours") or 2,
+            }
+        )
+        return recommend_mission_task_windows(db=db, current_user=current_user, task_id=task_id, payload=request)
+
+    return _with_tool_db(context, call)
+
+
+def _select_mission_task_window(payload: dict[str, Any], context: ToolExecutionContext) -> Any:
+    from app.services.mission_task_execution import select_mission_task_window
+
+    def call(db: Session) -> Any:
+        current_user = _get_current_tool_user(db, context)
+        task_id = _require_task_id(payload)
+        request = MissionTaskSelectWindowRequest.model_validate(
+            {
+                "rank": payload.get("rank") or payload.get("window_rank"),
+                "window": payload.get("window"),
+            }
+        )
+        return select_mission_task_window(db=db, current_user=current_user, task_id=task_id, payload=request)
+
+    return _with_tool_db(context, call)
+
+
+def _preflight_check_mission_task(payload: dict[str, Any], context: ToolExecutionContext) -> Any:
+    from app.services.mission_task_execution import preflight_check_mission_task
+
+    return _call_task_action(payload, context, preflight_check_mission_task)
+
+
+def _call_task_action(payload: dict[str, Any], context: ToolExecutionContext, handler: Callable[..., Any]) -> Any:
+    def call(db: Session) -> Any:
+        current_user = _get_current_tool_user(db, context)
+        return handler(db=db, current_user=current_user, task_id=_require_task_id(payload))
+
+    return _with_tool_db(context, call)
+
+
+def _with_tool_db(context: ToolExecutionContext, callback: Callable[[Session], Any]) -> Any:
+    if context.db is not None:
+        return callback(context.db)
+
+    with SessionLocal() as db:
+        return callback(db)
+
+
+def _get_current_tool_user(db: Session, context: ToolExecutionContext) -> User:
+    if not context.user_id:
+        raise PermissionError("authenticated user context is required")
+    user = db.get(User, str(context.user_id))
+    if user is None or not user.is_active:
+        raise PermissionError("authenticated user is not available")
+    return user
+
+
+def _require_task_id(payload: dict[str, Any]) -> str:
+    task_id = payload.get("task_id")
+    if not task_id:
+        raise ValueError("task_id is required")
+    return str(task_id)
 
 
 def _dump_tool_data(data: Any) -> Any:

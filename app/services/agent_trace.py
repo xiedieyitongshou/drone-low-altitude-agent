@@ -14,30 +14,38 @@ if TYPE_CHECKING:
     from app.agent.trace import TraceEvent
 
 
-def record_trace_event(event: TraceEvent, *, db: Session | None = None) -> int:
+def record_trace_event(event: TraceEvent, *, db: Session | None = None, task_id: str | None = None, commit: bool = True) -> int:
     if db is not None:
-        record = _add_trace_event(db, event)
-        db.commit()
-        db.refresh(record)
+        record = _add_trace_event(db, event, task_id=task_id)
+        if commit:
+            db.commit()
+            db.refresh(record)
         return record.id
 
     with SessionLocal() as session:
-        record = _add_trace_event(session, event)
+        record = _add_trace_event(session, event, task_id=task_id)
         session.commit()
         session.refresh(record)
         return record.id
 
 
-def record_trace_events(events: Iterable[TraceEvent], *, db: Session | None = None) -> list[int]:
+def record_trace_events(
+    events: Iterable[TraceEvent],
+    *,
+    db: Session | None = None,
+    task_id: str | None = None,
+    commit: bool = True,
+) -> list[int]:
     if db is not None:
-        records = [_add_trace_event(db, event) for event in events]
-        db.commit()
-        for record in records:
-            db.refresh(record)
+        records = [_add_trace_event(db, event, task_id=task_id) for event in events]
+        if commit:
+            db.commit()
+            for record in records:
+                db.refresh(record)
         return [record.id for record in records]
 
     with SessionLocal() as session:
-        records = [_add_trace_event(session, event) for event in events]
+        records = [_add_trace_event(session, event, task_id=task_id) for event in events]
         session.commit()
         for record in records:
             session.refresh(record)
@@ -64,12 +72,13 @@ def get_user_trace_detail(
     return _build_trace_detail(records)
 
 
-def _add_trace_event(db: Session, event: TraceEvent) -> AgentTraceEventRecord:
+def _add_trace_event(db: Session, event: TraceEvent, *, task_id: str | None = None) -> AgentTraceEventRecord:
     record = AgentTraceEventRecord(
         trace_id=event.trace_id,
         run_id=event.run_id,
         user_id=event.user_id,
         session_id=event.session_id,
+        task_id=task_id,
         event_type=event.event_type.value,
         step_index=event.step_index,
         status_before=event.status_before,

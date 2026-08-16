@@ -1,4 +1,4 @@
-﻿import re
+import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
@@ -22,6 +22,11 @@ HISTORY_HINTS = ["历史", "历史记录", "上次", "之前", "以前", "查记
 KNOWLEDGE_HINTS = ["政策", "规则", "规定", "知识库", "注意事项", "建议", "怎么处理", "SOP", "标准流程", "FAQ", "风险说明"]
 EXPLAIN_HINTS = ["为什么", "为何", "依据是什么", "规则来源", "判定依据", "为什么判", "为什么不能飞", "为什么高风险", "解释一下"]
 MODIFY_HINTS = ["改成", "换成", "改为", "换为", "还是", "不变"]
+CREATE_TASK_HINTS = ["创建任务", "新建任务", "建个任务", "建立任务", "创建一个", "新建一个"]
+EVALUATE_TASK_HINTS = ["评估这个任务", "评估一下这个任务", "评估任务", "这个任务能飞吗", "这个任务可以飞吗"]
+RECOMMEND_TASK_HINTS = ["推荐窗口", "推荐一下窗口", "推荐任务窗口", "给这个任务推荐", "这个任务什么时候"]
+SELECT_WINDOW_HINTS = ["选第一个窗口", "选择第一个窗口", "就选第一个", "选第二个窗口", "选择第二个窗口", "就选第二个", "选第三个窗口", "选择第三个窗口", "就选第三个"]
+PREFLIGHT_TASK_HINTS = ["执行前复核", "执行前检查", "起飞前复核", "起飞前检查", "再检查一次", "再复核一次"]
 TIME_RANGE_PATTERNS = [
     re.compile(
         r"(?P<start_period>凌晨|早上|上午|中午|下午|晚上)?\s*"
@@ -36,6 +41,7 @@ DATE_PATTERN = re.compile(
     r"\d{4}[-/年]\d{1,2}[-/月]\d{1,2}[日号]?|\d{1,2}月\d{1,2}[日号]?)"
 )
 SCAN_HOURS_PATTERN = re.compile(r"(?:未来|接下来)(?P<hours>\d{1,3})小时")
+TASK_ID_PATTERN = re.compile(r"(?:task[_-]?)?(?P<task_id>[0-9a-fA-F]{8,64})")
 WEEKDAY_MAP = {"一": 0, "二": 1, "三": 2, "四": 3, "五": 4, "六": 5, "日": 6, "天": 6}
 PERIOD_WINDOWS = {
     "凌晨": ("00:00", "06:00"),
@@ -96,6 +102,21 @@ def parse_natural_language_request(
 
     if not any([locations, date_text, start_time, end_time, scan_hours, task_type_detected, _has_intent_hint(text)]):
         raise NaturalLanguageParseError("未检测到可解析的任务要素", missing_fields=["location", "date"])
+
+    mission_result = _parse_mission_task_intent(
+        query=query,
+        text=text,
+        context=context,
+        locations=locations,
+        date_text=date_text,
+        start_time=start_time,
+        end_time=end_time,
+        task_type=task_type,
+        task_type_detected=task_type_detected,
+        scan_hours=scan_hours,
+    )
+    if mission_result is not None:
+        return mission_result
 
     intent = _detect_intent(
         text=text,
@@ -340,6 +361,141 @@ def _detect_intent(
     raise NaturalLanguageParseError("未识别到明确任务意图", missing_fields=["intent"])
 
 
+def _parse_mission_task_intent(
+    *,
+    query: str,
+    text: str,
+    context: dict[str, object],
+    locations: list[str],
+    date_text: str | None,
+    start_time: str | None,
+    end_time: str | None,
+    task_type: str,
+    task_type_detected: bool,
+    scan_hours: int | None,
+) -> ParsedTaskRequest | None:
+    intent = _detect_mission_task_intent(text)
+    if intent is None:
+        return None
+
+    if intent == "create_task":
+        parsed = {
+            "task_title": _detect_task_title(query, locations, task_type),
+            "location": locations[0] if locations else None,
+            "date": date_text,
+            "start_time": start_time,
+            "end_time": end_time,
+            "task_type": task_type if task_type_detected else _context_value(context, "task_type", "cruise"),
+            "purpose": query,
+            "candidate_locations": locations[1:] if len(locations) > 1 else [],
+        }
+        missing_fields = [
+            field
+            for field in ["location", "date", "start_time", "end_time", "task_type"]
+            if parsed.get(field) in (None, "", [])
+        ]
+        if missing_fields:
+            raise NaturalLanguageParseError(
+                "任务创建请求信息不完整",
+                missing_fields=missing_fields,
+                intent="create_task",
+                target_endpoint="/tasks",
+                parsed={key: value for key, value in parsed.items() if value not in (None, "", [])},
+            )
+        return ParsedTaskRequest(
+            intent="create_task",
+            target_endpoint="/tasks",
+            parsed={key: value for key, value in parsed.items() if value not in (None, "", [])},
+            warnings=[],
+        )
+
+    task_id, used_context = _resolve_task_id(text, context)
+    window_rank = _detect_window_rank(text)
+    parsed = {
+        "task_id": task_id,
+        "task_title": _context_value(context, "current_task_title") or _context_value(context, "task_title"),
+        "purpose": query,
+    }
+    if intent == "recommend_task":
+        parsed["scan_hours"] = scan_hours or _context_value(context, "scan_hours", 72)
+        parsed["min_window_hours"] = _context_value(context, "min_window_hours", 2)
+    if intent == "select_task_window":
+        parsed["window_rank"] = window_rank or _context_value(context, "selected_window_rank")
+
+    required_fields = ["task_id", "window_rank"] if intent == "select_task_window" else ["task_id"]
+    missing_fields = [field for field in required_fields if parsed.get(field) in (None, "", [])]
+    target_endpoint = {
+        "evaluate_task": "/tasks/{task_id}/evaluate",
+        "recommend_task": "/tasks/{task_id}/recommend",
+        "select_task_window": "/tasks/{task_id}/select-window",
+        "preflight_check_task": "/tasks/{task_id}/preflight-check",
+    }[intent]
+    if missing_fields:
+        raise NaturalLanguageParseError(
+            "任务单操作缺少任务上下文",
+            missing_fields=missing_fields,
+            intent=intent,
+            target_endpoint=target_endpoint,
+            parsed={key: value for key, value in parsed.items() if value not in (None, "", [])},
+        )
+    return ParsedTaskRequest(
+        intent=intent,
+        target_endpoint=target_endpoint,
+        parsed={key: value for key, value in parsed.items() if value not in (None, "", [])},
+        warnings=[],
+        context_used=used_context,
+    )
+
+
+def _detect_mission_task_intent(text: str) -> str | None:
+    if any(word in text for word in CREATE_TASK_HINTS):
+        return "create_task"
+    if any(word in text for word in PREFLIGHT_TASK_HINTS):
+        return "preflight_check_task"
+    if any(word in text for word in SELECT_WINDOW_HINTS):
+        return "select_task_window"
+    if any(word in text for word in RECOMMEND_TASK_HINTS):
+        return "recommend_task"
+    if any(word in text for word in EVALUATE_TASK_HINTS):
+        return "evaluate_task"
+    return None
+
+
+def _resolve_task_id(text: str, context: dict[str, object]) -> tuple[str | None, bool]:
+    match = TASK_ID_PATTERN.search(text)
+    if match:
+        return match.group("task_id"), False
+    for key in ["current_task_id", "task_id"]:
+        value = context.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip(), True
+    return None, False
+
+
+def _detect_window_rank(text: str) -> int | None:
+    rank_words = {
+        "第一个": 1,
+        "第一": 1,
+        "1": 1,
+        "第二个": 2,
+        "第二": 2,
+        "2": 2,
+        "第三个": 3,
+        "第三": 3,
+        "3": 3,
+    }
+    for word, rank in rank_words.items():
+        if word in text:
+            return rank
+    return None
+
+
+def _detect_task_title(query: str, locations: list[str], task_type: str) -> str:
+    if locations:
+        return f"{locations[0]}{task_type}任务"
+    return query[:80]
+
+
 def _detect_scan_hours(text: str) -> int | None:
     match = SCAN_HOURS_PATTERN.search(text)
     if not match:
@@ -501,6 +657,31 @@ def _detect_locations(text: str) -> list[str]:
         "查一下",
         "查询",
         "一下",
+        "创建任务",
+        "新建任务",
+        "建个任务",
+        "建立任务",
+        "创建一个",
+        "新建一个",
+        "评估这个任务",
+        "评估任务",
+        "推荐窗口",
+        "选择窗口",
+        "执行前复核",
+        "执行前检查",
+        "起飞前复核",
+        "起飞前检查",
+        "再检查一次",
+        "再复核一次",
+        "选第一个窗口",
+        "选择第一个窗口",
+        "就选第一个",
+        "选第二个窗口",
+        "选择第二个窗口",
+        "就选第二个",
+        "选第三个窗口",
+        "选择第三个窗口",
+        "就选第三个",
         "有哪些",
         "有什么",
         "要注意",
@@ -551,7 +732,22 @@ def _is_valid_location(value: str) -> bool:
 
 
 def _has_intent_hint(text: str) -> bool:
-    return any(word in text for word in COMPARE_HINTS + RECOMMEND_HINTS + EVALUATE_HINTS + HISTORY_HINTS + KNOWLEDGE_HINTS + EXPLAIN_HINTS)
+    return any(
+        word in text
+        for word in (
+            COMPARE_HINTS
+            + RECOMMEND_HINTS
+            + EVALUATE_HINTS
+            + HISTORY_HINTS
+            + KNOWLEDGE_HINTS
+            + EXPLAIN_HINTS
+            + CREATE_TASK_HINTS
+            + EVALUATE_TASK_HINTS
+            + RECOMMEND_TASK_HINTS
+            + SELECT_WINDOW_HINTS
+            + PREFLIGHT_TASK_HINTS
+        )
+    )
 
 
 def _detect_history_keyword(query: str, locations: list[str]) -> str | None:

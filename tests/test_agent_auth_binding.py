@@ -1,5 +1,5 @@
 from collections.abc import Generator
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -88,6 +88,7 @@ def test_agent_query_uses_token_user_not_payload_user_id() -> None:
             "深圳明天下午可以飞吗",
             session_id="session-1",
             user_id="real-user-id",
+            db=ANY,
         )
     finally:
         app.dependency_overrides.clear()

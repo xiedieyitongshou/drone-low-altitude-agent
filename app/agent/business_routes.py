@@ -9,6 +9,7 @@ class AgentRouteKind(StrEnum):
     KNOWLEDGE_QUERY = "knowledge_query"
     HISTORY_QUERY = "history_query"
     EXPLANATION_QUERY = "explanation_query"
+    MISSION_TASK = "mission_task"
 
 
 class AgentBusinessRoute(BaseModel):
@@ -102,6 +103,56 @@ INTENT_ALIASES: dict[str, str] = {
     "rag": "knowledge",
     "query_history": "history",
 }
+
+BUSINESS_ROUTES.update(
+    {
+        "create_task": AgentBusinessRoute(
+            intent="create_task",
+            route_kind=AgentRouteKind.MISSION_TASK,
+            target_endpoint="/tasks",
+            primary_tool="create_mission_task",
+            required_fields=["task_title", "location", "date", "start_time", "end_time", "task_type"],
+            optional_fields=["purpose", "candidate_locations", "profile_context", "metadata"],
+            description="Create a mission task owned by the current user.",
+        ),
+        "evaluate_task": AgentBusinessRoute(
+            intent="evaluate_task",
+            route_kind=AgentRouteKind.MISSION_TASK,
+            target_endpoint="/tasks/{task_id}/evaluate",
+            primary_tool="evaluate_mission_task",
+            required_fields=["task_id"],
+            optional_fields=["task_title", "purpose"],
+            description="Evaluate an existing mission task through the task service.",
+        ),
+        "recommend_task": AgentBusinessRoute(
+            intent="recommend_task",
+            route_kind=AgentRouteKind.MISSION_TASK,
+            target_endpoint="/tasks/{task_id}/recommend",
+            primary_tool="recommend_mission_task_windows",
+            required_fields=["task_id"],
+            optional_fields=["task_title", "purpose", "scan_hours", "min_window_hours"],
+            description="Recommend execution windows for an existing mission task.",
+        ),
+        "select_task_window": AgentBusinessRoute(
+            intent="select_task_window",
+            route_kind=AgentRouteKind.MISSION_TASK,
+            target_endpoint="/tasks/{task_id}/select-window",
+            primary_tool="select_mission_task_window",
+            required_fields=["task_id", "window_rank"],
+            optional_fields=["task_title", "purpose"],
+            description="Select a recommended execution window for an existing mission task.",
+        ),
+        "preflight_check_task": AgentBusinessRoute(
+            intent="preflight_check_task",
+            route_kind=AgentRouteKind.MISSION_TASK,
+            target_endpoint="/tasks/{task_id}/preflight-check",
+            primary_tool="preflight_check_mission_task",
+            required_fields=["task_id"],
+            optional_fields=["task_title", "purpose"],
+            description="Run an execution-time weather and rule recheck for an existing mission task.",
+        ),
+    }
+)
 
 
 def normalize_business_intent(intent: str | None) -> str | None:

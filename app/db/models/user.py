@@ -25,3 +25,4 @@ class User(Base):
     conversations: Mapped[list["ConversationRecord"]] = relationship(back_populates="user")
     sessions: Mapped[list["SessionRecord"]] = relationship(back_populates="user")
     rule_sets: Mapped[list["RuleSet"]] = relationship(back_populates="owner")
+    mission_tasks: Mapped[list["MissionTask"]] = relationship(back_populates="user")

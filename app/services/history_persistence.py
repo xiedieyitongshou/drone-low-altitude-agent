@@ -20,10 +20,19 @@ def persist_cruise_evaluation(
     *,
     payload,
     artifacts: CruiseEvaluationArtifacts,
+    task_id: str | None = None,
+    request_type: str = "evaluate",
 ) -> str:
     request_id = uuid4().hex
     with SessionLocal() as session:
-        _persist_cruise_evaluation(session=session, request_id=request_id, payload=payload, artifacts=artifacts)
+        _persist_cruise_evaluation(
+            session=session,
+            request_id=request_id,
+            payload=payload,
+            artifacts=artifacts,
+            task_id=task_id,
+            request_type=request_type,
+        )
         session.commit()
     return request_id
 
@@ -34,10 +43,13 @@ def _persist_cruise_evaluation(
     request_id: str,
     payload,
     artifacts: CruiseEvaluationArtifacts,
+    task_id: str | None = None,
+    request_type: str = "evaluate",
 ) -> None:
     task_request = TaskRequest(
         request_id=request_id,
-        request_type="evaluate",
+        task_id=task_id,
+        request_type=request_type,
         location_text=payload.location,
         task_date=payload.normalized_date,
         start_time=payload.normalized_start_time,
@@ -128,6 +140,7 @@ def _persist_cruise_evaluation(
 
     assessment = CruiseAssessment(
         request_id=request_id,
+        task_id=task_id,
         location_id=location.id,
         allow_cruise=artifacts.response.advice.allow_cruise,
         overall_decision=artifacts.response.advice.overall_decision,

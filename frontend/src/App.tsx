@@ -11,6 +11,7 @@ import { EvaluatePage } from './pages/EvaluatePage'
 import { HealthPage } from './pages/HealthPage'
 import { HistoryPage } from './pages/HistoryPage'
 import { LoginPage } from './pages/LoginPage'
+import { MissionTasksPage } from './pages/MissionTasksPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { RecommendPage } from './pages/RecommendPage'
 import { RegisterPage } from './pages/RegisterPage'
@@ -19,9 +20,10 @@ import './App.css'
 const navItems = [
   { to: '/', label: '系统状态' },
   { to: '/agent', label: 'Agent 对话' },
-  { to: '/evaluate', label: '单地点评估' },
+  { to: '/evaluate', label: '单点评估' },
   { to: '/recommend', label: '推荐窗口' },
   { to: '/compare', label: '多地点比选' },
+  { to: '/tasks', label: '任务单' },
   { to: '/history', label: '历史记录' },
   { to: '/profile', label: 'Profile 设置' },
 ]
@@ -92,7 +94,7 @@ function App() {
             <div>
               <span>认证状态</span>
               <strong>未登录</strong>
-              <small>登录后可使用 Agent、历史记录和 Profile 能力。</small>
+              <small>登录后可使用 Agent、任务单、历史记录和 Profile 能力。</small>
             </div>
           )}
         </div>
@@ -132,6 +134,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ComparePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tasks"
+            element={
+              <ProtectedRoute>
+                <MissionTasksPage />
               </ProtectedRoute>
             }
           />

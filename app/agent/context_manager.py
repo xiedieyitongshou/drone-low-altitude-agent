@@ -7,6 +7,7 @@ from app.services.profile_memory import ProfileMemory
 
 PENDING_TASK_KEY = "pending_task"
 COMPUTE_PROFILE_FIELDS = {"task_type"}
+MISSION_TASK_PROFILE_FIELDS = {"task_type", "start_time", "end_time"}
 QUERY_PROFILE_FIELDS = {"location", "city", "task_type"}
 DEFAULT_FIELDS_BY_INTENT: dict[str, dict[str, object]] = {
     "history": {"mode": "list", "page": 1, "page_size": 10},
@@ -154,6 +155,8 @@ def _profile_context_for_intent(
     route_kind: AgentRouteKind | None,
 ) -> dict[str, object]:
     raw_context = profile.to_context()
+    if route_kind == AgentRouteKind.MISSION_TASK:
+        return {field_name: value for field_name, value in raw_context.items() if field_name in MISSION_TASK_PROFILE_FIELDS}
     if route_kind in {AgentRouteKind.KNOWLEDGE_QUERY, AgentRouteKind.HISTORY_QUERY, AgentRouteKind.EXPLANATION_QUERY}:
         context = {field_name: value for field_name, value in raw_context.items() if field_name in QUERY_PROFILE_FIELDS}
         if "location" in context:

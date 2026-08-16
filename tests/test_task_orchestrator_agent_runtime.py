@@ -43,7 +43,7 @@ def test_agent_runtime_default_mode_uses_legacy_workflow():
 
     assert response.message == "legacy ok"
     assert response.agent_runtime is None
-    legacy_mock.assert_called_once_with("评估深圳", session_id="session-1", user_id="user-1")
+    legacy_mock.assert_called_once_with("评估深圳", session_id="session-1", user_id="user-1", db=None)
 
 
 def test_agent_runtime_unknown_mode_falls_back_to_legacy_workflow():
@@ -55,7 +55,7 @@ def test_agent_runtime_unknown_mode_falls_back_to_legacy_workflow():
 
     assert response.message == "legacy ok"
     assert response.agent_runtime is None
-    legacy_mock.assert_called_once_with("评估深圳", session_id="session-1", user_id="user-1")
+    legacy_mock.assert_called_once_with("评估深圳", session_id="session-1", user_id="user-1", db=None)
 
 
 def test_agent_runtime_loop_mode_returns_compatible_response():

@@ -55,6 +55,18 @@ from app.schemas.knowledge import (
     KnowledgeIndexJobResponse,
     KnowledgeIndexJobStatus,
 )
+from app.schemas.mission_task import (
+    MissionTaskCreateRequest,
+    MissionTaskDetailResponse,
+    MissionTaskListResponse,
+    MissionTaskRecommendRequest,
+    MissionTaskResponse,
+    MissionTaskSelectWindowRequest,
+    MissionTaskStatus,
+    MissionTaskStatusUpdateRequest,
+    MissionTaskUpdateRequest,
+    SelectedMissionWindow,
+)
 from app.schemas.nl import NaturalLanguageParseRequest, NaturalLanguageParseResponse
 from app.schemas.orchestrator import OrchestratorRequest, OrchestratorResponse
 from app.schemas.profile import UserProfileResponse, UserProfileUpdateRequest
@@ -138,6 +150,15 @@ __all__ = [
     'LocationInfo',
     'MultiLocationComparisonRequest',
     'MultiLocationComparisonResponse',
+    'MissionTaskCreateRequest',
+    'MissionTaskDetailResponse',
+    'MissionTaskListResponse',
+    'MissionTaskRecommendRequest',
+    'MissionTaskResponse',
+    'MissionTaskSelectWindowRequest',
+    'MissionTaskStatus',
+    'MissionTaskStatusUpdateRequest',
+    'MissionTaskUpdateRequest',
     'NaturalLanguageParseRequest',
     'NaturalLanguageParseResponse',
     'OrchestratorRequest',
@@ -161,6 +182,7 @@ __all__ = [
     'RuleSetUpdate',
     'RuleSetVisibility',
     'RuleHit',
+    'SelectedMissionWindow',
     'RiskDecision',
     'UnifiedBusinessResponse',
     'UserLoginRequest',

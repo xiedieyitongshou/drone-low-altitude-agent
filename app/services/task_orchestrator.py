@@ -1,5 +1,8 @@
 import logging
 import os
+from typing import Any
+
+from sqlalchemy.orm import Session
 
 from app.schemas import (
     CruiseEvaluateRequest,
@@ -7,7 +10,15 @@ from app.schemas import (
     OrchestratorResponse,
     RecommendationRequest,
 )
-from app.agent import AgentLoop, ToolExecutionContext, initialize_state, mark_parsed
+from app.agent import (
+    AgentLoop,
+    ToolExecutionContext,
+    build_route_tool_input,
+    default_tool_registry,
+    get_business_route,
+    initialize_state,
+    mark_parsed,
+)
 from app.agent.context_manager import (
     build_agent_parser_context,
     build_pending_task_context,
@@ -44,6 +55,7 @@ def orchestrate_task_query(
     *,
     session_id: str | None = None,
     user_id: str | None = None,
+    db: Session | None = None,
 ) -> OrchestratorResponse:
     mode = os.getenv("AGENT_RUNTIME_MODE", "legacy").strip().lower()
     if mode not in SUPPORTED_AGENT_RUNTIME_MODES:
@@ -52,11 +64,11 @@ def orchestrate_task_query(
 
     if mode == "loop":
         try:
-            return _orchestrate_task_query_with_agent_loop(query, session_id=session_id, user_id=user_id)
+            return _orchestrate_task_query_with_agent_loop(query, session_id=session_id, user_id=user_id, db=db)
         except Exception as exc:
             logger.warning("Agent runtime failed, fallback to legacy workflow: %s", exc)
             return _with_agent_runtime_debug(
-                _orchestrate_task_query_legacy(query, session_id=session_id, user_id=user_id),
+                _orchestrate_task_query_legacy(query, session_id=session_id, user_id=user_id, db=db),
                 {
                     "mode": "loop",
                     "fallback_used": True,
@@ -64,7 +76,7 @@ def orchestrate_task_query(
                 },
             )
 
-    return _orchestrate_task_query_legacy(query, session_id=session_id, user_id=user_id)
+    return _orchestrate_task_query_legacy(query, session_id=session_id, user_id=user_id, db=db)
 
 
 def _orchestrate_task_query_legacy(
@@ -72,6 +84,7 @@ def _orchestrate_task_query_legacy(
     *,
     session_id: str | None = None,
     user_id: str | None = None,
+    db: Session | None = None,
 ) -> OrchestratorResponse:
     """Single natural-language entrypoint for evaluate/recommend/compare flows."""
 
@@ -169,6 +182,15 @@ def _orchestrate_task_query_legacy(
                 ),
             )
 
+        if _is_mission_task_intent(parsed_result.intent):
+            return _handle_legacy_mission_task_intent(
+                query=query,
+                session_id=session_id,
+                user_id=normalized_user_id,
+                parsed_result=parsed_result,
+                db=db,
+            )
+
         return _with_conversation_record(
             query=query,
             user_id=normalized_user_id,
@@ -214,6 +236,7 @@ def _orchestrate_task_query_with_agent_loop(
     *,
     session_id: str | None = None,
     user_id: str | None = None,
+    db: Session | None = None,
 ) -> OrchestratorResponse:
     normalized_user_id = normalize_user_id(user_id)
     profile = get_or_create_user_profile(normalized_user_id)
@@ -251,11 +274,11 @@ def _orchestrate_task_query_with_agent_loop(
     )
 
     def fallback_handler(_, __):
-        return _orchestrate_task_query_legacy(query, session_id=session_id, user_id=user_id)
+        return _orchestrate_task_query_legacy(query, session_id=session_id, user_id=user_id, db=db)
 
     loop_result = AgentLoop(fallback_handler=fallback_handler).run(
         state,
-        context=ToolExecutionContext(user_id=normalized_user_id, tenant_id="public", role="user"),
+        context=ToolExecutionContext(user_id=normalized_user_id, tenant_id="public", role="user", db=db),
     )
     if isinstance(loop_result.fallback_result, OrchestratorResponse):
         return _with_agent_runtime_debug(
@@ -287,6 +310,7 @@ def _orchestrate_task_query_with_agent_loop(
             agent_runtime=_build_agent_runtime_debug(loop_result, mode="loop", context_result=context_result),
         )
 
+    session_parsed = _enrich_task_session_context(parsed_result.parsed, loop_result)
     response = OrchestratorResponse(
         success=loop_result.success,
         session_id=session_id,
@@ -294,7 +318,7 @@ def _orchestrate_task_query_with_agent_loop(
         intent=parsed_result.intent,
         target_endpoint=parsed_result.target_endpoint,
         parser_source=parsed_result.parser_source,
-        parsed=parsed_result.parsed,
+        parsed=session_parsed,
         context_used=parsed_result.context_used,
         warnings=parsed_result.warnings,
         message=_build_agent_loop_message(loop_result),
@@ -302,8 +326,8 @@ def _orchestrate_task_query_with_agent_loop(
         fallback=None if loop_result.success else loop_result.output if isinstance(loop_result.output, dict) else {"errors": loop_result.final_state.errors},
         agent_runtime=_build_agent_runtime_debug(loop_result, mode="loop", context_result=context_result),
     )
-    _save_context(session_id, normalized_user_id, parsed_result.intent, parsed_result.parsed, query=query)
-    update_profile_from_parsed(user_id=normalized_user_id, parsed=parsed_result.parsed)
+    _save_context(session_id, normalized_user_id, parsed_result.intent, session_parsed, query=query)
+    update_profile_from_parsed(user_id=normalized_user_id, parsed=session_parsed)
     return _with_conversation_record(query=query, user_id=normalized_user_id, response=response)
 
 
@@ -346,6 +370,55 @@ def _handle_agent_parse_error(
             message=loop_result.message,
             fallback=loop_result.output if isinstance(loop_result.output, dict) else {"missing_fields": error.missing_fields},
             agent_runtime=_build_agent_runtime_debug(loop_result, mode="loop"),
+        ),
+    )
+
+
+def _handle_legacy_mission_task_intent(
+    *,
+    query: str,
+    session_id: str | None,
+    user_id: str,
+    parsed_result: ParsedTaskRequest,
+    db: Session | None,
+) -> OrchestratorResponse:
+    route = get_business_route(parsed_result.intent)
+    if route is None:
+        raise ValueError(f"unsupported mission task intent: {parsed_result.intent}")
+
+    tool_input = build_route_tool_input(route, parsed_result.parsed)
+    tool_result = default_tool_registry.call(
+        route.primary_tool,
+        tool_input,
+        context=ToolExecutionContext(user_id=user_id, tenant_id="public", role="user", db=db),
+    )
+    session_parsed = _enrich_task_session_context_from_results(parsed_result.parsed, [tool_result])
+    if tool_result.success:
+        _save_context(session_id, user_id, parsed_result.intent, session_parsed, query=query)
+        update_profile_from_parsed(user_id=user_id, parsed=session_parsed)
+
+    return _with_conversation_record(
+        query=query,
+        user_id=user_id,
+        response=OrchestratorResponse(
+            success=tool_result.success,
+            session_id=session_id,
+            user_id=user_id,
+            intent=parsed_result.intent,
+            target_endpoint=parsed_result.target_endpoint,
+            parser_source=parsed_result.parser_source,
+            parsed=session_parsed,
+            context_used=parsed_result.context_used,
+            warnings=parsed_result.warnings,
+            message=_build_legacy_mission_task_message(parsed_result.intent, tool_result.success),
+            result=tool_result.data if tool_result.success else None,
+            fallback=None
+            if tool_result.success
+            else {
+                "tool_name": tool_result.tool_name,
+                "error_code": tool_result.error_code,
+                "message": tool_result.message,
+            },
         ),
     )
 
@@ -407,6 +480,69 @@ def _build_agent_runtime_debug(loop_result, *, mode: str, context_result=None) -
             "invalidated_tools": context_result.invalidated_tools,
         }
     return debug
+
+
+def _enrich_task_session_context(parsed: dict[str, object], loop_result) -> dict[str, object]:
+    return _enrich_task_session_context_from_results(parsed, loop_result.final_state.tool_results.values())
+
+
+def _enrich_task_session_context_from_results(parsed: dict[str, object], tool_results) -> dict[str, object]:
+    enriched = dict(parsed)
+    for result in tool_results:
+        if not result.success or not isinstance(result.data, dict):
+            continue
+        data: dict[str, Any] = result.data
+        if result.tool_name in {"create_mission_task", "select_mission_task_window"}:
+            task_id = data.get("id")
+            if task_id:
+                enriched["task_id"] = task_id
+                enriched["current_task_id"] = task_id
+            title = data.get("title")
+            if title:
+                enriched["task_title"] = title
+                enriched["current_task_title"] = title
+            selected_window = data.get("selected_window")
+            if isinstance(selected_window, dict) and selected_window.get("rank"):
+                enriched["selected_window_rank"] = selected_window["rank"]
+        if result.tool_name == "recommend_mission_task_windows":
+            recommendation = data.get("recommendation")
+            if isinstance(recommendation, dict):
+                windows = recommendation.get("recommended_windows")
+                if isinstance(windows, list):
+                    enriched["last_recommended_windows"] = windows
+            request = data.get("request")
+            if isinstance(request, dict) and request.get("task_id"):
+                enriched["task_id"] = request["task_id"]
+                enriched["current_task_id"] = request["task_id"]
+        if result.tool_name in {"evaluate_mission_task", "preflight_check_mission_task"}:
+            request = data.get("request")
+            if isinstance(request, dict) and request.get("task_id"):
+                enriched["task_id"] = request["task_id"]
+                enriched["current_task_id"] = request["task_id"]
+    return enriched
+
+
+def _is_mission_task_intent(intent: str | None) -> bool:
+    return intent in {
+        "create_task",
+        "evaluate_task",
+        "recommend_task",
+        "select_task_window",
+        "preflight_check_task",
+    }
+
+
+def _build_legacy_mission_task_message(intent: str, success: bool) -> str:
+    if not success:
+        return "任务单工具调用失败。"
+    messages = {
+        "create_task": "已创建任务单。",
+        "evaluate_task": "已完成任务单风险评估。",
+        "recommend_task": "已完成任务单窗口推荐。",
+        "select_task_window": "已选择任务单执行窗口。",
+        "preflight_check_task": "已完成任务单执行前复核。",
+    }
+    return messages.get(intent, "已完成任务单操作。")
 
 
 def _with_agent_runtime_debug(response: OrchestratorResponse, debug: dict[str, object]) -> OrchestratorResponse:

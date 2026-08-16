@@ -223,6 +223,10 @@ def build_session_context(intent: str, parsed: dict[str, object]) -> dict[str, o
         "location": parsed.get("location"),
         "locations": parsed.get("locations"),
         "scan_hours": parsed.get("scan_hours"),
+        "current_task_id": parsed.get("task_id") or parsed.get("current_task_id"),
+        "current_task_title": parsed.get("task_title") or parsed.get("current_task_title"),
+        "last_recommended_windows": parsed.get("last_recommended_windows"),
+        "selected_window_rank": parsed.get("window_rank") or parsed.get("selected_window_rank"),
     }
     return {key: value for key, value in context.items() if value not in (None, [], "")}
 

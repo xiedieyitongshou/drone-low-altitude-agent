@@ -14,12 +14,15 @@ from app.utils.timezone import now_in_app_timezone
 
 ALLOWED_MISSING_FIELDS = {
     "intent",
+    "task_id",
+    "task_title",
     "location",
     "locations",
     "date",
     "start_time",
     "end_time",
     "task_type",
+    "window_rank",
 }
 PERIOD_WINDOWS = {
     "\u51cc\u6668": ("00:00", "06:00"),
@@ -33,6 +36,11 @@ REQUIRED_FIELDS_BY_INTENT = {
     "evaluate": {"location", "date", "start_time", "end_time"},
     "recommend": {"location", "date"},
     "compare": {"locations", "date", "start_time", "end_time"},
+    "create_task": {"location", "date", "start_time", "end_time", "task_type"},
+    "evaluate_task": {"task_id"},
+    "recommend_task": {"task_id"},
+    "select_task_window": {"task_id", "window_rank"},
+    "preflight_check_task": {"task_id"},
 }
 
 TASK_PARSER_SYSTEM_PROMPT = (
@@ -44,7 +52,7 @@ TASK_PARSER_SYSTEM_PROMPT = (
     "\u89c4\u5219\uff1a\n"
     "1. \u53ea\u8f93\u51fa\u4e00\u4e2a JSON object\uff0c\u4e0d\u8981\u8f93\u51fa Markdown\u3001"
     "\u89e3\u91ca\u3001\u4ee3\u7801\u5757\u6216\u989d\u5916\u6587\u672c\u3002\n"
-    "2. intent \u53ea\u80fd\u662f evaluate\u3001recommend\u3001compare\u3002\n"
+    "2. intent \u53ea\u80fd\u662f evaluate\u3001recommend\u3001compare\u3001create_task\u3001evaluate_task\u3001recommend_task\u3001select_task_window\u3001preflight_check_task\u3002\n"
     "3. task_type \u53ea\u80fd\u662f cruise\u3001inspection\u3001hover\u3001survey\u3002\n"
     "4. date \u5fc5\u987b\u8f93\u51fa YYYY-MM-DD\u3002\n"
     "5. start_time \u548c end_time \u5fc5\u987b\u8f93\u51fa HH:MM\uff0cend_time \u5141\u8bb8 24:00\u3002\n"
@@ -71,17 +79,18 @@ TASK_PARSER_SYSTEM_PROMPT = (
     "- \u6d4b\u7ed8\u3001\u4f4e\u7a7a\u6d4b\u7ed8\u3001\u822a\u6d4b\u3001"
     "\u5efa\u6a21 -> survey\n\n"
     "\u8f93\u51fa\u5b57\u6bb5\u53ea\u5141\u8bb8\u5305\u542b\uff1a\n"
-    "intent, location, locations, date, start_time, end_time, task_type, "
-    "scan_hours, min_window_hours, top_k, comparison_mode, purpose, "
+    "intent, task_id, task_title, location, locations, candidate_locations, date, start_time, end_time, task_type, "
+    "scan_hours, min_window_hours, top_k, comparison_mode, purpose, window_rank, "
     "missing_fields, confidence"
 )
 TASK_PARSER_RETRY_SYSTEM_PROMPT = (
     "Return only valid JSON. No analysis. No markdown. No reasoning text.\n"
-    "Schema: {\"intent\":\"evaluate|recommend|compare\",\"location\":\"string\","
-    "\"locations\":[\"string\"],\"date\":\"YYYY-MM-DD\",\"start_time\":\"HH:MM\","
+    "Schema: {\"intent\":\"evaluate|recommend|compare|create_task|evaluate_task|recommend_task|select_task_window|preflight_check_task\","
+    "\"task_id\":\"string\",\"task_title\":\"string\",\"location\":\"string\","
+    "\"locations\":[\"string\"],\"candidate_locations\":[\"string\"],\"date\":\"YYYY-MM-DD\",\"start_time\":\"HH:MM\","
     "\"end_time\":\"HH:MM\",\"task_type\":\"cruise|inspection|hover|survey\","
     "\"scan_hours\":72,\"min_window_hours\":2,\"top_k\":3,"
-    "\"comparison_mode\":\"default\",\"purpose\":\"string\",\"missing_fields\":[]}.\n"
+    "\"comparison_mode\":\"default\",\"purpose\":\"string\",\"window_rank\":1,\"missing_fields\":[]}.\n"
     "For recommend, start_time and end_time are not required. For compare, infer afternoon as 13:00-18:00."
 )
 
@@ -89,9 +98,21 @@ TASK_PARSER_RETRY_SYSTEM_PROMPT = (
 class LLMParsedTaskPayload(BaseModel):
     model_config = ConfigDict(extra="ignore", str_strip_whitespace=True)
 
-    intent: Literal["evaluate", "recommend", "compare"] | None = None
+    intent: Literal[
+        "evaluate",
+        "recommend",
+        "compare",
+        "create_task",
+        "evaluate_task",
+        "recommend_task",
+        "select_task_window",
+        "preflight_check_task",
+    ] | None = None
+    task_id: str | None = None
+    task_title: str | None = None
     location: str | None = None
     locations: list[str] = Field(default_factory=list)
+    candidate_locations: list[str] = Field(default_factory=list)
     date: str | None = None
     start_time: str | None = None
     end_time: str | None = None
@@ -101,6 +122,7 @@ class LLMParsedTaskPayload(BaseModel):
     top_k: int | None = None
     comparison_mode: str | None = "default"
     purpose: str | None = None
+    window_rank: int | None = None
     missing_fields: list[str] = Field(default_factory=list)
     confidence: float | None = None
 
@@ -252,6 +274,33 @@ def build_parsed_task_request_from_llm_payload(
     task_type, used_task_context = _merge_value(payload.task_type, context, "task_type", default="cruise")
     context_used = context_used or used_task_context
 
+    if payload.intent in {
+        "create_task",
+        "evaluate_task",
+        "recommend_task",
+        "select_task_window",
+        "preflight_check_task",
+    }:
+        parsed, target_endpoint, used_task_context = _build_mission_task_payload(payload, query=query, context=context)
+        context_used = context_used or used_task_context
+        missing_fields = [field for field in REQUIRED_FIELDS_BY_INTENT[payload.intent] if parsed.get(field) in (None, "", [])]
+        if missing_fields:
+            raise NaturalLanguageParseError(
+                "LLM parsed mission task request is incomplete",
+                missing_fields=missing_fields,
+                intent=payload.intent,
+                target_endpoint=target_endpoint,
+                parsed=parsed,
+            )
+        return ParsedTaskRequest(
+            intent=payload.intent,
+            target_endpoint=target_endpoint,
+            parsed=parsed,
+            warnings=_missing_field_warnings(payload.intent, payload.missing_fields),
+            context_used=context_used,
+            parser_source="llm",
+        )
+
     if payload.intent == "evaluate":
         location, used_location_context = _merge_value(payload.location, context, "location")
         task_date, used_date_context = _merge_value(payload.date, context, "date")
@@ -355,6 +404,69 @@ def build_parsed_task_request_from_llm_payload(
         context_used=context_used,
         parser_source="llm",
     )
+
+
+def _build_mission_task_payload(
+    payload: LLMParsedTaskPayload,
+    *,
+    query: str,
+    context: dict[str, object],
+) -> tuple[dict[str, object], str, bool]:
+    current_task_id, used_task_id_context = _merge_value(
+        payload.task_id,
+        context,
+        "current_task_id",
+    )
+    if not current_task_id:
+        current_task_id, used_legacy_task_id_context = _merge_value(payload.task_id, context, "task_id")
+        used_task_id_context = used_task_id_context or used_legacy_task_id_context
+    current_task_title, used_title_context = _merge_value(payload.task_title, context, "current_task_title")
+    if not current_task_title:
+        current_task_title, used_legacy_title_context = _merge_value(payload.task_title, context, "task_title")
+        used_title_context = used_title_context or used_legacy_title_context
+    task_type, used_task_type_context = _merge_value(payload.task_type, context, "task_type", default="cruise")
+    context_used = used_task_id_context or used_title_context or used_task_type_context
+
+    if payload.intent == "create_task":
+        parsed = {
+            "task_title": payload.task_title or current_task_title or _default_task_title(payload, query=query),
+            "location": payload.location,
+            "date": payload.date,
+            "start_time": payload.start_time,
+            "end_time": payload.end_time,
+            "task_type": task_type,
+            "purpose": payload.purpose or query,
+            "candidate_locations": list(payload.candidate_locations or payload.locations or []),
+        }
+        target_endpoint = "/tasks"
+    elif payload.intent == "select_task_window":
+        parsed = {
+            "task_id": current_task_id,
+            "task_title": current_task_title,
+            "window_rank": payload.window_rank,
+            "purpose": payload.purpose or query,
+        }
+        target_endpoint = "/tasks/{task_id}/select-window"
+    else:
+        parsed = {
+            "task_id": current_task_id,
+            "task_title": current_task_title,
+            "purpose": payload.purpose or query,
+        }
+        suffix = {
+            "evaluate_task": "evaluate",
+            "recommend_task": "recommend",
+            "preflight_check_task": "preflight-check",
+        }[payload.intent]
+        target_endpoint = f"/tasks/{{task_id}}/{suffix}"
+
+    return {key: value for key, value in parsed.items() if value not in (None, "", [])}, target_endpoint, context_used
+
+
+def _default_task_title(payload: LLMParsedTaskPayload, *, query: str) -> str:
+    if payload.location:
+        return f"{payload.location}{payload.task_type or 'cruise'}任务"
+    return query[:80]
 
 
 def _extract_json_object(content: str) -> dict[str, Any] | None:
