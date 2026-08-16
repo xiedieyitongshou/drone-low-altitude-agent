@@ -2,6 +2,7 @@ import { NavLink, Route, Routes } from 'react-router-dom'
 import { useAuth } from './auth/useAuth'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { AdminConversationsPage } from './pages/AdminConversationsPage'
+import { AdminKnowledgePage } from './pages/AdminKnowledgePage'
 import { AdminStatsPage } from './pages/AdminStatsPage'
 import { AdminUsersPage } from './pages/AdminUsersPage'
 import { AgentPage } from './pages/AgentPage'
@@ -29,6 +30,7 @@ const adminNavItems = [
   { to: '/admin', label: '管理统计' },
   { to: '/admin/users', label: '用户管理' },
   { to: '/admin/conversations', label: '任务审计' },
+  { to: '/admin/knowledge', label: 'RAG 知识库' },
 ]
 
 function App() {
@@ -52,9 +54,7 @@ function App() {
               key={item.to}
               to={item.to}
               end={item.to === '/'}
-              className={({ isActive }) =>
-                isActive ? 'nav-link active' : 'nav-link'
-              }
+              className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
             >
               {item.label}
             </NavLink>
@@ -65,9 +65,7 @@ function App() {
                   key={item.to}
                   to={item.to}
                   end={item.to === '/admin'}
-                  className={({ isActive }) =>
-                    isActive ? 'nav-link active' : 'nav-link'
-                  }
+                  className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
                 >
                   {item.label}
                 </NavLink>
@@ -174,6 +172,14 @@ function App() {
             element={
               <ProtectedRoute requiredRole="admin">
                 <AdminConversationsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/knowledge"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminKnowledgePage />
               </ProtectedRoute>
             }
           />

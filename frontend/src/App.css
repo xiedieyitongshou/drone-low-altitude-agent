@@ -1664,6 +1664,137 @@
   gap: 8px;
 }
 
+.admin-index-status {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.admin-index-status > div {
+  display: grid;
+  gap: 6px;
+  border: 1px solid #dbeafe;
+  border-radius: 18px;
+  padding: 16px;
+  background: linear-gradient(135deg, #eff6ff, #ffffff);
+}
+
+.admin-index-status span,
+.admin-index-status small,
+.admin-knowledge-table small {
+  color: #64748b;
+}
+
+.admin-index-status strong {
+  color: #0f172a;
+  font-size: 24px;
+}
+
+.admin-knowledge-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(360px, 0.65fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.admin-knowledge-table {
+  min-width: 1080px;
+}
+
+.admin-knowledge-table td {
+  min-width: 110px;
+}
+
+.admin-knowledge-table td > strong,
+.admin-knowledge-table td > span,
+.admin-knowledge-table td > small {
+  display: block;
+}
+
+.knowledge-editor {
+  display: grid;
+  gap: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 18px;
+  background: #ffffff;
+}
+
+.knowledge-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.knowledge-editor-header h3 {
+  margin: 0;
+}
+
+.knowledge-editor label {
+  display: grid;
+  gap: 8px;
+}
+
+.knowledge-editor input,
+.knowledge-editor select,
+.knowledge-editor textarea {
+  width: 100%;
+}
+
+.knowledge-editor textarea {
+  min-height: 112px;
+  resize: vertical;
+}
+
+.knowledge-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.checkbox-label {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+}
+
+.checkbox-label input {
+  width: auto;
+}
+
+.knowledge-status-badge,
+.dirty-index,
+.clean-index {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.knowledge-status-approved,
+.knowledge-status-success,
+.clean-index {
+  color: #166534;
+  background: #dcfce7;
+}
+
+.knowledge-status-draft,
+.knowledge-status-pending,
+.knowledge-status-running,
+.dirty-index {
+  color: #92400e;
+  background: #fef3c7;
+}
+
+.knowledge-status-rejected,
+.knowledge-status-expired,
+.knowledge-status-failed {
+  color: #991b1b;
+  background: #fee2e2;
+}
+
 @media (max-width: 860px) {
   .app-shell {
     grid-template-columns: 1fr;
@@ -1703,6 +1834,9 @@
   .history-search-form,
   .conversation-layout,
   .profile-summary,
+  .admin-index-status,
+  .admin-knowledge-layout,
+  .knowledge-editor-grid,
   .admin-filter-form,
   .admin-stats-grid {
     grid-template-columns: 1fr;

@@ -5,6 +5,15 @@ import type {
   AdminTaskStats,
   AdminUser,
   AdminUserListResponse,
+  KnowledgeDocument,
+  KnowledgeDocumentListResponse,
+  KnowledgeDocumentPayload,
+  KnowledgeDocumentStatusPayload,
+  KnowledgeIndexJob,
+  KnowledgeIndexJobListResponse,
+  KnowledgeReviewStatus,
+  KnowledgeType,
+  KnowledgeVisibility,
 } from '../types/admin'
 import type { UserRole } from '../types/auth'
 
@@ -27,6 +36,19 @@ type ListConversationsParams = {
   keyword?: string
   created_from?: string
   created_to?: string
+}
+
+type ListKnowledgeParams = {
+  page?: number
+  page_size?: number
+  keyword?: string
+  knowledge_type?: KnowledgeType | ''
+  review_status?: KnowledgeReviewStatus | ''
+  is_active?: boolean | ''
+  visibility?: KnowledgeVisibility | ''
+  tenant_id?: string
+  city?: string
+  index_dirty?: boolean | ''
 }
 
 export async function getAdminTaskStats() {
@@ -64,6 +86,51 @@ export async function getAdminConversationDetail(conversationId: string) {
   const response = await apiClient.get<AdminConversationDetail>(
     `/admin/conversations/${conversationId}`,
   )
+  return response.data
+}
+
+export async function listAdminKnowledge(params: ListKnowledgeParams = {}) {
+  const response = await apiClient.get<KnowledgeDocumentListResponse>('/admin/knowledge', {
+    params: cleanParams(params),
+  })
+  return response.data
+}
+
+export async function createAdminKnowledge(payload: KnowledgeDocumentPayload) {
+  const response = await apiClient.post<KnowledgeDocument>('/admin/knowledge', payload)
+  return response.data
+}
+
+export async function updateAdminKnowledge(knowledgeId: string, payload: Partial<KnowledgeDocumentPayload>) {
+  const response = await apiClient.patch<KnowledgeDocument>(`/admin/knowledge/${knowledgeId}`, payload)
+  return response.data
+}
+
+export async function updateAdminKnowledgeStatus(
+  knowledgeId: string,
+  payload: KnowledgeDocumentStatusPayload,
+) {
+  const response = await apiClient.post<KnowledgeDocument>(
+    `/admin/knowledge/${knowledgeId}/status`,
+    payload,
+  )
+  return response.data
+}
+
+export async function deleteAdminKnowledge(knowledgeId: string) {
+  const response = await apiClient.delete<KnowledgeDocument>(`/admin/knowledge/${knowledgeId}`)
+  return response.data
+}
+
+export async function reindexAdminKnowledge() {
+  const response = await apiClient.post<KnowledgeIndexJob>('/admin/knowledge/reindex')
+  return response.data
+}
+
+export async function listAdminKnowledgeIndexJobs(page = 1, pageSize = 5) {
+  const response = await apiClient.get<KnowledgeIndexJobListResponse>('/admin/knowledge/index-jobs', {
+    params: { page, page_size: pageSize },
+  })
   return response.data
 }
 
