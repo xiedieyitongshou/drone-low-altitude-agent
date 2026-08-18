@@ -25,11 +25,14 @@ DEFAULT_DB_KNOWLEDGE_PATH = DEFAULT_INDEX_DIR / "knowledge_documents_source.json
 
 
 def get_default_knowledge_path() -> Path:
-    configured_path = os.getenv("KNOWLEDGE_SOURCE_PATH") or os.getenv("ADVICE_KNOWLEDGE_PATH")
+    configured_path = os.getenv("KNOWLEDGE_SOURCE_PATH")
     if configured_path:
         return Path(configured_path)
     if DEFAULT_DB_KNOWLEDGE_PATH.exists():
         return DEFAULT_DB_KNOWLEDGE_PATH
+    configured_advice_path = os.getenv("ADVICE_KNOWLEDGE_PATH")
+    if configured_advice_path:
+        return Path(configured_advice_path)
     return DEFAULT_KNOWLEDGE_PATH
 
 

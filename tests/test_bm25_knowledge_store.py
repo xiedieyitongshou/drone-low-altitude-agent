@@ -12,6 +12,7 @@ from app.services.knowledge_retrievers import (
     TfidfKnowledgeRetriever,
     create_default_knowledge_retriever,
 )
+from app.services.vector_knowledge_store import get_default_knowledge_path
 
 
 def test_tokenize_text_supports_chinese_ngrams_and_english_terms():
@@ -92,6 +93,34 @@ def test_default_retriever_can_switch_between_bm25_and_tfidf(monkeypatch):
 
     monkeypatch.setenv("KNOWLEDGE_RETRIEVER", "unknown")
     assert isinstance(create_default_knowledge_retriever(), TfidfKnowledgeRetriever)
+
+
+def test_default_knowledge_path_prefers_db_export_over_static_advice_path(tmp_path, monkeypatch):
+    db_source_path = tmp_path / "index" / "knowledge_documents_source.json"
+    static_source_path = tmp_path / "advice_rules.json"
+    db_source_path.parent.mkdir()
+    db_source_path.write_text("{}", encoding="utf-8")
+    static_source_path.write_text("{}", encoding="utf-8")
+
+    monkeypatch.setattr("app.services.vector_knowledge_store.DEFAULT_DB_KNOWLEDGE_PATH", db_source_path)
+    monkeypatch.setenv("ADVICE_KNOWLEDGE_PATH", str(static_source_path))
+    monkeypatch.delenv("KNOWLEDGE_SOURCE_PATH", raising=False)
+
+    assert get_default_knowledge_path() == db_source_path
+
+
+def test_default_knowledge_path_respects_explicit_source_override(tmp_path, monkeypatch):
+    db_source_path = tmp_path / "index" / "knowledge_documents_source.json"
+    explicit_source_path = tmp_path / "custom_source.json"
+    db_source_path.parent.mkdir()
+    db_source_path.write_text("{}", encoding="utf-8")
+    explicit_source_path.write_text("{}", encoding="utf-8")
+
+    monkeypatch.setattr("app.services.vector_knowledge_store.DEFAULT_DB_KNOWLEDGE_PATH", db_source_path)
+    monkeypatch.setenv("KNOWLEDGE_SOURCE_PATH", str(explicit_source_path))
+    monkeypatch.setenv("ADVICE_KNOWLEDGE_PATH", str(tmp_path / "advice_rules.json"))
+
+    assert get_default_knowledge_path() == explicit_source_path
 
 
 def _knowledge_payload():

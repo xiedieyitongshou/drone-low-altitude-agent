@@ -33,6 +33,8 @@ services:
       DATABASE_URL: sqlite:///./data/drone_agent.db
       SESSION_MEMORY_BACKEND: redis
       REDIS_URL: redis://redis:6379/0
+      SESSION_MEMORY_TTL_SECONDS: ${SESSION_MEMORY_TTL_SECONDS:-1800}
+      SESSION_MEMORY_REDIS_KEY_PREFIX: ${SESSION_MEMORY_REDIS_KEY_PREFIX:-drone_agent:session:}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-only-change-me}
       JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-1440}
@@ -50,6 +52,7 @@ services:
       AGENT_RUNTIME_MODE: ${AGENT_RUNTIME_MODE:-loop}
       AGENT_LOG_RAW_PAYLOAD: ${AGENT_LOG_RAW_PAYLOAD:-false}
       ADVICE_KNOWLEDGE_PATH: ${ADVICE_KNOWLEDGE_PATH:-data/knowledge/advice_rules.json}
+      KNOWLEDGE_SOURCE_PATH: ${KNOWLEDGE_SOURCE_PATH:-}
       KNOWLEDGE_RETRIEVER: ${KNOWLEDGE_RETRIEVER:-bm25}
       KNOWLEDGE_EMBEDDING_MIN_SCORE: ${KNOWLEDGE_EMBEDDING_MIN_SCORE:-0.25}
       RAG_CONFIDENCE_THRESHOLD: ${RAG_CONFIDENCE_THRESHOLD:-0.2}
@@ -83,13 +86,161 @@ services:
       JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
       INITIAL_ADMIN_USERNAME: ${INITIAL_ADMIN_USERNAME:-admin}
       INITIAL_ADMIN_PASSWORD: ${INITIAL_ADMIN_PASSWORD:-}
+      SESSION_MEMORY_BACKEND: redis
+      REDIS_URL: redis://redis:6379/0
       AGENT_RUNTIME_MODE: ${AGENT_RUNTIME_MODE:-loop}
       ADVICE_KNOWLEDGE_PATH: ${ADVICE_KNOWLEDGE_PATH:-data/knowledge/advice_rules.json}
+      KNOWLEDGE_SOURCE_PATH: ${KNOWLEDGE_SOURCE_PATH:-}
       KNOWLEDGE_RETRIEVER: ${KNOWLEDGE_RETRIEVER:-bm25}
     volumes:
       - ./data:/app/data
     entrypoint: ["sh", "-c"]
     command: ["python -m alembic upgrade head && python scripts/create_initial_admin.py"]
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  knowledge-import:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    profiles:
+      - tools
+    env_file:
+      - .env
+    environment:
+      APP_ENV: docker
+      TZ: Asia/Shanghai
+      DATABASE_URL: sqlite:///./data/drone_agent.db
+      ADVICE_KNOWLEDGE_PATH: ${ADVICE_KNOWLEDGE_PATH:-data/knowledge/advice_rules.json}
+    volumes:
+      - ./data:/app/data
+    entrypoint: ["sh", "-c"]
+    command: ["python -m alembic upgrade head && python scripts/import_knowledge_json.py --path \"$${ADVICE_KNOWLEDGE_PATH:-data/knowledge/advice_rules.json}\""]
+
+  knowledge-reindex:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    profiles:
+      - tools
+    env_file:
+      - .env
+    environment:
+      APP_ENV: docker
+      TZ: Asia/Shanghai
+      DATABASE_URL: sqlite:///./data/drone_agent.db
+      ADVICE_KNOWLEDGE_PATH: ${ADVICE_KNOWLEDGE_PATH:-data/knowledge/advice_rules.json}
+      KNOWLEDGE_SOURCE_PATH: ${KNOWLEDGE_SOURCE_PATH:-}
+      KNOWLEDGE_RETRIEVER: ${KNOWLEDGE_RETRIEVER:-bm25}
+    volumes:
+      - ./data:/app/data
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        python -m alembic upgrade head && python - <<'PY'
+        from app.core.config import load_environment
+        from app.db.session import SessionLocal
+        from app.services.admin_knowledge_indexing import reindex_knowledge_documents
+
+        load_environment()
+        with SessionLocal() as db:
+            job = reindex_knowledge_documents(db=db)
+            print(
+                "Knowledge reindex completed: "
+                f"status={job.status}, documents={job.document_count}, chunks={job.chunk_count}, error={job.error_message}"
+            )
+            if job.status != "success":
+                raise SystemExit(1)
+        PY
+
+  backend-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    profiles:
+      - test
+    env_file:
+      - .env
+    environment:
+      APP_ENV: docker
+      TZ: Asia/Shanghai
+      DATABASE_URL: sqlite:///./data/drone_agent.db
+      SESSION_MEMORY_BACKEND: redis
+      REDIS_URL: redis://redis:6379/0
+      AGENT_RUNTIME_MODE: ${AGENT_RUNTIME_MODE:-loop}
+      NL_PARSER_MODE: ${NL_PARSER_MODE:-rule}
+      ADVICE_KNOWLEDGE_PATH: ${ADVICE_KNOWLEDGE_PATH:-data/knowledge/advice_rules.json}
+      KNOWLEDGE_SOURCE_PATH: ${KNOWLEDGE_SOURCE_PATH:-}
+      KNOWLEDGE_RETRIEVER: ${KNOWLEDGE_RETRIEVER:-bm25}
+      RAG_CONFIDENCE_THRESHOLD: ${RAG_CONFIDENCE_THRESHOLD:-0.2}
+    volumes:
+      - ./data:/app/data
+    entrypoint: ["sh", "-c"]
+    command: ["python -m alembic upgrade head && python -m pytest -q"]
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  eval-fast:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    profiles:
+      - eval
+    env_file:
+      - .env
+    environment:
+      APP_ENV: docker
+      TZ: Asia/Shanghai
+      DATABASE_URL: sqlite:///./data/drone_agent.db
+      SESSION_MEMORY_BACKEND: redis
+      REDIS_URL: redis://redis:6379/0
+      AGENT_RUNTIME_MODE: loop
+      NL_PARSER_MODE: rule
+      ADVICE_KNOWLEDGE_PATH: ${ADVICE_KNOWLEDGE_PATH:-data/knowledge/advice_rules.json}
+      KNOWLEDGE_SOURCE_PATH: ${KNOWLEDGE_SOURCE_PATH:-}
+      KNOWLEDGE_RETRIEVER: hybrid
+      RAG_CONFIDENCE_THRESHOLD: ${RAG_CONFIDENCE_THRESHOLD:-0.2}
+    volumes:
+      - ./data:/app/data
+      - ./evals/reports:/app/evals/reports
+    entrypoint: ["sh", "-c"]
+    command: ["python -m alembic upgrade head && python -m pytest -m eval_fast -q"]
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  eval-full:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    profiles:
+      - eval
+    env_file:
+      - .env
+    environment:
+      APP_ENV: docker
+      TZ: Asia/Shanghai
+      DATABASE_URL: sqlite:///./data/drone_agent.db
+      SESSION_MEMORY_BACKEND: redis
+      REDIS_URL: redis://redis:6379/0
+      AGENT_RUNTIME_MODE: loop
+      NL_PARSER_MODE: rule
+      ADVICE_KNOWLEDGE_PATH: ${ADVICE_KNOWLEDGE_PATH:-data/knowledge/advice_rules.json}
+      KNOWLEDGE_SOURCE_PATH: ${KNOWLEDGE_SOURCE_PATH:-}
+      RAG_CONFIDENCE_THRESHOLD: ${RAG_CONFIDENCE_THRESHOLD:-0.2}
+    volumes:
+      - ./data:/app/data
+      - ./evals/reports:/app/evals/reports
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        python -m alembic upgrade head
+        python scripts/tool_calling_eval.py
+        python scripts/multi_turn_state_eval.py
+        python scripts/failure_recovery_eval.py
+        python scripts/rag_eval.py
     depends_on:
       redis:
         condition: service_healthy

@@ -174,6 +174,41 @@ python -m pytest -q
 python -m pytest -m eval_fast -q
 ```
 
+## Docker 运行方式
+
+后端镜像已包含 `tests/`、`scripts/`、`evals/` 和 `pytest.ini`，可以通过 `docker-compose.yml` 中的 profile 运行测试和评测。
+
+运行后端完整测试：
+
+```powershell
+docker compose --profile test run --rm backend-tests
+```
+
+运行快速 Eval 门禁：
+
+```powershell
+docker compose --profile eval run --rm eval-fast
+```
+
+运行完整 Eval 并生成报告：
+
+```powershell
+docker compose --profile eval run --rm eval-full
+```
+
+报告输出到：
+
+```text
+evals/reports/
+```
+
+第 20 周数据库化知识库联调时，可以先导入 JSON 知识，再重建检索索引：
+
+```powershell
+docker compose --profile tools run --rm knowledge-import
+docker compose --profile tools run --rm knowledge-reindex
+```
+
 ## 失败处理原则
 
 如果门禁失败：
