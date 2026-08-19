@@ -7,6 +7,7 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   backend-test:
@@ -41,8 +42,54 @@ jobs:
       - name: Run backend test suite
         run: python -m pytest -q
 
+      - name: Run fast Agent and RAG eval gates
+        run: python -m pytest -m eval_fast -q
+
       - name: Prepare Docker Compose env file
         run: cp .env.example .env
 
       - name: Validate Docker Compose configuration
         run: docker compose --profile test --profile eval --profile tools config --quiet
+
+  full-eval:
+    name: Full eval reports
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+
+    env:
+      AGENT_RUNTIME_MODE: loop
+      DATABASE_URL: sqlite:///./data/ci-full-eval.db
+      LLM_ENABLED: "false"
+      NL_PARSER_MODE: rule
+      PYTHONUNBUFFERED: "1"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Run database migrations
+        run: python -m alembic upgrade head
+
+      - name: Generate full eval reports
+        run: |
+          python scripts/tool_calling_eval.py
+          python scripts/multi_turn_state_eval.py
+          python scripts/failure_recovery_eval.py
+          python scripts/rag_eval.py
+
+      - name: Upload eval reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-reports
+          path: evals/reports/
