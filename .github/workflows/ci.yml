@@ -41,5 +41,8 @@ jobs:
       - name: Run backend test suite
         run: python -m pytest -q
 
+      - name: Prepare Docker Compose env file
+        run: cp .env.example .env
+
       - name: Validate Docker Compose configuration
         run: docker compose --profile test --profile eval --profile tools config --quiet
