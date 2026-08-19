@@ -46,6 +46,33 @@ docker compose --profile test --profile eval --profile tools config --quiet
 - `python -m pytest -m eval_fast -q` 是 Agent/RAG 快速质量门禁。
 - `docker compose ... config --quiet` 只校验 Compose 配置，不启动生产服务。
 
+## 前端 CI
+
+GitHub Actions 的 `Frontend lint and build` job 固定使用 Node 24，并在 `frontend/` 目录执行：
+
+```bash
+npm ci
+npm run lint
+npm run build
+```
+
+其中：
+
+- `npm ci` 使用 `package-lock.json` 安装可重复依赖。
+- `npm run lint` 执行 oxlint，检查 React/TypeScript 基础问题。
+- `npm run build` 执行 `tsc -b && vite build`，验证类型检查和生产构建。
+
+本地运行：
+
+```bash
+cd frontend
+npm ci
+npm run lint
+npm run build
+```
+
+前端 CI 只做构建质量门禁，不负责部署静态资源。正式前端服务仍通过 Docker/服务器部署流程交付。
+
 ## 快速 Eval 门禁
 
 快速 Eval 由 `tests/test_eval_regression.py` 统一设置阈值：

@@ -51,6 +51,34 @@ jobs:
       - name: Validate Docker Compose configuration
         run: docker compose --profile test --profile eval --profile tools config --quiet
 
+  frontend-test:
+    name: Frontend lint and build
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Run frontend lint
+        run: npm run lint
+
+      - name: Build frontend
+        run: npm run build
+
   full-eval:
     name: Full eval reports
     runs-on: ubuntu-latest
