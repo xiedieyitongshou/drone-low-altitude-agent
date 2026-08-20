@@ -106,6 +106,38 @@ docker compose --profile tools run --rm admin-init
 
 更多启动、测试和环境变量说明见：[docs/本地开发与测试说明.md](docs/本地开发与测试说明.md) 和 [docs/Docker部署说明.md](docs/Docker部署说明.md)。
 
+## LLM 与 DeepSeek 配置
+
+本项目默认使用 DeepSeek 作为 OpenAI-compatible LLM provider，但默认不启用 LLM：
+
+```env
+LLM_ENABLED=false
+LLM_PROVIDER=deepseek
+LLM_MODEL=deepseek-v4-flash
+NL_PARSER_MODE=rule
+```
+
+需要启用自然语言 LLM 结构化解析时，在本地 `.env` 中配置：
+
+```env
+LLM_ENABLED=true
+LLM_PROVIDER=deepseek
+LLM_MODEL=deepseek-v4-flash
+DEEPSEEK_API_KEY=your_deepseek_api_key
+NL_PARSER_MODE=hybrid
+```
+
+Docker 镜像中不写 API Key。`Dockerfile` 只提供无密钥默认值，实际运行时由 `docker-compose.yml` 从宿主机 `.env` 注入：
+
+```yaml
+LLM_PROVIDER: ${LLM_PROVIDER:-deepseek}
+LLM_MODEL: ${LLM_MODEL:-deepseek-v4-flash}
+LLM_API_KEY: ${LLM_API_KEY:-}
+DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+```
+
+因此 Docker 实例可以调用 DeepSeek 的前提是：启动容器前 `.env` 已写入 `LLM_ENABLED=true`、`NL_PARSER_MODE=hybrid` 和有效的 `DEEPSEEK_API_KEY`。不要把真实 API Key 写入 `Dockerfile`、README 或 Git 仓库。
+
 ## 演示入口
 
 - 前端控制台：[frontend/](frontend/)
@@ -177,6 +209,6 @@ docker-compose.yml      本地 Docker Compose 联调入口
 - 天气数据只接入一个第三方来源，气象准确性依赖外部服务。
 - 规则阈值是工程化原型，不等同于权威适航标准或监管审批结论。
 - RAG 知识库是样例知识库，不应包装成实时权威政策库。
-- LLM 默认关闭，主要用于结构化解析和解释增强。
+- LLM 在此项目中开启，但自主部署需要重新配置环境，主要用于结构化解析和解释增强。
 - SQLite 适合本地运行和功能验证，不适合高并发写入场景。
 - 当前 Docker Compose 更适合本地联调和服务器部署前验证，生产化还需要独立 Nginx 反代、HTTPS、PostgreSQL、监控告警和备份策略。
