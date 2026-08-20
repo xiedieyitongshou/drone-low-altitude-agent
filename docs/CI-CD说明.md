@@ -4,8 +4,14 @@
 
 本项目当前实现的是 CI 质量门禁，不包含自动生产部署。
 
-- CI：在 GitHub Actions 临时 runner 中执行后端测试、数据库迁移、Docker Compose 配置校验、快速 Agent/RAG Eval。
-- CD：服务器部署仍按 `docs/Docker部署说明.md` 手动执行，避免 CI 误改生产或演示环境。
+- CI：在 GitHub Actions 临时 runner 中执行后端测试、数据库迁移、Docker Compose 配置校验、快速 Agent/RAG Eval、前端 lint/build。
+- CD：服务器部署仍按 [Docker部署说明.md](Docker部署说明.md) 手动执行，避免 CI 误改生产或演示环境。
+
+CI 和 Docker 默认验证 Agent Loop 主链路：
+
+```env
+AGENT_RUNTIME_MODE=loop
+```
 
 ## 触发方式
 
@@ -130,6 +136,41 @@ Docker 运行完整 Eval：
 docker compose --profile eval run --rm eval-full
 ```
 
+## 运行路径边界
+
+| 路径 | 执行位置 | 目的 | 是否部署 |
+|---|---|---|---|
+| 本地运行 | 开发机 | 快速调试后端、前端、规则、Agent 行为 | 否 |
+| Docker 运行 | 开发机或服务器 | 前后端联调、Redis 链路、部署前验证 | 手动 |
+| CI 运行 | GitHub Actions runner | 自动测试、快速 Eval、Compose 配置校验 | 否 |
+| 服务器部署 | 目标服务器 | 演示或准生产环境运行 | 手动 |
+
+CI 不负责：
+
+- 登录服务器
+- 修改服务器 `.env`
+- 重启生产容器
+- 执行数据库生产迁移
+- 上传前端静态资源到生产环境
+
+这些操作应按 [Docker部署说明.md](Docker部署说明.md) 在服务器侧手动执行，或后续单独设计带审批的 CD 流程。
+
+## legacy fallback 边界
+
+CI 和 Docker 默认都验证：
+
+```env
+AGENT_RUNTIME_MODE=loop
+```
+
+`legacy` 只作为：
+
+- 本地兼容模式。
+- Agent Loop 异常 fallback 路径。
+- 排查旧链路行为时的临时对照。
+
+`legacy` 不作为 CI 主验证目标，也不作为 Docker 部署主链路。
+
 ## 失败排查顺序
 
 CI 失败时先看失败 step：
@@ -138,6 +179,8 @@ CI 失败时先看失败 step：
 - `Run backend test suite`：优先检查普通单元测试和 API 回归。
 - `Run fast Agent and RAG eval gates`：优先检查 Agent/RAG 质量指标。
 - `Validate Docker Compose configuration`：优先检查 `docker-compose.yml`、profiles、`.env.example`。
+- `Run frontend lint`：优先检查 React/TypeScript 静态问题。
+- `Build frontend`：优先检查类型错误、Vite 构建和环境变量。
 
 Eval 失败时按指标定位：
 
@@ -149,6 +192,7 @@ Eval 失败时按指标定位：
 ## 完成标准
 
 - push/PR 后 `Backend tests` 为绿色通过。
+- push/PR 后 `Frontend lint and build` 为绿色通过。
 - 工具选择退化能被 `eval_fast` 发现。
 - RAG 召回、metadata filter、权限过滤退化能被 `eval_fast` 发现。
 - 完整 Eval 可通过 `workflow_dispatch` 手动生成报告。

@@ -1,14 +1,29 @@
 # Docker 部署说明
 
-本文档用于本地 Docker 联调，也可以作为后续服务器部署的基础。
+本文档用于本地 Docker 联调，也可以作为后续服务器部署的基础。当前 Docker 主链路默认运行 Agent Loop：
+
+```env
+AGENT_RUNTIME_MODE=loop
+```
+
+`legacy` 仅作为本地兼容模式和 Agent Loop 异常 fallback 路径，不作为 Docker 部署主链路。
 
 ## 1. 当前 Docker 结构
 
-当前 `docker-compose.yml` 启动三个服务：
+当前 `docker-compose.yml` 启动三个主服务：
 
-- `frontend`：React 前端，使用 Nginx 托管静态资源
-- `app`：FastAPI 后端服务
-- `redis`：Session Memory 的 Redis 后端
+- `frontend`：React 前端，使用 Nginx 托管静态资源。
+- `app`：FastAPI 后端服务，默认 `AGENT_RUNTIME_MODE=loop`。
+- `redis`：Session Memory 的 Redis 后端。
+
+同时提供以下 profile 服务：
+
+- `admin-init`：初始化管理员账号。
+- `knowledge-import`：导入 JSON 知识库。
+- `knowledge-reindex`：重建知识库索引。
+- `backend-tests`：容器内运行后端测试。
+- `eval-fast`：容器内运行快速 Eval 门禁。
+- `eval-full`：容器内运行完整 Eval 脚本并输出报告。
 
 SQLite 数据库仍然使用本地文件挂载：
 
@@ -42,9 +57,16 @@ Copy-Item .env.docker.example .env
 
 ```env
 QWEATHER_API_KEY=your_qweather_api_key
-QWEATHER_GEO_BASE_URL=https://your-host
-QWEATHER_WEATHER_BASE_URL=https://your-host
-QWEATHER_WARNING_BASE_URL=https://your-host
+QWEATHER_GEO_BASE_URL=https://your-qweather-host
+QWEATHER_WEATHER_BASE_URL=https://your-qweather-host
+QWEATHER_WARNING_BASE_URL=https://your-qweather-host
+```
+
+首次运行前必须替换：
+
+```env
+JWT_SECRET_KEY=replace-with-random-secret
+INITIAL_ADMIN_PASSWORD=change-me-before-deploy
 ```
 
 Docker Compose 会覆盖以下后端容器环境变量：
@@ -54,6 +76,7 @@ APP_ENV=docker
 DATABASE_URL=sqlite:///./data/drone_agent.db
 SESSION_MEMORY_BACKEND=redis
 REDIS_URL=redis://redis:6379/0
+AGENT_RUNTIME_MODE=loop
 ```
 
 注意：容器内连接 Redis 不能写 `localhost`，要写 Compose 服务名 `redis`。
@@ -118,7 +141,72 @@ docker compose logs -f app
 docker compose logs -f redis
 ```
 
-## 5. 停止
+确认后端使用 Agent Loop：
+
+```powershell
+docker compose exec app printenv AGENT_RUNTIME_MODE
+```
+
+期望输出：
+
+```text
+loop
+```
+
+## 5. 管理员与知识库工具
+
+初始化管理员账号：
+
+```powershell
+docker compose --profile tools run --rm admin-init
+```
+
+导入知识库：
+
+```powershell
+docker compose --profile tools run --rm knowledge-import
+```
+
+重建知识库索引：
+
+```powershell
+docker compose --profile tools run --rm knowledge-reindex
+```
+
+管理员账号读取 `.env` 中的：
+
+```env
+INITIAL_ADMIN_USERNAME=admin
+INITIAL_ADMIN_PASSWORD=change-me-before-deploy
+```
+
+## 6. Docker 中运行测试与 Eval
+
+后端测试：
+
+```powershell
+docker compose --profile test run --rm backend-tests
+```
+
+快速 Eval：
+
+```powershell
+docker compose --profile eval run --rm eval-fast
+```
+
+完整 Eval：
+
+```powershell
+docker compose --profile eval run --rm eval-full
+```
+
+完整 Eval 报告输出到：
+
+```text
+evals/reports/
+```
+
+## 7. 停止
 
 停止容器：
 
@@ -134,19 +222,58 @@ docker compose down -v
 
 注意：`docker compose down -v` 会删除 Redis volume，但不会删除本地 `data/drone_agent.db`，因为 SQLite 是通过 `./data:/app/data` 挂载的。
 
-## 6. 当前部署边界
+## 8. legacy fallback 边界
+
+Docker 部署默认主链路是：
+
+```env
+AGENT_RUNTIME_MODE=loop
+```
+
+`legacy` 的定位：
+
+- 仅用于本地兼容旧流程。
+- 仅用于 Agent Loop 异常时的 fallback 路径。
+- 不作为 Docker Compose 默认部署模式。
+- 不作为面试或演示时的主要技术链路。
+
+如果 Docker 环境中需要临时排查旧链路，可以显式修改 `.env`：
+
+```env
+AGENT_RUNTIME_MODE=legacy
+```
+
+排查完成后应恢复：
+
+```env
+AGENT_RUNTIME_MODE=loop
+```
+
+## 9. 运行路径边界
+
+| 路径 | 用途 | 默认配置 | 边界 |
+|---|---|---|---|
+| 本地运行 | 开发和快速调试 | SQLite、TTLCache、`NL_PARSER_MODE=rule` | 不验证容器网络和 Redis 链路 |
+| Docker 运行 | 前后端联调和服务器部署前验证 | SQLite 挂载、Redis、`AGENT_RUNTIME_MODE=loop` | 不是完整生产部署 |
+| CI 运行 | 自动质量门禁 | SQLite 临时库、LLM 关闭、快速 Eval | 不连接生产或演示服务器 |
+| 服务器部署 | 手动上线或演示环境 | 基于 Docker Compose 调整 | 需要额外补 HTTPS、反代、监控、备份 |
+
+## 10. 当前部署边界
 
 当前 Docker 版本适合：
 
 - 本地演示
 - 前后端完整功能联调
 - 服务器部署前验证
+- 快速测试和 Eval 容器化运行
 
 当前还没有包含：
 
 - 统一公网入口 Nginx 反向代理
 - HTTPS 证书
 - PostgreSQL
-- 多用户登录认证
+- 监控告警
+- 自动备份
+- 自动生产部署
 
 这些内容可以放到服务器部署阶段继续补。
