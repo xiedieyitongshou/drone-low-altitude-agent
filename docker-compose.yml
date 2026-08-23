@@ -4,7 +4,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        VITE_API_BASE_URL: http://localhost:8000
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
         VITE_API_TIMEOUT_MS: ${VITE_API_TIMEOUT_MS:-60000}
     container_name: drone-agent-frontend
     ports:
@@ -27,7 +27,7 @@ services:
     env_file:
       - .env
     environment:
-      APP_ENV: docker
+      APP_ENV: ${APP_ENV:-docker}
       APP_PORT: 8000
       TZ: Asia/Shanghai
       DATABASE_URL: sqlite:///./data/drone_agent.db
@@ -79,7 +79,7 @@ services:
     env_file:
       - .env
     environment:
-      APP_ENV: docker
+      APP_ENV: ${APP_ENV:-docker}
       TZ: Asia/Shanghai
       DATABASE_URL: sqlite:///./data/drone_agent.db
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-only-change-me}
@@ -109,7 +109,7 @@ services:
     env_file:
       - .env
     environment:
-      APP_ENV: docker
+      APP_ENV: ${APP_ENV:-docker}
       TZ: Asia/Shanghai
       DATABASE_URL: sqlite:///./data/drone_agent.db
       ADVICE_KNOWLEDGE_PATH: ${ADVICE_KNOWLEDGE_PATH:-data/knowledge/advice_rules.json}
@@ -127,7 +127,7 @@ services:
     env_file:
       - .env
     environment:
-      APP_ENV: docker
+      APP_ENV: ${APP_ENV:-docker}
       TZ: Asia/Shanghai
       DATABASE_URL: sqlite:///./data/drone_agent.db
       ADVICE_KNOWLEDGE_PATH: ${ADVICE_KNOWLEDGE_PATH:-data/knowledge/advice_rules.json}
@@ -163,7 +163,7 @@ services:
     env_file:
       - .env
     environment:
-      APP_ENV: docker
+      APP_ENV: ${APP_ENV:-docker}
       TZ: Asia/Shanghai
       DATABASE_URL: sqlite:///./data/drone_agent.db
       SESSION_MEMORY_BACKEND: redis
@@ -191,7 +191,7 @@ services:
     env_file:
       - .env
     environment:
-      APP_ENV: docker
+      APP_ENV: ${APP_ENV:-docker}
       TZ: Asia/Shanghai
       DATABASE_URL: sqlite:///./data/drone_agent.db
       SESSION_MEMORY_BACKEND: redis
@@ -220,7 +220,7 @@ services:
     env_file:
       - .env
     environment:
-      APP_ENV: docker
+      APP_ENV: ${APP_ENV:-docker}
       TZ: Asia/Shanghai
       DATABASE_URL: sqlite:///./data/drone_agent.db
       SESSION_MEMORY_BACKEND: redis
