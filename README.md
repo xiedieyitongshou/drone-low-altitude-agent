@@ -6,7 +6,7 @@
 
 ## 项目状态
 
-当前版本支持本地运行、Docker Compose 联调、GitHub Actions CI 门禁和前后端控制台演示。默认配置使用规则解析、SQLite、TTLCache；Docker 环境默认使用 Redis 会话记忆，并通过 `AGENT_RUNTIME_MODE=loop` 运行 Agent Loop。LLM 解析默认关闭，需要配置 API Key 后通过 `LLM_ENABLED=true` 和 `NL_PARSER_MODE=hybrid` 启用。
+当前版本支持本地运行、Docker Compose 联调、GitHub Actions CI 门禁、前后端控制台演示和阿里云 Linux 服务器私有部署验证。默认配置使用规则解析、SQLite、TTLCache；Docker 环境默认使用 Redis 会话记忆，并通过 `AGENT_RUNTIME_MODE=loop` 运行 Agent Loop。LLM 解析默认关闭，需要配置 API Key 后通过 `LLM_ENABLED=true` 和 `NL_PARSER_MODE=hybrid` 启用。
 
 这个项目应被定义为“可运行的低空作业气象决策原型”，不是生产级航空安全系统。规则阈值、样例知识库和第三方天气数据都服务于工程化验证，不等同于权威适航标准或监管审批结论。
 
@@ -22,6 +22,7 @@
 - Eval 体系：包含 Tool Calling Eval、Multi-turn State Eval、Failure Recovery Eval 和 RAG Eval，用样例集量化 Agent 行为。
 - 前后端控制台：React + Vite 页面覆盖 Agent 对话、评估、推荐、比选、历史、Profile 和管理员功能。
 - Docker 化：提供后端、前端和 Redis 的 Docker Compose 联调环境，便于本地运行和服务器部署前验证。
+- 服务器部署验证：已完成阿里云 Linux + Docker Compose 私有部署验证，默认通过 SSH 隧道访问，补充了密钥、日志、数据库权限和最小备份检查。
 
 ## 系统架构
 
@@ -106,6 +107,22 @@ docker compose --profile tools run --rm admin-init
 
 更多启动、测试和环境变量说明见：[docs/本地开发与测试说明.md](docs/本地开发与测试说明.md) 和 [docs/Docker部署说明.md](docs/Docker部署说明.md)。
 
+### 服务器私有部署验证
+
+当前服务器部署定位为未备案阶段的私有测试环境：服务运行在阿里云 Linux 服务器上，前端、后端和 Redis 均只绑定服务器本机 `127.0.0.1`，默认通过 SSH 隧道在本地访问，不公开公网 IP、真实演示地址或演示账号。
+
+已覆盖内容：
+
+- Docker、Docker Compose、Git、Nginx 基础环境准备
+- GitHub `main` 分支代码拉取和部署 commit 记录
+- 服务器本地 `.env`、管理员凭据和 SQLite 数据库权限收敛
+- Redis / API / 前端容器健康检查
+- 知识库导入与索引重建
+- 日志敏感信息检查和 `AGENT_LOG_RAW_PAYLOAD=false`
+- SQLite 数据库、知识索引和 `.env` 的最小备份方案
+
+详细步骤和检查结果见：[docs/服务器部署说明.md](docs/服务器部署说明.md)。
+
 ## LLM 与 DeepSeek 配置
 
 本项目默认使用 DeepSeek 作为 OpenAI-compatible LLM provider，但默认不启用 LLM：
@@ -184,6 +201,7 @@ docker-compose.yml      本地 Docker Compose 联调入口
 | 系统架构与 Agent Runtime | [docs/架构设计说明.md](docs/架构设计说明.md) |
 | 本地开发、测试与 Eval | [docs/本地开发与测试说明.md](docs/本地开发与测试说明.md) |
 | Docker 部署 | [docs/Docker部署说明.md](docs/Docker部署说明.md) |
+| 服务器私有部署验证 | [docs/服务器部署说明.md](docs/服务器部署说明.md) |
 | CI/CD 与质量门禁 | [docs/CI-CD说明.md](docs/CI-CD说明.md) |
 | 关键设计取舍 | [docs/设计取舍说明.md](docs/设计取舍说明.md) |
 | 权限与数据隔离 | [docs/权限模型说明.md](docs/权限模型说明.md) |
