@@ -202,6 +202,8 @@ docker-compose.yml      本地 Docker Compose 联调入口
 | 本地开发、测试与 Eval | [docs/本地开发与测试说明.md](docs/本地开发与测试说明.md) |
 | Docker 部署 | [docs/Docker部署说明.md](docs/Docker部署说明.md) |
 | 服务器私有部署验证 | [docs/服务器部署说明.md](docs/服务器部署说明.md) |
+| SSH 隧道访问 | [docs/SSH隧道访问说明.md](docs/SSH隧道访问说明.md) |
+| 负载测试与容量评估 | [docs/负载测试说明.md](docs/负载测试说明.md) |
 | CI/CD 与质量门禁 | [docs/CI-CD说明.md](docs/CI-CD说明.md) |
 | 关键设计取舍 | [docs/设计取舍说明.md](docs/设计取舍说明.md) |
 | 权限与数据隔离 | [docs/权限模型说明.md](docs/权限模型说明.md) |
