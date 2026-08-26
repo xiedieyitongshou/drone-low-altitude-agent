@@ -104,6 +104,20 @@ class LLMTaskParserTestCase(unittest.TestCase):
         self.assertIn("start_time", raised.exception.missing_fields)
         self.assertIn("end_time", raised.exception.missing_fields)
 
+    def test_confidence_accepts_model_label(self) -> None:
+        payload = LLMParsedTaskPayload.model_validate(
+            {
+                "intent": "evaluate",
+                "location": "深圳湾",
+                "date": "2026-07-26",
+                "start_time": "09:00",
+                "end_time": "11:00",
+                "confidence": "low",
+            }
+        )
+
+        self.assertEqual(payload.confidence, 0.3)
+
 
 if __name__ == "__main__":
     unittest.main()

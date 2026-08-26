@@ -192,6 +192,34 @@ class LLMParsedTaskPayload(BaseModel):
     def normalize_missing_fields(cls, value: list[str]) -> list[str]:
         return [field for field in value if field in ALLOWED_MISSING_FIELDS]
 
+    @field_validator("confidence", mode="before")
+    @classmethod
+    def normalize_confidence(cls, value: object | None) -> float | None:
+        if value is None:
+            return None
+        if isinstance(value, (int, float)):
+            return float(value)
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if not normalized:
+                return None
+            confidence_labels = {
+                "low": 0.3,
+                "medium": 0.6,
+                "mid": 0.6,
+                "high": 0.9,
+                "低": 0.3,
+                "中": 0.6,
+                "高": 0.9,
+            }
+            if normalized in confidence_labels:
+                return confidence_labels[normalized]
+            try:
+                return float(normalized)
+            except ValueError:
+                return None
+        return None
+
     @model_validator(mode="after")
     def sync_location_fields(self) -> "LLMParsedTaskPayload":
         if self.location and not self.locations:
