@@ -40,21 +40,21 @@
                 "id": "5c0f8025f7e0b6654089e5b00e950f1a",
                 "groups": {},
                 "checks": {
-                        "register created or already exists": {
-                            "name": "register created or already exists",
-                            "path": "::setup::register created or already exists",
-                            "id": "d164af803caf2dd51e0b01a40f4f31b9",
-                            "passes": 1,
-                            "fails": 0
-                        },
-                        "login ok": {
-                            "path": "::setup::login ok",
-                            "id": "65474b9d4039908543e738715d924333",
-                            "passes": 1,
-                            "fails": 0,
-                            "name": "login ok"
-                        }
+                    "register created or already exists": {
+                        "name": "register created or already exists",
+                        "path": "::setup::register created or already exists",
+                        "id": "d164af803caf2dd51e0b01a40f4f31b9",
+                        "passes": 1,
+                        "fails": 0
+                    },
+                    "login ok": {
+                        "path": "::setup::login ok",
+                        "id": "65474b9d4039908543e738715d924333",
+                        "passes": 1,
+                        "fails": 0,
+                        "name": "login ok"
                     }
+                }
             }
         }
     },
@@ -184,7 +184,7 @@
         }
     },
     "setup_data": {
-        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyMTZmOWUwZC02ZmQwLTQ4YmUtODg5Yy1jOTA4MzE1MGMwY2YiLCJleHAiOjE3ODc4Mjg0MzIsImlhdCI6MTc4Nzc0MjAzMn0.QCZ1DiVwQHHr7D47AGcc5GUh58wt3WctxhYvwEEDOAE",
+        "token": "[REDACTED]",
         "username": "load_smoke_day155_smoke_20260826190031"
     }
 }

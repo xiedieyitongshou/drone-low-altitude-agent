@@ -1,0 +1,27 @@
+﻿# day156 server metrics rerun
+2026-08-27T21:14:40+08:00
+## docker compose ps
+NAME                   IMAGE            COMMAND                  SERVICE    CREATED        STATUS                  PORTS
+drone-agent-api        app-app          "./docker/entrypoint…"   app        47 hours ago   Up 47 hours (healthy)   127.0.0.1:8000->8000/tcp
+drone-agent-frontend   app-frontend     "/docker-entrypoint.…"   frontend   47 hours ago   Up 47 hours (healthy)   127.0.0.1:5173->80/tcp
+drone-agent-redis      redis:7-alpine   "docker-entrypoint.s…"   redis      2 days ago     Up 2 days (healthy)     127.0.0.1:6379->6379/tcp
+## docker stats
+CONTAINER ID   NAME                   CPU %     MEM USAGE / LIMIT     MEM %     NET I/O          BLOCK I/O         PIDS
+25118533f85d   drone-agent-api        0.14%     147.2MiB / 1.635GiB   8.79%     975kB / 847kB    14.8MB / 26MB     4
+9d4c2687aa41   drone-agent-frontend   0.00%     3.379MiB / 1.635GiB   0.20%     36.1kB / 23kB    2.64MB / 8.19kB   3
+b6fcf40efa3f   drone-agent-redis      0.50%     7.309MiB / 1.635GiB   0.44%     118kB / 95.1kB   27.9MB / 193kB    6
+## restart counts
+/drone-agent-api restart=0 status=running health=healthy
+/drone-agent-frontend restart=0 status=running health=healthy
+/drone-agent-redis restart=0 status=running health=healthy
+## system
+ 21:14:43 up 2 days,  1:07,  2 users,  load average: 0.25, 0.10, 0.02
+               total        used        free      shared  buff/cache   available
+Mem:            1674         839         253           6         746         834
+Swap:           2047           0        2047
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/vda3        40G  7.1G   31G  20% /
+/dev/vda3        40G  7.1G   31G  20% /
+## app anomalies
+## redis anomalies
+[2Kdrone-agent-redis  | 1:C 25 Aug 2026 13:19:38.220 # WARNING Memory overcommit must be enabled! Without it, a background save or replication may fail under low memory condition. Being disabled, it can also cause failures without low memory condition, see https://github.com/jemalloc/jemalloc/issues/1328. To fix this issue add 'vm.overcommit_memory = 1' to /etc/sysctl.conf and then reboot or run the command 'sysctl vm.overcommit_memory=1' for this to take effect.

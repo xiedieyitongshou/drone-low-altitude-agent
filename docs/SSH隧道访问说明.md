@@ -18,6 +18,43 @@ redis    -> 127.0.0.1:6379
 
 ## 手动恢复 SSH 隧道
 
+推荐按以下流程恢复本机到服务器的端口转发隧道：
+
+1. 确认服务器 SSH 可连接：
+
+```powershell
+ssh -i .\<private-key.pem> <ssh-user>@<server-public-ip> "echo ssh_ok"
+```
+
+2. 确认服务器上的容器仍在运行：
+
+```powershell
+ssh -i .\<private-key.pem> <ssh-user>@<server-public-ip> `
+  "cd /opt/drone-low-altitude-agent/app && docker compose ps"
+```
+
+3. 确认服务器本机健康检查正常：
+
+```powershell
+ssh -i .\<private-key.pem> <ssh-user>@<server-public-ip> `
+  "curl -fsS http://127.0.0.1:8000/health && curl -fsS http://127.0.0.1:5173/health"
+```
+
+4. 检查本机 `5173` 和 `8000` 是否已经被旧隧道或其他进程占用：
+
+```powershell
+Get-NetTCPConnection -LocalPort 5173,8000 -State Listen
+```
+
+5. 如发现旧 SSH 隧道占用端口，先查看并关闭旧进程：
+
+```powershell
+Get-Process ssh
+Stop-Process -Id <ssh-process-id>
+```
+
+6. 重新建立端口转发隧道：
+
 在本地 PowerShell 中执行：
 
 ```powershell
@@ -40,6 +77,21 @@ ssh -i .\<private-key.pem> `
 - `-L 8000:127.0.0.1:8000`：本地 `localhost:8000` 转发到服务器本机后端端口。
 
 该命令所在窗口需要保持打开。窗口关闭、电脑睡眠或网络切换后，隧道会断开。
+
+7. 新开一个 PowerShell 窗口，验证本地端口和服务：
+
+```powershell
+Get-NetTCPConnection -LocalPort 5173,8000 -State Listen
+curl.exe http://localhost:8000/health
+curl.exe http://localhost:5173/health
+```
+
+8. 浏览器访问：
+
+```text
+http://localhost:5173/
+http://localhost:5173/login
+```
 
 `-i .\<private-key.pem>` 中的路径是相对当前 PowerShell 所在目录的私钥路径，不一定是项目根目录。手动执行时需要按实际位置填写，例如：
 

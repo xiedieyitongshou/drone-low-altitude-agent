@@ -1,0 +1,344 @@
+{
+    "metrics": {
+        "http_reqs": {
+            "count": 108,
+            "rate": 1.0936348436590781
+        },
+        "http_req_blocked": {
+            "p(90)": 0.0158136,
+            "p(95)": 0.019345849999999998,
+            "p(99)": 0.8728662899999977,
+            "max": 0.930383,
+            "avg": 0.034581157407407415,
+            "min": 0.004405,
+            "med": 0.006523
+        },
+        "iteration_duration": {
+            "p(95)": 6650.625458,
+            "p(99)": 9500.478218549992,
+            "max": 12753.39392,
+            "avg": 2299.659815333333,
+            "min": 1003.18949,
+            "med": 1144.7760805,
+            "p(90)": 5510.6408235
+        },
+        "http_req_connecting": {
+            "avg": 0.018564462962962963,
+            "min": 0,
+            "med": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "p(99)": 0.5191102999999988,
+            "max": 0.799435
+        },
+        "vus": {
+            "value": 1,
+            "min": 0,
+            "max": 3
+        },
+        "http_req_sending": {
+            "p(95)": 0.1440833999999997,
+            "p(99)": 0.3290527799999992,
+            "max": 0.458956,
+            "avg": 0.06507177777777777,
+            "min": 0.017163,
+            "med": 0.050008,
+            "p(90)": 0.0935592
+        },
+        "http_req_tls_handshaking": {
+            "p(90)": 0,
+            "p(95)": 0,
+            "p(99)": 0,
+            "max": 0,
+            "avg": 0,
+            "min": 0,
+            "med": 0
+        },
+        "http_req_duration{expected_response:true}": {
+            "max": 11752.791885,
+            "avg": 1317.267774037037,
+            "min": 2.205999,
+            "med": 285.193441,
+            "p(90)": 4601.9396223,
+            "p(95)": 5940.503285399995,
+            "p(99)": 8240.762063859991
+        },
+        "http_req_waiting": {
+            "med": 284.751081,
+            "p(90)": 4601.4328305,
+            "p(95)": 5939.943408049994,
+            "p(99)": 8239.91443129999,
+            "max": 11752.527734,
+            "avg": 1316.8171315,
+            "min": 2.002484
+        },
+        "http_req_duration{endpoint:evaluate}": {
+            "p(90)": 370.3716624,
+            "p(95)": 375.43580699999995,
+            "p(99)": 394.60653019999995,
+            "max": 399.399211,
+            "avg": 319.6593425,
+            "min": 271.820668,
+            "med": 316.8101465,
+            "thresholds": {
+                "p(95)<20000": false
+            }
+        },
+        "checks": {
+            "passes": 138,
+            "fails": 0,
+            "value": 1
+        },
+        "vus_max": {
+            "value": 3,
+            "min": 3,
+            "max": 3
+        },
+        "http_req_duration{endpoint:tasks_list}": {
+            "min": 6.25144,
+            "med": 6.878224,
+            "p(90)": 13.052655399999999,
+            "p(95)": 15.3605672,
+            "p(99)": 15.61609664,
+            "max": 15.679979,
+            "avg": 8.142631578947368,
+            "thresholds": {
+                "p(95)<1500": false
+            }
+        },
+        "data_received": {
+            "count": 370095,
+            "rate": 3747.673958000061
+        },
+        "http_req_duration{endpoint:trace_detail}": {
+            "med": 6.748254,
+            "p(90)": 8.946182799999999,
+            "p(95)": 9.065744299999999,
+            "p(99)": 9.57229526,
+            "max": 9.698933,
+            "avg": 7.097306526315787,
+            "min": 5.89381,
+            "thresholds": {
+                "p(95)<1500": false
+            }
+        },
+        "http_req_receiving": {
+            "avg": 0.38557075925925904,
+            "min": 0.128025,
+            "med": 0.33014,
+            "p(90)": 0.6143419,
+            "p(95)": 0.8495824499999994,
+            "p(99)": 1.1775083199999998,
+            "max": 1.357587
+        },
+        "group_duration": {
+            "p(99)": 8499.700446899991,
+            "max": 11753.124519,
+            "avg": 1298.8995893333329,
+            "min": 2.512443,
+            "med": 144.06454200000002,
+            "p(90)": 4509.558322999999,
+            "p(95)": 5650.17947575
+        },
+        "http_req_duration": {
+            "p(99)": 8240.762063859991,
+            "max": 11752.791885,
+            "avg": 1317.267774037037,
+            "min": 2.205999,
+            "med": 285.193441,
+            "p(90)": 4601.9396223,
+            "p(95)": 5940.503285399995,
+            "thresholds": {
+                "p(95)<20000": false
+            }
+        },
+        "http_req_duration{endpoint:health}": {
+            "p(90)": 4.6237071,
+            "p(95)": 4.6694410500000005,
+            "p(99)": 4.70602821,
+            "max": 4.715175,
+            "avg": 3.1592009999999995,
+            "min": 2.205999,
+            "med": 2.641124,
+            "thresholds": {
+                "p(95)<500": false
+            }
+        },
+        "data_sent": {
+            "count": 39397,
+            "rate": 398.9438142188584
+        },
+        "iterations": {
+            "rate": 0.9721198610302918,
+            "count": 96
+        },
+        "http_req_duration{endpoint:agent_query}": {
+            "p(99)": 10759.199400510002,
+            "max": 11752.791885,
+            "avg": 3952.7320000000004,
+            "min": 1586.695208,
+            "med": 3414.1053065,
+            "p(90)": 6347.145522700001,
+            "p(95)": 7477.348498049994,
+            "thresholds": {
+                "p(95)<12000": false
+            }
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 108,
+            "thresholds": {
+                "rate<0.05": false
+            },
+            "value": 0
+        }
+    },
+    "setup_data": {
+        "users": [
+            {
+                "taskId": "5d9053d21c9f48148d3b9ce699c01afb",
+                "token": "[REDACTED]",
+                "traceId": "14d199eb-68f8-418c-8791-691e61cbf54d",
+                "username": "load_user_day156_after_sync_20260827220048_api_0"
+            },
+            {
+                "taskId": "cbdfc3e3ba644c5d837e41c7d3a3b47b",
+                "token": "[REDACTED]",
+                "traceId": "2c57b6a3-97c1-4292-845a-c2c7b93c4fa4",
+                "username": "load_user_day156_after_sync_20260827220048_api_1"
+            },
+            {
+                "taskId": "354fef6dc0cf4d80b21a496b0760abe9",
+                "token": "[REDACTED]",
+                "traceId": "d122cc35-0dfa-46c0-a77b-2a7283848dde",
+                "username": "load_user_day156_after_sync_20260827220048_api_2"
+            }
+        ]
+    },
+    "root_group": {
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {
+            "setup": {
+                "name": "setup",
+                "path": "::setup",
+                "id": "5c0f8025f7e0b6654089e5b00e950f1a",
+                "groups": {},
+                "checks": {
+                    "register created or already exists": {
+                        "path": "::setup::register created or already exists",
+                        "id": "d164af803caf2dd51e0b01a40f4f31b9",
+                        "passes": 3,
+                        "fails": 0,
+                        "name": "register created or already exists"
+                    },
+                    "login ok": {
+                        "path": "::setup::login ok",
+                        "id": "65474b9d4039908543e738715d924333",
+                        "passes": 3,
+                        "fails": 0,
+                        "name": "login ok"
+                    },
+                    "seed task created": {
+                        "name": "seed task created",
+                        "path": "::setup::seed task created",
+                        "id": "f281fb5814e7c3bd5a3ba54e13831993",
+                        "passes": 3,
+                        "fails": 0
+                    },
+                    "seed agent query 200": {
+                        "name": "seed agent query 200",
+                        "path": "::setup::seed agent query 200",
+                        "id": "17a55a7012ffa10430f4247bf0b0fc0a",
+                        "passes": 3,
+                        "fails": 0
+                    }
+                }
+            },
+            "agent_query": {
+                "name": "agent_query",
+                "path": "::agent_query",
+                "id": "8e1ff0ae3f52c6749632774f4f7f5807",
+                "groups": {},
+                "checks": {
+                    "agent query 200": {
+                        "name": "agent query 200",
+                        "path": "::agent_query::agent query 200",
+                        "id": "7614b308b4bceb815f5071581f26358f",
+                        "passes": 30,
+                        "fails": 0
+                    },
+                    "agent query success": {
+                        "fails": 0,
+                        "name": "agent query success",
+                        "path": "::agent_query::agent query success",
+                        "id": "21638e6867b526ef8d0db52618ddd217",
+                        "passes": 30
+                    }
+                }
+            },
+            "evaluate": {
+                "name": "evaluate",
+                "path": "::evaluate",
+                "id": "cc2bd705084fcf2264a792a19e114c4f",
+                "groups": {},
+                "checks": {
+                    "evaluate 200": {
+                        "id": "50d75ee7031cf0456260511041a5e867",
+                        "passes": 18,
+                        "fails": 0,
+                        "name": "evaluate 200",
+                        "path": "::evaluate::evaluate 200"
+                    }
+                }
+            },
+            "tasks_list": {
+                "path": "::tasks_list",
+                "id": "aeda93eaed1e5f6650b452884d81868a",
+                "groups": {},
+                "checks": {
+                    "tasks list 200": {
+                        "name": "tasks list 200",
+                        "path": "::tasks_list::tasks list 200",
+                        "id": "1c2b491651ffcb5d05c0d0c45944a08a",
+                        "passes": 19,
+                        "fails": 0
+                    }
+                },
+                "name": "tasks_list"
+            },
+            "health": {
+                "path": "::health",
+                "id": "612cc1c9a7c3d7996d1eb6414fb9c69d",
+                "groups": {},
+                "checks": {
+                    "health 200": {
+                        "name": "health 200",
+                        "path": "::health::health 200",
+                        "id": "1923beb3f69502def2b065e42e13b3e0",
+                        "passes": 10,
+                        "fails": 0
+                    }
+                },
+                "name": "health"
+            },
+            "trace_detail": {
+                "groups": {},
+                "checks": {
+                    "trace detail 200": {
+                        "name": "trace detail 200",
+                        "path": "::trace_detail::trace detail 200",
+                        "id": "0efcb759f45b32331b146ca1031e0405",
+                        "passes": 19,
+                        "fails": 0
+                    }
+                },
+                "name": "trace_detail",
+                "path": "::trace_detail",
+                "id": "0520fa1d950b6db9b05342bb5d658aa8"
+            }
+        },
+        "checks": {}
+    }
+}

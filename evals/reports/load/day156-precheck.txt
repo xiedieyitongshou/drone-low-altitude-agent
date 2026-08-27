@@ -1,0 +1,31 @@
+
+2026-08-27T21:12:17+08:00
+
+k6 v2.2.0 (commit/00a9a1b7f5, go1.26.5, linux/amd64)
+
+9ec5c9d
+ M .dockerignore
+ M Dockerfile
+ M docker-compose.yml
+ M frontend/Dockerfile
+?? Dockerfile.server-backup
+?? data/knowledge/index/
+?? docker-compose.yml.server-backup
+?? frontend/Dockerfile.server-backup
+
+{"status":"ok","service":"drone-low-altitude-agent","environment":"production-demo"}
+ok
+
+NAME                   IMAGE            COMMAND                  SERVICE    CREATED        STATUS                  PORTS
+drone-agent-api        app-app          "./docker/entrypoint…"   app        47 hours ago   Up 47 hours (healthy)   127.0.0.1:8000->8000/tcp
+drone-agent-frontend   app-frontend     "/docker-entrypoint.…"   frontend   47 hours ago   Up 47 hours (healthy)   127.0.0.1:5173->80/tcp
+drone-agent-redis      redis:7-alpine   "docker-entrypoint.s…"   redis      2 days ago     Up 2 days (healthy)     127.0.0.1:6379->6379/tcp
+
+
+ 21:12:17 up 2 days,  1:05,  3 users,  load average: 0.05, 0.03, 0.00
+               total        used        free      shared  buff/cache   available
+Mem:            1674         828         208           6         801         845
+Swap:           2047           0        2047
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/vda3        40G  7.1G   31G  20% /
+/dev/vda3        40G  7.1G   31G  20% /

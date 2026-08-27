@@ -1,0 +1,38 @@
+
+2026-08-27T22:00:31+08:00
+
+5ea91c9
+5ea91c9 docs: add load testing and ssh tunnel docs
+f98bd6c Handle labeled LLM parser confidence
+dece32d docs: add server deployment verification guide
+
+197:    def normalize_confidence(cls, value: object | None) -> float | None:
+206:            confidence_labels = {
+215:            if normalized in confidence_labels:
+216:                return confidence_labels[normalized]
+
+LLM_ENABLED=true
+NL_PARSER_MODE=llm
+LLM_PROVIDER=deepseek
+AGENT_RUNTIME_MODE=loop
+
+{"status":"ok","service":"drone-low-altitude-agent","environment":"production-demo"}
+ok
+
+NAME                   IMAGE            COMMAND                  SERVICE    CREATED         STATUS                   PORTS
+drone-agent-api        app-app          "./docker/entrypoint…"   app        4 minutes ago   Up 4 minutes (healthy)   127.0.0.1:8000->8000/tcp
+drone-agent-frontend   app-frontend     "/docker-entrypoint.…"   frontend   2 days ago      Up 2 days (healthy)      127.0.0.1:5173->80/tcp
+drone-agent-redis      redis:7-alpine   "docker-entrypoint.s…"   redis      2 days ago      Up 2 days (healthy)      127.0.0.1:6379->6379/tcp
+
+CONTAINER ID   NAME                   CPU %     MEM USAGE / LIMIT     MEM %     NET I/O           BLOCK I/O         PIDS
+266f6f7b9d35   drone-agent-api        0.14%     138.9MiB / 1.635GiB   8.30%     32.1kB / 23.7kB   54.4MB / 967kB    4
+9d4c2687aa41   drone-agent-frontend   0.00%     3.449MiB / 1.635GiB   0.21%     36.9kB / 23.5kB   3.69MB / 8.19kB   3
+b6fcf40efa3f   drone-agent-redis      0.47%     9.051MiB / 1.635GiB   0.54%     121kB / 96.8kB    32.2MB / 221kB    6
+
+ 22:00:36 up 2 days,  1:53,  2 users,  load average: 0.06, 0.17, 0.12
+               total        used        free      shared  buff/cache   available
+Mem:            1674         850         389           6         597         823
+Swap:           2047           0        2047
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/vda3        40G  7.1G   31G  20% /
+/dev/vda3        40G  7.1G   31G  20% /

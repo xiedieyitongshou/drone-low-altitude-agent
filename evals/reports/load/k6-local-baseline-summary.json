@@ -8,35 +8,35 @@
                 "id": "5c0f8025f7e0b6654089e5b00e950f1a",
                 "groups": {},
                 "checks": {
-                        "register created or already exists": {
-                            "name": "register created or already exists",
-                            "path": "::setup::register created or already exists",
-                            "id": "d164af803caf2dd51e0b01a40f4f31b9",
-                            "passes": 2,
-                            "fails": 0
-                        },
-                        "login ok": {
-                            "name": "login ok",
-                            "path": "::setup::login ok",
-                            "id": "65474b9d4039908543e738715d924333",
-                            "passes": 2,
-                            "fails": 0
-                        },
-                        "seed task created": {
-                            "passes": 2,
-                            "fails": 0,
-                            "name": "seed task created",
-                            "path": "::setup::seed task created",
-                            "id": "f281fb5814e7c3bd5a3ba54e13831993"
-                        },
-                        "seed agent query 200": {
-                            "name": "seed agent query 200",
-                            "path": "::setup::seed agent query 200",
-                            "id": "17a55a7012ffa10430f4247bf0b0fc0a",
-                            "passes": 2,
-                            "fails": 0
-                        }
+                    "register created or already exists": {
+                        "name": "register created or already exists",
+                        "path": "::setup::register created or already exists",
+                        "id": "d164af803caf2dd51e0b01a40f4f31b9",
+                        "passes": 2,
+                        "fails": 0
+                    },
+                    "login ok": {
+                        "name": "login ok",
+                        "path": "::setup::login ok",
+                        "id": "65474b9d4039908543e738715d924333",
+                        "passes": 2,
+                        "fails": 0
+                    },
+                    "seed task created": {
+                        "passes": 2,
+                        "fails": 0,
+                        "name": "seed task created",
+                        "path": "::setup::seed task created",
+                        "id": "f281fb5814e7c3bd5a3ba54e13831993"
+                    },
+                    "seed agent query 200": {
+                        "name": "seed agent query 200",
+                        "path": "::setup::seed agent query 200",
+                        "id": "17a55a7012ffa10430f4247bf0b0fc0a",
+                        "passes": 2,
+                        "fails": 0
                     }
+                }
             },
             "agent_query": {
                 "name": "agent_query",
@@ -44,21 +44,21 @@
                 "id": "8e1ff0ae3f52c6749632774f4f7f5807",
                 "groups": {},
                 "checks": {
-                        "agent query 200": {
-                            "id": "7614b308b4bceb815f5071581f26358f",
-                            "passes": 4,
-                            "fails": 0,
-                            "name": "agent query 200",
-                            "path": "::agent_query::agent query 200"
-                        },
-                        "agent query success": {
-                            "passes": 4,
-                            "fails": 0,
-                            "name": "agent query success",
-                            "path": "::agent_query::agent query success",
-                            "id": "21638e6867b526ef8d0db52618ddd217"
-                        }
+                    "agent query 200": {
+                        "id": "7614b308b4bceb815f5071581f26358f",
+                        "passes": 4,
+                        "fails": 0,
+                        "name": "agent query 200",
+                        "path": "::agent_query::agent query 200"
+                    },
+                    "agent query success": {
+                        "passes": 4,
+                        "fails": 0,
+                        "name": "agent query success",
+                        "path": "::agent_query::agent query success",
+                        "id": "21638e6867b526ef8d0db52618ddd217"
                     }
+                }
             }
         },
         "checks": {},
@@ -263,13 +263,13 @@
         "users": [
             {
                 "taskId": "4e333603034749d493a73ff02cc6c6d1",
-                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjMWQ5ZDcwNi0wZjhjLTQwYWItODQ3OC01ZTU1NjJjNDk5NjMiLCJleHAiOjE3ODc4Mjg1OTMsImlhdCI6MTc4Nzc0MjE5M30.9eE0LEcSWpUdY9jJWpvi0AYYPKgh5tzy7GSuDi8qKjY",
+                "token": "[REDACTED]",
                 "traceId": "3c87b5ee-2b24-4482-9335-478234697a35",
                 "username": "load_user_day155_local_20260826190312_0"
             },
             {
                 "taskId": "869921cd27cf4ba39a5f2548f0ce6578",
-                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyYWIzNDVmOC01Y2JjLTQ4YTAtYjc4Zi0yMjg2MzI1YzAyMjMiLCJleHAiOjE3ODc4Mjg2MTEsImlhdCI6MTc4Nzc0MjIxMX0.5EBt_t3DBzvw-s3F70U_FTCviu8r9d3Jcn5yEnm48YI",
+                "token": "[REDACTED]",
                 "traceId": "914eefaf-b5eb-450f-8aec-751b6b1322b6",
                 "username": "load_user_day155_local_20260826190312_1"
             }
