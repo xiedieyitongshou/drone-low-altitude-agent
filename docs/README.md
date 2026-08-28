@@ -19,6 +19,7 @@
 | [Docker部署说明.md](Docker部署说明.md) | Docker Compose 服务、默认 Agent Loop、Redis 会话记忆、legacy fallback 边界 |
 | [CI-CD说明.md](CI-CD说明.md) | GitHub Actions、快速 Eval 门禁、完整 Eval、服务器手动部署边界 |
 | [设计取舍说明.md](设计取舍说明.md) | 规则引擎 vs LLM、RAG 边界、SQLite、Eval fast/full、前端权限边界 |
+| [数据库迁移说明.md](数据库迁移说明.md) | SQLite 到 PostgreSQL 的迁移触发条件、部署拓扑、执行步骤、校验和回滚 |
 | [权限模型说明.md](权限模型说明.md) | `user_id`、`tenant_id`、`role`、`visibility` 在业务数据中的边界 |
 | [项目完成度与能力映射.md](项目完成度与能力映射.md) | 功能模块、岗位能力、演示入口、测试文件和文档链接对应关系 |
 
