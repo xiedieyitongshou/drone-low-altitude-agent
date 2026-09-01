@@ -3,22 +3,24 @@
 .venv
 __pycache__
 *.pyc
-.env
 
+# Runtime configuration and secrets must be injected at deploy time.
+.env
+.env.*
+*.pem
+*.key
+*.crt
+*.csr
+
+# Runtime data must stay outside image layers.
+*.db
+*.sqlite
 data/drone_agent.db
 data/samples
+data/knowledge/index
+evals/reports
 
+# Documentation is not needed by the runtime image and may include
+# non-ASCII filenames that older Docker BuildKit versions reject.
+*.md
 docs
-!docs/
-!docs/Day*.md
-
-项目面试指南.md
-开发计划与时间表.md
-开发过程发现的问题以及完成后的改进.md
-无人机巡航行业规则表.md
-第一周工作总结.md
-第三周工作总结.md
-第四周工作总结.md
-阿里云百炼工作流搭建指南.md
-阿里云百炼工作流节点图.md
-项目重构技术方案.md

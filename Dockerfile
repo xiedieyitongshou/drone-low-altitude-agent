@@ -1,5 +1,8 @@
 FROM python:3.11-slim
 
+# This image intentionally contains only public application code and tooling.
+# Runtime secrets, .env files, databases, backups, and server-local state must
+# be injected by Docker Compose or mounted volumes, not baked into the image.
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV TZ=Asia/Shanghai
@@ -24,10 +27,21 @@ ENV RAG_CONFIDENCE_THRESHOLD=0.2
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir --upgrade pip
+ARG PIP_INDEX_URL=https://pypi.org/simple
+ARG PIP_TRUSTED_HOST=
+
+RUN if [ -n "$PIP_TRUSTED_HOST" ]; then \
+      pip install --no-cache-dir -i "$PIP_INDEX_URL" --trusted-host "$PIP_TRUSTED_HOST" --upgrade pip; \
+    else \
+      pip install --no-cache-dir -i "$PIP_INDEX_URL" --upgrade pip; \
+    fi
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN if [ -n "$PIP_TRUSTED_HOST" ]; then \
+      pip install --no-cache-dir -i "$PIP_INDEX_URL" --trusted-host "$PIP_TRUSTED_HOST" -r requirements.txt; \
+    else \
+      pip install --no-cache-dir -i "$PIP_INDEX_URL" -r requirements.txt; \
+    fi
 
 COPY alembic.ini .
 COPY alembic ./alembic
@@ -45,4 +59,7 @@ RUN chmod +x ./docker/entrypoint.sh
 
 EXPOSE 8000
 
+# The entrypoint runs `python -m alembic upgrade head` before starting FastAPI.
+# On a fresh PostgreSQL volume this creates an empty schema; historical SQLite
+# data migration is a separate, explicit operation.
 ENTRYPOINT ["./docker/entrypoint.sh"]
