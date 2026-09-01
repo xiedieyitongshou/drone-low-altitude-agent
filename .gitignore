@@ -8,3 +8,10 @@ __pycache__/
 data/drone_agent.db
 data/eval-reports/
 data/samples/
+*.pem
+*.key
+*.crt
+*.csr
+data/knowledge/index/
+evals/reports/load/*.json
+evals/reports/load/*.db

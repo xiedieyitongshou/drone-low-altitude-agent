@@ -8,7 +8,7 @@ services:
         VITE_API_TIMEOUT_MS: ${VITE_API_TIMEOUT_MS:-60000}
     container_name: drone-agent-frontend
     ports:
-      - "5173:80"
+      - "127.0.0.1:5173:80"
     depends_on:
       app:
         condition: service_healthy
@@ -30,7 +30,7 @@ services:
       APP_ENV: ${APP_ENV:-docker}
       APP_PORT: 8000
       TZ: Asia/Shanghai
-      DATABASE_URL: sqlite:///./data/drone_agent.db
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://drone_agent:${POSTGRES_PASSWORD:-change-me-postgres-password}@postgres:5432/drone_agent}
       SESSION_MEMORY_BACKEND: redis
       REDIS_URL: redis://redis:6379/0
       SESSION_MEMORY_TTL_SECONDS: ${SESSION_MEMORY_TTL_SECONDS:-1800}
@@ -57,11 +57,13 @@ services:
       KNOWLEDGE_EMBEDDING_MIN_SCORE: ${KNOWLEDGE_EMBEDDING_MIN_SCORE:-0.25}
       RAG_CONFIDENCE_THRESHOLD: ${RAG_CONFIDENCE_THRESHOLD:-0.2}
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     volumes:
       - ./data:/app/data
     depends_on:
       redis:
+        condition: service_healthy
+      postgres:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
@@ -81,7 +83,7 @@ services:
     environment:
       APP_ENV: ${APP_ENV:-docker}
       TZ: Asia/Shanghai
-      DATABASE_URL: sqlite:///./data/drone_agent.db
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://drone_agent:${POSTGRES_PASSWORD:-change-me-postgres-password}@postgres:5432/drone_agent}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-only-change-me}
       JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
       INITIAL_ADMIN_USERNAME: ${INITIAL_ADMIN_USERNAME:-admin}
@@ -99,6 +101,8 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
 
   knowledge-import:
     build:
@@ -111,12 +115,15 @@ services:
     environment:
       APP_ENV: ${APP_ENV:-docker}
       TZ: Asia/Shanghai
-      DATABASE_URL: sqlite:///./data/drone_agent.db
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://drone_agent:${POSTGRES_PASSWORD:-change-me-postgres-password}@postgres:5432/drone_agent}
       ADVICE_KNOWLEDGE_PATH: ${ADVICE_KNOWLEDGE_PATH:-data/knowledge/advice_rules.json}
     volumes:
       - ./data:/app/data
     entrypoint: ["sh", "-c"]
     command: ["python -m alembic upgrade head && python scripts/import_knowledge_json.py --path \"$${ADVICE_KNOWLEDGE_PATH:-data/knowledge/advice_rules.json}\""]
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   knowledge-reindex:
     build:
@@ -129,7 +136,7 @@ services:
     environment:
       APP_ENV: ${APP_ENV:-docker}
       TZ: Asia/Shanghai
-      DATABASE_URL: sqlite:///./data/drone_agent.db
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://drone_agent:${POSTGRES_PASSWORD:-change-me-postgres-password}@postgres:5432/drone_agent}
       ADVICE_KNOWLEDGE_PATH: ${ADVICE_KNOWLEDGE_PATH:-data/knowledge/advice_rules.json}
       KNOWLEDGE_SOURCE_PATH: ${KNOWLEDGE_SOURCE_PATH:-}
       KNOWLEDGE_RETRIEVER: ${KNOWLEDGE_RETRIEVER:-bm25}
@@ -153,6 +160,9 @@ services:
             if job.status != "success":
                 raise SystemExit(1)
         PY
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   backend-tests:
     build:
@@ -165,7 +175,7 @@ services:
     environment:
       APP_ENV: ${APP_ENV:-docker}
       TZ: Asia/Shanghai
-      DATABASE_URL: sqlite:///./data/drone_agent.db
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://drone_agent:${POSTGRES_PASSWORD:-change-me-postgres-password}@postgres:5432/drone_agent}
       SESSION_MEMORY_BACKEND: redis
       REDIS_URL: redis://redis:6379/0
       AGENT_RUNTIME_MODE: ${AGENT_RUNTIME_MODE:-loop}
@@ -181,6 +191,8 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
 
   eval-fast:
     build:
@@ -193,7 +205,7 @@ services:
     environment:
       APP_ENV: ${APP_ENV:-docker}
       TZ: Asia/Shanghai
-      DATABASE_URL: sqlite:///./data/drone_agent.db
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://drone_agent:${POSTGRES_PASSWORD:-change-me-postgres-password}@postgres:5432/drone_agent}
       SESSION_MEMORY_BACKEND: redis
       REDIS_URL: redis://redis:6379/0
       AGENT_RUNTIME_MODE: loop
@@ -210,6 +222,8 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
 
   eval-full:
     build:
@@ -222,7 +236,7 @@ services:
     environment:
       APP_ENV: ${APP_ENV:-docker}
       TZ: Asia/Shanghai
-      DATABASE_URL: sqlite:///./data/drone_agent.db
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://drone_agent:${POSTGRES_PASSWORD:-change-me-postgres-password}@postgres:5432/drone_agent}
       SESSION_MEMORY_BACKEND: redis
       REDIS_URL: redis://redis:6379/0
       AGENT_RUNTIME_MODE: loop
@@ -244,12 +258,43 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: drone-agent-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-drone_agent}
+      POSTGRES_USER: ${POSTGRES_USER:-drone_agent}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-postgres-password}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    command:
+      - "postgres"
+      - "-c"
+      - "shared_buffers=128MB"
+      - "-c"
+      - "effective_cache_size=512MB"
+      - "-c"
+      - "work_mem=4MB"
+      - "-c"
+      - "maintenance_work_mem=64MB"
+      - "-c"
+      - "max_connections=20"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-drone_agent} -d $${POSTGRES_DB:-drone_agent}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7-alpine
     container_name: drone-agent-redis
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis_data:/data
     command: ["redis-server", "--appendonly", "yes"]
@@ -261,3 +306,4 @@ services:
 
 volumes:
   redis_data:
+  postgres_data:

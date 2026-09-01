@@ -6,7 +6,7 @@
 
 ## 项目状态
 
-当前版本支持本地运行、Docker Compose 联调、GitHub Actions CI 门禁、前后端控制台演示和阿里云 Linux 服务器私有部署验证。默认配置使用规则解析、SQLite、TTLCache；Docker 环境默认使用 Redis 会话记忆，并通过 `AGENT_RUNTIME_MODE=loop` 运行 Agent Loop。LLM 解析默认关闭，需要配置 API Key 后通过 `LLM_ENABLED=true` 和 `NL_PARSER_MODE=hybrid` 启用。
+当前版本支持本地运行、Docker Compose 联调、GitHub Actions CI 门禁、前后端控制台演示和阿里云 Linux 服务器私有部署验证。本地裸跑默认使用规则解析、SQLite、TTLCache；Docker 环境默认使用 PostgreSQL、Redis 会话记忆，并通过 `AGENT_RUNTIME_MODE=loop` 运行 Agent Loop。LLM 解析默认关闭，需要配置 API Key 后通过 `LLM_ENABLED=true` 和 `NL_PARSER_MODE=hybrid` 启用。
 
 这个项目应被定义为“可运行的低空作业气象决策原型”，不是生产级航空安全系统。规则阈值、样例知识库和第三方天气数据都服务于工程化验证，不等同于权威适航标准或监管审批结论。
 
@@ -21,7 +21,7 @@
 - RAG 数据治理：支持知识类型、地域、租户、用户、可见性、时效、审核状态等 metadata 过滤。
 - Eval 体系：包含 Tool Calling Eval、Multi-turn State Eval、Failure Recovery Eval 和 RAG Eval，用样例集量化 Agent 行为。
 - 前后端控制台：React + Vite 页面覆盖 Agent 对话、评估、推荐、比选、历史、Profile 和管理员功能。
-- Docker 化：提供后端、前端和 Redis 的 Docker Compose 联调环境，便于本地运行和服务器部署前验证。
+- Docker 化：提供后端、前端、PostgreSQL 和 Redis 的 Docker Compose 联调环境，便于本地运行和服务器部署前验证。
 - 服务器部署验证：已完成阿里云 Linux + Docker Compose 私有部署验证，默认通过 SSH 隧道访问，补充了密钥、日志、数据库权限和最小备份检查。
 
 ## 系统架构
@@ -45,7 +45,7 @@ Browser / React Console
           -> Conversation History
           -> RAG Retriever
       -> Storage
-          -> SQLite / SQLAlchemy / Alembic
+          -> SQLite or PostgreSQL / SQLAlchemy / Alembic
           -> Redis Session Memory
 ```
 
@@ -115,11 +115,11 @@ docker compose --profile tools run --rm admin-init
 
 - Docker、Docker Compose、Git、Nginx 基础环境准备
 - GitHub `main` 分支代码拉取和部署 commit 记录
-- 服务器本地 `.env`、管理员凭据和 SQLite 数据库权限收敛
+- 服务器本地 `.env`、管理员凭据和数据库权限收敛
 - Redis / API / 前端容器健康检查
 - 知识库导入与索引重建
 - 日志敏感信息检查和 `AGENT_LOG_RAW_PAYLOAD=false`
-- SQLite 数据库、知识索引和 `.env` 的最小备份方案
+- SQLite/PostgreSQL 数据库、知识索引和 `.env` 的最小备份方案
 
 详细步骤和检查结果见：[docs/服务器部署说明.md](docs/服务器部署说明.md)。
 
@@ -189,7 +189,7 @@ tests/                  后端单元测试、API 测试和 Eval 快速门禁
 evals/                  Agent/RAG 评测样例和报告
 scripts/                Eval、管理员初始化、知识库导入和辅助脚本
 docs/                   架构、部署、测试、权限、设计取舍和阶段说明
-data/                   本地 SQLite、样例数据和知识库索引
+data/                   本地 SQLite、样例数据和知识库索引；Docker PostgreSQL 使用 named volume 持久化
 docker-compose.yml      本地 Docker Compose 联调入口
 ```
 
@@ -232,5 +232,5 @@ docker-compose.yml      本地 Docker Compose 联调入口
 - 规则阈值是工程化原型，不等同于权威适航标准或监管审批结论。
 - RAG 知识库是样例知识库，不应包装成实时权威政策库。
 - LLM 在配置中关闭，但自主部署需要重新配置环境，主要用于结构化解析和解释增强。
-- SQLite 适合本地运行和功能验证，不适合高并发写入场景。
-- 当前 Docker Compose 更适合本地联调和服务器部署前验证，生产化还需要独立 Nginx 反代、HTTPS、PostgreSQL、监控告警和备份策略。
+- SQLite 适合本地裸跑和功能验证，不适合高并发写入场景。
+- 当前 Docker Compose 已支持同机 PostgreSQL，适合演示和迁移演练；生产化还需要独立 Nginx 反代、HTTPS、监控告警和备份策略。
