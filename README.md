@@ -106,6 +106,7 @@ docker compose --profile tools run --rm admin-init
 ```
 
 GitHub 仓库不包含运行数据库文件，也不包含管理员账号、测试账号或压测数据。首次从 GitHub 部署时数据库为空；如需登录管理后台，需要先在 `.env` 中配置 `INITIAL_ADMIN_USERNAME` / `INITIAL_ADMIN_PASSWORD`，再执行上面的 `admin-init`。
+普通 `docker compose up -d` 不会自动创建管理员账号。管理员初始化是显式操作，必须由部署者在 `.env` 中设置强密码后执行 `docker compose --profile tools run --rm admin-init`。
 
 更多启动、测试和环境变量说明见：[docs/本地开发与测试说明.md](docs/本地开发与测试说明.md) 和 [docs/Docker部署说明.md](docs/Docker部署说明.md)。
 

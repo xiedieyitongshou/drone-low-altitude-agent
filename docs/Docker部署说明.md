@@ -427,6 +427,8 @@ INITIAL_ADMIN_USERNAME=admin
 INITIAL_ADMIN_PASSWORD=change-me-before-deploy
 ```
 
+普通 `docker compose up -d` 不会自动创建管理员账号。管理员初始化是显式操作，必须由部署者在 `.env` 中设置强密码后执行 `docker compose --profile tools run --rm admin-init`。
+
 ## 10. Docker 中运行测试与 Eval
 
 后端测试：
