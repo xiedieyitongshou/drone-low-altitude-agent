@@ -10,19 +10,25 @@
 
 这个项目应被定义为“可运行的低空作业气象决策原型”，不是生产级航空安全系统。规则阈值、样例知识库和第三方天气数据都服务于工程化验证，不等同于权威适航标准或监管审批结论。
 
-## 核心亮点
+## 功能概览
 
-- 业务闭环：支持单地点评估、推荐窗口、多地点比选、历史复盘和自然语言统一入口。
+- 核心决策：支持单地点评估、逐小时风险解释、天气预警修正和 `适飞 / 慎飞 / 禁飞` 结论输出。
+- 调度辅助：支持未来推荐执行窗口、多地点比选、历史复盘和任务单状态流转。
+- Agent 交互：支持自然语言统一入口、多轮上下文继承、字段覆盖、缺字段追问、失败恢复和工具编排。
+- 知识增强：支持 RAG 操作建议、风险解释、SOP/政策提示、metadata filter、低置信 fallback。
+- 用户体系：支持注册、登录、JWT 鉴权、普通用户数据隔离、Profile Memory、Conversation History 和管理员审计。
+- 前端控制台：React + Vite 页面覆盖 Agent 对话、评估、推荐、比选、历史、Profile、Trace 和管理员功能。
+- 部署验证：支持本地运行、Docker Compose 联调、PostgreSQL、Redis、GitHub Actions CI、服务器私有部署和轻量压测。
+
+## 技术亮点
+
 - Agent Runtime：通过 Business Route、Planner、Tool Registry、Tool Executor 和 Agent State 组织工具调用，而不是固定串行 workflow。
 - 安全边界：LLM 不直接判断飞行安全，RAG 不覆盖规则结论，Guardrail 固定在输入、工具调用和最终输出阶段。
 - 可解释 Trace：记录 plan、tool_call、tool_result、error、fallback、final_response 等事件，支持按用户查询执行链路。
 - 多轮上下文：支持 pending task、字段继承、字段覆盖、会话隔离和 Profile Memory 补全。
-- 多用户体系：支持注册、登录、JWT 鉴权、普通用户数据隔离、管理员用户治理和会话审计。
 - RAG 数据治理：支持知识类型、地域、租户、用户、可见性、时效、审核状态等 metadata 过滤。
 - Eval 体系：包含 Tool Calling Eval、Multi-turn State Eval、Failure Recovery Eval 和 RAG Eval，用样例集量化 Agent 行为。
-- 前后端控制台：React + Vite 页面覆盖 Agent 对话、评估、推荐、比选、历史、Profile 和管理员功能。
 - Docker 化：提供后端、前端、PostgreSQL 和 Redis 的 Docker Compose 联调环境，便于本地运行和服务器部署前验证。
-- 服务器部署验证：已完成阿里云 Linux + Docker Compose 私有部署验证，默认通过 SSH 隧道访问，补充了密钥、日志、数据库权限和最小备份检查。
 
 ## 系统架构
 
