@@ -16,6 +16,7 @@ __pycache__
 *.db
 *.sqlite
 data/drone_agent.db
+data/backups
 data/samples
 data/knowledge/index
 evals/reports

@@ -6,6 +6,7 @@ __pycache__/
 
 项目面试指南.md
 data/drone_agent.db
+data/backups/
 data/eval-reports/
 data/samples/
 *.pem

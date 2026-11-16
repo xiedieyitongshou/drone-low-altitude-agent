@@ -34,7 +34,8 @@ AGENT_RUNTIME_MODE=loop
 Docker Compose 默认数据库为 PostgreSQL：
 
 ```env
-DATABASE_URL=postgresql+psycopg://drone_agent:<password>@postgres:5432/drone_agent
+DATABASE_URL=
+POSTGRES_DB=drone_agent
 ```
 
 PostgreSQL 数据保存在 Docker named volume：
@@ -147,7 +148,7 @@ QWEATHER_WARNING_BASE_URL=<replace-with-real-host>
 POSTGRES_DB=drone_agent
 POSTGRES_USER=drone_agent
 POSTGRES_PASSWORD=<replace-with-strong-random-password>
-DATABASE_URL=postgresql+psycopg://drone_agent:<same-password>@postgres:5432/drone_agent
+DATABASE_URL=
 
 JWT_SECRET_KEY=<replace-with-long-random-secret>
 INITIAL_ADMIN_USERNAME=<replace-with-admin-username>
@@ -165,6 +166,8 @@ NL_PARSER_MODE=rule
 AGENT_RUNTIME_MODE=loop
 AGENT_LOG_RAW_PAYLOAD=false
 ```
+
+`DATABASE_URL` 留空时，后端和工具容器使用 Compose 的 `postgres:5432` 与上面的 `POSTGRES_*` 配置。设置 `DATABASE_URL=sqlite:///./data/drone_agent.db` 可选择项目目录中的 SQLite 文件。配置完整连接串也可连接外部数据库。
 
 国外服务器或网络稳定环境建议使用官方源：
 
@@ -296,35 +299,33 @@ git pull --ff-only origin main
 
 首次空库部署跳过本节；只有服务器已经存在 `data/drone_agent.db` 且需要保留历史用户、任务、会话、Trace 或知识库数据时，才执行本节。
 
-备份：
+停止使用旧库的后端后，备份 SQLite 文件和 `.env`：
 
 ```bash
+docker compose stop frontend app
 BACKUP=/opt/drone-low-altitude-agent/backups/pre-postgres-$(date +%Y%m%d-%H%M%S)
 mkdir -p "$BACKUP"
 cp -a .env data/drone_agent.db "$BACKUP"/
 ```
 
-停止会写数据库的服务：
+将 `.env` 中的 `DATABASE_URL` 留空并设置 PostgreSQL 参数，然后启动数据库服务：
 
 ```bash
-docker compose stop frontend app
 docker compose up -d postgres redis
 ```
 
-执行 schema migration：
+迁移脚本会清空配置指向的目标业务表。请使用空的目标库。已有 PostgreSQL 数据卷时，改 `POSTGRES_DB` 只会改变应用连接的库，需先在实例中创建该库。确认目标后，执行 schema migration：
 
 ```bash
 docker compose run --rm --entrypoint sh app -c 'python -m alembic upgrade head'
 ```
 
-执行数据迁移。迁移脚本使用 `psycopg.connect()`，需要标准 PostgreSQL URL；如果 `.env` 中是 SQLAlchemy URL `postgresql+psycopg://`，执行时转换一下：
+执行数据迁移。脚本默认采用后端的数据库配置：
 
 ```bash
-PGURL=$(grep '^DATABASE_URL=' .env | tail -1 | cut -d= -f2- | sed 's#^postgresql+psycopg://#postgresql://#')
 docker compose run --rm --entrypoint python app \
-  scripts/migrate_sqlite_to_postgres.py \
+  -m scripts.migrate_sqlite_to_postgres \
   --sqlite-path data/drone_agent.db \
-  --postgres-url "$PGURL" \
   --yes
 ```
 
@@ -355,9 +356,9 @@ docker compose logs --tail=100 frontend
 docker compose logs --tail=100 postgres
 curl -fsS http://127.0.0.1:8000/health
 curl -fsS http://127.0.0.1:5173/health
-docker compose exec app env | grep '^DATABASE_URL='
+docker compose exec app python -c 'from app.db.session import engine; print(engine.url.drivername, engine.url.host, engine.url.database)'
 docker compose exec app python -m alembic current
-docker compose exec postgres pg_isready -U drone_agent -d drone_agent
+docker compose exec postgres sh -c 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
 ```
 
 CI 和质量门禁只能证明代码、测试、前端构建和 Compose 配置在自动化环境中通过，不能替代服务器部署后的人工检查。部署后至少要人工验证：

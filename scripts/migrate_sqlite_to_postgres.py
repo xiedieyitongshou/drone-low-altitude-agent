@@ -3,12 +3,14 @@ from __future__ import annotations
 import argparse
 import json
 import sqlite3
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 import psycopg
 from psycopg.types.json import Json
+from sqlalchemy.engine import make_url
 
 
 TABLES_IN_IMPORT_ORDER = [
@@ -98,7 +100,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--sqlite-path", default="data/drone_agent.db")
     parser.add_argument(
         "--postgres-url",
-        default="postgresql://drone_agent:change-me-postgres-password@127.0.0.1:5432/drone_agent",
+        help="PostgreSQL connection URL. Defaults to the app's database configuration.",
     )
     parser.add_argument(
         "--yes",
@@ -106,6 +108,17 @@ def parse_args() -> argparse.Namespace:
         help="Actually truncate PostgreSQL tables and import data.",
     )
     return parser.parse_args()
+
+
+def configured_postgres_url() -> str:
+    if not __package__:
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from app.db.session import get_database_url
+
+    url = make_url(get_database_url())
+    if url.get_backend_name() != "postgresql":
+        raise SystemExit("Configure a PostgreSQL database or supply --postgres-url.")
+    return url.set(drivername="postgresql").render_as_string(hide_password=False)
 
 
 def sqlite_tables(conn: sqlite3.Connection) -> set[str]:
@@ -184,7 +197,7 @@ def insert_missing_users(
             "UNUSABLE_PASSWORD",
             user_id,
             "user",
-            True,
+            False,
             now,
             now,
         )
@@ -256,13 +269,13 @@ def main() -> None:
     if not args.yes:
         raise SystemExit("Refusing to modify PostgreSQL without --yes.")
 
-    sqlite_conn = sqlite3.connect(sqlite_path)
+    sqlite_conn = sqlite3.connect(sqlite_path.resolve().as_uri() + "?mode=ro", uri=True)
     sqlite_conn.row_factory = sqlite3.Row
     missing_tables = set(TABLES_IN_IMPORT_ORDER) - sqlite_tables(sqlite_conn)
     if missing_tables:
         raise SystemExit(f"SQLite database is missing tables: {sorted(missing_tables)}")
 
-    with psycopg.connect(args.postgres_url) as postgres_conn:
+    with psycopg.connect(args.postgres_url or configured_postgres_url()) as postgres_conn:
         missing_user_ids = find_missing_user_ids(sqlite_conn)
         truncate_postgres(postgres_conn)
         imported_counts: dict[str, int] = {}
@@ -273,9 +286,6 @@ def main() -> None:
                     postgres_conn,
                     missing_user_ids,
                 )
-        reset_sequences(postgres_conn)
-        postgres_conn.commit()
-
         mismatches: list[str] = []
         for table in TABLES_IN_IMPORT_ORDER:
             sqlite_count = count_sqlite(sqlite_conn, table)
@@ -288,15 +298,15 @@ def main() -> None:
             )
             if expected_count != postgres_count:
                 mismatches.append(table)
+        if mismatches:
+            raise SystemExit(f"Count mismatch after migration: {', '.join(mismatches)}")
+        reset_sequences(postgres_conn)
         if missing_user_ids:
             print(
-                "synthetic users added for historical orphan references: "
-                + ", ".join(missing_user_ids)
+                f"Inactive users added for historical orphan references: {len(missing_user_ids)}"
             )
 
     sqlite_conn.close()
-    if mismatches:
-        raise SystemExit(f"Count mismatch after migration: {', '.join(mismatches)}")
     print("SQLite to PostgreSQL migration completed successfully.")
 
 

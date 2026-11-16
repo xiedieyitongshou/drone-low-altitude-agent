@@ -6,7 +6,7 @@
 
 ## 项目状态
 
-当前版本支持本地运行、Docker Compose 联调、GitHub Actions CI 门禁、前后端控制台演示和阿里云 Linux 服务器私有部署验证。本地裸跑默认使用规则解析、SQLite、TTLCache；Docker 环境默认使用 PostgreSQL、Redis 会话记忆，并通过 `AGENT_RUNTIME_MODE=loop` 运行 Agent Loop。LLM 解析默认关闭，需要配置 API Key 后通过 `LLM_ENABLED=true` 和 `NL_PARSER_MODE=hybrid` 启用。
+当前版本支持本地运行、Docker Compose 联调、GitHub Actions CI 门禁、前后端控制台演示和阿里云 Linux 服务器私有部署验证。本地和 Docker Compose 默认使用 PostgreSQL，可通过 `DATABASE_URL` 切换到 SQLite。本地默认使用规则解析和 TTLCache，Docker 使用 Redis 会话记忆，并通过 `AGENT_RUNTIME_MODE=loop` 运行 Agent Loop。LLM 解析默认关闭，需要配置 API Key 后通过 `LLM_ENABLED=true` 和 `NL_PARSER_MODE=hybrid` 启用。
 
 这个项目应被定义为“可运行的低空作业气象决策原型”，不是生产级航空安全系统。规则阈值、样例知识库和第三方天气数据都服务于工程化验证，不等同于权威适航标准或监管审批结论。
 
@@ -61,13 +61,18 @@ Browser / React Console
 
 ### 本地启动
 
+首次运行时从 `.env.example` 创建 `.env`。已有配置的环境沿用现有 `.env`。
+
 ```powershell
-Copy-Item .env.example .env
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+docker compose up -d --wait postgres
 .\.venv\Scripts\activate
 python -m pip install -r requirements.txt
 python -m alembic upgrade head
 python -m uvicorn main:app --reload
 ```
+
+本机通过 `127.0.0.1:5432` 访问 Compose 的 PostgreSQL。要使用 SQLite，在 `.env` 设置 `DATABASE_URL=sqlite:///./data/drone_agent.db` 后重启后端。两种数据库各自存储数据，有旧数据时可执行迁移。[本地配置与切换](docs/本地开发与测试说明.md)
 
 后端入口：
 
@@ -93,7 +98,7 @@ http://localhost:5173
 ### Docker Compose 启动
 
 ```powershell
-Copy-Item .env.docker.example .env
+if (-not (Test-Path .env)) { Copy-Item .env.docker.example .env }
 docker compose up -d --build
 ```
 
