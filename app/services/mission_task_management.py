@@ -110,7 +110,7 @@ def get_mission_task_detail(
     current_user: User,
     task_id: str,
 ) -> MissionTaskDetailResponse:
-    task = _get_visible_task(db=db, current_user=current_user, task_id=task_id)
+    task = get_visible_mission_task(db=db, current_user=current_user, task_id=task_id)
     return to_mission_task_detail_response(db=db, task=task)
 
 
@@ -204,8 +204,11 @@ def to_mission_task_detail_response(*, db: Session, task: MissionTask) -> Missio
         db.scalars(
             select(AgentTraceEventRecord.trace_id)
             .where(AgentTraceEventRecord.task_id == task.id)
-            .order_by(AgentTraceEventRecord.created_at.desc())
-            .distinct()
+            .group_by(AgentTraceEventRecord.trace_id)
+            .order_by(
+                func.max(AgentTraceEventRecord.created_at).desc(),
+                AgentTraceEventRecord.trace_id.asc(),
+            )
         ).all()
     )
     assessment_request_ids = list(
@@ -226,7 +229,7 @@ def to_mission_task_detail_response(*, db: Session, task: MissionTask) -> Missio
     )
 
 
-def _get_visible_task(*, db: Session, current_user: User, task_id: str) -> MissionTask:
+def get_visible_mission_task(*, db: Session, current_user: User, task_id: str) -> MissionTask:
     task = db.get(MissionTask, task_id)
     if task is None:
         raise MissionTaskNotFoundError("mission task not found")
@@ -236,7 +239,7 @@ def _get_visible_task(*, db: Session, current_user: User, task_id: str) -> Missi
 
 
 def _get_owned_task(*, db: Session, current_user: User, task_id: str) -> MissionTask:
-    task = _get_visible_task(db=db, current_user=current_user, task_id=task_id)
+    task = get_visible_mission_task(db=db, current_user=current_user, task_id=task_id)
     if task.user_id != current_user.id:
         raise MissionTaskPermissionError("cannot modify another user's mission task")
     return task

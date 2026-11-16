@@ -1,4 +1,5 @@
 from fastapi import HTTPException
+from fastapi.security import HTTPAuthorizationCredentials
 
 from app.db.models import (
     CruiseAssessment,
@@ -9,6 +10,7 @@ from app.db.models import (
     WeatherWarningSnapshot,
 )
 from app.db.session import SessionLocal
+from app.dependencies.auth import get_current_user
 from app.schemas import (
     CruiseAssessmentAdvice,
     CruiseHistoryResponse,
@@ -19,9 +21,14 @@ from app.schemas import (
     WeatherDataBundle,
     WeatherHourData,
 )
+from app.services.mission_task_management import MissionTaskNotFoundError, get_visible_mission_task
 
 
-def get_cruise_history(request_id: str) -> CruiseHistoryResponse:
+def get_cruise_history(
+    request_id: str,
+    *,
+    credentials: HTTPAuthorizationCredentials | None = None,
+) -> CruiseHistoryResponse:
     with SessionLocal() as session:
         task_request = session.query(TaskRequest).filter(TaskRequest.request_id == request_id).one_or_none()
         if task_request is None:
@@ -30,6 +37,18 @@ def get_cruise_history(request_id: str) -> CruiseHistoryResponse:
         assessment = session.query(CruiseAssessment).filter(CruiseAssessment.request_id == request_id).one_or_none()
         if assessment is None:
             raise HTTPException(status_code=404, detail=f"assessment not found for request_id={request_id}")
+
+        task_id = task_request.task_id
+        if task_id is None:
+            task_id = assessment.task_id
+        if assessment.task_id is not None and assessment.task_id != task_id:
+            raise HTTPException(status_code=404, detail=f"history not found for request_id={request_id}")
+        if task_id is not None:
+            current_user = get_current_user(credentials=credentials, db=session)
+            try:
+                get_visible_mission_task(db=session, current_user=current_user, task_id=task_id)
+            except MissionTaskNotFoundError as exc:
+                raise HTTPException(status_code=404, detail=f"history not found for request_id={request_id}") from exc
 
         location = session.query(Location).filter(Location.id == assessment.location_id).one()
         hourly_assessments = (

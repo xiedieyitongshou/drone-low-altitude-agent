@@ -8,6 +8,7 @@ from fastapi import Depends, FastAPI, HTTPException, Query, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from fastapi.security import HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -15,7 +16,7 @@ from sqlalchemy.orm import Session
 from app.core.config import load_environment
 from app.db.models import User
 from app.dependencies import get_current_user, get_db
-from app.dependencies.auth import require_admin_user
+from app.dependencies.auth import bearer_scheme, require_admin_user
 from app.schemas import (
     AdminConversationDetailResponse,
     AdminConversationListResponse,
@@ -1024,9 +1025,12 @@ def evaluate_cruise(payload: CruiseEvaluateRequest) -> CruiseAssessmentResponse:
 
 
 @app.get("/cruise/history/{request_id}", response_model=CruiseHistoryResponse)
-def read_cruise_history(request_id: str) -> CruiseHistoryResponse:
+def read_cruise_history(
+    request_id: str,
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+) -> CruiseHistoryResponse:
     logger.info("Reading cruise history", extra={"request_id": request_id})
-    result = get_cruise_history(request_id)
+    result = get_cruise_history(request_id, credentials=credentials)
     logger.info(
         "Cruise history loaded",
         extra={
@@ -1039,9 +1043,12 @@ def read_cruise_history(request_id: str) -> CruiseHistoryResponse:
 
 
 @app.get("/cruise/history/{request_id}/composed", response_model=UnifiedBusinessResponse)
-def read_cruise_history_composed(request_id: str) -> UnifiedBusinessResponse:
+def read_cruise_history_composed(
+    request_id: str,
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+) -> UnifiedBusinessResponse:
     logger.info("Reading composed cruise history", extra={"request_id": request_id})
-    result = get_cruise_history(request_id)
+    result = get_cruise_history(request_id, credentials=credentials)
     return compose_history_response(result)
 
 

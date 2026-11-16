@@ -1,8 +1,9 @@
 from collections.abc import Generator
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
+import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine, select, update
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -236,32 +237,130 @@ def build_recommendation(payload: RecommendationRequest) -> RecommendationRespon
     )
 
 
-def test_task_evaluate_persists_history_and_updates_task_status() -> None:
-    client, tokens, SessionLocal = build_test_client()
-    try:
-        task_id = create_task(client, tokens["user-a"])
-        with patch("app.services.mission_task_execution.evaluate_cruise_request_with_artifacts", side_effect=build_artifacts):
-            response = client.post(f"/tasks/{task_id}/evaluate", headers=auth_headers(tokens["user-a"]))
+@pytest.fixture
+def task_history_tokens(api_session_factory: sessionmaker[Session]) -> dict[str, str]:
+    with api_session_factory.begin() as db:
+        db.add_all(
+            [
+                User(id="owner", username="owner", password_hash="UNUSABLE_PASSWORD", role="user"),
+                User(id="other", username="other", password_hash="UNUSABLE_PASSWORD", role="user"),
+                User(id="auditor", username="auditor", password_hash="UNUSABLE_PASSWORD", role="admin"),
+            ]
+        )
+    return {user_id: create_access_token(user_id) for user_id in ("owner", "other", "auditor")}
 
-        assert response.status_code == 200
-        payload = response.json()
-        assert payload["request"]["task_id"] == task_id
-        request_id = payload["request"]["request_id"]
 
-        with SessionLocal() as db:
-            task = db.get(MissionTask, task_id)
-            assert task is not None
-            assert task.status == "evaluated"
-            assert task.latest_request_id == request_id
-            assert task.latest_decision == payload["advice"]["overall_decision"]
-            task_request = db.scalar(select(TaskRequest).where(TaskRequest.request_id == request_id))
-            assessment = db.scalar(select(CruiseAssessment).where(CruiseAssessment.request_id == request_id))
-            assert task_request is not None
-            assert task_request.task_id == task_id
-            assert assessment is not None
-            assert assessment.task_id == task_id
-    finally:
-        app.dependency_overrides.clear()
+def test_task_evaluation_readback_and_cancellation(
+    api_client: TestClient,
+    api_session_factory: sessionmaker[Session],
+    task_history_tokens: dict[str, str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("app.services.history_query.SessionLocal", api_session_factory)
+    evaluate = Mock(side_effect=build_artifacts)
+    monkeypatch.setattr("app.services.mission_task_execution.evaluate_cruise_request_with_artifacts", evaluate)
+
+    owner_token = task_history_tokens["owner"]
+    other_token = task_history_tokens["other"]
+    owner_headers = auth_headers(owner_token)
+    other_headers = auth_headers(other_token)
+    task_id = create_task(api_client, owner_token)
+    other_task_id = create_task(api_client, other_token)
+    task_url = f"/tasks/{task_id}"
+    evaluate_url = f"{task_url}/evaluate"
+
+    evaluation = api_client.post(evaluate_url, headers=owner_headers)
+    assert evaluation.status_code == 200
+    result = evaluation.json()
+    assert result["request"]["task_id"] == task_id
+    request_id = result["request"]["request_id"]
+    decision = result["advice"]["overall_decision"]
+
+    task_detail = api_client.get(task_url, headers=owner_headers)
+    assert task_detail.status_code == 200
+    task = task_detail.json()
+    assert task["status"] == "evaluated"
+    assert task["latest_request_id"] == request_id
+    assert task["latest_decision"] == decision
+    assert task["request_ids"] == [request_id]
+
+    history_url = f"/cruise/history/{request_id}"
+    history_response = api_client.get(history_url, headers=owner_headers)
+    assert history_response.status_code == 200
+    history = history_response.json()
+    assert history["request_id"] == request_id
+    assert history["advice"]["overall_decision"] == decision
+
+    other_tasks = api_client.get("/tasks", headers=other_headers)
+    assert other_tasks.status_code == 200
+    assert [item["id"] for item in other_tasks.json()["items"]] == [other_task_id]
+    assert api_client.get(task_url, headers=other_headers).status_code == 404
+    assert api_client.post(evaluate_url, headers=other_headers).status_code == 403
+
+    cancelled = api_client.patch(f"{task_url}/status", headers=owner_headers, json={"status": "cancelled"})
+    assert cancelled.status_code == 200
+    assert cancelled.json()["status"] == "cancelled"
+    assert api_client.post(evaluate_url, headers=owner_headers).status_code == 409
+    evaluate.assert_called_once()
+
+    cancelled_detail = api_client.get(task_url, headers=owner_headers)
+    assert cancelled_detail.status_code == 200
+    cancelled_task = cancelled_detail.json()
+    assert cancelled_task["status"] == "cancelled"
+    assert cancelled_task["latest_request_id"] == request_id
+    assert cancelled_task["latest_decision"] == decision
+    assert cancelled_task["request_ids"] == [request_id]
+
+    saved_history = api_client.get(history_url, headers=owner_headers)
+    assert saved_history.status_code == 200
+    assert saved_history.json() == history
+
+    with api_session_factory() as db:
+        requests = db.scalars(select(TaskRequest.request_id).where(TaskRequest.task_id == task_id)).all()
+        assessments = db.scalars(select(CruiseAssessment.request_id).where(CruiseAssessment.task_id == task_id)).all()
+        assert requests == [request_id]
+        assert assessments == [request_id]
+
+
+@pytest.mark.parametrize("task_link", ["both", "request_only", "assessment_only"])
+def test_task_evaluation_history_requires_task_visibility(
+    api_client: TestClient,
+    api_session_factory: sessionmaker[Session],
+    task_history_tokens: dict[str, str],
+    monkeypatch: pytest.MonkeyPatch,
+    task_link: str,
+) -> None:
+    monkeypatch.setattr("app.services.history_query.SessionLocal", api_session_factory)
+    owner_token = task_history_tokens["owner"]
+    task_id = create_task(api_client, owner_token)
+    with patch("app.services.mission_task_execution.evaluate_cruise_request_with_artifacts", side_effect=build_artifacts):
+        evaluation = api_client.post(f"/tasks/{task_id}/evaluate", headers=auth_headers(owner_token))
+    assert evaluation.status_code == 200
+    result = evaluation.json()
+    request_id = result["request"]["request_id"]
+
+    with api_session_factory.begin() as db:
+        if task_link == "request_only":
+            db.execute(update(CruiseAssessment).where(CruiseAssessment.request_id == request_id).values(task_id=None))
+        if task_link == "assessment_only":
+            db.execute(update(TaskRequest).where(TaskRequest.request_id == request_id).values(task_id=None))
+
+    other_headers = auth_headers(task_history_tokens["other"])
+    admin_headers = auth_headers(task_history_tokens["auditor"])
+    history_url = f"/cruise/history/{request_id}"
+    for url in (history_url, f"{history_url}/composed"):
+        assert api_client.get(url, headers=other_headers).status_code == 404
+        assert api_client.get(url).status_code == 401
+        assert api_client.get(url, headers=admin_headers).status_code == 200
+
+    history = api_client.get(history_url, headers=auth_headers(owner_token))
+    assert history.status_code == 200
+    assert history.json()["request_id"] == request_id
+    assert history.json()["advice"]["overall_decision"] == result["advice"]["overall_decision"]
+
+    composed_history = api_client.get(f"{history_url}/composed", headers=auth_headers(owner_token))
+    assert composed_history.status_code == 200
+    assert composed_history.json()["history_summary"]["request_id"] == request_id
 
 
 def test_task_recommend_and_select_window_updates_schedule() -> None:

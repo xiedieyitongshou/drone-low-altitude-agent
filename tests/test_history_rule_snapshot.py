@@ -1,8 +1,7 @@
-from sqlalchemy import create_engine
+import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy.pool import StaticPool
 
-from app.db.base import Base
 from app.rules import assess_cruise_window
 from app.schemas import (
     CruiseAssessmentResponse,
@@ -17,20 +16,12 @@ from app.services.history_persistence import _persist_cruise_evaluation
 import app.services.history_query as history_query
 
 
-def build_session_factory() -> sessionmaker[Session]:
-    engine = create_engine(
-        "sqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-        future=True,
-    )
-    Base.metadata.create_all(bind=engine)
-    return sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)
-
-
-def test_history_detail_returns_rule_snapshot_and_rule_hits(monkeypatch) -> None:
-    SessionLocal = build_session_factory()
-    monkeypatch.setattr(history_query, "SessionLocal", SessionLocal)
+def test_history_detail_returns_rule_snapshot_and_rule_hits(
+    api_client: TestClient,
+    api_session_factory: sessionmaker[Session],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(history_query, "SessionLocal", api_session_factory)
 
     payload = CruiseEvaluateRequest(
         location="深圳湾",
@@ -86,9 +77,8 @@ def test_history_detail_returns_rule_snapshot_and_rule_hits(monkeypatch) -> None
         standardized_warnings=warnings,
     )
 
-    with SessionLocal() as db:
+    with api_session_factory.begin() as db:
         _persist_cruise_evaluation(session=db, request_id="history-rule-1", payload=payload, artifacts=artifacts)
-        db.commit()
 
     history = history_query.get_cruise_history("history-rule-1")
 
@@ -99,3 +89,6 @@ def test_history_detail_returns_rule_snapshot_and_rule_hits(monkeypatch) -> None
     assert history.advice.rule_hits[0].metric == "wind_speed"
     assert history.advice.rule_hits[0].actual_value == 25
     assert history.advice.hourly_assessment[0].rule_hits[0].label == "风速偏高"
+
+    assert api_client.get("/cruise/history/history-rule-1").status_code == 200
+    assert api_client.get("/cruise/history/history-rule-1/composed").status_code == 200

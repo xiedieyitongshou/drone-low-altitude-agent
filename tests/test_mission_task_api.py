@@ -1,4 +1,5 @@
 from collections.abc import Generator
+from datetime import datetime
 
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -6,7 +7,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.db.base import Base
-from app.db.models import MissionTask, User
+from app.db.models import AgentTraceEventRecord, MissionTask, User
 from app.dependencies import get_db
 from app.services.auth_service import create_access_token, hash_password
 from main import app
@@ -106,12 +107,29 @@ def test_user_can_create_list_get_and_patch_own_task() -> None:
         assert listed["total"] == 1
         assert listed["items"][0]["id"] == task_id
 
+        with SessionLocal.begin() as db:
+            db.add_all(
+                AgentTraceEventRecord(
+                    task_id=task_id,
+                    trace_id=trace_id,
+                    run_id=trace_id,
+                    event_type=event_type,
+                    created_at=datetime(2026, 8, 18, 14, minute),
+                )
+                for trace_id, event_type, minute in (
+                    ("trace-a", "tool_call", 0),
+                    ("trace-b", "tool_call", 4),
+                    ("trace-a", "tool_result", 6),
+                )
+            )
+
         get_response = client.get(f"/tasks/{task_id}", headers=auth_headers(tokens["user-a"]))
         assert get_response.status_code == 200
         detail = get_response.json()
         assert detail["id"] == task_id
         assert detail["profile_context"] == {"default_task_type": "inspection"}
         assert detail["metadata"] == {"source": "api-test"}
+        assert detail["trace_ids"] == ["trace-a", "trace-b"]
 
         patch_response = client.patch(
             f"/tasks/{task_id}",

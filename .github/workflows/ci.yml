@@ -51,6 +51,56 @@ jobs:
       - name: Validate Docker Compose configuration
         run: docker compose --profile test --profile eval --profile tools config --quiet
 
+  postgres-api-test:
+    name: PostgreSQL API regression tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: ci_api
+          POSTGRES_USER: ci_api_user
+          POSTGRES_PASSWORD: ci_api_password
+        ports:
+          - "5432:5432"
+        options: >-
+          --health-cmd "pg_isready -h 127.0.0.1 -U ci_api_user -d ci_api"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql+psycopg://ci_api_user:ci_api_password@127.0.0.1:5432/ci_api
+      LLM_ENABLED: "false"
+      NL_PARSER_MODE: rule
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install Python dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Run PostgreSQL migrations
+        run: python -m alembic upgrade head
+
+      - name: Run PostgreSQL API regression tests
+        run: >-
+          python -m pytest -q --api-db=postgresql
+          tests/test_auth_api.py
+          tests/test_user_profile_api.py
+          tests/test_conversation_history_api.py
+          tests/test_history_rule_snapshot.py
+          tests/test_mission_task_execution_api.py::test_task_evaluation_readback_and_cancellation
+          tests/test_mission_task_execution_api.py::test_task_evaluation_history_requires_task_visibility
+
   frontend-test:
     name: Frontend lint and build
     runs-on: ubuntu-latest

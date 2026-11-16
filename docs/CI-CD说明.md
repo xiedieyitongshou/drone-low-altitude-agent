@@ -4,7 +4,7 @@
 
 本项目当前实现的是 CI 质量门禁，不包含自动生产部署。
 
-- CI：在 GitHub Actions 临时 runner 中执行后端测试、数据库迁移、Docker Compose 配置校验、快速 Agent/RAG Eval、前端 lint/build。
+- CI：在 GitHub Actions 临时 runner 中执行后端测试、PostgreSQL API 回归、数据库迁移、Docker Compose 配置校验、快速 Agent/RAG Eval、前端 lint/build。
 - CD：服务器部署仍按 [Docker部署说明.md](Docker部署说明.md) 手动执行，避免 CI 误改生产或演示环境。
 
 CI 和 Docker 默认验证 Agent Loop 主链路：
@@ -23,7 +23,7 @@ AGENT_RUNTIME_MODE=loop
 
 ## CI 环境变量
 
-CI 固定使用稳定、可重复的测试配置：
+SQLite 后端测试 job 使用以下配置：
 
 ```text
 LLM_ENABLED=false
@@ -51,6 +51,28 @@ docker compose --profile test --profile eval --profile tools config --quiet
 - `python -m pytest -q` 覆盖后端单元测试、API 测试、Agent Runtime、权限过滤、规则引擎、RAG 基础链路。
 - `python -m pytest -m eval_fast -q` 是 Agent/RAG 快速质量门禁。
 - `docker compose ... config --quiet` 只校验 Compose 配置，不启动生产服务。
+
+## PostgreSQL API 回归
+
+`PostgreSQL API regression tests` job 在每次推送到 `main`、向 `main` 提交 PR 或手动触发时运行。GitHub Actions 为这个 job 启动临时的 PostgreSQL 16 服务，先执行 `alembic upgrade head`，再用相同的数据库运行 17 项回归测试。
+
+- 注册和登录，包括用户名重复、错误密码、停用账号和当前账号查询。
+- Profile 读写，包括写入后重新读取、用户之间的偏好隔离、默认值补全。
+- 对话历史，包括登录校验、列表、搜索、分页过滤和详情的用户隔离。
+- 任务评估，包括任务列表与评估历史的用户隔离、评估成功后从任务详情和历史接口读回同一结果、取消后再次评估返回 `409` 且历史记录保持原值。
+
+本地复现时，将 `DATABASE_URL` 指向一个空的 PostgreSQL 测试库。从项目根目录执行：
+
+```bash
+python -m alembic upgrade head
+python -m pytest -q --api-db=postgresql \
+  tests/test_auth_api.py tests/test_user_profile_api.py tests/test_conversation_history_api.py \
+  tests/test_history_rule_snapshot.py \
+  tests/test_mission_task_execution_api.py::test_task_evaluation_readback_and_cancellation \
+  tests/test_mission_task_execution_api.py::test_task_evaluation_history_requires_task_visibility
+```
+
+这些测试在 SQLite 和 PostgreSQL 上使用同一套断言。默认使用 SQLite 内存库，显式传入 `--api-db=postgresql` 时要求 PostgreSQL 连接。PostgreSQL 测试数据在每个用例结束后通过事务回滚清理。
 
 ## 前端 CI
 

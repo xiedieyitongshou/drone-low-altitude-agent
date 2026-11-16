@@ -1,30 +1,17 @@
-from collections.abc import Generator
 from datetime import datetime, timedelta
 
+import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy.pool import StaticPool
 
-from app.db.base import Base
 from app.db.models import ConversationRecord, User
-from app.dependencies import get_db
 from app.services.auth_service import create_access_token, hash_password
-from main import app
 
 
-def build_test_client() -> tuple[TestClient, dict[str, str]]:
-    engine = create_engine(
-        "sqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-        future=True,
-    )
-    TestingSessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)
-    Base.metadata.create_all(bind=engine)
-
+@pytest.fixture
+def conversation_tokens(api_session_factory: sessionmaker[Session]) -> dict[str, str]:
     now = datetime.utcnow()
-    with TestingSessionLocal() as db:
+    with api_session_factory() as db:
         db.add_all(
             [
                 User(
@@ -100,94 +87,64 @@ def build_test_client() -> tuple[TestClient, dict[str, str]]:
         )
         db.commit()
 
-    def override_get_db() -> Generator[Session, None, None]:
-        db = TestingSessionLocal()
-        try:
-            yield db
-        finally:
-            db.close()
-
-    app.dependency_overrides[get_db] = override_get_db
-    return TestClient(app), {
-        "user-a": create_access_token("user-a"),
-        "user-b": create_access_token("user-b"),
-    }
+    return {"user-a": create_access_token("user-a"), "user-b": create_access_token("user-b")}
 
 
-def test_conversation_list_requires_login() -> None:
-    client, _ = build_test_client()
-    try:
-        response = client.get("/agent/conversations")
+@pytest.mark.usefixtures("conversation_tokens")
+def test_conversation_list_requires_login(api_client: TestClient) -> None:
+    response = api_client.get("/agent/conversations")
 
-        assert response.status_code == 401
-    finally:
-        app.dependency_overrides.clear()
+    assert response.status_code == 401
 
 
-def test_conversation_list_is_scoped_to_current_user() -> None:
-    client, tokens = build_test_client()
-    try:
-        response = client.get(
-            "/agent/conversations",
-            headers={"Authorization": f"Bearer {tokens['user-a']}"},
-        )
+def test_conversation_list_is_scoped_to_current_user(api_client: TestClient, conversation_tokens: dict[str, str]) -> None:
+    response = api_client.get(
+        "/agent/conversations",
+        headers={"Authorization": f"Bearer {conversation_tokens['user-a']}"},
+    )
 
-        assert response.status_code == 200
-        payload = response.json()
-        assert payload["total"] == 2
-        assert [item["conversation_id"] for item in payload["items"]] == ["conv-a-2", "conv-a-1"]
-    finally:
-        app.dependency_overrides.clear()
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["total"] == 2
+    assert [item["conversation_id"] for item in payload["items"]] == ["conv-a-2", "conv-a-1"]
 
 
-def test_keyword_search_does_not_cross_user_boundary() -> None:
-    client, tokens = build_test_client()
-    try:
-        response = client.get(
-            "/agent/conversations?keyword=深圳",
-            headers={"Authorization": f"Bearer {tokens['user-a']}"},
-        )
+def test_keyword_search_does_not_cross_user_boundary(api_client: TestClient, conversation_tokens: dict[str, str]) -> None:
+    response = api_client.get(
+        "/agent/conversations?keyword=深圳",
+        headers={"Authorization": f"Bearer {conversation_tokens['user-a']}"},
+    )
 
-        assert response.status_code == 200
-        payload = response.json()
-        assert payload["total"] == 1
-        assert payload["items"][0]["conversation_id"] == "conv-a-1"
-    finally:
-        app.dependency_overrides.clear()
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["total"] == 1
+    assert payload["items"][0]["conversation_id"] == "conv-a-1"
 
 
-def test_conversation_detail_requires_owner() -> None:
-    client, tokens = build_test_client()
-    try:
-        own_response = client.get(
-            "/agent/conversations/conv-a-1",
-            headers={"Authorization": f"Bearer {tokens['user-a']}"},
-        )
-        assert own_response.status_code == 200
-        assert own_response.json()["parsed"] == {"location": "深圳"}
+def test_conversation_detail_requires_owner(api_client: TestClient, conversation_tokens: dict[str, str]) -> None:
+    own_response = api_client.get(
+        "/agent/conversations/conv-a-1",
+        headers={"Authorization": f"Bearer {conversation_tokens['user-a']}"},
+    )
+    assert own_response.status_code == 200
+    assert own_response.json()["parsed"] == {"location": "深圳"}
 
-        other_response = client.get(
-            "/agent/conversations/conv-b-1",
-            headers={"Authorization": f"Bearer {tokens['user-a']}"},
-        )
-        assert other_response.status_code == 404
-    finally:
-        app.dependency_overrides.clear()
+    other_response = api_client.get(
+        "/agent/conversations/conv-b-1",
+        headers={"Authorization": f"Bearer {conversation_tokens['user-a']}"},
+    )
+    assert other_response.status_code == 404
 
 
-def test_conversation_list_supports_filters_and_pagination() -> None:
-    client, tokens = build_test_client()
-    try:
-        response = client.get(
-            "/agent/conversations?page=1&page_size=1&intent=recommend&parser_source=llm",
-            headers={"Authorization": f"Bearer {tokens['user-a']}"},
-        )
+def test_conversation_list_supports_filters_and_pagination(api_client: TestClient, conversation_tokens: dict[str, str]) -> None:
+    response = api_client.get(
+        "/agent/conversations?page=1&page_size=1&intent=recommend&parser_source=llm",
+        headers={"Authorization": f"Bearer {conversation_tokens['user-a']}"},
+    )
 
-        assert response.status_code == 200
-        payload = response.json()
-        assert payload["total"] == 1
-        assert payload["page"] == 1
-        assert payload["page_size"] == 1
-        assert payload["items"][0]["conversation_id"] == "conv-a-2"
-    finally:
-        app.dependency_overrides.clear()
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["total"] == 1
+    assert payload["page"] == 1
+    assert payload["page_size"] == 1
+    assert payload["items"][0]["conversation_id"] == "conv-a-2"
