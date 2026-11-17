@@ -43,9 +43,10 @@ services:
       APP_PORT: 8000
       TZ: Asia/Shanghai
       <<: *database-environment
-      SESSION_MEMORY_BACKEND: redis
+      SESSION_MEMORY_BACKEND: ${SESSION_MEMORY_BACKEND:-database}
       REDIS_URL: redis://redis:6379/0
-      SESSION_MEMORY_TTL_SECONDS: ${SESSION_MEMORY_TTL_SECONDS:-1800}
+      SESSION_MEMORY_TTL_SECONDS: ${SESSION_MEMORY_TTL_SECONDS:-}
+      ANONYMOUS_SESSION_TTL_SECONDS: ${ANONYMOUS_SESSION_TTL_SECONDS:-1800}
       SESSION_MEMORY_REDIS_KEY_PREFIX: ${SESSION_MEMORY_REDIS_KEY_PREFIX:-drone_agent:session:}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-only-change-me}
       JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
@@ -73,9 +74,9 @@ services:
     volumes:
       - ./data:/app/data
     depends_on:
-      redis:
-        condition: service_healthy
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
@@ -103,8 +104,6 @@ services:
       JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
       INITIAL_ADMIN_USERNAME: ${INITIAL_ADMIN_USERNAME:-admin}
       INITIAL_ADMIN_PASSWORD: ${INITIAL_ADMIN_PASSWORD:-}
-      SESSION_MEMORY_BACKEND: redis
-      REDIS_URL: redis://redis:6379/0
       AGENT_RUNTIME_MODE: ${AGENT_RUNTIME_MODE:-loop}
       ADVICE_KNOWLEDGE_PATH: ${ADVICE_KNOWLEDGE_PATH:-data/knowledge/advice_rules.json}
       KNOWLEDGE_SOURCE_PATH: ${KNOWLEDGE_SOURCE_PATH:-}
@@ -114,8 +113,6 @@ services:
     entrypoint: ["sh", "-c"]
     command: ["python -m alembic upgrade head && python scripts/create_initial_admin.py"]
     depends_on:
-      redis:
-        condition: service_healthy
       postgres:
         condition: service_healthy
 
@@ -200,8 +197,7 @@ services:
       APP_ENV: ${APP_ENV:-docker}
       TZ: Asia/Shanghai
       <<: *database-environment
-      SESSION_MEMORY_BACKEND: redis
-      REDIS_URL: redis://redis:6379/0
+      SESSION_MEMORY_BACKEND: ttlcache
       AGENT_RUNTIME_MODE: ${AGENT_RUNTIME_MODE:-loop}
       NL_PARSER_MODE: ${NL_PARSER_MODE:-rule}
       ADVICE_KNOWLEDGE_PATH: ${ADVICE_KNOWLEDGE_PATH:-data/knowledge/advice_rules.json}
@@ -213,8 +209,6 @@ services:
     entrypoint: ["sh", "-c"]
     command: ["python -m alembic upgrade head && python -m pytest -q"]
     depends_on:
-      redis:
-        condition: service_healthy
       postgres:
         condition: service_healthy
 
@@ -233,8 +227,7 @@ services:
       APP_ENV: ${APP_ENV:-docker}
       TZ: Asia/Shanghai
       <<: *database-environment
-      SESSION_MEMORY_BACKEND: redis
-      REDIS_URL: redis://redis:6379/0
+      SESSION_MEMORY_BACKEND: ttlcache
       AGENT_RUNTIME_MODE: loop
       NL_PARSER_MODE: rule
       ADVICE_KNOWLEDGE_PATH: ${ADVICE_KNOWLEDGE_PATH:-data/knowledge/advice_rules.json}
@@ -247,8 +240,6 @@ services:
     entrypoint: ["sh", "-c"]
     command: ["python -m alembic upgrade head && python -m pytest -m eval_fast -q"]
     depends_on:
-      redis:
-        condition: service_healthy
       postgres:
         condition: service_healthy
 
@@ -267,8 +258,7 @@ services:
       APP_ENV: ${APP_ENV:-docker}
       TZ: Asia/Shanghai
       <<: *database-environment
-      SESSION_MEMORY_BACKEND: redis
-      REDIS_URL: redis://redis:6379/0
+      SESSION_MEMORY_BACKEND: ttlcache
       AGENT_RUNTIME_MODE: loop
       NL_PARSER_MODE: rule
       ADVICE_KNOWLEDGE_PATH: ${ADVICE_KNOWLEDGE_PATH:-data/knowledge/advice_rules.json}
@@ -286,8 +276,6 @@ services:
         python scripts/failure_recovery_eval.py
         python scripts/rag_eval.py
     depends_on:
-      redis:
-        condition: service_healthy
       postgres:
         condition: service_healthy
 

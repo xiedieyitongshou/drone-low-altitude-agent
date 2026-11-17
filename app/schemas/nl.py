@@ -2,7 +2,7 @@
 
 
 class NaturalLanguageParseRequest(BaseModel):
-    session_id: str | None = Field(default=None, description="会话 ID，用于上下文继承")
+    session_id: str | None = Field(default=None, max_length=128, description="会话 ID，用于上下文继承")
     query: str = Field(..., min_length=2, description="自然语言任务请求")
 
 

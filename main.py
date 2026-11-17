@@ -1,6 +1,8 @@
+import asyncio
 import logging
 import os
-from contextlib import suppress
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager, suppress
 from datetime import datetime
 
 import uvicorn
@@ -137,7 +139,11 @@ from app.services.rule_set_management import (
     update_rule_set,
     validate_and_store_rule_set,
 )
-from app.services.session_memory import build_session_context, session_memory_store
+from app.services.session_memory import (
+    anonymous_session_memory_store,
+    build_session_context,
+    run_database_session_cleanup,
+)
 from app.services.task_orchestrator import orchestrate_task_query
 from app.services.weather import (
     GeoLocation,
@@ -187,7 +193,20 @@ settings = Settings()
 setup_logging(settings.log_level)
 logger = logging.getLogger(settings.app_name)
 
-app = FastAPI(title=settings.app_name)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    logger.info("Application starting")
+    cleanup_task = asyncio.create_task(run_database_session_cleanup())
+    try:
+        yield
+    finally:
+        cleanup_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await cleanup_task
+
+
+app = FastAPI(title=settings.app_name, lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_allowed_origins,
@@ -196,11 +215,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 sample_store = WeatherSampleStore()
-
-
-@app.on_event("startup")
-def on_startup() -> None:
-    logger.info("Application starting")
 
 
 @app.exception_handler(RequestValidationError)
@@ -947,7 +961,7 @@ def retrieve_knowledge(payload: KnowledgeRetrievalRequest) -> KnowledgeRetrieval
 @app.post("/nl/parse", response_model=NaturalLanguageParseResponse)
 def parse_natural_language(payload: NaturalLanguageParseRequest) -> NaturalLanguageParseResponse:
     logger.info("Starting natural language parse")
-    context = session_memory_store.get(payload.session_id) if payload.session_id else None
+    context = anonymous_session_memory_store.get(payload.session_id) if payload.session_id else None
     result = parse_natural_language_request(payload.query, context=context)
     logger.info(
         "Natural language parse completed",
@@ -959,7 +973,7 @@ def parse_natural_language(payload: NaturalLanguageParseRequest) -> NaturalLangu
         },
     )
     if payload.session_id:
-        session_memory_store.set(payload.session_id, build_session_context(result.intent, result.parsed))
+        anonymous_session_memory_store.set(payload.session_id, build_session_context(result.intent, result.parsed))
 
     return NaturalLanguageParseResponse(
         session_id=payload.session_id,

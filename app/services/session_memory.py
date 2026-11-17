@@ -1,18 +1,28 @@
+import asyncio
 import json
+import logging
 import os
+from collections.abc import Callable
 from copy import deepcopy
 from datetime import datetime, timedelta
 from threading import Lock
 from typing import Protocol
 
 from cachetools import TTLCache
-from sqlalchemy import select
+from sqlalchemy import and_, delete, func, or_, select
+from sqlalchemy.dialects.postgresql import insert as postgresql_insert
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
+from sqlalchemy.sql.elements import ColumnElement
 
 from app.db.models import SessionRecord
 from app.db.session import SessionLocal
 
 
 DEFAULT_SESSION_USER_ID = "default_user"
+DEFAULT_SESSION_TTL_SECONDS = 1800
+DEFAULT_DATABASE_SESSION_TTL_SECONDS = 30 * 24 * 60 * 60
+SESSION_CLEANUP_INTERVAL_SECONDS = 24 * 60 * 60
+logger = logging.getLogger(__name__)
 
 
 class SessionMemoryStore(Protocol):
@@ -108,26 +118,46 @@ class RedisSessionMemoryStore:
 class DatabaseSessionMemoryStore:
     """Database-backed session memory for durable conversation context."""
 
-    def __init__(self, *, ttl_seconds: int = 1800) -> None:
+    def __init__(self, *, ttl_seconds: int = DEFAULT_DATABASE_SESSION_TTL_SECONDS) -> None:
         self._ttl_seconds = ttl_seconds
 
     def get(self, session_id: str, *, user_id: str | None = None) -> dict[str, object] | None:
         normalized_user_id = _normalize_session_user_id(user_id)
         now = datetime.utcnow()
+        expired = self._is_expired(now)
         with SessionLocal() as session:
-            record = session.scalar(
-                select(SessionRecord).where(
+            result = session.execute(
+                select(SessionRecord, expired).where(
                     SessionRecord.user_id == normalized_user_id,
                     SessionRecord.session_id == session_id,
                 )
-            )
-            if record is None:
+            ).one_or_none()
+            if result is None:
                 return None
-            if record.expires_at is not None and record.expires_at <= now:
-                session.delete(record)
+            record, is_expired = result
+            if is_expired:
+                session.execute(
+                    delete(SessionRecord).where(
+                        SessionRecord.id == record.id,
+                        expired,
+                    )
+                )
                 session.commit()
                 return None
             return deepcopy(record.last_context)
+
+    def delete_expired(self) -> int:
+        with SessionLocal.begin() as session:
+            result = session.execute(delete(SessionRecord).where(self._is_expired(datetime.utcnow())))
+            return result.rowcount
+
+    def _is_expired(self, now: datetime) -> ColumnElement[bool]:
+        expiry_passed = and_(SessionRecord.expires_at.is_not(None), SessionRecord.expires_at <= now)
+        if self._ttl_seconds <= 0:
+            return expiry_passed
+        # Older sessions were saved without an expiry, so also check their last write.
+        cutoff = now - timedelta(seconds=self._ttl_seconds)
+        return or_(expiry_passed, SessionRecord.updated_at <= cutoff)
 
     def set(
         self,
@@ -139,30 +169,32 @@ class DatabaseSessionMemoryStore:
     ) -> None:
         normalized_user_id = _normalize_session_user_id(user_id)
         now = datetime.utcnow()
-        expires_at = now + timedelta(seconds=self._ttl_seconds) if self._ttl_seconds > 0 else None
+        ttl_seconds = self._ttl_seconds
+        if normalized_user_id == DEFAULT_SESSION_USER_ID and ttl_seconds <= 0:
+            ttl_seconds = DEFAULT_SESSION_TTL_SECONDS
+        expires_at = now + timedelta(seconds=ttl_seconds) if ttl_seconds > 0 else None
         with SessionLocal() as session:
-            record = session.scalar(
-                select(SessionRecord).where(
-                    SessionRecord.user_id == normalized_user_id,
-                    SessionRecord.session_id == session_id,
+            insert = postgresql_insert if session.get_bind().dialect.name == "postgresql" else sqlite_insert
+            statement = insert(SessionRecord).values(
+                session_id=session_id,
+                user_id=normalized_user_id,
+                title=title or _build_session_title(context),
+                last_context=deepcopy(context),
+                created_at=now,
+                updated_at=now,
+                expires_at=expires_at,
+            )
+            session.execute(
+                statement.on_conflict_do_update(
+                    index_elements=[SessionRecord.user_id, SessionRecord.session_id],
+                    set_={
+                        "title": title or func.coalesce(func.nullif(SessionRecord.title, ""), statement.excluded.title),
+                        "last_context": statement.excluded.last_context,
+                        "updated_at": statement.excluded.updated_at,
+                        "expires_at": statement.excluded.expires_at,
+                    },
                 )
             )
-            if record is None:
-                record = SessionRecord(
-                    session_id=session_id,
-                    user_id=normalized_user_id,
-                    title=title or _build_session_title(context),
-                    last_context=deepcopy(context),
-                    created_at=now,
-                    updated_at=now,
-                    expires_at=expires_at,
-                )
-                session.add(record)
-            else:
-                record.title = title or record.title or _build_session_title(context)
-                record.last_context = deepcopy(context)
-                record.updated_at = now
-                record.expires_at = expires_at
             session.commit()
 
     def delete(self, session_id: str, *, user_id: str | None = None) -> None:
@@ -182,7 +214,8 @@ class DatabaseSessionMemoryStore:
 class LazySessionMemoryStore:
     """Create the configured backend on first use, after environment loading."""
 
-    def __init__(self) -> None:
+    def __init__(self, factory: Callable[[], SessionMemoryStore]) -> None:
+        self._factory = factory
         self._store: SessionMemoryStore | None = None
         self._lock = Lock()
 
@@ -207,7 +240,7 @@ class LazySessionMemoryStore:
             return self._store
         with self._lock:
             if self._store is None:
-                self._store = create_session_memory_store()
+                self._store = self._factory()
             return self._store
 
 
@@ -232,8 +265,11 @@ def build_session_context(intent: str, parsed: dict[str, object]) -> dict[str, o
 
 
 def create_session_memory_store() -> SessionMemoryStore:
-    backend = os.getenv("SESSION_MEMORY_BACKEND", "ttlcache").strip().lower()
-    ttl_seconds = int(os.getenv("SESSION_MEMORY_TTL_SECONDS", "1800"))
+    backend = _configured_session_backend()
+    if backend == "database":
+        return _create_database_session_memory_store()
+
+    ttl_seconds = int(os.getenv("SESSION_MEMORY_TTL_SECONDS") or DEFAULT_SESSION_TTL_SECONDS)
 
     if backend == "redis":
         return RedisSessionMemoryStore(
@@ -241,9 +277,6 @@ def create_session_memory_store() -> SessionMemoryStore:
             ttl_seconds=ttl_seconds,
             key_prefix=os.getenv("SESSION_MEMORY_REDIS_KEY_PREFIX", "drone_agent:session:"),
         )
-
-    if backend == "database":
-        return DatabaseSessionMemoryStore(ttl_seconds=ttl_seconds)
 
     if backend != "ttlcache":
         raise ValueError("SESSION_MEMORY_BACKEND must be ttlcache, redis, or database")
@@ -254,7 +287,40 @@ def create_session_memory_store() -> SessionMemoryStore:
     )
 
 
-session_memory_store: SessionMemoryStore = LazySessionMemoryStore()
+def _configured_session_backend() -> str:
+    return os.getenv("SESSION_MEMORY_BACKEND", "database").strip().lower()
+
+
+def _create_database_session_memory_store() -> DatabaseSessionMemoryStore:
+    ttl_seconds = int(os.getenv("SESSION_MEMORY_TTL_SECONDS") or DEFAULT_DATABASE_SESSION_TTL_SECONDS)
+    return DatabaseSessionMemoryStore(ttl_seconds=ttl_seconds)
+
+
+def create_anonymous_session_memory_store() -> SessionMemoryStore:
+    ttl_seconds = int(os.getenv("ANONYMOUS_SESSION_TTL_SECONDS") or DEFAULT_SESSION_TTL_SECONDS)
+    return RedisSessionMemoryStore(
+        redis_url=os.getenv("REDIS_URL", "redis://localhost:6379/0"),
+        ttl_seconds=ttl_seconds,
+        key_prefix=os.getenv("SESSION_MEMORY_REDIS_KEY_PREFIX", "drone_agent:session:") + "anonymous:",
+    )
+
+
+async def run_database_session_cleanup() -> None:
+    if _configured_session_backend() != "database":
+        return
+    store = _create_database_session_memory_store()
+    while True:
+        try:
+            deleted = await asyncio.to_thread(store.delete_expired)
+            if deleted:
+                logger.info("Deleted %d expired session records", deleted)
+        except Exception:
+            logger.exception("Could not delete expired session records")
+        await asyncio.sleep(SESSION_CLEANUP_INTERVAL_SECONDS)
+
+
+session_memory_store: SessionMemoryStore = LazySessionMemoryStore(create_session_memory_store)
+anonymous_session_memory_store: SessionMemoryStore = LazySessionMemoryStore(create_anonymous_session_memory_store)
 
 
 def _normalize_session_user_id(user_id: str | None) -> str:

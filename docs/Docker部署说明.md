@@ -15,12 +15,12 @@ AGENT_RUNTIME_MODE=loop
 
 ## 1. 当前 Docker 结构
 
-`docker-compose.yml` 启动四个主服务：
+`docker compose up -d app frontend` 启动以下服务：
 
 - `frontend`：React 前端，使用 Nginx 托管静态资源。
 - `app`：FastAPI 后端服务，默认 `AGENT_RUNTIME_MODE=loop`。
-- `postgres`：PostgreSQL 主数据库，使用 Docker named volume 持久化。
-- `redis`：Session Memory 的 Redis 后端。
+- `postgres`：主数据库，保存业务数据和登录后的 Session 上下文，使用 Docker named volume 持久化。
+- `redis`：保存免登录解析的临时上下文，默认在最后一次写入 30 分钟后过期。
 
 同时提供以下 profile 服务：
 
@@ -154,8 +154,9 @@ JWT_SECRET_KEY=<replace-with-long-random-secret>
 INITIAL_ADMIN_USERNAME=<replace-with-admin-username>
 INITIAL_ADMIN_PASSWORD=<replace-with-strong-admin-password>
 
-SESSION_MEMORY_BACKEND=redis
-REDIS_URL=redis://redis:6379/0
+SESSION_MEMORY_BACKEND=database
+SESSION_MEMORY_TTL_SECONDS=
+ANONYMOUS_SESSION_TTL_SECONDS=1800
 
 LLM_ENABLED=false
 LLM_PROVIDER=deepseek
@@ -259,7 +260,7 @@ chmod 600 .env
 vim .env
 
 docker compose config --quiet
-docker compose up -d --build postgres redis
+docker compose up -d --build postgres
 docker compose run --rm --entrypoint sh app -c 'python -m alembic upgrade head'
 docker compose --profile tools run --rm admin-init
 docker compose --profile tools run --rm knowledge-import
@@ -311,7 +312,7 @@ cp -a .env data/drone_agent.db "$BACKUP"/
 将 `.env` 中的 `DATABASE_URL` 留空并设置 PostgreSQL 参数，然后启动数据库服务：
 
 ```bash
-docker compose up -d postgres redis
+docker compose up -d postgres
 ```
 
 迁移脚本会清空配置指向的目标业务表。请使用空的目标库。已有 PostgreSQL 数据卷时，改 `POSTGRES_DB` 只会改变应用连接的库，需先在实例中创建该库。确认目标后，执行 schema migration：
@@ -593,7 +594,7 @@ redis_data:/data
 
 | 路径 | 用途 | 默认配置 | 边界 |
 |---|---|---|---|
-| 本地运行 | 开发和快速调试 | SQLite、TTLCache、`NL_PARSER_MODE=rule` | 不验证容器网络和 Redis 链路 |
+| 本地运行 | 开发和快速调试 | PostgreSQL、Redis、`NL_PARSER_MODE=rule` | 本地进程连接 PostgreSQL 和 Redis |
 | Docker 运行 | 前后端联调和服务器部署前验证 | PostgreSQL、Redis、`AGENT_RUNTIME_MODE=loop` | 不是完整生产部署 |
 | CI 运行 | 自动质量门禁 | SQLite 临时库、LLM 关闭、快速 Eval | 不连接生产或演示服务器 |
 | 服务器部署 | 手动上线或演示环境 | 基于 Docker Compose 和服务器私有 `.env` | 需要额外补 HTTPS、反代、监控、备份 |
