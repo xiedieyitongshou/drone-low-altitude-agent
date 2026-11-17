@@ -104,6 +104,25 @@ class LLMTaskParserTestCase(unittest.TestCase):
         self.assertIn("start_time", raised.exception.missing_fields)
         self.assertIn("end_time", raised.exception.missing_fields)
 
+    def test_create_task_can_defer_missing_fields_and_defaults_to_agent(self) -> None:
+        payload = LLMParsedTaskPayload.model_validate(
+            {"intent": "create_task", "location": "深圳湾", "date": "2026-07-26"}
+        )
+        query = "帮我创建一个深圳湾明天任务"
+        with self.assertRaises(NaturalLanguageParseError):
+            build_parsed_task_request_from_llm_payload(payload, query=query)
+
+        result = build_parsed_task_request_from_llm_payload(
+            payload,
+            query=query,
+            context={"task_type": "survey", "start_time": "14:00", "end_time": "17:00"},
+            defer_context_merge=True,
+        )
+
+        self.assertEqual(result.intent, "create_task")
+        self.assertEqual(result.parsed["location"], "深圳湾")
+        self.assertTrue({"task_type", "start_time", "end_time"}.isdisjoint(result.parsed))
+
     def test_confidence_accepts_model_label(self) -> None:
         payload = LLMParsedTaskPayload.model_validate(
             {

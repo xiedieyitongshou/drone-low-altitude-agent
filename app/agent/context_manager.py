@@ -10,6 +10,7 @@ COMPUTE_PROFILE_FIELDS = {"task_type"}
 MISSION_TASK_PROFILE_FIELDS = {"task_type", "start_time", "end_time"}
 QUERY_PROFILE_FIELDS = {"location", "city", "task_type"}
 DEFAULT_FIELDS_BY_INTENT: dict[str, dict[str, object]] = {
+    "create_task": {"task_type": "cruise"},
     "history": {"mode": "list", "page": 1, "page_size": 10},
     "knowledge": {"task_type": "cruise", "top_k": 3},
     "explain": {"task_type": "cruise"},
@@ -38,10 +39,11 @@ def build_agent_parser_context(
     if session_context:
         pending_task = _pending_task(session_context)
         if pending_task:
-            merged.update(_dict_value(pending_task.get("parsed")))
+            merged.update(_session_fields(_dict_value(pending_task.get("parsed")), pending_task.get("intent")))
             if pending_task.get("intent"):
                 merged["intent"] = pending_task["intent"]
-        merged.update({key: value for key, value in session_context.items() if key != PENDING_TASK_KEY})
+                merged["pending_task_intent"] = pending_task["intent"]
+        merged.update(_session_fields(session_context, session_context.get("intent")))
     return {key: value for key, value in merged.items() if value not in (None, "", [])} or None
 
 
@@ -62,18 +64,20 @@ def merge_agent_context(
         _set_if_present(merged, field_sources, field_name, value, "default", overwrite=False)
 
     if profile is not None:
-        for field_name, value in _profile_context_for_intent(intent, profile, route_kind=route.route_kind if route else None).items():
+        for field_name, value in _profile_context_for_intent(profile, route_kind=route.route_kind if route else None).items():
             _set_if_present(merged, field_sources, field_name, value, "profile", overwrite=True)
 
     if session_context:
         pending_task = _pending_task(session_context)
-        if pending_task:
-            for field_name, value in _dict_value(pending_task.get("parsed")).items():
+        if pending_task and (intent != "create_task" or pending_task.get("intent") == intent):
+            pending_fields = _session_fields(_dict_value(pending_task.get("parsed")), pending_task.get("intent"))
+            for field_name, value in pending_fields.items():
                 _set_if_present(merged, field_sources, field_name, value, "session", overwrite=True)
-        for field_name, value in session_context.items():
-            if field_name == PENDING_TASK_KEY:
-                continue
-            _set_if_present(merged, field_sources, field_name, value, "session", overwrite=True)
+        if intent != "create_task":
+            for field_name, value in _session_fields(session_context, session_context.get("intent")).items():
+                _set_if_present(merged, field_sources, field_name, value, "session", overwrite=True)
+        if intent == "knowledge":
+            _set_if_present(merged, field_sources, "city", session_context.get("city"), "session", overwrite=True)
 
     for field_name, value in parsed.items():
         _set_if_present(
@@ -149,7 +153,6 @@ def _resolve_missing_fields(
 
 
 def _profile_context_for_intent(
-    intent: str,
     profile: ProfileMemory,
     *,
     route_kind: AgentRouteKind | None,
@@ -157,7 +160,9 @@ def _profile_context_for_intent(
     raw_context = profile.to_context()
     if route_kind == AgentRouteKind.MISSION_TASK:
         return {field_name: value for field_name, value in raw_context.items() if field_name in MISSION_TASK_PROFILE_FIELDS}
-    if route_kind in {AgentRouteKind.KNOWLEDGE_QUERY, AgentRouteKind.HISTORY_QUERY, AgentRouteKind.EXPLANATION_QUERY}:
+    if route_kind == AgentRouteKind.KNOWLEDGE_QUERY:
+        return {"city": raw_context.get("location"), "task_type": raw_context.get("task_type")}
+    if route_kind in {AgentRouteKind.HISTORY_QUERY, AgentRouteKind.EXPLANATION_QUERY}:
         context = {field_name: value for field_name, value in raw_context.items() if field_name in QUERY_PROFILE_FIELDS}
         if "location" in context:
             context["city"] = context["location"]
@@ -176,6 +181,17 @@ def _pending_task(context: dict[str, object]) -> dict[str, object] | None:
 
 def _dict_value(value: object) -> dict[str, object]:
     return dict(value) if isinstance(value, dict) else {}
+
+
+def _session_fields(values: dict[str, object], source_intent: object) -> dict[str, object]:
+    excluded = {PENDING_TASK_KEY, "city", "flight_location", "flight_locations"}
+    if source_intent in ("knowledge", "history", "explain"):
+        excluded.update({"location", "locations"})
+    fields = {key: value for key, value in values.items() if key not in excluded}
+    if source_intent == "knowledge":
+        # Older knowledge sessions stored the Profile default as location.
+        fields.update(location=values.get("flight_location"), locations=values.get("flight_locations"))
+    return fields
 
 
 def _set_if_present(

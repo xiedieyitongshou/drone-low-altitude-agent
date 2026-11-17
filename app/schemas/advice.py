@@ -125,6 +125,7 @@ class KnowledgeBusinessContext(BaseModel):
 
 class KnowledgeRetrievalRequest(BaseModel):
     task_type: str
+    query: str | None = None
     overall_decision: str | None = None
     risk_reasons: list[str] = Field(default_factory=list)
     risk_tags: list[str] = Field(default_factory=list)

@@ -93,6 +93,11 @@ TASK_PARSER_RETRY_SYSTEM_PROMPT = (
     "\"comparison_mode\":\"default\",\"purpose\":\"string\",\"window_rank\":1,\"missing_fields\":[]}.\n"
     "For recommend, start_time and end_time are not required. For compare, infer afternoon as 13:00-18:00."
 )
+CREATE_TASK_CONTEXT_INSTRUCTION = (
+    "\nFor create_task, return task fields inferred from the current query only. "
+    "Use context to identify intent, then leave fields omitted by the user for the Agent to fill. "
+    "If context.pending_task_intent is create_task and the query supplies a missing field, keep create_task."
+)
 
 
 class LLMParsedTaskPayload(BaseModel):
@@ -233,8 +238,9 @@ def parse_natural_language_request_with_llm(
     query: str,
     *,
     context: dict[str, object] | None = None,
+    defer_context_merge: bool = False,
 ) -> ParsedTaskRequest | None:
-    raw_payload = parse_task_request_with_llm(query, context=context)
+    raw_payload = parse_task_request_with_llm(query, context=context, defer_context_merge=defer_context_merge)
     if raw_payload is None:
         return None
 
@@ -246,13 +252,16 @@ def parse_natural_language_request_with_llm(
             missing_fields=_validation_missing_fields(exc),
         ) from exc
 
-    return build_parsed_task_request_from_llm_payload(payload, query=query, context=context)
+    return build_parsed_task_request_from_llm_payload(
+        payload, query=query, context=context, defer_context_merge=defer_context_merge
+    )
 
 
 def parse_task_request_with_llm(
     query: str,
     *,
     context: dict[str, object] | None = None,
+    defer_context_merge: bool = False,
 ) -> dict[str, Any] | None:
     """Return the raw JSON object produced by the LLM, kept for debugging compatibility."""
 
@@ -268,15 +277,16 @@ def parse_task_request_with_llm(
         },
         ensure_ascii=False,
     )
+    create_task_instruction = CREATE_TASK_CONTEXT_INSTRUCTION if defer_context_merge else ""
     content = generate_text(
-        system_prompt=TASK_PARSER_SYSTEM_PROMPT,
+        system_prompt=TASK_PARSER_SYSTEM_PROMPT + create_task_instruction,
         user_prompt=user_prompt,
         temperature=0,
         max_tokens=2000,
     )
     if not content:
         content = generate_text(
-            system_prompt=TASK_PARSER_RETRY_SYSTEM_PROMPT,
+            system_prompt=TASK_PARSER_RETRY_SYSTEM_PROMPT + create_task_instruction,
             user_prompt=user_prompt,
             temperature=0,
             max_tokens=3000,
@@ -291,6 +301,7 @@ def build_parsed_task_request_from_llm_payload(
     *,
     query: str,
     context: dict[str, object] | None = None,
+    defer_context_merge: bool = False,
 ) -> ParsedTaskRequest:
     context = context or {}
     warnings: list[str] = []
@@ -309,10 +320,18 @@ def build_parsed_task_request_from_llm_payload(
         "select_task_window",
         "preflight_check_task",
     }:
-        parsed, target_endpoint, used_task_context = _build_mission_task_payload(payload, query=query, context=context)
-        context_used = context_used or used_task_context
+        defer_create = defer_context_merge and payload.intent == "create_task"
+        parsed, target_endpoint, used_task_context = _build_mission_task_payload(
+            payload, query=query, context={} if defer_create else context
+        )
+        context_used = not defer_create and (context_used or used_task_context)
+        if defer_create:
+            if payload.task_type is None:
+                parsed.pop("task_type", None)
+            if context.get("pending_task_intent") == "create_task" and payload.task_title is None:
+                parsed.pop("task_title", None)
         missing_fields = [field for field in REQUIRED_FIELDS_BY_INTENT[payload.intent] if parsed.get(field) in (None, "", [])]
-        if missing_fields:
+        if missing_fields and not defer_create:
             raise NaturalLanguageParseError(
                 "LLM parsed mission task request is incomplete",
                 missing_fields=missing_fields,
@@ -324,7 +343,7 @@ def build_parsed_task_request_from_llm_payload(
             intent=payload.intent,
             target_endpoint=target_endpoint,
             parsed=parsed,
-            warnings=_missing_field_warnings(payload.intent, payload.missing_fields),
+            warnings=[] if defer_create else _missing_field_warnings(payload.intent, payload.missing_fields),
             context_used=context_used,
             parser_source="llm",
         )

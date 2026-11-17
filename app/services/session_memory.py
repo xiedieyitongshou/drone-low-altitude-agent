@@ -244,7 +244,9 @@ class LazySessionMemoryStore:
             return self._store
 
 
-def build_session_context(intent: str, parsed: dict[str, object]) -> dict[str, object]:
+def build_session_context(
+    intent: str, parsed: dict[str, object], *, knowledge_city: object = None
+) -> dict[str, object]:
     """Keep only reusable fields for next-turn completion."""
 
     context = {
@@ -253,14 +255,17 @@ def build_session_context(intent: str, parsed: dict[str, object]) -> dict[str, o
         "date": parsed.get("date"),
         "start_time": parsed.get("start_time"),
         "end_time": parsed.get("end_time"),
-        "location": parsed.get("location"),
-        "locations": parsed.get("locations"),
+        "city": knowledge_city,
         "scan_hours": parsed.get("scan_hours"),
         "current_task_id": parsed.get("task_id") or parsed.get("current_task_id"),
         "current_task_title": parsed.get("task_title") or parsed.get("current_task_title"),
         "last_recommended_windows": parsed.get("last_recommended_windows"),
         "selected_window_rank": parsed.get("window_rank") or parsed.get("selected_window_rank"),
     }
+    if intent == "knowledge":
+        context.update(flight_location=parsed.get("location"), flight_locations=parsed.get("locations"))
+    else:
+        context.update(location=parsed.get("location"), locations=parsed.get("locations"))
     return {key: value for key, value in context.items() if value not in (None, [], "")}
 
 

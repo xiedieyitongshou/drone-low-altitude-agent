@@ -5,6 +5,7 @@ from app.agent import (
     resolve_invalidated_tools,
 )
 from app.services.profile_memory import ProfileMemory
+from app.services.session_memory import build_session_context
 
 
 def test_parser_context_uses_session_pending_and_profile_task_type_only():
@@ -49,18 +50,31 @@ def test_compute_merge_uses_session_but_not_profile_location():
     assert result.missing_fields == []
 
 
-def test_compute_merge_does_not_fill_safety_location_from_profile():
+def test_compute_merge_does_not_fill_safety_location_from_profile_or_old_knowledge_context():
     profile = ProfileMemory(user_id="user-1", default_location="广州", default_task_type="inspection")
 
     result = merge_agent_context(
         intent="evaluate",
         parsed={"date": "2026-08-03", "start_time": "13:00", "end_time": "18:00"},
-        session_context=None,
+        session_context={"intent": "knowledge", "location": "广州", "city": "深圳"},
         profile=profile,
     )
 
     assert "location" not in result.parsed
     assert result.missing_fields == ["location"]
+
+
+def test_saved_flight_location_and_knowledge_city_are_inherited_independently():
+    session_context = build_session_context("knowledge", {"location": "深圳湾"}, knowledge_city="广州")
+    assert build_agent_parser_context(session_context=session_context, profile=None)["location"] == "深圳湾"
+
+    evaluation = merge_agent_context(intent="evaluate", parsed={}, session_context=session_context, profile=None)
+    knowledge = merge_agent_context(intent="knowledge", parsed={}, session_context=session_context, profile=None)
+
+    assert evaluation.parsed["location"] == "深圳湾"
+    assert "city" not in evaluation.parsed
+    assert knowledge.parsed["city"] == "广州"
+    assert knowledge.field_sources["city"] == "session"
 
 
 def test_query_merge_can_use_profile_location_and_defaults():

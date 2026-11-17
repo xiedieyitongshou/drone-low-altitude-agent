@@ -28,6 +28,26 @@ def test_rule_parser_detects_knowledge_sop_query_without_location():
     assert result.intent == "knowledge"
     assert result.parsed["task_type"] == "cruise"
     assert result.parsed["query"] == "遇到强风预警时无人机巡航 SOP 怎么处理"
+    assert "city" not in result.parsed
+
+
+@pytest.mark.parametrize(
+    ("query", "city"),
+    [
+        ("深圳，空域核查政策", "深圳"),
+        ("深圳市无人机作业报备政策有哪些注意事项？", "深圳"),
+        ("想了解广州市无人机作业报备政策", "广州"),
+        ("请问浙江省杭州市无人机报备政策", "杭州"),
+        ("无人机作业报备政策有哪些注意事项？", None),
+        ("持续降雨时怎么办，有哪些作业建议？", None),
+    ],
+)
+def test_rule_parser_extracts_city_only_from_location_mentions(query, city):
+    result = parse_natural_language_request(query)
+
+    assert result.intent == "knowledge"
+    assert result.parsed["query"] == query
+    assert result.parsed.get("city") == city
 
 
 def test_rule_parser_detects_risk_explanation_query():

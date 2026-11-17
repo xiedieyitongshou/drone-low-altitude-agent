@@ -212,6 +212,8 @@ def retrieve_knowledge_by_request(
         province=payload.province,
         city=payload.city,
     )
+    if payload.query and payload.query.strip():
+        query_text = f"{query_text}\n用户问题: {payload.query.strip()}"
     snippets = active_retriever.retrieve(
         query_text,
         top_k=payload.top_k,

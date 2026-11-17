@@ -29,7 +29,7 @@ from app.services.conversation_history import persist_conversation_record
 from app.services.cruise_evaluator import evaluate_cruise_request_with_artifacts
 from app.services.history_persistence import persist_cruise_evaluation
 from app.services.llm_task_parser import parse_natural_language_request_with_llm
-from app.services.nl_parser import NaturalLanguageParseError, ParsedTaskRequest, parse_natural_language_request
+from app.services.nl_parser import KNOWLEDGE_HINTS, NaturalLanguageParseError, ParsedTaskRequest, parse_natural_language_request
 from app.services.profile_memory import (
     get_or_create_user_profile,
     merge_profile_context,
@@ -242,14 +242,16 @@ def _orchestrate_task_query_with_agent_loop(
     profile = get_or_create_user_profile(normalized_user_id)
     cached_context = session_memory_store.get(session_id, user_id=normalized_user_id) if session_id else None
     parser_context = build_agent_parser_context(session_context=cached_context, profile=profile)
+    knowledge_city = cached_context.get("city") if cached_context else None
     try:
-        parsed_result = _parse_task_query(query, context=parser_context)
+        parsed_result = _parse_task_query(query, context=parser_context, defer_context_merge=True)
     except NaturalLanguageParseError as exc:
         return _handle_agent_parse_error(
             query=query,
             session_id=session_id,
             user_id=normalized_user_id,
             error=exc,
+            knowledge_city=knowledge_city,
         )
     context_result = merge_agent_context(
         intent=parsed_result.intent,
@@ -287,13 +289,21 @@ def _orchestrate_task_query_with_agent_loop(
         )
 
     if loop_result.requires_clarification:
+        pending_parsed = parsed_result.parsed
+        if parsed_result.intent == "create_task":
+            pending_parsed = {
+                key: value
+                for key, value in pending_parsed.items()
+                if context_result.field_sources[key] in {"session", "user_input"}
+            }
         _save_pending_task(
             session_id=session_id,
             user_id=normalized_user_id,
             intent=parsed_result.intent,
-            parsed=parsed_result.parsed,
+            parsed=pending_parsed,
             missing_fields=loop_result.final_state.missing_fields,
             query=query,
+            knowledge_city=knowledge_city,
         )
         return OrchestratorResponse(
             success=False,
@@ -326,7 +336,11 @@ def _orchestrate_task_query_with_agent_loop(
         fallback=None if loop_result.success else loop_result.output if isinstance(loop_result.output, dict) else {"errors": loop_result.final_state.errors},
         agent_runtime=_build_agent_runtime_debug(loop_result, mode="loop", context_result=context_result),
     )
-    _save_context(session_id, normalized_user_id, parsed_result.intent, session_parsed, query=query)
+    if parsed_result.intent == "knowledge" and context_result.field_sources.get("city") == "user_input":
+        knowledge_city = session_parsed["city"]
+    _save_context(
+        session_id, normalized_user_id, parsed_result.intent, session_parsed, query=query, knowledge_city=knowledge_city
+    )
     update_profile_from_parsed(user_id=normalized_user_id, parsed=session_parsed)
     return _with_conversation_record(query=query, user_id=normalized_user_id, response=response)
 
@@ -337,6 +351,7 @@ def _handle_agent_parse_error(
     session_id: str | None,
     user_id: str,
     error: NaturalLanguageParseError,
+    knowledge_city: object = None,
 ) -> OrchestratorResponse:
     intent = error.intent or "unknown"
     target_endpoint = error.target_endpoint or "/agent/query"
@@ -352,6 +367,7 @@ def _handle_agent_parse_error(
         parsed=parsed,
         missing_fields=error.missing_fields,
         query=query,
+        knowledge_city=knowledge_city,
     )
 
     return _with_conversation_record(
@@ -431,20 +447,19 @@ def _save_pending_task(
     parsed: dict[str, object],
     missing_fields: list[str],
     query: str,
+    knowledge_city: object = None,
 ) -> None:
     if not session_id or not missing_fields or intent == "unknown":
         return
-    session_memory_store.set(
-        session_id,
-        build_pending_task_context(
-            intent=intent,
-            parsed=parsed,
-            missing_fields=missing_fields,
-            query=query,
-        ),
-        user_id=user_id,
-        title=query[:80],
+    context = build_pending_task_context(
+        intent=intent,
+        parsed=parsed,
+        missing_fields=missing_fields,
+        query=query,
     )
+    if knowledge_city:
+        context["city"] = knowledge_city
+    session_memory_store.set(session_id, context, user_id=user_id, title=query[:80])
 
 
 def _clean_context_fields(values: dict[str, object]) -> dict[str, object]:
@@ -557,25 +572,30 @@ def _save_context(
     parsed: dict[str, object],
     *,
     query: str,
+    knowledge_city: object = None,
 ) -> None:
     if not session_id:
         return
-    session_memory_store.set(session_id, build_session_context(intent, parsed), user_id=user_id, title=query[:80])
+    context = build_session_context(intent, parsed, knowledge_city=knowledge_city)
+    session_memory_store.set(session_id, context, user_id=user_id, title=query[:80])
 
 
-def _parse_task_query(query: str, *, context: dict[str, object] | None = None) -> ParsedTaskRequest:
+def _parse_task_query(
+    query: str, *, context: dict[str, object] | None = None, defer_context_merge: bool = False
+) -> ParsedTaskRequest:
+    parser_kwargs = {"context": context, "defer_context_merge": defer_context_merge}
     mode = os.getenv("NL_PARSER_MODE", "rule").strip().lower()
     if mode not in SUPPORTED_PARSER_MODES:
         logger.warning("Unsupported NL_PARSER_MODE=%s, fallback to rule parser", mode)
-        parsed = parse_natural_language_request(query, context=context)
+        parsed = parse_natural_language_request(query, **parser_kwargs)
         parsed.warnings.append(f"Unsupported NL_PARSER_MODE={mode}, used rule parser")
         return parsed
 
     if mode == "rule":
-        return parse_natural_language_request(query, context=context)
+        return parse_natural_language_request(query, **parser_kwargs)
 
     if mode == "llm":
-        parsed = parse_natural_language_request_with_llm(query, context=context)
+        parsed = parse_natural_language_request_with_llm(query, **parser_kwargs)
         if parsed is None:
             raise NaturalLanguageParseError(
                 "LLM parser is unavailable or disabled",
@@ -583,16 +603,25 @@ def _parse_task_query(query: str, *, context: dict[str, object] | None = None) -
             )
         return parsed
 
+    rule_result = None
+    if any(hint in query for hint in KNOWLEDGE_HINTS) or (context and context.get("intent") == "knowledge"):
+        try:
+            rule_result = parse_natural_language_request(query, **parser_kwargs)
+        except NaturalLanguageParseError:
+            pass
+        if rule_result is not None and rule_result.intent == "knowledge":
+            return rule_result
+
     llm_error: Exception | None = None
     try:
-        parsed = parse_natural_language_request_with_llm(query, context=context)
+        parsed = parse_natural_language_request_with_llm(query, **parser_kwargs)
         if parsed is not None:
             return parsed
     except Exception as exc:
         llm_error = exc
         logger.warning("LLM parser failed, fallback to rule parser: %s", exc)
 
-    parsed = parse_natural_language_request(query, context=context)
+    parsed = rule_result or parse_natural_language_request(query, **parser_kwargs)
     parsed.parser_source = "llm_fallback_rule"
     if llm_error:
         parsed.warnings.append(f"LLM parser failed, used rule parser: {llm_error}")

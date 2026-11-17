@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import dateparser
 
 from app.rules.mission_profiles import is_supported_task_type
+from app.services.advice_retriever import load_advice_library
 from app.utils.timezone import now_in_app_timezone
 
 
@@ -20,6 +21,13 @@ RECOMMEND_HINTS = ["什么时候", "何时", "推荐", "最佳时间", "最适�
 EVALUATE_HINTS = ["可以飞吗", "能飞吗", "适合飞吗", "适合吗", "可以执行吗"]
 HISTORY_HINTS = ["历史", "历史记录", "上次", "之前", "以前", "查记录", "查询记录", "任务记录", "会话记录"]
 KNOWLEDGE_HINTS = ["政策", "规则", "规定", "知识库", "注意事项", "建议", "怎么处理", "SOP", "标准流程", "FAQ", "风险说明"]
+EXPLICIT_CITY_PATTERN = re.compile(
+    r"(?:^|[，,、。；;：:])"
+    r"(?:请问|帮我|我?想(?:了解|问)|查一下|查询|关于|在|从)*"
+    r"(?:[\u4e00-\u9fff]{2,8}省)?"
+    r"(?P<city>[\u4e00-\u9fff]{2,6}?)市"
+    r"(?=$|[，,、。；;：:]|的|无人机|低空|作业|飞行|政策|报备|空域|巡检|测绘|巡航)"
+)
 EXPLAIN_HINTS = ["为什么", "为何", "依据是什么", "规则来源", "判定依据", "为什么判", "为什么不能飞", "为什么高风险", "解释一下"]
 MODIFY_HINTS = ["改成", "换成", "改为", "换为", "还是", "不变"]
 CREATE_TASK_HINTS = ["创建任务", "新建任务", "建个任务", "建立任务", "创建一个", "新建一个"]
@@ -86,6 +94,7 @@ def parse_natural_language_request(
     query: str,
     *,
     context: dict[str, object] | None = None,
+    defer_context_merge: bool = False,
 ) -> ParsedTaskRequest:
     text = _normalize_query(query)
     if not text:
@@ -114,6 +123,7 @@ def parse_natural_language_request(
         task_type=task_type,
         task_type_detected=task_type_detected,
         scan_hours=scan_hours,
+        defer_context_merge=defer_context_merge,
     )
     if mission_result is not None:
         return mission_result
@@ -152,15 +162,16 @@ def parse_natural_language_request(
         parsed = {key: value for key, value in parsed.items() if value not in (None, "", [])}
         target_endpoint = "/agent/rules/explain"
     elif intent == "knowledge":
-        merged_task_type = task_type if task_type_detected else _context_value(context, "task_type", "cruise")
-        city = locations[0] if locations else _context_value(context, "city") or _context_value(context, "location")
-        context_used = not locations and bool(city)
+        explicit_city = _detect_knowledge_city(text)
         parsed = {
             "query": query,
-            "task_type": merged_task_type,
-            "city": city,
-            "top_k": 3,
+            "task_type": task_type if task_type_detected else None,
+            "city": explicit_city,
         }
+        if not defer_context_merge:
+            city = explicit_city or _context_value(context, "city") or _context_value(context, "location")
+            context_used = explicit_city is None and bool(city)
+            parsed.update(task_type=merged_task_type, city=city, top_k=3)
         parsed = {key: value for key, value in parsed.items() if value not in (None, "", [])}
         target_endpoint = "/knowledge/advice/retrieve"
     elif intent == "compare":
@@ -373,35 +384,46 @@ def _parse_mission_task_intent(
     task_type: str,
     task_type_detected: bool,
     scan_hours: int | None,
+    defer_context_merge: bool,
 ) -> ParsedTaskRequest | None:
     intent = _detect_mission_task_intent(text)
+    continuing_create = (
+        defer_context_merge
+        and intent is None
+        and context.get("pending_task_intent") == "create_task"
+        and not _has_intent_hint(text)
+    )
+    if continuing_create:
+        intent = "create_task"
     if intent is None:
         return None
 
     if intent == "create_task":
         parsed = {
-            "task_title": _detect_task_title(query, locations, task_type),
+            "task_title": None if continuing_create else _detect_task_title(query, locations, task_type),
             "location": locations[0] if locations else None,
             "date": date_text,
             "start_time": start_time,
             "end_time": end_time,
-            "task_type": task_type if task_type_detected else _context_value(context, "task_type", "cruise"),
+            "task_type": task_type if task_type_detected else None,
             "purpose": query,
             "candidate_locations": locations[1:] if len(locations) > 1 else [],
         }
-        missing_fields = [
-            field
-            for field in ["location", "date", "start_time", "end_time", "task_type"]
-            if parsed.get(field) in (None, "", [])
-        ]
-        if missing_fields:
-            raise NaturalLanguageParseError(
-                "任务创建请求信息不完整",
-                missing_fields=missing_fields,
-                intent="create_task",
-                target_endpoint="/tasks",
-                parsed={key: value for key, value in parsed.items() if value not in (None, "", [])},
-            )
+        if not defer_context_merge:
+            parsed["task_type"] = parsed["task_type"] or _context_value(context, "task_type", "cruise")
+            missing_fields = [
+                field
+                for field in ["location", "date", "start_time", "end_time", "task_type"]
+                if parsed.get(field) in (None, "", [])
+            ]
+            if missing_fields:
+                raise NaturalLanguageParseError(
+                    "任务创建请求信息不完整",
+                    missing_fields=missing_fields,
+                    intent="create_task",
+                    target_endpoint="/tasks",
+                    parsed={key: value for key, value in parsed.items() if value not in (None, "", [])},
+                )
         return ParsedTaskRequest(
             intent="create_task",
             target_endpoint="/tasks",
@@ -596,6 +618,24 @@ def _build_time_text(*, period: str | None, hour_text: str | None, minute_text: 
         hour = 0
 
     return f"{hour:02d}:{minute:02d}"
+
+
+def _detect_knowledge_city(text: str) -> str | None:
+    # Bare names resolve against the same catalog used for retrieval.
+    try:
+        city_names = {item.city for item in load_advice_library().items if item.city}
+    except (OSError, ValueError):
+        city_names = set()
+
+    city_by_alias = {city.removesuffix("市"): city for city in sorted(city_names, reverse=True)}
+    explicit_city = EXPLICIT_CITY_PATTERN.search(text)
+    if city_by_alias:
+        aliases = "|".join(re.escape(alias) for alias in sorted(city_by_alias, key=len, reverse=True))
+        match = re.search(rf"({aliases})(?!省)", text)
+        if match and (explicit_city is None or match.start() <= explicit_city.start("city")):
+            return city_by_alias[match[1]]
+
+    return explicit_city["city"] if explicit_city else None
 
 
 def _detect_locations(text: str) -> list[str]:
