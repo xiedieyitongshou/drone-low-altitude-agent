@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+import httpx
 import pytest
 
 from app.agent import (
@@ -17,6 +18,7 @@ from app.agent import (
 from app.services.profile_memory import ProfileMemory
 from app.services.session_memory import TTLSessionMemoryStore
 from app.services.task_orchestrator import orchestrate_task_query
+from app.services.weather.client import HttpClient
 
 
 def _run_with_planner_only(self, state, context):
@@ -239,6 +241,74 @@ def test_create_task_merges_profile_defaults_before_checking_missing_fields(agen
     )
     assert sources["date"] == "session"
     assert sources["start_time"] == sources["end_time"] == sources["task_type"] == "user_input"
+
+
+@pytest.mark.parametrize(
+    ("save_function", "warning"),
+    [("_save_context", "会话上下文保存失败"), ("update_profile_from_parsed", "用户偏好更新失败")],
+)
+def test_committed_task_is_returned_when_ancillary_save_fails(agent_api, save_function, warning):
+    headers = _login(agent_api, "task-save-failure-test")
+    request = {"query": "帮我创建一个深圳湾明天下午2点到3点巡检任务", "session_id": "task-save-fault"}
+    with patch(f"app.services.task_orchestrator.{save_function}", side_effect=RuntimeError("save failed")) as save:
+        response = agent_api.post("/agent/query", json=request, headers=headers)
+
+    assert response.status_code == 200
+    assert save.call_count == 1
+    payload = response.json()
+    assert payload["success"] is True
+    assert payload["agent_runtime"]["fallback_used"] is False
+    assert any(warning in item for item in payload["warnings"])
+    task = payload["result"]["tool_results"]["create_mission_task"]["data"]
+    listing = agent_api.get("/tasks", headers=headers).json()
+    assert listing["total"] == 1
+    assert listing["items"][0]["id"] == task["id"]
+
+
+@pytest.mark.parametrize(
+    ("fault", "attempts", "error_code"),
+    [("timeout", 2, "WeatherRequestError"), ("invalid_json", 1, "WeatherResponseError"),
+     ("invalid_hour", 1, "WeatherResponseError")],
+)
+def test_weather_tool_failure_consumes_only_client_retry_budget(agent_api, monkeypatch, fault, attempts, error_code):
+    headers = _login(agent_api, "weather-recovery-test")
+    monkeypatch.setenv("QWEATHER_API_KEY", "test-only")
+    monkeypatch.setenv("QWEATHER_MAX_RETRIES", "2")
+    monkeypatch.setenv("QWEATHER_RETRY_BACKOFF_SECONDS", "0")
+    hourly_calls = 0
+
+    def weather_transport(request):
+        if request.url.path.endswith("/lookup"):
+            return httpx.Response(200, json={"code": "200", "location": [
+                {"id": "fixed", "name": "深圳", "lat": "22.54", "lon": "114.05"}
+            ]})
+        if request.url.path.endswith("/72h"):
+            nonlocal hourly_calls
+            hourly_calls += 1
+            if fault == "timeout":
+                raise httpx.ReadTimeout("test timeout", request=request)
+            if fault == "invalid_json":
+                return httpx.Response(200, text="invalid JSON")
+            return httpx.Response(200, json={"code": "200", "hourly": [{"temp": "20"}]})
+        raise AssertionError(request.url.path)
+
+    original_init = HttpClient.__init__
+
+    def install_transport(self, **kwargs):
+        original_init(self, **kwargs)
+        self._client.close()
+        self._client = httpx.Client(transport=httpx.MockTransport(weather_transport))
+
+    monkeypatch.setattr(HttpClient, "__init__", install_transport)
+    response = agent_api.post("/agent/query", json={"query": "深圳明天下午2点到3点能飞吗"}, headers=headers)
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["success"] is False
+    assert payload["agent_runtime"]["fallback_used"] is False
+    assert payload["fallback"]["recovery_action"] == "fail_fast"
+    assert payload["fallback"]["errors"][-1]["error_code"] == error_code
+    assert hourly_calls == attempts
 
 
 def test_mixed_orchestration_missing_fields_asks_clarification_and_saves_pending():

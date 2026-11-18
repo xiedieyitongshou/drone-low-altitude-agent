@@ -37,7 +37,6 @@ class HttpClient:
             try:
                 response = self._client.get(url, params=params)
                 self._raise_for_status(response)
-                return response.json()
             except (httpx.HTTPError, WeatherResponseError) as exc:
                 last_exception = exc
                 logger.warning(
@@ -47,6 +46,14 @@ class HttpClient:
                 if attempt == self._max_retries:
                     break
                 time.sleep(self._retry_backoff_seconds * attempt)
+            else:
+                try:
+                    payload = response.json()
+                except ValueError as exc:
+                    raise WeatherResponseError("Weather API returned invalid JSON") from exc
+                if not isinstance(payload, dict):
+                    raise WeatherResponseError("Weather API returned a non-object JSON payload")
+                return payload
 
         raise WeatherRequestError(f"Weather API request failed after retries: {url}") from last_exception
 

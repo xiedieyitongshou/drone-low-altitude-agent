@@ -73,9 +73,8 @@ def classify_tool_failure(tool_result: ToolResult) -> ToolFailurePolicy | None:
     if failure_type == ToolFailureType.AUTH_REQUIRED:
         return ToolFailurePolicy(
             failure_type=failure_type,
-            recovery_action=ToolRecoveryAction.FALLBACK_LEGACY,
-            retryable=False,
-            user_message="缺少登录上下文，已尝试使用兼容链路处理。",
+            recovery_action=ToolRecoveryAction.DENY,
+            user_message="当前请求缺少登录信息，请登录后再试。",
         )
     if failure_type == ToolFailureType.PERMISSION_DENIED:
         return ToolFailurePolicy(
@@ -94,30 +93,26 @@ def classify_tool_failure(tool_result: ToolResult) -> ToolFailurePolicy | None:
     if failure_type == ToolFailureType.EXTERNAL_DEPENDENCY_FAILED:
         return ToolFailurePolicy(
             failure_type=failure_type,
-            recovery_action=ToolRecoveryAction.RETRY,
-            retryable=True,
-            user_message="外部依赖暂时不可用，可重试一次；仍失败时进入兼容兜底。",
+            recovery_action=ToolRecoveryAction.FAIL_FAST,
+            user_message="外部依赖暂时不可用，请稍后重试。",
         )
     if failure_type == ToolFailureType.TIMEOUT:
         return ToolFailurePolicy(
             failure_type=failure_type,
-            recovery_action=ToolRecoveryAction.RETRY,
-            retryable=True,
-            user_message="工具调用超时，可重试一次；仍失败时进入兼容兜底。",
+            recovery_action=ToolRecoveryAction.FAIL_FAST,
+            user_message="工具调用超时，请稍后重试。",
         )
     if failure_type == ToolFailureType.INTERNAL_ERROR:
         return ToolFailurePolicy(
             failure_type=failure_type,
-            recovery_action=ToolRecoveryAction.FALLBACK_LEGACY,
-            retryable=False,
-            user_message="工具执行出现内部错误，已尝试使用兼容链路处理。",
+            recovery_action=ToolRecoveryAction.FAIL_FAST,
+            user_message="工具执行出现内部错误。",
         )
 
     return ToolFailurePolicy(
         failure_type=ToolFailureType.UNKNOWN,
-        recovery_action=ToolRecoveryAction.FALLBACK_LEGACY,
-        retryable=False,
-        user_message="工具执行失败，已尝试使用兼容链路处理。",
+        recovery_action=ToolRecoveryAction.FAIL_FAST,
+        user_message="工具执行失败。",
     )
 
 

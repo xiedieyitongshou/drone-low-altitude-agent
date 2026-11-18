@@ -314,6 +314,13 @@ class AgentLoop:
             message=message,
         )
         failure_policy = _latest_failure_policy(failed_state)
+        # Once a tool has started, replaying the request could repeat a committed operation.
+        allow_legacy_fallback = (
+            allow_legacy_fallback
+            and state.status in {AgentStatus.INITIALIZED, AgentStatus.PARSED, AgentStatus.READY_TO_PLAN}
+            and not state.tool_results
+            and all(step.status != AgentStatus.TOOL_RUNNING for step in state.steps)
+        )
         fallback_result = self.fallback_handler(failed_state, plan) if self.fallback_handler and allow_legacy_fallback else None
         fallback_message = message or build_tool_failure_message(
             policy=failure_policy,

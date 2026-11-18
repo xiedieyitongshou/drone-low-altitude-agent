@@ -12,6 +12,7 @@ from app.schemas import (
 )
 from app.agent import (
     AgentLoop,
+    AgentRouteKind,
     ToolExecutionContext,
     build_route_tool_input,
     default_tool_registry,
@@ -65,15 +66,18 @@ def orchestrate_task_query(
     if mode == "loop":
         try:
             return _orchestrate_task_query_with_agent_loop(query, session_id=session_id, user_id=user_id, db=db)
-        except Exception as exc:
-            logger.warning("Agent runtime failed, fallback to legacy workflow: %s", exc)
-            return _with_agent_runtime_debug(
-                _orchestrate_task_query_legacy(query, session_id=session_id, user_id=user_id, db=db),
-                {
-                    "mode": "loop",
-                    "fallback_used": True,
-                    "error": str(exc),
-                },
+        except Exception:
+            logger.exception("Agent runtime failed", extra={"session_id": session_id, "user_id": user_id})
+            return OrchestratorResponse(
+                success=False,
+                session_id=session_id,
+                user_id=normalize_user_id(user_id),
+                intent="unknown",
+                target_endpoint="/agent/query",
+                parsed={},
+                message="本轮请求处理失败。",
+                fallback={"error_code": "AGENT_RUNTIME_ERROR"},
+                agent_runtime={"mode": "loop", "fallback_used": False, "status": "failed"},
             )
 
     return _orchestrate_task_query_legacy(query, session_id=session_id, user_id=user_id, db=db)
@@ -278,7 +282,9 @@ def _orchestrate_task_query_with_agent_loop(
     def fallback_handler(_, __):
         return _orchestrate_task_query_legacy(query, session_id=session_id, user_id=user_id, db=db)
 
-    loop_result = AgentLoop(fallback_handler=fallback_handler).run(
+    route = get_business_route(parsed_result.intent)
+    legacy_handler = fallback_handler if route and route.route_kind == AgentRouteKind.BUSINESS_COMPUTE else None
+    loop_result = AgentLoop(fallback_handler=legacy_handler).run(
         state,
         context=ToolExecutionContext(user_id=normalized_user_id, tenant_id="public", role="user", db=db),
     )
@@ -338,10 +344,8 @@ def _orchestrate_task_query_with_agent_loop(
     )
     if parsed_result.intent == "knowledge" and context_result.field_sources.get("city") == "user_input":
         knowledge_city = session_parsed["city"]
-    _save_context(
-        session_id, normalized_user_id, parsed_result.intent, session_parsed, query=query, knowledge_city=knowledge_city
-    )
-    update_profile_from_parsed(user_id=normalized_user_id, parsed=session_parsed)
+    if loop_result.success:
+        _save_completed_context(response, query=query, knowledge_city=knowledge_city)
     return _with_conversation_record(query=query, user_id=normalized_user_id, response=response)
 
 
@@ -409,34 +413,27 @@ def _handle_legacy_mission_task_intent(
         context=ToolExecutionContext(user_id=user_id, tenant_id="public", role="user", db=db),
     )
     session_parsed = _enrich_task_session_context_from_results(parsed_result.parsed, [tool_result])
-    if tool_result.success:
-        _save_context(session_id, user_id, parsed_result.intent, session_parsed, query=query)
-        update_profile_from_parsed(user_id=user_id, parsed=session_parsed)
-
-    return _with_conversation_record(
-        query=query,
+    response = OrchestratorResponse(
+        success=tool_result.success,
+        session_id=session_id,
         user_id=user_id,
-        response=OrchestratorResponse(
-            success=tool_result.success,
-            session_id=session_id,
-            user_id=user_id,
-            intent=parsed_result.intent,
-            target_endpoint=parsed_result.target_endpoint,
-            parser_source=parsed_result.parser_source,
-            parsed=session_parsed,
-            context_used=parsed_result.context_used,
-            warnings=parsed_result.warnings,
-            message=_build_legacy_mission_task_message(parsed_result.intent, tool_result.success),
-            result=tool_result.data if tool_result.success else None,
-            fallback=None
-            if tool_result.success
-            else {
-                "tool_name": tool_result.tool_name,
-                "error_code": tool_result.error_code,
-                "message": tool_result.message,
-            },
-        ),
+        intent=parsed_result.intent,
+        target_endpoint=parsed_result.target_endpoint,
+        parser_source=parsed_result.parser_source,
+        parsed=session_parsed,
+        context_used=parsed_result.context_used,
+        warnings=parsed_result.warnings,
+        message=_build_legacy_mission_task_message(parsed_result.intent, tool_result.success),
+        result=tool_result.data if tool_result.success else None,
+        fallback=None if tool_result.success else {
+            "tool_name": tool_result.tool_name,
+            "error_code": tool_result.error_code,
+            "message": tool_result.message,
+        },
     )
+    if tool_result.success:
+        _save_completed_context(response, query=query)
+    return _with_conversation_record(query=query, user_id=user_id, response=response)
 
 
 def _save_pending_task(
@@ -469,12 +466,10 @@ def _clean_context_fields(values: dict[str, object]) -> dict[str, object]:
 def _build_agent_loop_message(loop_result) -> str:
     if loop_result.requires_clarification or not loop_result.success:
         return loop_result.message
-    if loop_result.success:
-        tool_names = list(loop_result.final_state.tool_results.keys())
-        if tool_names:
-            return f"Agent Runtime 已完成工具调用：{', '.join(tool_names)}。"
-        return "Agent Runtime 已完成请求处理。"
-    return "Agent Runtime 执行失败，已进入兼容兜底。"
+    tool_names = list(loop_result.final_state.tool_results.keys())
+    if tool_names:
+        return f"Agent Runtime 已完成工具调用：{', '.join(tool_names)}。"
+    return "Agent Runtime 已完成请求处理。"
 
 
 def _build_agent_runtime_debug(loop_result, *, mode: str, context_result=None) -> dict[str, object]:
@@ -563,6 +558,29 @@ def _build_legacy_mission_task_message(intent: str, success: bool) -> str:
 def _with_agent_runtime_debug(response: OrchestratorResponse, debug: dict[str, object]) -> OrchestratorResponse:
     response.agent_runtime = debug
     return response
+
+
+def _save_completed_context(
+    response: OrchestratorResponse, *, query: str, knowledge_city: object = None
+) -> None:
+    log_context = {"session_id": response.session_id, "user_id": response.user_id, "intent": response.intent}
+    try:
+        _save_context(
+            response.session_id,
+            response.user_id,
+            response.intent,
+            response.parsed,
+            query=query,
+            knowledge_city=knowledge_city,
+        )
+    except Exception:
+        logger.exception("Could not save the completed request's Session", extra=log_context)
+        response.warnings.append("会话上下文保存失败，下一轮可能需要重新补充信息。")
+    try:
+        update_profile_from_parsed(user_id=response.user_id, parsed=response.parsed)
+    except Exception:
+        logger.exception("Could not update Profile after a completed request", extra=log_context)
+        response.warnings.append("用户偏好更新失败。")
 
 
 def _save_context(

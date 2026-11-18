@@ -45,7 +45,7 @@ def build_tool_failure_message(
     tool_name: str | None = None,
 ) -> str:
     if policy is None:
-        return tool_result.message if tool_result and tool_result.message else "工具执行失败，系统已进入兜底处理。"
+        return tool_result.message if tool_result and tool_result.message else "工具执行失败。"
     if policy.recovery_action == ToolRecoveryAction.ASK_CLARIFICATION:
         return policy.user_message
     if policy.recovery_action == ToolRecoveryAction.DENY:

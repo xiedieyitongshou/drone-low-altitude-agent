@@ -67,7 +67,7 @@ def test_agent_loop_returns_clarification_when_fields_missing():
     assert result.last_plan.action == AgentPlanAction.ASK_CLARIFICATION
 
 
-def test_agent_loop_uses_fallback_when_tool_fails():
+def test_agent_loop_returns_tool_failure_without_replaying_the_request():
     registry = ToolRegistry()
     registry.register(
         ToolSpec(
@@ -100,13 +100,41 @@ def test_agent_loop_uses_fallback_when_tool_fails():
     result = AgentLoop(tool_registry=registry, fallback_handler=fallback_handler).run(state)
 
     assert result.success is False
-    assert result.fallback_used is True
-    assert result.fallback_result == {"source": "legacy_workflow"}
-    assert fallback_calls == [(AgentStatus.FAILED, "evaluate_flight_risk")]
+    assert result.fallback_used is False
+    assert result.output["recovery_action"] == "fail_fast"
+    assert fallback_calls == []
     assert result.final_state.errors[-1]["error_code"] == "RuntimeError"
 
 
-def test_agent_loop_fallback_when_tool_requires_auth_context():
+def test_agent_loop_can_use_legacy_fallback_before_a_tool_starts():
+    state = mark_parsed(
+        initialize_state("评估深圳", user_id="user-1"),
+        intent="evaluate",
+        parsed={"location": "深圳", "date": "2026-08-01", "start_time": "14:00", "end_time": "17:00", "task_type": "inspection"},
+    )
+    result = AgentLoop(
+        tool_registry=ToolRegistry(), fallback_handler=lambda state, plan: {"source": "legacy_workflow"}
+    ).run(state)
+
+    assert result.fallback_used is True
+    assert result.fallback_result == {"source": "legacy_workflow"}
+    assert result.final_state.tool_results == {}
+
+
+def test_agent_loop_cannot_replay_an_incomplete_tool_call():
+    state = initialize_state("评估深圳", user_id="user-1")
+    state = state.model_copy(update={"status": AgentStatus.TOOL_RUNNING, "current_intent": "evaluate"})
+    fallback_calls = []
+    result = AgentLoop(
+        tool_registry=ToolRegistry(), fallback_handler=lambda state, plan: fallback_calls.append(plan)
+    ).run(state)
+
+    assert result.success is False
+    assert result.fallback_used is False
+    assert fallback_calls == []
+
+
+def test_agent_loop_denies_tool_without_auth_context():
     registry = ToolRegistry()
     registry.register(
         ToolSpec(
@@ -125,8 +153,8 @@ def test_agent_loop_fallback_when_tool_requires_auth_context():
     assert result.success is False
     assert result.final_state.status == AgentStatus.FAILED
     assert result.final_state.errors[-1]["error_code"] == "AUTH_CONTEXT_REQUIRED"
-    assert result.message == "缺少登录上下文，已尝试使用兼容链路处理。"
-    assert result.output["recovery_action"] == "fallback_legacy"
+    assert result.message == "当前请求缺少登录信息，请登录后再试。"
+    assert result.output["recovery_action"] == "deny"
     assert result.output["fallback_used"] is False
 
 

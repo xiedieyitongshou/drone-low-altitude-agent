@@ -26,23 +26,23 @@ def test_classify_permission_error_as_deny():
     assert policy.recovery_action == ToolRecoveryAction.DENY
 
 
-def test_classify_external_dependency_as_retryable():
+def test_classify_external_dependency_as_terminal_for_agent():
     policy = classify_tool_failure(
         ToolResult(success=False, tool_name="fetch_weather_context", error_code="WeatherRequestError")
     )
 
     assert policy.failure_type == ToolFailureType.EXTERNAL_DEPENDENCY_FAILED
-    assert policy.recovery_action == ToolRecoveryAction.RETRY
-    assert policy.retryable is True
+    assert policy.recovery_action == ToolRecoveryAction.FAIL_FAST
+    assert policy.retryable is False
 
 
-def test_classify_unknown_error_as_legacy_fallback():
+def test_classify_unknown_tool_error_as_terminal_for_agent():
     policy = classify_tool_failure(
         ToolResult(success=False, tool_name="unknown", error_code="UnexpectedError")
     )
 
     assert policy.failure_type == ToolFailureType.UNKNOWN
-    assert policy.recovery_action == ToolRecoveryAction.FALLBACK_LEGACY
+    assert policy.recovery_action == ToolRecoveryAction.FAIL_FAST
     assert policy.retryable is False
 
 

@@ -1,4 +1,18 @@
-from pydantic import BaseModel, ConfigDict, Field
+from typing import TypeVar
+
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
+
+from app.services.weather.exceptions import WeatherResponseError
+
+
+WeatherPayload = TypeVar("WeatherPayload")
+
+
+def parse_weather_payload(payload_type: type[WeatherPayload], payload: object) -> WeatherPayload:
+    try:
+        return TypeAdapter(payload_type).validate_python(payload)
+    except ValidationError as exc:
+        raise WeatherResponseError("Weather API returned an invalid response format") from exc
 
 
 class GeoLocation(BaseModel):

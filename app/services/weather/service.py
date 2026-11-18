@@ -14,6 +14,7 @@ from app.services.weather.schemas import (
     GeoLocation,
     HourlyWeatherResponse,
     WeatherWarningResponse,
+    parse_weather_payload,
 )
 
 load_environment()
@@ -56,7 +57,7 @@ class QWeatherService:
 
     def lookup_location(self, location: str, number: int = 10) -> list[GeoLocation]:
         payload = self.lookup_location_payload(location=location, number=number)
-        locations = [GeoLocation.model_validate(item) for item in payload.get("location", [])]
+        locations = parse_weather_payload(list[GeoLocation], payload.get("location", []))
         if not locations:
             raise LocationNotFoundError(f"No matching location found for: {location}")
 
@@ -76,7 +77,7 @@ class QWeatherService:
         hours: Literal["24h", "72h", "168h"] = "72h",
     ) -> HourlyWeatherResponse:
         payload = self.get_hourly_weather_payload(location_id=location_id, hours=hours)
-        return HourlyWeatherResponse.model_validate(payload)
+        return parse_weather_payload(HourlyWeatherResponse, payload)
 
     def get_hourly_weather_payload(
         self,
@@ -92,7 +93,7 @@ class QWeatherService:
 
     def get_weather_warning(self, latitude: str, longitude: str) -> WeatherWarningResponse:
         payload = self.get_weather_warning_payload(latitude=latitude, longitude=longitude)
-        return WeatherWarningResponse.model_validate(payload)
+        return parse_weather_payload(WeatherWarningResponse, payload)
 
     def get_weather_warning_payload(self, latitude: str, longitude: str) -> dict:
         payload = self._client.get(

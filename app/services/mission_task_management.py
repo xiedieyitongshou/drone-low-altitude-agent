@@ -99,9 +99,10 @@ def create_mission_task(
         metadata_json=dict(payload.metadata),
     )
     db.add(task)
+    db.flush()
+    response = to_mission_task_response(task)
     db.commit()
-    db.refresh(task)
-    return to_mission_task_response(task)
+    return response
 
 
 def get_mission_task_detail(

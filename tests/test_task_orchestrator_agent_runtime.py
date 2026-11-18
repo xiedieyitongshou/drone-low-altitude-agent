@@ -132,3 +132,17 @@ def test_agent_runtime_loop_mode_returns_legacy_response_when_loop_fallback_resu
     assert response.message == "legacy ok"
     assert response.agent_runtime["fallback_used"] is True
     assert response.agent_runtime["mode"] == "loop"
+
+
+def test_unexpected_loop_exception_does_not_replay_the_request(monkeypatch):
+    monkeypatch.setenv("AGENT_RUNTIME_MODE", "loop")
+    with (
+        patch("app.services.task_orchestrator._orchestrate_task_query_with_agent_loop", side_effect=RuntimeError("failed")),
+        patch("app.services.task_orchestrator._orchestrate_task_query_legacy") as legacy,
+    ):
+        response = orchestrate_task_query("创建任务", session_id="session-1", user_id="user-1")
+
+    legacy.assert_not_called()
+    assert response.success is False
+    assert response.fallback["error_code"] == "AGENT_RUNTIME_ERROR"
+    assert response.agent_runtime["fallback_used"] is False

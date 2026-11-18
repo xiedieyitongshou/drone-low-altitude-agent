@@ -12,7 +12,7 @@ from app.services.weather import (
     to_warning_data_bundle,
     to_weather_data_bundle,
 )
-from app.services.weather.schemas import GeoLocation, HourlyWeatherResponse, WeatherWarningResponse
+from app.services.weather.schemas import GeoLocation, HourlyWeatherResponse, WeatherWarningResponse, parse_weather_payload
 
 
 @dataclass
@@ -31,18 +31,18 @@ def evaluate_cruise_request_with_artifacts(payload: CruiseEvaluateRequest) -> Cr
     weather_service = QWeatherService()
     try:
         raw_location_payload = weather_service.lookup_location_payload(payload.location, number=1)
-        locations = [GeoLocation.model_validate(item) for item in raw_location_payload.get("location", [])]
+        locations = parse_weather_payload(list[GeoLocation], raw_location_payload.get("location", []))
         if not locations:
             raise LocationNotFoundError(f"No matching location found for: {payload.location}")
         selected_location = locations[0]
 
         raw_hourly_weather_payload = weather_service.get_hourly_weather_payload(selected_location.location_id, hours="72h")
-        hourly_response = HourlyWeatherResponse.model_validate(raw_hourly_weather_payload)
+        hourly_response = parse_weather_payload(HourlyWeatherResponse, raw_hourly_weather_payload)
         raw_warning_payload = weather_service.get_weather_warning_payload(
             latitude=selected_location.latitude,
             longitude=selected_location.longitude,
         )
-        warning_response = WeatherWarningResponse.model_validate(raw_warning_payload)
+        warning_response = parse_weather_payload(WeatherWarningResponse, raw_warning_payload)
 
         standardized_weather = to_weather_data_bundle(selected_location, hourly_response)
         standardized_warnings = to_warning_data_bundle(warning_response)
