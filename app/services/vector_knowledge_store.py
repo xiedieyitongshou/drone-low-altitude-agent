@@ -17,6 +17,7 @@ from app.schemas.advice import (
     KnowledgeVisibility,
     RetrievedKnowledgeSnippet,
 )
+from app.utils.timezone import now_in_app_timezone
 
 
 DEFAULT_INDEX_DIR = Path("data/knowledge/index")
@@ -113,9 +114,7 @@ class LocalVectorKnowledgeStore:
             if score <= 0:
                 continue
             doc = documents[index]
-            if not is_document_visible(doc.metadata, access_context):
-                continue
-            if not is_document_applicable(doc.metadata, business_context):
+            if not is_document_retrievable(doc.metadata, access_context, business_context, document_id=doc.id):
                 continue
             results.append(
                 RetrievedKnowledgeSnippet(
@@ -173,20 +172,53 @@ def is_document_applicable(
     *,
     today: date | None = None,
 ) -> bool:
-    if metadata.get("review_status") != KnowledgeReviewStatus.APPROVED.value:
-        return False
+    return not document_rejection_reasons(metadata, business_context, today=today)
 
-    if _is_expired(metadata.get("expires_at"), today=today):
-        return False
+
+def document_rejection_reasons(
+    metadata: dict[str, object],
+    business_context: KnowledgeBusinessContext | None = None,
+    *,
+    today: date | None = None,
+) -> list[str]:
+    reference_date = today or (business_context.as_of if business_context else None) or now_in_app_timezone().date()
+    reasons: list[str] = []
+    if metadata.get("review_status") != KnowledgeReviewStatus.APPROVED.value:
+        reasons.append("not_approved")
+    for key in ("effective_at", "expires_at"):
+        value = metadata.get(key)
+        if value in (None, ""):
+            continue
+        try:
+            boundary = date.fromisoformat(str(value))
+        except ValueError:
+            reasons.append("invalid_validity_date")
+            continue
+        if key == "effective_at" and boundary > reference_date:
+            reasons.append("not_yet_effective")
+        if key == "expires_at" and boundary < reference_date:
+            reasons.append("expired")
 
     if business_context is None:
-        return True
+        return reasons
 
     if not _matches_task_type(metadata.get("task_type"), business_context.task_type):
-        return False
+        reasons.append("task_type_mismatch")
 
     if not _matches_risk_tags(metadata.get("risk_type"), business_context.risk_tags):
-        return False
+        reasons.append("risk_mismatch")
+    if metadata.get("risk_type") and business_context.overall_decision and not business_context.risk_tags:
+        reasons.append("risk_not_present")
+    decision = {"适飞": "allow", "慎飞": "caution", "谨慎飞行": "caution", "禁飞": "reject"}.get(
+        business_context.overall_decision, business_context.overall_decision
+    )
+    scopes = _to_string_list(metadata.get("decision_scope"))
+    if decision and scopes and decision not in scopes:
+        reasons.append("decision_mismatch")
+    for key, known_values in (("warning_type", business_context.warning_types), ("warning_level", business_context.warning_levels)):
+        required_values = set(_to_string_list(metadata.get(key)))
+        if required_values and known_values is not None and not required_values.intersection(known_values):
+            reasons.append(f"{key}_mismatch")
 
     if not _matches_region(
         region=metadata.get("region"),
@@ -194,21 +226,27 @@ def is_document_applicable(
         city=metadata.get("city"),
         business_context=business_context,
     ):
-        return False
+        reasons.append("region_mismatch")
 
-    return True
+    return reasons
 
 
-def _is_expired(value: object, *, today: date | None = None) -> bool:
-    if value in (None, ""):
-        return False
-    if not isinstance(value, str):
-        return True
-    try:
-        expires_at = date.fromisoformat(value)
-    except ValueError:
-        return True
-    return expires_at < (today or date.today())
+def is_document_retrievable(
+    metadata: dict[str, object],
+    access_context: KnowledgeAccessContext | None,
+    business_context: KnowledgeBusinessContext | None,
+    *,
+    document_id: str,
+) -> bool:
+    visible = is_document_visible(metadata, access_context)
+    reasons = document_rejection_reasons(metadata, business_context) if visible else ["access_denied"]
+    if business_context is not None and reasons:
+        for reason in reasons:
+            business_context.rejection_counts[reason] = business_context.rejection_counts.get(reason, 0) + 1
+        # Keep private document identifiers out of retrieval diagnostics.
+        if visible:
+            business_context.rejected_candidates.append({"id": document_id, "reasons": reasons})
+    return not reasons
 
 
 def _matches_task_type(value: object, task_type: str | None) -> bool:

@@ -1,4 +1,5 @@
 from enum import StrEnum
+from datetime import date
 
 from pydantic import BaseModel, Field
 
@@ -121,6 +122,12 @@ class KnowledgeBusinessContext(BaseModel):
     region: str | None = None
     province: str | None = None
     city: str | None = None
+    as_of: date | None = None
+    overall_decision: str | None = None
+    warning_types: list[str] | None = None
+    warning_levels: list[str] | None = None
+    rejection_counts: dict[str, int] = Field(default_factory=dict, exclude=True)
+    rejected_candidates: list[dict[str, object]] = Field(default_factory=list, exclude=True)
 
 
 class KnowledgeRetrievalRequest(BaseModel):
@@ -129,12 +136,15 @@ class KnowledgeRetrievalRequest(BaseModel):
     overall_decision: str | None = None
     risk_reasons: list[str] = Field(default_factory=list)
     risk_tags: list[str] = Field(default_factory=list)
-    warning_types: list[str] = Field(default_factory=list)
-    warning_levels: list[str] = Field(default_factory=list)
+    warning_types: list[str] | None = None
+    warning_levels: list[str] | None = None
     region: str | None = None
     province: str | None = None
     city: str | None = None
-    top_k: int = 5
+    as_of: date | None = None
+    required_context_fields: list[str] = Field(default_factory=list)
+    constraint_sources: dict[str, str] = Field(default_factory=dict)
+    top_k: int = Field(default=5, ge=1, le=50)
 
 
 class KnowledgeRetrievalResponse(BaseModel):

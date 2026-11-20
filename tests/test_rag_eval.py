@@ -1,11 +1,22 @@
-from scripts.rag_eval import evaluate_rag_checks, summarize_results
+from scripts.rag_eval import _id_matched, evaluate_rag_checks, run_eval, summarize_results
+
+
+def test_default_bm25_passes_applicability_permission_and_no_answer_cases(monkeypatch):
+    monkeypatch.setenv("LLM_ENABLED", "false")
+    summaries, results = run_eval(retriever_names=["bm25"])
+    assert summaries["bm25"].pass_rate == 1.0, [result["case_id"] for result in results if not result["passed"]]
+    assert summaries["bm25"].fallback_pass_rate == 1.0
+
+
+def test_knowledge_id_matching_is_exact():
+    assert _id_matched("policy-shenzhen", ["policy-shenzhen-airspace-check-001"]) is False
 
 
 def test_evaluate_rag_checks_passes_expected_id_and_metadata():
     case = {
         "id": "case-1",
         "category": "policy_hint",
-        "expected_knowledge_ids": ["policy-shenzhen"],
+        "expected_knowledge_ids": ["policy-shenzhen-airspace-check-001"],
         "expected_metadata": {"city": "深圳", "visibility": "public"},
     }
     actual = {
@@ -31,7 +42,7 @@ def test_evaluate_rag_checks_detects_permission_leakage():
     case = {
         "id": "case-1",
         "category": "permission",
-        "expected_excluded_knowledge_ids": ["private-user-b"],
+        "expected_excluded_knowledge_ids": ["private-user-b-secret"],
     }
     actual = {
         "retrieval_status": "success",
@@ -49,7 +60,7 @@ def test_evaluate_rag_checks_detects_permission_leakage():
 
     assert checks["passed"] is False
     assert checks["excluded_knowledge_pass"] is False
-    assert checks["excluded_leaks"] == ["private-user-b"]
+    assert checks["excluded_leaks"] == ["private-user-b-secret"]
 
 
 def test_summarize_results_computes_recall_and_latency():

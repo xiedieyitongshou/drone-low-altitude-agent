@@ -1,4 +1,5 @@
 from unittest.mock import patch
+import json
 
 import httpx
 import pytest
@@ -173,8 +174,8 @@ def test_agent_query_passes_original_question_and_city_to_rag(agent_api, monkeyp
     assert tool_input["city"] == "深圳"
     result = payload["result"]["tool_results"]["query_knowledge_snippets"]["data"]
     search_text = result["retrieval_metadata"]["attempts"][0]["query"]
-    assert f"用户问题: {query}" in search_text
-    assert "任务地区: 深圳" in search_text.splitlines()
+    assert search_text == query
+    assert result["retrieval_metadata"]["constraint_sources"]["city"] == "user_input"
     assert result["snippets"][0]["id"] == "policy-shenzhen-airspace-check-001"
 
 
@@ -196,7 +197,8 @@ def test_knowledge_city_stays_in_its_session_and_does_not_fill_flight_location(a
         assert payload["intent"] == "knowledge"
         assert payload["agent_runtime"]["context_merge"]["field_sources"]["city"] == source
         data = payload["result"]["tool_results"]["query_knowledge_snippets"]["data"]
-        assert f"任务地区: {expected_city}" in data["retrieval_metadata"]["attempts"][0]["query"].splitlines()
+        assert payload["parsed"]["city"] == expected_city
+        assert data["retrieval_metadata"]["constraint_sources"]["city"] == source
 
     evaluation = agent_api.post(
         "/agent/query", json={"query": "明天下午能飞吗", "session_id": "same-id"}, headers=owner_headers
@@ -204,6 +206,47 @@ def test_knowledge_city_stays_in_its_session_and_does_not_fill_flight_location(a
     assert evaluation["intent"] == "evaluate"
     assert evaluation["agent_runtime"]["plan_actions"] == ["ask_clarification"]
     assert "location" not in evaluation["parsed"]
+
+
+def test_knowledge_query_clarifies_city_and_keeps_the_original_topic(agent_api):
+    headers = _login(agent_api, "knowledge-clarification")
+    first = agent_api.post("/agent/query", json={"query": "本地报备政策", "session_id": "policy"}, headers=headers).json()
+    assert first["agent_runtime"]["plan_actions"] == ["ask_clarification"]
+    second = agent_api.post("/agent/query", json={"query": "深圳", "session_id": "policy"}, headers=headers).json()
+    assert second["success"] is True
+    data = second["result"]["tool_results"]["query_knowledge_snippets"]["data"]
+    assert "报备政策" in data["retrieval_metadata"]["attempts"][0]["query"]
+    assert data["snippets"][0]["id"] == "policy-shenzhen-airspace-check-001"
+
+
+def test_knowledge_llm_parser_passes_evidenced_constraints_through_agent_api(agent_api, monkeypatch):
+    headers = _login(agent_api, "knowledge-llm-evidence")
+    monkeypatch.setenv("NL_PARSER_MODE", "llm")
+    monkeypatch.setattr("app.services.llm_task_parser.is_llm_enabled", lambda: True)
+    monkeypatch.setattr("app.services.llm_task_parser.generate_text", lambda **kwargs: json.dumps({
+        "intent": "knowledge", "city": "深圳", "as_of": "2026-11-20",
+        "knowledge_evidence": {"city": "深圳", "as_of": "2026年11月20日"},
+    }))
+    query = "深圳2026年11月20日的报备政策"
+    response = agent_api.post("/agent/query", json={"query": query}, headers=headers)
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["parser_source"] == "llm"
+    data = payload["result"]["tool_results"]["query_knowledge_snippets"]["data"]
+    assert data["retrieval_metadata"]["attempts"][0]["query"] == query
+    assert payload["parsed"]["as_of"] == "2026-11-20"
+    assert any(item["id"] == "policy-shenzhen-airspace-check-001" for item in data["snippets"])
+
+
+@pytest.mark.parametrize("query", ["ZXQ734电池循环寿命 FAQ", "无人机电池寿命有哪些规定？"])
+def test_knowledge_no_answer_remains_explicit_through_agent_api(agent_api, query):
+    headers = _login(agent_api, "knowledge-no-answer")
+    response = agent_api.post("/agent/query", json={"query": query}, headers=headers)
+    assert response.status_code == 200
+    data = response.json()["result"]["tool_results"]["query_knowledge_snippets"]["data"]
+    assert data["retrieval_status"] == "fallback"
+    assert data["snippets"] == data["advice"] == []
+    assert data["retrieval_metadata"]["reason_code"] in {"insufficient_relevance", "no_candidates", "no_applicable_knowledge"}
 
 
 def test_create_task_merges_profile_defaults_before_checking_missing_fields(agent_api):

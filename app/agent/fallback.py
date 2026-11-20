@@ -11,6 +11,8 @@ from app.agent.tools import ToolResult
 
 
 FIELD_DISPLAY_NAMES = {
+    "city": "适用城市",
+    "as_of": "适用日期",
     "location": "任务地点",
     "locations": "候选地点",
     "date": "任务日期",

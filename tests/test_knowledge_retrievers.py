@@ -36,7 +36,7 @@ class FakeKnowledgeRetriever:
                 title="深圳巡检知识",
                 content="深圳巡检需要关注风速和管制提示。",
                 score=0.91,
-                metadata={"retriever": self.name},
+                metadata={"retriever": self.name, "review_status": "approved"},
             )
         ]
 
@@ -66,7 +66,7 @@ def test_retrieve_knowledge_by_request_uses_injected_retriever_and_preserves_con
     assert response.snippets[0].metadata["retriever"] == "fake"
     assert len(retriever.calls) == 1
     call = retriever.calls[0]
-    assert call["top_k"] == 3
+    assert call["top_k"] == 10
     assert call["access_context"] == access_context
     assert call["business_context"] == KnowledgeBusinessContext(
         task_type="inspection",
@@ -74,10 +74,12 @@ def test_retrieve_knowledge_by_request_uses_injected_retriever_and_preserves_con
         region="深圳",
         province="广东",
         city="深圳",
+        overall_decision="谨慎飞行",
+        warning_types=["大风"],
+        warning_levels=["yellow"],
     )
-    assert "任务类型: inspection" in call["query"]
-    assert "风险原因: 风速较大" in call["query"]
-    assert "任务地区: 广东 深圳 深圳" in call["query"]
+    assert "inspection" in call["query"]
+    assert "风速较大" in call["query"]
 
 
 def test_retrieve_knowledge_by_request_prefers_explicit_risk_tags_from_mapper():
@@ -95,7 +97,7 @@ def test_retrieve_knowledge_by_request_prefers_explicit_risk_tags_from_mapper():
     assert retriever.calls[0]["business_context"].risk_tags == ["high_wind", "weather_warning"]
 
 
-def test_build_knowledge_retrieval_query_keeps_existing_query_format():
+def test_build_knowledge_retrieval_query_uses_business_values():
     query = build_knowledge_retrieval_query(
         task_type="inspection",
         overall_decision="谨慎飞行",
@@ -106,11 +108,4 @@ def test_build_knowledge_retrieval_query_keeps_existing_query_format():
         city="深圳",
     )
 
-    assert query == (
-        "任务类型: inspection\n"
-        "总体结论: 谨慎飞行\n"
-        "风险原因: 阵风 降雨\n"
-        "预警类型: 大风\n"
-        "预警等级: yellow\n"
-        "任务地区: 广东 深圳"
-    )
+    assert query == "inspection 阵风 降雨 大风 yellow"

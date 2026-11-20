@@ -9,7 +9,7 @@ from app.schemas.advice import (
 )
 from app.services.bm25_knowledge_store import LocalBm25KnowledgeStore
 from app.services.embedding_knowledge_store import LocalEmbeddingKnowledgeStore
-from app.services.vector_knowledge_store import LocalVectorKnowledgeStore, build_retrieval_query
+from app.services.vector_knowledge_store import LocalVectorKnowledgeStore
 
 
 HYBRID_BM25_WEIGHT = 0.45
@@ -161,17 +161,11 @@ def build_knowledge_retrieval_query(
     region: str | None = None,
     province: str | None = None,
     city: str | None = None,
+    query: str | None = None,
 ) -> str:
-    return build_retrieval_query(
-        task_type=task_type,
-        overall_decision=overall_decision,
-        risk_reasons=risk_reasons,
-        warning_types=warning_types,
-        warning_levels=warning_levels,
-        region=region,
-        province=province,
-        city=city,
-    )
+    if query and query.strip():
+        return query.strip()
+    return " ".join([task_type, *risk_reasons, *warning_types, *warning_levels])
 
 
 def _merge_hybrid_results(

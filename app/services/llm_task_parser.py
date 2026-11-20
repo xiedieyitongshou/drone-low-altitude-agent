@@ -8,12 +8,14 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_valida
 from app.rules.mission_profiles import is_supported_task_type, normalize_task_type
 from app.schemas import CruiseEvaluateRequest, MultiLocationComparisonRequest, RecommendationRequest
 from app.services.llm_client import generate_text, is_llm_enabled
-from app.services.nl_parser import NaturalLanguageParseError, ParsedTaskRequest
+from app.services.nl_parser import NaturalLanguageParseError, ParsedTaskRequest, parse_natural_language_request
 from app.utils.timezone import now_in_app_timezone
 
 
 ALLOWED_MISSING_FIELDS = {
     "intent",
+    "city",
+    "as_of",
     "task_id",
     "task_title",
     "location",
@@ -52,7 +54,7 @@ TASK_PARSER_SYSTEM_PROMPT = (
     "\u89c4\u5219\uff1a\n"
     "1. \u53ea\u8f93\u51fa\u4e00\u4e2a JSON object\uff0c\u4e0d\u8981\u8f93\u51fa Markdown\u3001"
     "\u89e3\u91ca\u3001\u4ee3\u7801\u5757\u6216\u989d\u5916\u6587\u672c\u3002\n"
-    "2. intent \u53ea\u80fd\u662f evaluate\u3001recommend\u3001compare\u3001create_task\u3001evaluate_task\u3001recommend_task\u3001select_task_window\u3001preflight_check_task\u3002\n"
+    "2. intent must be knowledge, evaluate, recommend, compare, create_task, evaluate_task, recommend_task, select_task_window, or preflight_check_task.\n"
     "3. task_type \u53ea\u80fd\u662f cruise\u3001inspection\u3001hover\u3001survey\u3002\n"
     "4. date \u5fc5\u987b\u8f93\u51fa YYYY-MM-DD\u3002\n"
     "5. start_time \u548c end_time \u5fc5\u987b\u8f93\u51fa HH:MM\uff0cend_time \u5141\u8bb8 24:00\u3002\n"
@@ -81,17 +83,25 @@ TASK_PARSER_SYSTEM_PROMPT = (
     "\u8f93\u51fa\u5b57\u6bb5\u53ea\u5141\u8bb8\u5305\u542b\uff1a\n"
     "intent, task_id, task_title, location, locations, candidate_locations, date, start_time, end_time, task_type, "
     "scan_hours, min_window_hours, top_k, comparison_mode, purpose, window_rank, "
-    "missing_fields, confidence"
+    "missing_fields, confidence, city, as_of, knowledge_evidence"
 )
 TASK_PARSER_RETRY_SYSTEM_PROMPT = (
     "Return only valid JSON. No analysis. No markdown. No reasoning text.\n"
-    "Schema: {\"intent\":\"evaluate|recommend|compare|create_task|evaluate_task|recommend_task|select_task_window|preflight_check_task\","
+    "Schema: {\"intent\":\"knowledge|evaluate|recommend|compare|create_task|evaluate_task|recommend_task|select_task_window|preflight_check_task\","
     "\"task_id\":\"string\",\"task_title\":\"string\",\"location\":\"string\","
     "\"locations\":[\"string\"],\"candidate_locations\":[\"string\"],\"date\":\"YYYY-MM-DD\",\"start_time\":\"HH:MM\","
     "\"end_time\":\"HH:MM\",\"task_type\":\"cruise|inspection|hover|survey\","
     "\"scan_hours\":72,\"min_window_hours\":2,\"top_k\":3,"
     "\"comparison_mode\":\"default\",\"purpose\":\"string\",\"window_rank\":1,\"missing_fields\":[]}.\n"
     "For recommend, start_time and end_time are not required. For compare, infer afternoon as 13:00-18:00."
+)
+KNOWLEDGE_PARSER_INSTRUCTION = (
+    "\nknowledge means asking for policy, SOP, FAQ, or risk guidance. "
+    "For knowledge, extract city, as_of (YYYY-MM-DD), and task_type only when supported by the current query. "
+    "For every extracted field provide its exact, nonempty quote from the query in knowledge_evidence. "
+    "Leave uncertain fields absent. Use missing_fields for city when local policy requires an unspecified city. "
+    "A warning mentioned as a topic is a knowledge query, not evidence of a current weather warning. "
+    "Preserve the original question. Never invent a location, warning, or safety decision."
 )
 CREATE_TASK_CONTEXT_INSTRUCTION = (
     "\nFor create_task, return task fields inferred from the current query only. "
@@ -104,6 +114,7 @@ class LLMParsedTaskPayload(BaseModel):
     model_config = ConfigDict(extra="ignore", str_strip_whitespace=True)
 
     intent: Literal[
+        "knowledge",
         "evaluate",
         "recommend",
         "compare",
@@ -116,6 +127,9 @@ class LLMParsedTaskPayload(BaseModel):
     task_id: str | None = None
     task_title: str | None = None
     location: str | None = None
+    city: str | None = None
+    as_of: date | None = None
+    knowledge_evidence: dict[str, str] = Field(default_factory=dict)
     locations: list[str] = Field(default_factory=list)
     candidate_locations: list[str] = Field(default_factory=list)
     date: str | None = None
@@ -279,14 +293,14 @@ def parse_task_request_with_llm(
     )
     create_task_instruction = CREATE_TASK_CONTEXT_INSTRUCTION if defer_context_merge else ""
     content = generate_text(
-        system_prompt=TASK_PARSER_SYSTEM_PROMPT + create_task_instruction,
+        system_prompt=TASK_PARSER_SYSTEM_PROMPT + KNOWLEDGE_PARSER_INSTRUCTION + create_task_instruction,
         user_prompt=user_prompt,
         temperature=0,
         max_tokens=2000,
     )
     if not content:
         content = generate_text(
-            system_prompt=TASK_PARSER_RETRY_SYSTEM_PROMPT + create_task_instruction,
+            system_prompt=TASK_PARSER_RETRY_SYSTEM_PROMPT + KNOWLEDGE_PARSER_INSTRUCTION + create_task_instruction,
             user_prompt=user_prompt,
             temperature=0,
             max_tokens=3000,
@@ -309,6 +323,29 @@ def build_parsed_task_request_from_llm_payload(
 
     if payload.intent is None:
         raise NaturalLanguageParseError("大模型未识别到明确任务意图", missing_fields=["intent"])
+
+    if payload.intent == "knowledge":
+        try:
+            rule = parse_natural_language_request(query, context=context, defer_context_merge=True)
+            parsed = dict(rule.parsed) if rule.intent == "knowledge" else {"query": query}
+        except NaturalLanguageParseError as exc:
+            if exc.intent == "knowledge":
+                raise
+            parsed = {"query": query, "required_context_fields": [field for field in exc.missing_fields if field in {"city", "as_of"}]}
+        for field in ("city", "as_of", "task_type"):
+            evidence = payload.knowledge_evidence.get(field, "").strip()
+            value = getattr(payload, field)
+            if field == "city" and value and str(value).removesuffix("市") not in evidence:
+                continue
+            if not parsed.get(field) and value is not None and evidence and evidence in query:
+                parsed[field] = value.isoformat() if field == "as_of" else value
+        if not defer_context_merge:
+            parsed.setdefault("task_type", context.get("task_type", "cruise"))
+            parsed.setdefault("top_k", 3)
+        return ParsedTaskRequest(
+            intent="knowledge", target_endpoint="/knowledge/advice/retrieve", parsed=parsed,
+            warnings=[], parser_source="llm",
+        )
 
     task_type, used_task_context = _merge_value(payload.task_type, context, "task_type", default="cruise")
     context_used = context_used or used_task_context

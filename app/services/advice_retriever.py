@@ -1,5 +1,6 @@
 import json
 import os
+import pickle
 from functools import lru_cache
 from pathlib import Path
 
@@ -18,7 +19,12 @@ from app.services.knowledge_retrievers import (
     build_knowledge_retrieval_query,
     create_default_knowledge_retriever,
 )
-from app.services.vector_knowledge_store import get_default_knowledge_path
+from app.services.knowledge_reranker import assess_candidate_relevance
+from app.services.vector_knowledge_store import (
+    document_rejection_reasons,
+    get_default_knowledge_path,
+    is_document_visible,
+)
 from app.services.rag_fallback import (
     build_rag_fallback_message,
     evaluate_rag_confidence,
@@ -84,13 +90,24 @@ def normalize_warning_level(level: str | None) -> str | None:
     return WARNING_LEVEL_MAP.get(level.strip())
 
 
-def retrieve_advice(context: AdviceRetrievalContext, *, path: str | None = None) -> list[AdviceSuggestion]:
+def retrieve_advice(
+    context: AdviceRetrievalContext, *, path: str | None = None,
+    business_context: KnowledgeBusinessContext | None = None, access_context: KnowledgeAccessContext | None = None,
+) -> list[AdviceSuggestion]:
     library = load_advice_library(path)
     decision_scope = DECISION_SCOPE_MAP.get(context.overall_decision or "")
     candidates: list[tuple[int, AdviceSuggestion]] = []
+    business_context = business_context or KnowledgeBusinessContext(
+        task_type=context.task_type, risk_tags=context.risk_tags, overall_decision=context.overall_decision,
+        warning_types=context.warning_types if context.overall_decision else None,
+        warning_levels=context.warning_levels if context.overall_decision else None,
+    )
 
     for item in library.items:
         if item.knowledge_type == KnowledgeType.POLICY_HINT:
+            continue
+        metadata = item.model_dump(mode="json")
+        if not is_document_visible(metadata, access_context) or document_rejection_reasons(metadata, business_context):
             continue
 
         matched_by: list[str] = []
@@ -189,8 +206,8 @@ def retrieve_knowledge_by_request(
         task_type=payload.task_type,
         overall_decision=payload.overall_decision,
         risk_tags=merge_risk_tags(payload.risk_tags, infer_risk_tags(payload.risk_reasons)),
-        warning_types=payload.warning_types,
-        warning_levels=[level for level in (normalize_warning_level(item) for item in payload.warning_levels) if level],
+        warning_types=payload.warning_types or [],
+        warning_levels=[level for level in (normalize_warning_level(item) for item in payload.warning_levels or []) if level],
         limit=payload.top_k,
     )
     business_context = KnowledgeBusinessContext(
@@ -199,9 +216,23 @@ def retrieve_knowledge_by_request(
         region=payload.region,
         province=payload.province,
         city=payload.city,
+        as_of=payload.as_of,
+        overall_decision=payload.overall_decision,
+        warning_types=payload.warning_types,
+        warning_levels=context.warning_levels if payload.warning_levels is not None else None,
     )
-    advice = retrieve_advice(context)
-    active_retriever = retriever or create_default_knowledge_retriever()
+    advice: list[AdviceSuggestion] = []
+    retrieval_metadata: dict[str, object] = {
+        "query_rewritten": False, "attempts": [], "reason_code": None,
+        "constraint_sources": payload.constraint_sources,
+    }
+    missing_fields = [field for field in payload.required_context_fields if field in {"city", "as_of"} and not getattr(payload, field)]
+    if missing_fields:
+        retrieval_metadata.update(reason_code="clarification_required", missing_fields=missing_fields)
+        return KnowledgeRetrievalResponse(
+            context=context, retrieval_status="fallback", retrieval_metadata=retrieval_metadata,
+            retrieval_message="请补充查询所需的地区或适用日期。",
+        )
     query_text = build_knowledge_retrieval_query(
         task_type=context.task_type,
         overall_decision=context.overall_decision,
@@ -211,82 +242,79 @@ def retrieve_knowledge_by_request(
         region=payload.region,
         province=payload.province,
         city=payload.city,
+        query=payload.query,
     )
-    if payload.query and payload.query.strip():
-        query_text = f"{query_text}\n用户问题: {payload.query.strip()}"
-    snippets = active_retriever.retrieve(
-        query_text,
-        top_k=payload.top_k,
-        access_context=access_context,
-        business_context=business_context,
-    )
-    first_decision = evaluate_rag_confidence(snippets)
-    retrieval_metadata: dict[str, object] = {
-        "retriever": active_retriever.name,
-        "query_rewritten": False,
-        "attempts": [
-            {
-                "attempt": 1,
-                "query": query_text,
-                "status": first_decision.status,
-                "reason": first_decision.reason,
-                "top_score": first_decision.top_score,
-                "result_count": first_decision.result_count,
-                "threshold": first_decision.threshold,
-            }
-        ],
-    }
-    if first_decision.is_confident:
+    try:
+        active_retriever = retriever or create_default_knowledge_retriever()
+        retrieval_metadata["retriever"] = active_retriever.name
+        if not payload.query:
+            advice = retrieve_advice(context, business_context=business_context, access_context=access_context)
+        candidate_limit = max(10, payload.top_k * 3)
+        retrieval_metadata["candidate_limit"] = candidate_limit
+        for attempt in (1, 2):
+            business_context.rejection_counts.clear()
+            business_context.rejected_candidates.clear()
+            snippets = active_retriever.retrieve(
+                query_text, top_k=candidate_limit, access_context=access_context, business_context=business_context,
+            )
+            decision = evaluate_rag_confidence(snippets)
+            accepted = []
+            rejections = list(business_context.rejected_candidates)
+            for snippet in snippets:
+                if not is_document_visible(snippet.metadata, access_context):
+                    continue
+                reasons = document_rejection_reasons(snippet.metadata, business_context)
+                if not evaluate_rag_confidence([snippet]).is_confident:
+                    reasons.append("low_score")
+                if reasons:
+                    rejections.append({"id": str(snippet.metadata.get("chunk_id") or snippet.id), "reasons": reasons})
+                else:
+                    accepted.append(snippet)
+            review_status = "not_needed"
+            if payload.query:
+                accepted, irrelevant, review_status = assess_candidate_relevance(payload.query, accepted, business_context)
+                rejections.extend(irrelevant)
+            reason = "accepted" if accepted else "no_candidates"
+            status = "success" if accepted else decision.status
+            if snippets and not accepted and decision.is_confident:
+                reason, status = "insufficient_relevance", "no_answer"
+            elif snippets and not decision.is_confident:
+                reason = "low_confidence"
+            elif business_context.rejection_counts:
+                reason = "no_applicable_knowledge"
+            retrieval_metadata["reason_code"] = reason
+            retrieval_metadata["attempts"].append({
+                "attempt": attempt, "query": query_text, "status": status, "reason": reason,
+                "top_score": decision.top_score, "result_count": len(accepted), "threshold": decision.threshold,
+                "candidate_count": len(snippets), "rejected_candidates": rejections,
+                "filter_counts": dict(business_context.rejection_counts), "llm_review_status": review_status,
+            })
+            if accepted:
+                return KnowledgeRetrievalResponse(
+                    context=context, advice=advice,
+                    snippets=_mark_rag_attempt(accepted[:payload.top_k], attempt=attempt, query_rewritten=attempt == 2),
+                    retrieval_status="success" if attempt == 1 else "rewritten_success",
+                    retrieval_metadata=retrieval_metadata,
+                )
+            if attempt == 1:
+                query_text = rewrite_rag_query(
+                    query_text, business_context=business_context, risk_reasons=payload.risk_reasons,
+                    warning_types=context.warning_types, warning_levels=context.warning_levels,
+                )
+                retrieval_metadata.update(query_rewritten=True, rewrite_query=query_text)
+    except (OSError, ValueError, TypeError, RuntimeError, EOFError, pickle.UnpicklingError) as exc:
+        retrieval_metadata.update(reason_code="retrieval_error", error_type=type(exc).__name__)
         return KnowledgeRetrievalResponse(
-            context=context,
-            snippets=_mark_rag_attempt(snippets, attempt=1, query_rewritten=False),
-            advice=advice,
-            retrieval_status=first_decision.status,
-            retrieval_metadata=retrieval_metadata,
+            context=context, advice=advice, retrieval_status="error", retrieval_metadata=retrieval_metadata,
+            retrieval_message="知识检索暂时不可用，请稍后重试。",
         )
-
-    rewritten_query = rewrite_rag_query(
-        query_text,
-        business_context=business_context,
-        risk_reasons=payload.risk_reasons,
-        warning_types=context.warning_types,
-        warning_levels=context.warning_levels,
-    )
-    rewritten_snippets = active_retriever.retrieve(
-        rewritten_query,
-        top_k=payload.top_k,
-        access_context=access_context,
-        business_context=business_context,
-    )
-    second_decision = evaluate_rag_confidence(rewritten_snippets)
-    retrieval_metadata["query_rewritten"] = True
-    retrieval_metadata["rewrite_query"] = rewritten_query
-    retrieval_metadata["attempts"].append(
-        {
-            "attempt": 2,
-            "query": rewritten_query,
-            "status": second_decision.status,
-            "reason": second_decision.reason,
-            "top_score": second_decision.top_score,
-            "result_count": second_decision.result_count,
-            "threshold": second_decision.threshold,
-        }
-    )
-    if second_decision.is_confident:
-        return KnowledgeRetrievalResponse(
-            context=context,
-            snippets=_mark_rag_attempt(rewritten_snippets, attempt=2, query_rewritten=True),
-            advice=advice,
-            retrieval_status="rewritten_success",
-            retrieval_metadata=retrieval_metadata,
-        )
-
     return KnowledgeRetrievalResponse(
         context=context,
         snippets=[],
         advice=advice,
         retrieval_status="fallback",
-        retrieval_message=build_rag_fallback_message(second_decision),
+        retrieval_message=(build_rag_fallback_message(decision) if retrieval_metadata["reason_code"] == "low_confidence"
+                           else "当前知识库没有找到足以回答本次问题的适用依据，请补充具体对象或查询条件。"),
         retrieval_metadata=retrieval_metadata,
     )
 

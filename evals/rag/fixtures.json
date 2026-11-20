@@ -1,0 +1,17 @@
+[
+  {
+    "id": "eval-faq-battery", "category": "execution_advice", "knowledge_type": "faq",
+    "title": "通用电池储存问答", "advice_text": "Q：电池如何储存？A：保持干燥，按厂商要求使用储存电量。",
+    "keywords": ["电池", "储存"], "task_type": ["all"], "priority": "medium"
+  },
+  {
+    "id": "eval-private-user-b", "category": "execution_advice", "knowledge_type": "policy_hint",
+    "title": "用户 B 私有试验场报备", "advice_text": "用户 B 私有试验场报备需要联系内部负责人。",
+    "keywords": ["私有试验场", "报备"], "visibility": "private", "user_id": "user-b", "priority": "medium"
+  },
+  {
+    "id": "eval-future-registration", "category": "execution_advice", "knowledge_type": "policy_hint",
+    "title": "未来实名登记制度", "advice_text": "未来实名登记制度的测试材料。",
+    "keywords": ["实名登记"], "effective_at": "2099-01-01", "priority": "medium"
+  }
+]

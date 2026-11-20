@@ -15,8 +15,7 @@ from app.schemas.advice import (
 from app.services.vector_knowledge_store import (
     DEFAULT_INDEX_DIR,
     get_default_knowledge_path,
-    is_document_applicable,
-    is_document_visible,
+    is_document_retrievable,
 )
 from app.services.knowledge_chunker import IndexedKnowledgeChunk, build_indexed_chunks
 from app.services.knowledge_reranker import rule_rerank_boost
@@ -94,9 +93,7 @@ class LocalBm25KnowledgeStore:
 
         scored_chunks: list[tuple[float, float, IndexedKnowledgeChunk]] = []
         for chunk_index, chunk in enumerate(chunks):
-            if not is_document_visible(chunk.metadata, access_context):
-                continue
-            if not is_document_applicable(chunk.metadata, business_context):
+            if not is_document_retrievable(chunk.metadata, access_context, business_context, document_id=chunk.id):
                 continue
 
             score = _bm25_score(

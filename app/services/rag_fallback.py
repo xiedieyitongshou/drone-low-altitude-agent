@@ -1,4 +1,5 @@
 import os
+import math
 from dataclasses import dataclass
 
 from app.schemas.advice import KnowledgeBusinessContext, RetrievedKnowledgeSnippet
@@ -22,7 +23,8 @@ def load_rag_confidence_threshold() -> float:
     if raw_value is None:
         return DEFAULT_RAG_CONFIDENCE_THRESHOLD
     try:
-        return float(raw_value)
+        threshold = float(raw_value)
+        return threshold if math.isfinite(threshold) and threshold >= 0 else DEFAULT_RAG_CONFIDENCE_THRESHOLD
     except ValueError:
         return DEFAULT_RAG_CONFIDENCE_THRESHOLD
 
@@ -43,12 +45,13 @@ def evaluate_rag_confidence(
             threshold=active_threshold,
         )
 
-    top_score = max(snippet.score for snippet in snippets)
-    if top_score < active_threshold:
+    finite_scores = [snippet.score for snippet in snippets if math.isfinite(snippet.score)]
+    top_score = max(finite_scores, default=0.0)
+    if not finite_scores or top_score < active_threshold:
         return RagConfidenceDecision(
             is_confident=False,
             status="low_confidence",
-            reason="top_score_below_threshold",
+            reason="top_score_below_threshold" if finite_scores else "non_finite_score",
             top_score=top_score,
             result_count=len(snippets),
             threshold=active_threshold,
@@ -72,16 +75,10 @@ def rewrite_rag_query(
     warning_types: list[str],
     warning_levels: list[str],
 ) -> str:
-    context_terms = [
-        f"任务类型: {business_context.task_type or ''}",
-        f"风险标签: {' '.join(business_context.risk_tags)}",
-        f"风险原因: {' '.join(risk_reasons)}",
-        f"预警类型: {' '.join(warning_types)}",
-        f"预警等级: {' '.join(warning_levels)}",
-        f"地区: {' '.join(value for value in [business_context.province, business_context.city, business_context.region] if value)}",
-        "请优先召回与任务类型、地区、风险标签、政策提示、SOP、FAQ、风险建议相关的知识片段。",
-    ]
-    return "\n".join([original_query, "补充检索上下文:", *context_terms])
+    from app.services.embedding_providers import SEMANTIC_EXPANSIONS
+
+    synonyms = [alias for term, aliases in SEMANTIC_EXPANSIONS.items() if term in original_query for alias in aliases]
+    return " ".join(dict.fromkeys([original_query, *synonyms, *risk_reasons, *warning_types, *warning_levels]))
 
 
 def build_rag_fallback_message(decision: RagConfidenceDecision) -> str:

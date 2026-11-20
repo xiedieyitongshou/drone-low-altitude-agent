@@ -39,7 +39,10 @@ def build_agent_parser_context(
     if session_context:
         pending_task = _pending_task(session_context)
         if pending_task:
-            merged.update(_session_fields(_dict_value(pending_task.get("parsed")), pending_task.get("intent")))
+            pending_fields = _dict_value(pending_task.get("parsed"))
+            if pending_task.get("intent") != "knowledge":
+                pending_fields = _session_fields(pending_fields, pending_task.get("intent"))
+            merged.update(pending_fields)
             if pending_task.get("intent"):
                 merged["intent"] = pending_task["intent"]
                 merged["pending_task_intent"] = pending_task["intent"]
@@ -70,7 +73,9 @@ def merge_agent_context(
     if session_context:
         pending_task = _pending_task(session_context)
         if pending_task and (intent != "create_task" or pending_task.get("intent") == intent):
-            pending_fields = _session_fields(_dict_value(pending_task.get("parsed")), pending_task.get("intent"))
+            pending_fields = _dict_value(pending_task.get("parsed"))
+            if pending_task.get("intent") != "knowledge" or intent != "knowledge":
+                pending_fields = _session_fields(pending_fields, pending_task.get("intent"))
             for field_name, value in pending_fields.items():
                 _set_if_present(merged, field_sources, field_name, value, "session", overwrite=True)
         if intent != "create_task":
@@ -148,7 +153,9 @@ def _resolve_missing_fields(
     route = get_business_route(intent)
     if route is None:
         return explicit_missing_fields or []
-    required_fields = explicit_missing_fields or route.required_fields
+    required_fields = list(explicit_missing_fields or route.required_fields)
+    if intent == "knowledge":
+        required_fields.extend(field for field in parsed.get("required_context_fields", []) if field in {"city", "as_of"})
     return [field_name for field_name in required_fields if parsed.get(field_name) in (None, "", [])]
 
 
@@ -184,7 +191,10 @@ def _dict_value(value: object) -> dict[str, object]:
 
 
 def _session_fields(values: dict[str, object], source_intent: object) -> dict[str, object]:
-    excluded = {PENDING_TASK_KEY, "city", "flight_location", "flight_locations"}
+    excluded = {
+        PENDING_TASK_KEY, "city", "flight_location", "flight_locations", "as_of", "required_context_fields",
+        "constraint_sources", "warning_types", "warning_levels", "overall_decision", "risk_tags", "risk_reasons",
+    }
     if source_intent in ("knowledge", "history", "explain"):
         excluded.update({"location", "locations"})
     fields = {key: value for key, value in values.items() if key not in excluded}
@@ -204,7 +214,7 @@ def _set_if_present(
     overwrite: bool,
     modified_fields: list[str] | None = None,
 ) -> None:
-    if value in (None, "", []):
+    if value in (None, "") or (value == [] and field_name not in {"warning_types", "warning_levels"}):
         return
     if (
         source == "user_input"

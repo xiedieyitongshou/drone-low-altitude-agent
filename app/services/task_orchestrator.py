@@ -263,6 +263,11 @@ def _orchestrate_task_query_with_agent_loop(
         session_context=cached_context,
         profile=profile,
     )
+    if parsed_result.intent == "knowledge":
+        context_result.parsed["constraint_sources"] = {
+            field: source for field, source in context_result.field_sources.items()
+            if field in {"city", "province", "region", "as_of", "task_type", "warning_types", "warning_levels"}
+        }
     parsed_result = parsed_result.__class__(
         intent=context_result.intent,
         target_endpoint=parsed_result.target_endpoint,
@@ -628,12 +633,18 @@ def _parse_task_query(
         except NaturalLanguageParseError:
             pass
         if rule_result is not None and rule_result.intent == "knowledge":
-            return rule_result
+            # The existing LLM parser can fill ambiguous knowledge fields when enabled.
+            from app.services.llm_client import is_llm_enabled
+
+            if not is_llm_enabled() or not rule_result.parsed.get("required_context_fields"):
+                return rule_result
 
     llm_error: Exception | None = None
     try:
         parsed = parse_natural_language_request_with_llm(query, **parser_kwargs)
         if parsed is not None:
+            if rule_result is not None and rule_result.intent == "knowledge" and parsed.intent != "knowledge":
+                return rule_result
             return parsed
     except Exception as exc:
         llm_error = exc

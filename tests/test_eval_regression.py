@@ -72,4 +72,5 @@ def test_rag_eval_hybrid_fast_gate():
     assert summary.permission_leakage_rate == 0, (
         f"hybrid.permission_leakage_rate={summary.permission_leakage_rate:.4f}"
     )
+    assert summary.fallback_pass_rate == 1.0, f"hybrid.fallback_pass_rate={summary.fallback_pass_rate}"
     assert summary.p95_latency_ms <= 500, f"hybrid.p95_latency_ms={summary.p95_latency_ms:.3f}"

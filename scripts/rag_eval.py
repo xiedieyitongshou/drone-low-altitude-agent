@@ -7,6 +7,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from time import perf_counter
+from tempfile import TemporaryDirectory
 from typing import Any
 
 
@@ -50,11 +51,22 @@ def run_eval(
     selected_retrievers = retriever_names or DEFAULT_RETRIEVERS
     results: list[dict[str, Any]] = []
     summaries: dict[str, RagRetrieverSummary] = {}
-    for retriever_name in selected_retrievers:
-        retriever = build_eval_retriever(retriever_name)
-        retriever_results = [run_rag_case(case, retriever_name=retriever_name, retriever=retriever) for case in cases]
-        results.extend(retriever_results)
-        summaries[retriever_name] = summarize_results(retriever_results)
+    source = json.loads((PROJECT_ROOT / "data/knowledge/advice_rules.json").read_text(encoding="utf-8-sig"))
+    fixtures = json.loads((PROJECT_ROOT / "evals/rag/fixtures.json").read_text(encoding="utf-8-sig"))
+    source["items"].extend(fixtures)
+    with TemporaryDirectory(prefix="drone-rag-eval-") as temporary_dir:
+        knowledge_path = Path(temporary_dir) / "knowledge.json"
+        knowledge_path.write_text(json.dumps(source, ensure_ascii=False), encoding="utf-8")
+        for retriever_name in selected_retrievers:
+            retriever = build_eval_retriever(
+                retriever_name, knowledge_path=knowledge_path, index_dir=Path(temporary_dir) / retriever_name,
+            )
+            retriever_results = [
+                run_rag_case(case, retriever_name=retriever_name, retriever=retriever) for case in cases
+                if not case.get("retrievers") or retriever_name in case["retrievers"]
+            ]
+            results.extend(retriever_results)
+            summaries[retriever_name] = summarize_results(retriever_results)
     return summaries, results
 
 
@@ -91,11 +103,14 @@ def build_request(case: dict[str, Any]) -> Any:
     from app.schemas.advice import KnowledgeRetrievalRequest
 
     business_context = case.get("business_context") or {}
-    risk_reasons = [str(case.get("query") or "")]
-    risk_reasons.extend(str(item) for item in business_context.get("risk_tags") or [])
     return KnowledgeRetrievalRequest(
         task_type=business_context.get("task_type") or "cruise",
-        risk_reasons=[item for item in risk_reasons if item],
+        query=case.get("query"),
+        risk_tags=business_context.get("risk_tags") or [],
+        overall_decision=business_context.get("overall_decision"),
+        warning_types=business_context.get("warning_types"),
+        warning_levels=business_context.get("warning_levels"),
+        as_of=business_context.get("as_of"),
         region=business_context.get("region"),
         province=business_context.get("province"),
         city=business_context.get("city"),
@@ -337,7 +352,7 @@ def build_markdown_report(summaries: dict[str, RagRetrieverSummary], results: li
     return "\n".join(lines)
 
 
-def build_eval_retriever(name: str) -> Any:
+def build_eval_retriever(name: str, *, knowledge_path: Path | None = None, index_dir: Path | None = None) -> Any:
     from app.services.bm25_knowledge_store import LocalBm25KnowledgeStore
     from app.services.embedding_knowledge_store import LocalEmbeddingKnowledgeStore
     from app.services.knowledge_retrievers import (
@@ -349,16 +364,17 @@ def build_eval_retriever(name: str) -> Any:
     from app.services.vector_knowledge_store import LocalVectorKnowledgeStore
 
     normalized = name.strip().lower()
+    store_kwargs = {"knowledge_path": knowledge_path, "index_dir": index_dir}
     if normalized == "tfidf":
-        return TfidfKnowledgeRetriever(store=LocalVectorKnowledgeStore())
+        return TfidfKnowledgeRetriever(store=LocalVectorKnowledgeStore(**store_kwargs))
     if normalized == "bm25":
-        return Bm25KnowledgeRetriever(store=LocalBm25KnowledgeStore())
+        return Bm25KnowledgeRetriever(store=LocalBm25KnowledgeStore(**store_kwargs))
     if normalized == "embedding":
-        return EmbeddingKnowledgeRetriever(store=LocalEmbeddingKnowledgeStore())
+        return EmbeddingKnowledgeRetriever(store=LocalEmbeddingKnowledgeStore(**store_kwargs))
     if normalized == "hybrid":
         return HybridKnowledgeRetriever(
-            bm25_store=LocalBm25KnowledgeStore(),
-            embedding_store=LocalEmbeddingKnowledgeStore(min_score=0.0),
+            bm25_store=LocalBm25KnowledgeStore(**store_kwargs),
+            embedding_store=LocalEmbeddingKnowledgeStore(min_score=0.0, **store_kwargs),
         )
     raise ValueError(f"unsupported retriever: {name}")
 
@@ -373,7 +389,7 @@ def _metadata_value(metadata: dict[str, object], key: str) -> str | None:
 
 
 def _id_matched(expected_id: str, actual_ids: list[str]) -> bool:
-    return any(actual_id == expected_id or actual_id.startswith(expected_id) or expected_id in actual_id for actual_id in actual_ids)
+    return expected_id in actual_ids
 
 
 def _first_relevant_rank(expected_ids: list[str], actual_ids: list[str]) -> int | None:

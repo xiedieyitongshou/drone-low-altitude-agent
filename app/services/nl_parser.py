@@ -162,17 +162,29 @@ def parse_natural_language_request(
         parsed = {key: value for key, value in parsed.items() if value not in (None, "", [])}
         target_endpoint = "/agent/rules/explain"
     elif intent == "knowledge":
-        explicit_city = _detect_knowledge_city(text)
+        try:
+            explicit_city = _detect_knowledge_city(text)
+        except NaturalLanguageParseError as exc:
+            exc.parsed.update(query=query, as_of=date_text)
+            raise
+        knowledge_query = query
+        if context.get("pending_task_intent") == "knowledge" and not any(hint in text for hint in KNOWLEDGE_HINTS):
+            knowledge_query = f"{context.get('query', '')} {query}".strip()
         parsed = {
-            "query": query,
+            "query": knowledge_query,
             "task_type": task_type if task_type_detected else None,
             "city": explicit_city,
+            "as_of": date_text,
         }
+        if any(phrase in text for phrase in ("当地", "本地", "我这里")) and not explicit_city:
+            parsed["required_context_fields"] = ["city"]
+        if any(phrase in text for phrase in ("当前无预警", "目前没有预警", "当前没有预警")):
+            parsed.update(warning_types=[], warning_levels=[])
         if not defer_context_merge:
             city = explicit_city or _context_value(context, "city") or _context_value(context, "location")
             context_used = explicit_city is None and bool(city)
             parsed.update(task_type=merged_task_type, city=city, top_k=3)
-        parsed = {key: value for key, value in parsed.items() if value not in (None, "", [])}
+        parsed = {key: value for key, value in parsed.items() if value not in (None, "")}
         target_endpoint = "/knowledge/advice/retrieve"
     elif intent == "compare":
         merged_locations = locations or _context_list(context, "locations")
@@ -631,6 +643,15 @@ def _detect_knowledge_city(text: str) -> str | None:
     explicit_city = EXPLICIT_CITY_PATTERN.search(text)
     if city_by_alias:
         aliases = "|".join(re.escape(alias) for alias in sorted(city_by_alias, key=len, reverse=True))
+        mentioned = {match[1] for match in re.finditer(rf"({aliases})(?!省)", text)}
+        if len(mentioned) > 1:
+            correction = re.search(rf"(?:改成|改为|换成|只查|只看)({aliases})", text)
+            if correction:
+                return city_by_alias[correction[1]]
+            raise NaturalLanguageParseError(
+                "请确认要查询的城市", missing_fields=["city"], intent="knowledge",
+                target_endpoint="/knowledge/advice/retrieve", parsed={"query": text},
+            )
         match = re.search(rf"({aliases})(?!省)", text)
         if match and (explicit_city is None or match.start() <= explicit_city.start("city")):
             return city_by_alias[match[1]]

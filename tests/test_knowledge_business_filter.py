@@ -4,6 +4,23 @@ from app.schemas import KnowledgeBusinessContext
 from app.services.vector_knowledge_store import is_document_applicable
 
 
+def test_validity_dates_use_the_requested_date_inclusively():
+    metadata = {"review_status": "approved", "effective_at": "2026-11-20", "expires_at": "2026-11-22"}
+    for day, expected in ((19, False), (20, True), (22, True), (23, False)):
+        context = KnowledgeBusinessContext(as_of=date(2026, 11, day))
+        assert is_document_applicable(metadata, context) is expected
+    assert is_document_applicable({**metadata, "effective_at": "invalid"}) is False
+
+
+def test_warning_topic_is_allowed_but_known_absent_or_different_warnings_are_filtered():
+    metadata = {"review_status": "approved", "warning_level": ["yellow"], "decision_scope": ["caution"]}
+    assert is_document_applicable(metadata, KnowledgeBusinessContext()) is True
+    assert is_document_applicable(metadata, KnowledgeBusinessContext(warning_levels=[])) is False
+    assert is_document_applicable(metadata, KnowledgeBusinessContext(warning_levels=["orange"])) is False
+    assert is_document_applicable(metadata, KnowledgeBusinessContext(warning_levels=["yellow"], overall_decision="慎飞")) is True
+    assert is_document_applicable(metadata, KnowledgeBusinessContext(warning_levels=["yellow"], overall_decision="适飞")) is False
+
+
 def test_approved_unexpired_public_business_metadata_is_applicable_without_context():
     metadata = {
         "review_status": "approved",

@@ -22,8 +22,7 @@ from app.services.knowledge_reranker import rule_rerank_boost
 from app.services.vector_knowledge_store import (
     DEFAULT_INDEX_DIR,
     get_default_knowledge_path,
-    is_document_applicable,
-    is_document_visible,
+    is_document_retrievable,
 )
 
 
@@ -92,9 +91,7 @@ class LocalEmbeddingKnowledgeStore:
 
         scored_chunks: list[tuple[float, float, IndexedKnowledgeChunk]] = []
         for chunk, embedding in zip(chunks, index.embeddings, strict=False):
-            if not is_document_visible(chunk.metadata, access_context):
-                continue
-            if not is_document_applicable(chunk.metadata, business_context):
+            if not is_document_retrievable(chunk.metadata, access_context, business_context, document_id=chunk.id):
                 continue
 
             score = cosine_similarity(query_embedding, embedding)

@@ -11,6 +11,36 @@ from app.services.nl_parser import NaturalLanguageParseError
 
 
 class LLMTaskParserTestCase(unittest.TestCase):
+    def test_knowledge_llm_can_fill_a_literal_locality_but_cannot_replace_it(self) -> None:
+        query = "请查当地报备政策，范围是庐阳"
+        for city, expected in (("庐阳", "庐阳"), ("广州", None)):
+            payload = LLMParsedTaskPayload.model_validate({
+                "intent": "knowledge", "city": city, "knowledge_evidence": {"city": "庐阳"},
+            })
+            result = build_parsed_task_request_from_llm_payload(payload, query=query, defer_context_merge=True)
+            self.assertEqual(result.parsed.get("city"), expected)
+
+    def test_knowledge_ambiguous_cities_still_require_clarification(self) -> None:
+        payload = LLMParsedTaskPayload.model_validate({
+            "intent": "knowledge", "city": "深圳", "knowledge_evidence": {"city": "深圳"},
+        })
+        with self.assertRaises(NaturalLanguageParseError) as raised:
+            build_parsed_task_request_from_llm_payload(payload, query="深圳和广州的报备政策", defer_context_merge=True)
+        self.assertEqual(raised.exception.missing_fields, ["city"])
+
+    def test_knowledge_fields_need_evidence_and_keep_unknown_warning_state(self) -> None:
+        query = "请查深圳2026年11月20日的黄色预警政策"
+        payload = LLMParsedTaskPayload.model_validate({
+            "intent": "knowledge", "city": "深圳", "as_of": "2026-11-20", "task_type": "survey",
+            "knowledge_evidence": {"city": "深圳", "as_of": "2026年11月20日"},
+        })
+        result = build_parsed_task_request_from_llm_payload(payload, query=query, defer_context_merge=True)
+        self.assertEqual(result.parsed["city"], "深圳")
+        self.assertEqual(result.parsed["as_of"], "2026-11-20")
+        self.assertNotIn("task_type", result.parsed)
+        self.assertNotIn("warning_levels", result.parsed)
+        self.assertEqual(result.parsed["query"], query)
+
     def test_build_evaluate_request(self) -> None:
         payload = LLMParsedTaskPayload.model_validate(
             {

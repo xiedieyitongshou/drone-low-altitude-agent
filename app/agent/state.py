@@ -62,7 +62,7 @@ def merge_user_input(state: AgentState, updates: dict[str, object]) -> AgentStat
     changed_fields: list[str] = []
 
     for field_name, value in updates.items():
-        if value in (None, "", []):
+        if value in (None, "") or (value == [] and field_name not in {"warning_types", "warning_levels"}):
             continue
         task_draft[field_name] = value
         confirmed_fields.add(field_name)
@@ -95,7 +95,7 @@ def mark_parsed(
     confirmed_fields = set(state.confirmed_fields)
 
     for field_name, value in parsed.items():
-        if value in (None, "", []):
+        if value in (None, "") or (value == [] and field_name not in {"warning_types", "warning_levels"}):
             continue
         task_draft[field_name] = value
         confirmed_fields.add(field_name)
