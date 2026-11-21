@@ -29,6 +29,8 @@ class ConversationRecord(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     conversation_id: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    trace_id: Mapped[str | None] = mapped_column(String(64), index=True, nullable=True)
+    request_id: Mapped[str | None] = mapped_column(String(64), index=True, nullable=True)
     session_id: Mapped[str | None] = mapped_column(String(128), index=True, nullable=True)
     user_id: Mapped[str] = mapped_column(String(64), ForeignKey("users.id"), index=True)
     task_id: Mapped[str | None] = mapped_column(String(64), ForeignKey("mission_tasks.id"), index=True, nullable=True)

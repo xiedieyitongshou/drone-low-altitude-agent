@@ -42,7 +42,8 @@ def test_agent_runtime_default_mode_uses_legacy_workflow():
         response = orchestrate_task_query("评估深圳", session_id="session-1", user_id="user-1")
 
     assert response.message == "legacy ok"
-    assert response.agent_runtime is None
+    assert response.agent_runtime["mode"] == "legacy"
+    assert response.agent_runtime["trace_id"] == response.trace_id
     legacy_mock.assert_called_once_with("评估深圳", session_id="session-1", user_id="user-1", db=None)
 
 
@@ -54,7 +55,8 @@ def test_agent_runtime_unknown_mode_falls_back_to_legacy_workflow():
         response = orchestrate_task_query("评估深圳", session_id="session-1", user_id="user-1")
 
     assert response.message == "legacy ok"
-    assert response.agent_runtime is None
+    assert response.agent_runtime["mode"] == "legacy"
+    assert response.agent_runtime["trace_id"] == response.trace_id
     legacy_mock.assert_called_once_with("评估深圳", session_id="session-1", user_id="user-1", db=None)
 
 

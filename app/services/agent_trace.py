@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.db.models import AgentTraceEventRecord
+from app.db.models import AgentTraceEventRecord, ConversationRecord, TaskRequest
 from app.db.session import SessionLocal
 from app.schemas.trace import AgentTraceDetailResponse, AgentTraceEventResponse
 
@@ -38,18 +38,18 @@ def record_trace_events(
 ) -> list[int]:
     if db is not None:
         records = [_add_trace_event(db, event, task_id=task_id) for event in events]
+        db.flush()
+        record_ids = [record.id for record in records]
         if commit:
             db.commit()
-            for record in records:
-                db.refresh(record)
-        return [record.id for record in records]
+        return record_ids
 
     with SessionLocal() as session:
         records = [_add_trace_event(session, event, task_id=task_id) for event in events]
+        session.flush()
+        record_ids = [record.id for record in records]
         session.commit()
-        for record in records:
-            session.refresh(record)
-        return [record.id for record in records]
+        return record_ids
 
 
 def list_trace_events(trace_id: str, *, db: Session | None = None) -> list[AgentTraceEventRecord]:
@@ -69,7 +69,14 @@ def get_user_trace_detail(
     records = _list_user_trace_events(db=db, trace_id=trace_id, user_id=user_id)
     if not records:
         return None
-    return _build_trace_detail(records)
+    detail = _build_trace_detail(records)
+    requests = db.scalars(select(TaskRequest).where(TaskRequest.trace_id == trace_id, TaskRequest.user_id == user_id)).all()
+    detail.request_ids = [item.request_id for item in requests]
+    detail.task_ids = sorted({item.task_id for item in requests if item.task_id})
+    detail.conversation_ids = list(db.scalars(select(ConversationRecord.conversation_id).where(
+        ConversationRecord.trace_id == trace_id, ConversationRecord.user_id == user_id,
+    )).all())
+    return detail
 
 
 def _add_trace_event(db: Session, event: TraceEvent, *, task_id: str | None = None) -> AgentTraceEventRecord:
@@ -78,7 +85,7 @@ def _add_trace_event(db: Session, event: TraceEvent, *, task_id: str | None = No
         run_id=event.run_id,
         user_id=event.user_id,
         session_id=event.session_id,
-        task_id=task_id,
+        task_id=task_id or event.metadata.get("task_id"),
         event_type=event.event_type.value,
         step_index=event.step_index,
         status_before=event.status_before,
@@ -117,6 +124,7 @@ def _list_user_trace_events(db: Session, trace_id: str, user_id: str) -> list[Ag
 
 def _build_trace_detail(records: list[AgentTraceEventRecord]) -> AgentTraceDetailResponse:
     first_record = records[0]
+    final_metadata = next((item.metadata_json or {} for item in reversed(records) if item.event_type == "final_response"), {})
     return AgentTraceDetailResponse(
         trace_id=first_record.trace_id,
         run_id=first_record.run_id,
@@ -124,6 +132,8 @@ def _build_trace_detail(records: list[AgentTraceEventRecord]) -> AgentTraceDetai
         session_id=first_record.session_id,
         event_count=len(records),
         events=[_build_trace_event_response(record) for record in records],
+        outcome=final_metadata.get("outcome"),
+        timings=final_metadata.get("timings") or {},
     )
 
 

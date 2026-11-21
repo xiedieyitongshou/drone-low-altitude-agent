@@ -14,6 +14,8 @@ class OrchestratorResponse(BaseModel):
     session_id: str | None = None
     user_id: str = "default_user"
     conversation_id: str | None = None
+    request_id: str | None = None
+    trace_id: str | None = None
     intent: str
     target_endpoint: str
     parser_source: str = "rule"

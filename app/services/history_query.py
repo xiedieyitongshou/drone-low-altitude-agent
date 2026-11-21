@@ -43,6 +43,11 @@ def get_cruise_history(
             task_id = assessment.task_id
         if assessment.task_id is not None and assessment.task_id != task_id:
             raise HTTPException(status_code=404, detail=f"history not found for request_id={request_id}")
+        # Task histories retain the existing task visibility rules, including admin access.
+        if task_id is None and task_request.user_id is not None:
+            current_user = get_current_user(credentials=credentials, db=session)
+            if current_user.id != task_request.user_id:
+                raise HTTPException(status_code=404, detail=f"history not found for request_id={request_id}")
         if task_id is not None:
             current_user = get_current_user(credentials=credentials, db=session)
             try:
@@ -148,6 +153,7 @@ def get_cruise_history(
 
         return CruiseHistoryResponse(
             request_id=request_id,
+            trace_id=task_request.trace_id,
             created_at=task_request.created_at.isoformat(),
             request=task_request.raw_request_json,
             weather=weather_bundle,

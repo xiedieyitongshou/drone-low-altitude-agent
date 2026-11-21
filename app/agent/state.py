@@ -4,6 +4,7 @@ from uuid import uuid4
 from pydantic import BaseModel, Field
 
 from app.agent.tools import ToolResult
+from app.services.run_observability import current_observation
 
 
 class AgentStatus(StrEnum):
@@ -52,6 +53,9 @@ def initialize_state(
     session_id: str | None = None,
 ) -> AgentState:
     state = AgentState(query=query, user_id=user_id, session_id=session_id)
+    observation = current_observation()
+    if observation is not None:
+        state = state.model_copy(update={"trace_id": observation.trace_id, "run_id": observation.run_id})
     return _append_step(state, event="initialize", status=AgentStatus.INITIALIZED)
 
 

@@ -3,6 +3,14 @@ import pytest
 from app.services.nl_parser import NaturalLanguageParseError, parse_natural_language_request
 
 
+@pytest.mark.parametrize("day", ["2026-11-22", "2026/11/22", "2026年11月22日"])
+def test_calendar_date_is_not_used_as_the_time_range(day):
+    result = parse_natural_language_request(f"深圳{day}下午2点到3点巡航能飞吗", defer_context_merge=True)
+    assert result.parsed["date"] == "2026-11-22"
+    assert result.parsed["start_time"] == "14:00"
+    assert result.parsed["end_time"] == "15:00"
+
+
 def test_rule_parser_detects_history_query():
     result = parse_natural_language_request("查一下我上次深圳任务记录")
 

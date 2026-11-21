@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.db.models import UserProfile
 from app.db.session import SessionLocal
 from app.schemas.profile import UserProfileResponse, UserProfileUpdateRequest
+from app.services.run_observability import timed_stage
 
 
 DEFAULT_USER_ID = "default_user"
@@ -44,6 +45,7 @@ def get_or_create_user_profile(user_id: str | None = None) -> ProfileMemory:
         return _to_profile_memory(profile)
 
 
+@timed_stage("profile_write")
 def update_profile_from_parsed(*, user_id: str | None, parsed: dict[str, object]) -> None:
     normalized_user_id = normalize_user_id(user_id)
     with SessionLocal() as session:

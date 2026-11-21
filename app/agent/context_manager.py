@@ -3,6 +3,7 @@ from typing import Any
 
 from app.agent.business_routes import AgentRouteKind, get_business_route
 from app.services.profile_memory import ProfileMemory
+from app.services.run_observability import timed_stage
 
 
 PENDING_TASK_KEY = "pending_task"
@@ -50,6 +51,7 @@ def build_agent_parser_context(
     return {key: value for key, value in merged.items() if value not in (None, "", [])} or None
 
 
+@timed_stage("context_merge")
 def merge_agent_context(
     *,
     intent: str,

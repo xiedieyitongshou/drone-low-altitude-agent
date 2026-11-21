@@ -69,7 +69,7 @@ def test_plan_maps_evaluate_intent_to_risk_tool():
         "task_type": "inspection",
         "purpose": "巡检",
     }
-    assert plan.metadata["side_effect"] == "compute_only"
+    assert plan.metadata["side_effect"] == "write"  # The evaluation also saves its history snapshot.
     assert plan.metadata["risk_level"] == "high"
 
 

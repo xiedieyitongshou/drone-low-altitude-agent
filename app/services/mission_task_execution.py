@@ -16,6 +16,7 @@ from app.schemas import (
 )
 from app.services.cruise_evaluator import evaluate_cruise_request_with_artifacts
 from app.services.agent_trace import record_trace_events
+from app.services.run_observability import current_observation
 from app.services.history_persistence import _persist_cruise_evaluation
 from app.services.mission_task_management import (
     MissionTaskLockedError,
@@ -58,6 +59,7 @@ def evaluate_mission_task(
         payload=payload,
         artifacts=artifacts,
         task_id=task.id,
+        user_id=current_user.id,
     )
     result = artifacts.response
     result.request["request_id"] = request_id
@@ -119,8 +121,9 @@ def preflight_check_mission_task(
     payload = _build_preflight_request(task)
     artifacts = evaluate_cruise_request_with_artifacts(payload)
     request_id = _new_request_id()
-    trace_id = uuid4().hex
-    run_id = uuid4().hex
+    observation = current_observation()
+    trace_id = observation.trace_id if observation else uuid4().hex
+    run_id = observation.run_id if observation else uuid4().hex
     _persist_cruise_evaluation(
         session=db,
         request_id=request_id,
@@ -128,17 +131,20 @@ def preflight_check_mission_task(
         artifacts=artifacts,
         task_id=task.id,
         request_type="preflight_check",
+        user_id=current_user.id,
+        trace_id=trace_id,
     )
     result = artifacts.response
     result.request["request_id"] = request_id
     result.request["task_id"] = task.id
     result.request["request_type"] = "preflight_check"
+    result.request["trace_id"] = trace_id
 
     task.latest_request_id = request_id
     task.latest_trace_id = trace_id
     task.latest_decision = str(result.advice.overall_decision)
     task.status = ensure_mission_task_status_transition(task.status, MissionTaskStatus.RECHECK).value
-    record_trace_events(
+    _record_preflight_events(
         [
             build_trace_event(
                 trace_id=trace_id,
@@ -198,6 +204,16 @@ def preflight_check_mission_task(
     task.updated_at = datetime.utcnow()
     db.commit()
     return result
+
+
+def _record_preflight_events(events, *, db: Session, task_id: str, commit: bool) -> None:
+    observation = current_observation()
+    if observation is None:
+        record_trace_events(events, db=db, task_id=task_id, commit=commit)
+        return
+    for event in events:
+        event.metadata = {**event.metadata, "task_id": task_id}
+        observation.record(event)
 
 
 def _get_owned_active_task(*, db: Session, current_user: User, task_id: str) -> MissionTask:

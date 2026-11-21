@@ -1,9 +1,11 @@
 from app.schemas.assessment import CruiseAssessmentAdvice, HourlyAssessment, RiskDecision, RuleHit
 from app.schemas.warning import WarningDataBundle
 from app.schemas.weather import WeatherHourData
-from app.rules.mission_profiles import MissionRuleProfile, get_mission_rule_profile
+from app.rules.mission_profiles import MissionRuleProfile, build_system_rule_snapshot, get_mission_rule_profile
+from app.services.run_observability import timed_stage
 
 
+@timed_stage("rules")
 def assess_cruise_window(
     hourly_weather: list[WeatherHourData],
     warnings: WarningDataBundle | None = None,
@@ -13,7 +15,11 @@ def assess_cruise_window(
     hourly_assessment = [assess_hourly_weather(hour, profile=profile) for hour in hourly_weather]
     if warnings is not None:
         hourly_assessment = apply_warning_adjustments(hourly_assessment, warnings, profile=profile)
-    return summarize_assessment(hourly_assessment)
+    snapshot = build_system_rule_snapshot(task_type)
+    return summarize_assessment(hourly_assessment).model_copy(update={
+        "rule_set_id": snapshot["rule_set_id"], "rule_set_version": snapshot["rule_set_version"],
+        "rule_snapshot": snapshot,
+    })
 
 
 def assess_hourly_weather(
@@ -291,6 +297,7 @@ def _build_hourly_assessment(
         risk_factors=risk_factors,
         rule_hits=hourly_rule_hits,
         weather={
+            "fx_time": hour.fx_time,
             "temp": hour.temp,
             "text": hour.text,
             "wind_scale": hour.wind_scale,

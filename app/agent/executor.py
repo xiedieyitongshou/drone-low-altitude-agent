@@ -9,6 +9,7 @@ from app.agent.state import AgentState, AgentStatus
 from app.agent.tools import ToolExecutionContext, ToolNotFoundError, ToolRegistry, ToolResult, default_tool_registry
 from app.agent.trace import TraceEvent, TraceEventType, build_trace_event
 from app.services.agent_trace import record_trace_event
+from app.services.run_observability import emit_trace_event, measure_stage
 
 
 TraceRecorder = Callable[[TraceEvent], int]
@@ -68,7 +69,8 @@ class ToolExecutor:
             return guardrail_result
 
         start_time = perf_counter()
-        result = self.tool_registry.call(tool_name, tool_input, context=context)
+        with measure_stage("tool"):
+            result = self.tool_registry.call(tool_name, tool_input, context=context)
         latency_ms = max(round((perf_counter() - start_time) * 1000), 0)
         status_after = AgentStatus.TOOL_COMPLETED if result.success else AgentStatus.FAILED
         failure_policy = classify_tool_failure(result)
@@ -207,7 +209,7 @@ class ToolExecutor:
         if self.trace_recorder is None:
             return
         try:
-            self.trace_recorder(event)
+            emit_trace_event(event, self.trace_recorder)
         except Exception:
             return
 

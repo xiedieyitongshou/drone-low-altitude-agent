@@ -5,6 +5,9 @@ from pydantic import BaseModel, Field
 
 
 class TraceEventType(StrEnum):
+    PARSE = "parse"
+    CLARIFICATION = "clarification"
+    STAGE = "stage"
     PLAN = "plan"
     TOOL_CALL = "tool_call"
     TOOL_RESULT = "tool_result"

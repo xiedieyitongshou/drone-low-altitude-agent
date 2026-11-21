@@ -28,6 +28,7 @@ from app.agent.state import (
 from app.agent.tools import ToolExecutionContext, ToolRegistry, default_tool_registry
 from app.agent.trace import TraceEventType, build_trace_event
 from app.services.agent_trace import record_trace_event
+from app.services.run_observability import emit_trace_event, measure_stage
 
 
 FallbackHandler = Callable[[AgentState, AgentPlan | None], Any]
@@ -77,6 +78,7 @@ class AgentLoop:
                     [],
                     message=input_guardrail.reason,
                 )
+                self._record_event(current_state, TraceEventType.CLARIFICATION, message=input_guardrail.reason)
                 return AgentLoopResult(
                     success=True,
                     final_state=current_state,
@@ -100,8 +102,11 @@ class AgentLoop:
             )
 
         for _ in range(self.max_iterations):
-            plan = plan_next_step(current_state, tool_registry=self.tool_registry)
+            with measure_stage("planner"):
+                plan = plan_next_step(current_state, tool_registry=self.tool_registry)
             plans.append(plan)
+            self._record_event(current_state, TraceEventType.PLAN, tool_name=plan.tool_name,
+                               output_payload=plan.model_dump(mode="json"))
             log_agent_event(
                 logging.INFO,
                 "agent plan generated",
@@ -119,6 +124,8 @@ class AgentLoop:
                     plan.missing_fields,
                     message=clarification_message,
                 )
+                self._record_event(current_state, TraceEventType.CLARIFICATION, message=clarification_message,
+                                   metadata={"missing_fields": plan.missing_fields})
                 log_agent_event(
                     logging.INFO,
                     "agent clarification required",
@@ -268,6 +275,16 @@ class AgentLoop:
             message="agent loop exceeded max iterations",
         )
 
+    def _record_event(self, state: AgentState, event_type: TraceEventType, **kwargs: Any) -> None:
+        try:
+            emit_trace_event(build_trace_event(
+                trace_id=state.trace_id, run_id=state.run_id, user_id=state.user_id,
+                session_id=state.session_id, event_type=event_type, step_index=state.round_index,
+                status_after=state.status.value, **kwargs,
+            ), record_trace_event)
+        except Exception:
+            logging.getLogger(__name__).exception("Could not record Agent event")
+
     def _record_guardrail_event(self, state: AgentState, guardrail_result: GuardrailResult) -> None:
         log_agent_event(
             logging.INFO if guardrail_result.allowed else logging.WARNING,
@@ -279,7 +296,7 @@ class AgentLoop:
             metadata=guardrail_metadata(guardrail_result),
         )
         try:
-            record_trace_event(
+            emit_trace_event(
                 build_trace_event(
                     trace_id=state.trace_id,
                     run_id=state.run_id,
@@ -292,7 +309,7 @@ class AgentLoop:
                     error_code=guardrail_result.error_code,
                     message=guardrail_result.reason,
                     metadata={"source": "agent_guardrail", **guardrail_metadata(guardrail_result)},
-                )
+                ), record_trace_event,
             )
         except Exception:
             return
@@ -321,6 +338,9 @@ class AgentLoop:
             and not state.tool_results
             and all(step.status != AgentStatus.TOOL_RUNNING for step in state.steps)
         )
+        self._record_event(failed_state, TraceEventType.FALLBACK, error_code=error_code, message=message,
+                           metadata={"allow_legacy_fallback": allow_legacy_fallback,
+                                     "fallback_available": self.fallback_handler is not None})
         fallback_result = self.fallback_handler(failed_state, plan) if self.fallback_handler and allow_legacy_fallback else None
         fallback_message = message or build_tool_failure_message(
             policy=failure_policy,

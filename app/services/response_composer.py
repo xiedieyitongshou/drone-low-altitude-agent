@@ -13,8 +13,10 @@ from app.schemas.composed_response import (
 from app.services.advice_retriever import build_advice_context, retrieve_advice, retrieve_knowledge_by_request
 from app.services.rag_context_mapper import build_knowledge_request_from_assessment, build_knowledge_request_from_rule_context
 from app.services.response_explainer import build_explanation_guardrail_metadata, explain_business_response
+from app.services.run_observability import timed_stage
 
 
+@timed_stage("composition")
 def compose_evaluation_response(response: CruiseAssessmentResponse) -> UnifiedBusinessResponse:
     """Compose a stable evaluate-scene response for frontend and later LLM use."""
 
@@ -53,6 +55,8 @@ def compose_evaluation_response(response: CruiseAssessmentResponse) -> UnifiedBu
             "hour_count": len(response.advice.hourly_assessment),
             "advice": advice,
             "knowledge_snippets": [item.model_dump(mode='json') for item in knowledge.snippets],
+            "knowledge_retrieval_status": knowledge.retrieval_status,
+            "knowledge_retrieval_message": knowledge.retrieval_message,
         },
     ))
 

@@ -57,6 +57,7 @@ class CruiseAssessmentResponse(BaseModel):
 
 class CruiseHistoryResponse(BaseModel):
     request_id: str
+    trace_id: str | None = None
     created_at: str
     request: dict[str, str | bool | None]
     weather: WeatherDataBundle | None = None

@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import httpx
+from app.services.run_observability import timed_stage
 
 
 logger = logging.getLogger(__name__)
@@ -92,6 +93,7 @@ def generate_text(
         return None
 
 
+@timed_stage("llm")
 def generate_text_or_raise(
     *,
     system_prompt: str,

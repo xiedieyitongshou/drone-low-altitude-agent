@@ -98,6 +98,8 @@ def _apply_filters(
 def _to_summary(record: ConversationRecord) -> ConversationSummary:
     return ConversationSummary(
         conversation_id=record.conversation_id,
+        trace_id=record.trace_id,
+        request_id=record.request_id,
         session_id=record.session_id,
         query=record.query,
         intent=record.intent,

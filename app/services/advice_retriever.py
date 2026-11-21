@@ -2,6 +2,7 @@ import json
 import os
 import pickle
 from functools import lru_cache
+from app.services.run_observability import timed_stage
 from pathlib import Path
 
 from app.schemas.advice import (
@@ -196,6 +197,7 @@ def build_advice_context(
     )
 
 
+@timed_stage("knowledge")
 def retrieve_knowledge_by_request(
     payload: KnowledgeRetrievalRequest,
     *,

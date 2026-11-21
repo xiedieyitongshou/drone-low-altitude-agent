@@ -21,6 +21,8 @@ from app.services.advice_retriever import retrieve_knowledge_by_request
 from app.services.comparison import compare_locations
 from app.services.conversation_query import get_user_conversation_detail, list_user_conversations
 from app.services.cruise_evaluator import evaluate_cruise_request_with_artifacts
+from app.services.history_persistence import persist_cruise_evaluation
+from app.services.run_observability import current_observation
 from app.services.mission_task_management import create_mission_task
 from app.services.recommendation_executor import build_recommendation_response
 from app.services.risk_rule_explainer import explain_risk_rules
@@ -159,7 +161,7 @@ def create_default_tool_registry() -> ToolRegistry:
         ToolSpec(
             name="evaluate_flight_risk",
             description="Evaluate low-altitude drone flight risk for one location and time range.",
-            side_effect="compute_only",
+            side_effect="write",
             risk_level="high",
             input_schema_name="CruiseEvaluateRequest",
             output_schema_name="CruiseAssessmentResponse",
@@ -290,7 +292,20 @@ def create_default_tool_registry() -> ToolRegistry:
 
 def _evaluate_flight_risk(payload: dict[str, Any], context: ToolExecutionContext) -> Any:
     request = CruiseEvaluateRequest.model_validate(payload)
-    return evaluate_cruise_request_with_artifacts(request).response
+    artifacts = evaluate_cruise_request_with_artifacts(request)
+    response = artifacts.response
+    observation = current_observation()
+    if observation:
+        response.request["trace_id"] = observation.trace_id
+    try:
+        request_id = persist_cruise_evaluation(payload=request, artifacts=artifacts, user_id=context.user_id, db=context.db)
+        response.request.update(request_id=request_id, persistence_status="saved")
+    except Exception as exc:
+        # A failed history write must not replay weather calls or replace a computed decision.
+        response.request.update(persistence_status="failed", persistence_error=type(exc).__name__)
+        if observation:
+            observation.emit("error", error_code="ASSESSMENT_SAVE_FAILED", metadata={"error_type": type(exc).__name__})
+    return response
 
 
 def _recommend_flight_windows(payload: dict[str, Any], context: ToolExecutionContext) -> Any:

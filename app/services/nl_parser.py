@@ -589,6 +589,8 @@ def _detect_date(text: str) -> str | None:
 
 
 def _detect_time_range(text: str) -> tuple[str | None, str | None]:
+    # Date separators must not be consumed as an hour range (for example 2026-11-22).
+    text = DATE_PATTERN.sub("", text)
     for pattern in TIME_RANGE_PATTERNS:
         match = pattern.search(text)
         if not match:

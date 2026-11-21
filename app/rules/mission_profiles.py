@@ -180,3 +180,19 @@ def is_supported_task_type(task_type: str | None) -> bool:
 
 def list_supported_task_types() -> tuple[str, ...]:
     return SUPPORTED_TASK_TYPES
+
+
+def build_system_rule_snapshot(task_type: str) -> dict[str, object]:
+    profile = get_mission_rule_profile(task_type)
+    return {
+        "rule_set_id": f"system_default:{profile.task_type}", "rule_set_version": 1,
+        "source": "system_default", "task_type": profile.task_type,
+        "display_name": profile.display_name, "description": profile.description,
+        "hourly": _serialize_profile_section(profile.hourly),
+        "warning": _serialize_profile_section(profile.warning),
+    }
+
+
+def _serialize_profile_section(section: object) -> dict[str, object]:
+    return {key: sorted(value) if isinstance(value, (set, frozenset)) else value
+            for key, value in section.__dict__.items()}

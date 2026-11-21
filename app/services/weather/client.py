@@ -9,6 +9,7 @@ from app.services.weather.exceptions import (
     WeatherRequestError,
     WeatherResponseError,
 )
+from app.services.run_observability import measure_stage, timed_stage
 
 
 logger = logging.getLogger(__name__)
@@ -30,13 +31,15 @@ class HttpClient:
             headers={"X-QW-Api-Key": api_key},
         )
 
+    @timed_stage("weather")
     def get(self, url: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         last_exception: Exception | None = None
 
         for attempt in range(1, self._max_retries + 1):
             try:
-                response = self._client.get(url, params=params)
-                self._raise_for_status(response)
+                with measure_stage("weather_http"):
+                    response = self._client.get(url, params=params)
+                    self._raise_for_status(response)
             except (httpx.HTTPError, WeatherResponseError) as exc:
                 last_exception = exc
                 logger.warning(

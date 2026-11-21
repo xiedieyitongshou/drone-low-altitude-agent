@@ -11,6 +11,8 @@ class TaskRequest(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     request_id: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    user_id: Mapped[str | None] = mapped_column(String(64), index=True, nullable=True)
+    trace_id: Mapped[str | None] = mapped_column(String(64), index=True, nullable=True)
     task_id: Mapped[str | None] = mapped_column(String(64), ForeignKey("mission_tasks.id"), index=True, nullable=True)
     request_type: Mapped[str] = mapped_column(String(32), index=True)
     location_text: Mapped[str] = mapped_column(String(255))

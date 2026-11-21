@@ -3,6 +3,8 @@ from pydantic import BaseModel, Field
 
 class ConversationSummary(BaseModel):
     conversation_id: str
+    trace_id: str | None = None
+    request_id: str | None = None
     session_id: str | None = None
     query: str
     intent: str | None = None

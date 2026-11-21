@@ -33,3 +33,8 @@ class AgentTraceDetailResponse(BaseModel):
     session_id: str | None = None
     event_count: int
     events: list[AgentTraceEventResponse] = Field(default_factory=list)
+    request_ids: list[str] = Field(default_factory=list)
+    conversation_ids: list[str] = Field(default_factory=list)
+    task_ids: list[str] = Field(default_factory=list)
+    outcome: str | None = None
+    timings: dict[str, Any] = Field(default_factory=dict)
