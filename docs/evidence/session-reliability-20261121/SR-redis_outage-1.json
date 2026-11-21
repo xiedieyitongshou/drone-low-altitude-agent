@@ -1,0 +1,2474 @@
+{
+  "id": "SR-redis_outage-1",
+  "scenario": "redis_outage",
+  "iteration": 1,
+  "actions": [
+    {
+      "kind": "http",
+      "parallel": false,
+      "requests": [
+        {
+          "url": "http://app_a:8000/nl/parse",
+          "method": "POST",
+          "json": {
+            "query": "明天下午2点到3点深圳巡检能飞吗",
+            "session_id": "sr-redis-outage-1"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "session_id": "sr-redis-outage-1",
+            "intent": "evaluate",
+            "target_endpoint": "/cruise/evaluate",
+            "parser_source": "rule",
+            "parsed": {
+              "location": "深圳",
+              "date": "2026-11-22",
+              "start_time": "14:00",
+              "end_time": "15:00",
+              "task_type": "inspection",
+              "purpose": "明天下午2点到3点深圳巡检能飞吗"
+            },
+            "context_used": false,
+            "warnings": []
+          },
+          "latency_ms": 62.591
+        }
+      ]
+    },
+    {
+      "kind": "redis_snapshot",
+      "key": "reliability:session:anonymous:default_user:sr-redis-outage-1",
+      "context": {
+        "intent": "evaluate",
+        "task_type": "inspection",
+        "date": "2026-11-22",
+        "start_time": "14:00",
+        "end_time": "15:00",
+        "location": "深圳"
+      },
+      "ttl": "1799"
+    },
+    {
+      "kind": "process",
+      "action": "stop",
+      "service": "redis",
+      "elapsed_ms": 672.0
+    },
+    {
+      "kind": "http",
+      "parallel": false,
+      "requests": [
+        {
+          "url": "http://app_a:8000/nl/parse",
+          "method": "POST",
+          "json": {
+            "query": "后天呢",
+            "session_id": "sr-redis-outage-1"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 503,
+          "body": {
+            "success": false,
+            "error_code": "SESSION_STORAGE_UNAVAILABLE",
+            "message": "会话存储暂时不可用，请稍后重试。",
+            "details": []
+          },
+          "latency_ms": 58.557
+        }
+      ]
+    },
+    {
+      "kind": "http",
+      "parallel": false,
+      "requests": [
+        {
+          "url": "http://app_a:8000/nl/parse",
+          "method": "POST",
+          "json": {
+            "query": "深圳明天下午2点到3点巡检能飞吗"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "session_id": null,
+            "intent": "evaluate",
+            "target_endpoint": "/cruise/evaluate",
+            "parser_source": "rule",
+            "parsed": {
+              "location": "深圳",
+              "date": "2026-11-22",
+              "start_time": "14:00",
+              "end_time": "15:00",
+              "task_type": "inspection",
+              "purpose": "深圳明天下午2点到3点巡检能飞吗"
+            },
+            "context_used": false,
+            "warnings": []
+          },
+          "latency_ms": 48.214
+        }
+      ]
+    },
+    {
+      "kind": "http",
+      "parallel": false,
+      "requests": [
+        {
+          "url": "http://app_a:8000/agent/query",
+          "method": "POST",
+          "token": "[REDACTED]",
+          "json": {
+            "query": "深圳报备政策",
+            "session_id": "sr-redis-outage-1-independent"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "success": true,
+            "session_id": "sr-redis-outage-1-independent",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "conversation_id": "02527894ee3d4c7bbc33e984ce489725",
+            "request_id": null,
+            "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+            "intent": "knowledge",
+            "target_endpoint": "/knowledge/advice/retrieve",
+            "parser_source": "rule",
+            "parsed": {
+              "task_type": "cruise",
+              "top_k": 3,
+              "city": "深圳",
+              "query": "深圳报备政策",
+              "constraint_sources": {
+                "task_type": "profile",
+                "city": "user_input"
+              }
+            },
+            "context_used": true,
+            "message": "Agent Runtime 已完成工具调用：query_knowledge_snippets。",
+            "warnings": [],
+            "composed": null,
+            "result": {
+              "intent": "knowledge",
+              "tool_results": {
+                "query_knowledge_snippets": {
+                  "success": true,
+                  "tool_name": "query_knowledge_snippets",
+                  "data": {
+                    "context": {
+                      "task_type": "cruise",
+                      "overall_decision": null,
+                      "risk_tags": [],
+                      "warning_types": [],
+                      "warning_levels": [],
+                      "limit": 3
+                    },
+                    "snippets": [
+                      {
+                        "id": "policy-shenzhen-airspace-check-001",
+                        "title": "深圳地区无人机飞行空域核查提示",
+                        "content": "标题: 深圳地区无人机飞行空域核查提示\n片段: 在深圳执行无人机任务前，应核查任务区域是否涉及管制空域、机场净空保护区、人口密集区或临时管控区域。无法确认空域状态时，应降低自动放行倾向，提示用户查询官方平台或联系主管部门确认。\n用于深圳地区政策提示，强调先核查空域再执行任务。\n知识类型: policy_hint\n任务类型: all\n风险标签: \n适用地区: 广东 深圳 深圳\n关键词: 深圳 管制空域 净空区 临时管控 空域核查 低空飞行",
+                        "score": 22.613689,
+                        "source": "深圳市公安局：无人机飞行空域分类和管理提示",
+                        "source_url": "https://ga.sz.gov.cn/gkmlpt/content/10/10705/post_10705087.html",
+                        "metadata": {
+                          "category": "execution_advice",
+                          "knowledge_type": "policy_hint",
+                          "risk_type": [],
+                          "task_type": [
+                            "all"
+                          ],
+                          "warning_type": [],
+                          "warning_level": [],
+                          "decision_scope": [
+                            "allow",
+                            "caution",
+                            "reject"
+                          ],
+                          "region": "深圳",
+                          "province": "广东",
+                          "city": "深圳",
+                          "visibility": "public",
+                          "tenant_id": "public",
+                          "user_id": null,
+                          "version": "v1",
+                          "effective_at": null,
+                          "expires_at": null,
+                          "review_status": "approved",
+                          "priority": "medium",
+                          "action_type": null,
+                          "keywords": [
+                            "深圳",
+                            "管制空域",
+                            "净空区",
+                            "临时管控",
+                            "空域核查",
+                            "低空飞行"
+                          ],
+                          "knowledge_id": "policy-shenzhen-airspace-check-001",
+                          "chunk_id": "policy-shenzhen-airspace-check-001::chunk-1",
+                          "chunk_type": "policy_clause",
+                          "chunk_index": 0,
+                          "chunk_strategy": "policy_hint",
+                          "retriever": "bm25",
+                          "rerank_boost": 0.8,
+                          "relevance_method": "lexical",
+                          "relevance_evidence": {
+                            "id": "policy-shenzhen-airspace-check-001::chunk-1",
+                            "coverage": 1.0,
+                            "matched_terms": [
+                              "报备"
+                            ],
+                            "missing_terms": []
+                          },
+                          "rag_attempt": 1,
+                          "query_rewritten": false
+                        }
+                      }
+                    ],
+                    "advice": [],
+                    "retrieval_status": "success",
+                    "retrieval_message": null,
+                    "retrieval_metadata": {
+                      "query_rewritten": false,
+                      "attempts": [
+                        {
+                          "attempt": 1,
+                          "query": "深圳报备政策",
+                          "status": "success",
+                          "reason": "no_applicable_knowledge",
+                          "top_score": 22.613689,
+                          "result_count": 1,
+                          "threshold": 0.2,
+                          "candidate_count": 6,
+                          "rejected_candidates": [
+                            {
+                              "id": "advice-thunderstorm-cancel-002::chunk-1",
+                              "reasons": [
+                                "task_type_mismatch"
+                              ]
+                            },
+                            {
+                              "id": "advice-thunderstorm-cancel-002::chunk-2",
+                              "reasons": [
+                                "task_type_mismatch"
+                              ]
+                            },
+                            {
+                              "id": "advice-high-wind-change-task-002::chunk-1",
+                              "reasons": [
+                                "task_type_mismatch"
+                              ]
+                            },
+                            {
+                              "id": "advice-high-wind-change-task-002::chunk-2",
+                              "reasons": [
+                                "task_type_mismatch"
+                              ]
+                            },
+                            {
+                              "id": "advice-humidity-equipment-002::chunk-1",
+                              "reasons": [
+                                "task_type_mismatch"
+                              ]
+                            },
+                            {
+                              "id": "advice-humidity-equipment-002::chunk-2",
+                              "reasons": [
+                                "task_type_mismatch"
+                              ]
+                            },
+                            {
+                              "id": "advice-hover-sensitive-001::chunk-1",
+                              "reasons": [
+                                "task_type_mismatch"
+                              ]
+                            },
+                            {
+                              "id": "advice-hover-sensitive-001::chunk-2",
+                              "reasons": [
+                                "task_type_mismatch"
+                              ]
+                            },
+                            {
+                              "id": "advice-survey-precision-002::chunk-1",
+                              "reasons": [
+                                "task_type_mismatch"
+                              ]
+                            },
+                            {
+                              "id": "advice-survey-precision-002::chunk-2",
+                              "reasons": [
+                                "task_type_mismatch"
+                              ]
+                            },
+                            {
+                              "id": "policy-guangzhou-controlled-airspace-001::chunk-1",
+                              "reasons": [
+                                "region_mismatch"
+                              ]
+                            },
+                            {
+                              "id": "advice-compare-topk-002::chunk-1",
+                              "coverage": 0.0,
+                              "matched_terms": [],
+                              "missing_terms": [
+                                "报备"
+                              ],
+                              "reason": "no_topic_match"
+                            },
+                            {
+                              "id": "policy-geozone-check-001::chunk-1",
+                              "coverage": 0.0,
+                              "matched_terms": [],
+                              "missing_terms": [
+                                "报备"
+                              ],
+                              "reason": "no_topic_match"
+                            },
+                            {
+                              "id": "advice-compare-topk-002::chunk-2",
+                              "coverage": 0.0,
+                              "matched_terms": [],
+                              "missing_terms": [
+                                "报备"
+                              ],
+                              "reason": "no_topic_match"
+                            },
+                            {
+                              "id": "policy-registration-activation-001::chunk-1",
+                              "coverage": 0.0,
+                              "matched_terms": [],
+                              "missing_terms": [
+                                "报备"
+                              ],
+                              "reason": "no_topic_match"
+                            },
+                            {
+                              "id": "advice-rainfall-delay-001::chunk-1",
+                              "coverage": 0.0,
+                              "matched_terms": [],
+                              "missing_terms": [
+                                "报备"
+                              ],
+                              "reason": "no_topic_match"
+                            }
+                          ],
+                          "filter_counts": {
+                            "task_type_mismatch": 10,
+                            "region_mismatch": 1
+                          },
+                          "llm_review_status": "not_needed"
+                        }
+                      ],
+                      "reason_code": "no_applicable_knowledge",
+                      "constraint_sources": {
+                        "task_type": "profile",
+                        "city": "user_input"
+                      },
+                      "retriever": "bm25",
+                      "candidate_limit": 10
+                    }
+                  },
+                  "error_code": null,
+                  "message": null,
+                  "metadata": {
+                    "side_effect": "read_only",
+                    "risk_level": "medium",
+                    "allowed_roles": [
+                      "user",
+                      "admin"
+                    ],
+                    "user_scope": "current_user"
+                  }
+                }
+              },
+              "errors": [],
+              "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+              "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887"
+            },
+            "fallback": null,
+            "agent_runtime": {
+              "mode": "loop",
+              "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+              "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+              "status": "completed",
+              "fallback_used": false,
+              "plan_actions": [
+                "call_tool",
+                "respond_directly"
+              ],
+              "tool_results": [
+                "query_knowledge_snippets"
+              ],
+              "errors": [],
+              "context_merge": {
+                "field_sources": {
+                  "task_type": "profile",
+                  "top_k": "default",
+                  "city": "user_input",
+                  "query": "user_input"
+                },
+                "modified_fields": [],
+                "invalidated_tools": []
+              },
+              "timings": {
+                "processing_ms": 41.78,
+                "stages": {
+                  "session_guard": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 0.737,
+                    "self_ms": 0.737
+                  },
+                  "context_read": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 5.086,
+                    "self_ms": 5.086
+                  },
+                  "parser": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 1.085,
+                    "self_ms": 1.085
+                  },
+                  "context_merge": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 0.078,
+                    "self_ms": 0.078
+                  },
+                  "planner": {
+                    "calls": 2,
+                    "failures": 0,
+                    "duration_ms": 0.186,
+                    "self_ms": 0.186
+                  },
+                  "knowledge": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 7.064,
+                    "self_ms": 7.064
+                  },
+                  "tool": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 7.386,
+                    "self_ms": 0.322
+                  },
+                  "session_write": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 15.598,
+                    "self_ms": 15.598
+                  },
+                  "profile_write": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 6.707,
+                    "self_ms": 6.707
+                  }
+                },
+                "scope": "agent_processing_before_conversation_and_trace_commit"
+              }
+            }
+          },
+          "latency_ms": 113.354
+        }
+      ]
+    },
+    {
+      "kind": "http",
+      "parallel": false,
+      "requests": [
+        {
+          "url": "http://app_a:8000/agent/traces/5f471ed0-f197-4e03-a978-d4724a48caa7",
+          "method": "GET",
+          "token": "[REDACTED]"
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+            "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-redis-outage-1-independent",
+            "event_count": 20,
+            "events": [
+              {
+                "id": 310,
+                "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+                "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-redis-outage-1-independent",
+                "event_type": "state_update",
+                "step_index": 1,
+                "status_before": null,
+                "status_after": "initialized",
+                "tool_name": null,
+                "latency_ms": null,
+                "input_summary": {
+                  "query": "深圳报备政策"
+                },
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {},
+                "created_at": "2026-11-21T08:14:29.566666"
+              },
+              {
+                "id": 311,
+                "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+                "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-redis-outage-1-independent",
+                "event_type": "stage",
+                "step_index": 2,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 1,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "session_guard",
+                  "duration_ms": 0.737,
+                  "self_ms": 0.737,
+                  "start_offset_ms": 0.689,
+                  "parent_stage": null,
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:14:29.566669"
+              },
+              {
+                "id": 312,
+                "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+                "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-redis-outage-1-independent",
+                "event_type": "stage",
+                "step_index": 3,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 5,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "context_read",
+                  "duration_ms": 5.086,
+                  "self_ms": 5.086,
+                  "start_offset_ms": 1.488,
+                  "parent_stage": null,
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:14:29.566669"
+              },
+              {
+                "id": 313,
+                "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+                "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-redis-outage-1-independent",
+                "event_type": "stage",
+                "step_index": 4,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 1,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "parser",
+                  "duration_ms": 1.085,
+                  "self_ms": 1.085,
+                  "start_offset_ms": 6.633,
+                  "parent_stage": null,
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:14:29.566670"
+              },
+              {
+                "id": 314,
+                "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+                "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-redis-outage-1-independent",
+                "event_type": "parse",
+                "step_index": 5,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": null,
+                "input_summary": null,
+                "output_summary": {
+                  "query": "深圳报备政策",
+                  "city": "深圳"
+                },
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "intent": "knowledge",
+                  "parser_source": "rule"
+                },
+                "created_at": "2026-11-21T08:14:29.566670"
+              },
+              {
+                "id": 315,
+                "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+                "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-redis-outage-1-independent",
+                "event_type": "stage",
+                "step_index": 6,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 0,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "context_merge",
+                  "duration_ms": 0.078,
+                  "self_ms": 0.078,
+                  "start_offset_ms": 7.813,
+                  "parent_stage": null,
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:14:29.566671"
+              },
+              {
+                "id": 316,
+                "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+                "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-redis-outage-1-independent",
+                "event_type": "state_update",
+                "step_index": 7,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": null,
+                "input_summary": null,
+                "output_summary": {
+                  "task_type": "cruise",
+                  "top_k": 3,
+                  "city": "深圳",
+                  "query": "深圳报备政策"
+                },
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "source": "context_merge",
+                  "field_sources": {
+                    "task_type": "profile",
+                    "top_k": "default",
+                    "city": "user_input",
+                    "query": "user_input"
+                  },
+                  "missing_fields": [],
+                  "modified_fields": []
+                },
+                "created_at": "2026-11-21T08:14:29.566671"
+              },
+              {
+                "id": 317,
+                "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+                "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-redis-outage-1-independent",
+                "event_type": "state_update",
+                "step_index": 8,
+                "status_before": "ready_to_plan",
+                "status_after": "ready_to_plan",
+                "tool_name": null,
+                "latency_ms": null,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": "allowed",
+                "metadata": {
+                  "source": "agent_guardrail",
+                  "guardrail_checkpoint": "input",
+                  "guardrail_action": "allow",
+                  "guardrail_allowed": true,
+                  "guardrail_reason": "allowed",
+                  "guardrail_user_message": "Guardrail 检查通过。",
+                  "guardrail_explanation": {
+                    "checkpoint": "input",
+                    "action": "allow",
+                    "allowed": true,
+                    "error_code": null,
+                    "reason": "allowed",
+                    "user_message": "Guardrail 检查通过。",
+                    "violation_type": null,
+                    "tool_name": null,
+                    "metadata": {
+                      "query_length": 6
+                    }
+                  },
+                  "query_length": 6,
+                  "agent_step": 2
+                },
+                "created_at": "2026-11-21T08:14:29.566672"
+              },
+              {
+                "id": 318,
+                "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+                "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-redis-outage-1-independent",
+                "event_type": "stage",
+                "step_index": 9,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 0,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "planner",
+                  "duration_ms": 0.171,
+                  "self_ms": 0.171,
+                  "start_offset_ms": 8.403,
+                  "parent_stage": null,
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:14:29.566672"
+              },
+              {
+                "id": 319,
+                "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+                "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-redis-outage-1-independent",
+                "event_type": "plan",
+                "step_index": 10,
+                "status_before": null,
+                "status_after": "ready_to_plan",
+                "tool_name": "query_knowledge_snippets",
+                "latency_ms": null,
+                "input_summary": null,
+                "output_summary": {
+                  "action": "call_tool",
+                  "reason": "intent=knowledge is ready and maps to tool=query_knowledge_snippets",
+                  "tool_name": "query_knowledge_snippets",
+                  "tool_input": {
+                    "constraint_sources": {
+                      "task_type": "profile",
+                      "city": "user_input"
+                    },
+                    "query": "深圳报备政策",
+                    "city": "深圳",
+                    "top_k": 3,
+                    "task_type": "cruise"
+                  },
+                  "missing_fields": [],
+                  "metadata": {
+                    "intent": "knowledge",
+                    "route_kind": "knowledge_query",
+                    "target_endpoint": "/knowledge/advice/retrieve",
+                    "side_effect": "read_only",
+                    "risk_level": "medium",
+                    "rag_decision": "use_rag",
+                    "rag_reason": "knowledge intent explicitly requires knowledge retrieval",
+                    "rag_tool_name": "query_knowledge_snippets"
+                  }
+                },
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "agent_step": 2
+                },
+                "created_at": "2026-11-21T08:14:29.566673"
+              },
+              {
+                "id": 320,
+                "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+                "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-redis-outage-1-independent",
+                "event_type": "tool_call",
+                "step_index": 11,
+                "status_before": "tool_running",
+                "status_after": "tool_running",
+                "tool_name": "query_knowledge_snippets",
+                "latency_ms": null,
+                "input_summary": {
+                  "constraint_sources": {
+                    "task_type": "profile",
+                    "city": "user_input"
+                  },
+                  "query": "深圳报备政策",
+                  "city": "深圳",
+                  "top_k": 3,
+                  "task_type": "cruise"
+                },
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "side_effect": "read_only",
+                  "risk_level": "medium",
+                  "requires_auth": true,
+                  "requires_admin": false,
+                  "allowed_roles": [
+                    "user",
+                    "admin"
+                  ],
+                  "user_scope": "current_user",
+                  "timeout_ms": 30000,
+                  "agent_step": 3
+                },
+                "created_at": "2026-11-21T08:14:29.566673"
+              },
+              {
+                "id": 321,
+                "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+                "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-redis-outage-1-independent",
+                "event_type": "stage",
+                "step_index": 12,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 7,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "knowledge",
+                  "duration_ms": 7.064,
+                  "self_ms": 7.064,
+                  "start_offset_ms": 9.028,
+                  "parent_stage": "tool",
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:14:29.566674"
+              },
+              {
+                "id": 322,
+                "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+                "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-redis-outage-1-independent",
+                "event_type": "stage",
+                "step_index": 13,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 7,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "tool",
+                  "duration_ms": 7.386,
+                  "self_ms": 0.322,
+                  "start_offset_ms": 8.9,
+                  "parent_stage": null,
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:14:29.566674"
+              },
+              {
+                "id": 323,
+                "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+                "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-redis-outage-1-independent",
+                "event_type": "tool_result",
+                "step_index": 14,
+                "status_before": "tool_running",
+                "status_after": "tool_completed",
+                "tool_name": "query_knowledge_snippets",
+                "latency_ms": 7,
+                "input_summary": {
+                  "constraint_sources": {
+                    "task_type": "profile",
+                    "city": "user_input"
+                  },
+                  "query": "深圳报备政策",
+                  "city": "深圳",
+                  "top_k": 3,
+                  "task_type": "cruise"
+                },
+                "output_summary": {
+                  "success": true,
+                  "tool_name": "query_knowledge_snippets",
+                  "data": {
+                    "context": {
+                      "task_type": "cruise",
+                      "overall_decision": null,
+                      "risk_tags": [],
+                      "warning_types": [],
+                      "warning_levels": [],
+                      "limit": 3
+                    },
+                    "snippets": [
+                      {
+                        "id": "policy-shenzhen-airspace-check-001",
+                        "title": "深圳地区无人机飞行空域核查提示",
+                        "content": "标题: 深圳地区无人机飞行空域核查提示\n片段: 在深圳执行无人机任务前，应核查任务区域是否涉及管制空域、机场净空保护区、人口密集区或临时管控区域。无法确认空域状态时，应降低自动放行倾向，提示用户查询官方平台或联系主管部门确认。\n用于深圳地区政策提示，强调先核查空域再执行任务。\n知识类型: policy_hint\n任务类型: all\n风险标签: \n适用地区: 广东 深圳 深圳\n关键词: 深圳 管制空...",
+                        "score": 22.613689,
+                        "source": "深圳市公安局：无人机飞行空域分类和管理提示",
+                        "source_url": "https://ga.sz.gov.cn/gkmlpt/content/10/10705/post_10705087.html",
+                        "metadata": {
+                          "category": "execution_advice",
+                          "knowledge_type": "policy_hint",
+                          "risk_type": [],
+                          "task_type": [
+                            "all"
+                          ],
+                          "warning_type": [],
+                          "warning_level": [],
+                          "decision_scope": [
+                            "allow",
+                            "caution",
+                            "reject"
+                          ],
+                          "region": "深圳",
+                          "province": "广东",
+                          "city": "深圳",
+                          "visibility": "public",
+                          "tenant_id": "public",
+                          "user_id": null,
+                          "version": "v1",
+                          "effective_at": null,
+                          "expires_at": null,
+                          "review_status": "approved",
+                          "priority": "medium",
+                          "action_type": null,
+                          "keywords": [
+                            "深圳",
+                            "管制空域",
+                            "净空区",
+                            "临时管控",
+                            "空域核查",
+                            "低空飞行"
+                          ],
+                          "knowledge_id": "policy-shenzhen-airspace-check-001",
+                          "chunk_id": "policy-shenzhen-airspace-check-001::chunk-1",
+                          "chunk_type": "policy_clause",
+                          "chunk_index": 0,
+                          "chunk_strategy": "policy_hint",
+                          "retriever": "bm25",
+                          "rerank_boost": 0.8,
+                          "relevance_method": "lexical",
+                          "relevance_evidence": {
+                            "id": "policy-shenzhen-airspace-check-001::chunk-1",
+                            "coverage": 1.0,
+                            "matched_terms": [
+                              "报备"
+                            ],
+                            "missing_terms": []
+                          },
+                          "rag_attempt": 1,
+                          "_truncated": true
+                        }
+                      }
+                    ],
+                    "advice": [],
+                    "retrieval_status": "success",
+                    "retrieval_message": null,
+                    "retrieval_metadata": {
+                      "query_rewritten": false,
+                      "attempts": [
+                        {
+                          "attempt": 1,
+                          "query": "深圳报备政策",
+                          "status": "success",
+                          "reason": "no_applicable_knowledge",
+                          "top_score": 22.613689,
+                          "result_count": 1,
+                          "threshold": 0.2,
+                          "candidate_count": 6,
+                          "rejected_candidates": [
+                            {
+                              "id": "advice-thunderstorm-cancel-002::chunk-1",
+                              "reasons": [
+                                "task_type_mismatch"
+                              ]
+                            },
+                            {
+                              "id": "advice-thunderstorm-cancel-002::chunk-2",
+                              "reasons": [
+                                "task_type_mismatch"
+                              ]
+                            },
+                            {
+                              "id": "advice-high-wind-change-task-002::chunk-1",
+                              "reasons": [
+                                "task_type_mismatch"
+                              ]
+                            },
+                            {
+                              "id": "advice-high-wind-change-task-002::chunk-2",
+                              "reasons": [
+                                "task_type_mismatch"
+                              ]
+                            },
+                            {
+                              "id": "advice-humidity-equipment-002::chunk-1",
+                              "reasons": [
+                                "task_type_mismatch"
+                              ]
+                            },
+                            {
+                              "id": "advice-humidity-equipment-002::chunk-2",
+                              "reasons": [
+                                "task_type_mismatch"
+                              ]
+                            },
+                            {
+                              "id": "advice-hover-sensitive-001::chunk-1",
+                              "reasons": [
+                                "task_type_mismatch"
+                              ]
+                            },
+                            {
+                              "id": "advice-hover-sensitive-001::chunk-2",
+                              "reasons": [
+                                "task_type_mismatch"
+                              ]
+                            },
+                            {
+                              "id": "advice-survey-precision-002::chunk-1",
+                              "reasons": [
+                                "task_type_mismatch"
+                              ]
+                            },
+                            {
+                              "id": "advice-survey-precision-002::chunk-2",
+                              "reasons": [
+                                "task_type_mismatch"
+                              ]
+                            },
+                            {
+                              "_truncated": true,
+                              "remaining": 6
+                            }
+                          ],
+                          "filter_counts": {
+                            "task_type_mismatch": 10,
+                            "region_mismatch": 1
+                          },
+                          "llm_review_status": "not_needed"
+                        }
+                      ],
+                      "reason_code": "no_applicable_knowledge",
+                      "constraint_sources": {
+                        "task_type": "profile",
+                        "city": "user_input"
+                      },
+                      "retriever": "bm25",
+                      "candidate_limit": 10
+                    }
+                  },
+                  "error_code": null,
+                  "message": null,
+                  "metadata": {
+                    "side_effect": "read_only",
+                    "risk_level": "medium",
+                    "allowed_roles": [
+                      "user",
+                      "admin"
+                    ],
+                    "user_scope": "current_user"
+                  }
+                },
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "side_effect": "read_only",
+                  "risk_level": "medium",
+                  "requires_auth": true,
+                  "requires_admin": false,
+                  "allowed_roles": [
+                    "user",
+                    "admin"
+                  ],
+                  "user_scope": "current_user",
+                  "timeout_ms": 30000,
+                  "agent_step": 3
+                },
+                "created_at": "2026-11-21T08:14:29.566674"
+              },
+              {
+                "id": 324,
+                "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+                "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-redis-outage-1-independent",
+                "event_type": "stage",
+                "step_index": 15,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 0,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "planner",
+                  "duration_ms": 0.015,
+                  "self_ms": 0.015,
+                  "start_offset_ms": 17.141,
+                  "parent_stage": null,
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:14:29.566675"
+              },
+              {
+                "id": 325,
+                "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+                "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-redis-outage-1-independent",
+                "event_type": "plan",
+                "step_index": 16,
+                "status_before": null,
+                "status_after": "tool_completed",
+                "tool_name": null,
+                "latency_ms": null,
+                "input_summary": null,
+                "output_summary": {
+                  "action": "respond_directly",
+                  "reason": "tool result exists and final response can be composed",
+                  "tool_name": null,
+                  "tool_input": {},
+                  "missing_fields": [],
+                  "metadata": {
+                    "tool_results": [
+                      "query_knowledge_snippets"
+                    ]
+                  }
+                },
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "agent_step": 4
+                },
+                "created_at": "2026-11-21T08:14:29.566675"
+              },
+              {
+                "id": 326,
+                "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+                "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-redis-outage-1-independent",
+                "event_type": "state_update",
+                "step_index": 17,
+                "status_before": "completed",
+                "status_after": "completed",
+                "tool_name": null,
+                "latency_ms": null,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": "allowed",
+                "metadata": {
+                  "source": "agent_guardrail",
+                  "guardrail_checkpoint": "output",
+                  "guardrail_action": "allow",
+                  "guardrail_allowed": true,
+                  "guardrail_reason": "allowed",
+                  "guardrail_user_message": "Guardrail 检查通过。",
+                  "guardrail_explanation": {
+                    "checkpoint": "output",
+                    "action": "allow",
+                    "allowed": true,
+                    "error_code": null,
+                    "reason": "allowed",
+                    "user_message": "Guardrail 检查通过。",
+                    "violation_type": null,
+                    "tool_name": null,
+                    "metadata": {
+                      "intent": "knowledge"
+                    }
+                  },
+                  "intent": "knowledge",
+                  "agent_step": 5
+                },
+                "created_at": "2026-11-21T08:14:29.566676"
+              },
+              {
+                "id": 327,
+                "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+                "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-redis-outage-1-independent",
+                "event_type": "stage",
+                "step_index": 18,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 16,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "session_write",
+                  "duration_ms": 15.598,
+                  "self_ms": 15.598,
+                  "start_offset_ms": 18.098,
+                  "parent_stage": null,
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:14:29.566676"
+              },
+              {
+                "id": 328,
+                "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+                "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-redis-outage-1-independent",
+                "event_type": "stage",
+                "step_index": 19,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 7,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "profile_write",
+                  "duration_ms": 6.707,
+                  "self_ms": 6.707,
+                  "start_offset_ms": 33.79,
+                  "parent_stage": null,
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:14:29.566677"
+              },
+              {
+                "id": 329,
+                "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+                "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-redis-outage-1-independent",
+                "event_type": "final_response",
+                "step_index": 20,
+                "status_before": null,
+                "status_after": "completed",
+                "tool_name": null,
+                "latency_ms": null,
+                "input_summary": null,
+                "output_summary": {
+                  "success": true,
+                  "message": "Agent Runtime 已完成工具调用：query_knowledge_snippets。"
+                },
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "outcome": "success",
+                  "request_id": null,
+                  "conversation_id": "02527894ee3d4c7bbc33e984ce489725",
+                  "timings": {
+                    "processing_ms": 41.78,
+                    "stages": {
+                      "session_guard": {
+                        "calls": 1,
+                        "failures": 0,
+                        "duration_ms": 0.737,
+                        "self_ms": 0.737
+                      },
+                      "context_read": {
+                        "calls": 1,
+                        "failures": 0,
+                        "duration_ms": 5.086,
+                        "self_ms": 5.086
+                      },
+                      "parser": {
+                        "calls": 1,
+                        "failures": 0,
+                        "duration_ms": 1.085,
+                        "self_ms": 1.085
+                      },
+                      "context_merge": {
+                        "calls": 1,
+                        "failures": 0,
+                        "duration_ms": 0.078,
+                        "self_ms": 0.078
+                      },
+                      "planner": {
+                        "calls": 2,
+                        "failures": 0,
+                        "duration_ms": 0.186,
+                        "self_ms": 0.186
+                      },
+                      "knowledge": {
+                        "calls": 1,
+                        "failures": 0,
+                        "duration_ms": 7.064,
+                        "self_ms": 7.064
+                      },
+                      "tool": {
+                        "calls": 1,
+                        "failures": 0,
+                        "duration_ms": 7.386,
+                        "self_ms": 0.322
+                      },
+                      "session_write": {
+                        "calls": 1,
+                        "failures": 0,
+                        "duration_ms": 15.598,
+                        "self_ms": 15.598
+                      },
+                      "profile_write": {
+                        "calls": 1,
+                        "failures": 0,
+                        "duration_ms": 6.707,
+                        "self_ms": 6.707
+                      }
+                    },
+                    "scope": "agent_processing_before_conversation_and_trace_commit"
+                  },
+                  "fallback_used": false,
+                  "warnings": []
+                },
+                "created_at": "2026-11-21T08:14:29.566677"
+              }
+            ],
+            "request_ids": [],
+            "conversation_ids": [
+              "02527894ee3d4c7bbc33e984ce489725"
+            ],
+            "task_ids": [],
+            "outcome": "success",
+            "timings": {
+              "processing_ms": 41.78,
+              "stages": {
+                "session_guard": {
+                  "calls": 1,
+                  "failures": 0,
+                  "duration_ms": 0.737,
+                  "self_ms": 0.737
+                },
+                "context_read": {
+                  "calls": 1,
+                  "failures": 0,
+                  "duration_ms": 5.086,
+                  "self_ms": 5.086
+                },
+                "parser": {
+                  "calls": 1,
+                  "failures": 0,
+                  "duration_ms": 1.085,
+                  "self_ms": 1.085
+                },
+                "context_merge": {
+                  "calls": 1,
+                  "failures": 0,
+                  "duration_ms": 0.078,
+                  "self_ms": 0.078
+                },
+                "planner": {
+                  "calls": 2,
+                  "failures": 0,
+                  "duration_ms": 0.186,
+                  "self_ms": 0.186
+                },
+                "knowledge": {
+                  "calls": 1,
+                  "failures": 0,
+                  "duration_ms": 7.064,
+                  "self_ms": 7.064
+                },
+                "tool": {
+                  "calls": 1,
+                  "failures": 0,
+                  "duration_ms": 7.386,
+                  "self_ms": 0.322
+                },
+                "session_write": {
+                  "calls": 1,
+                  "failures": 0,
+                  "duration_ms": 15.598,
+                  "self_ms": 15.598
+                },
+                "profile_write": {
+                  "calls": 1,
+                  "failures": 0,
+                  "duration_ms": 6.707,
+                  "self_ms": 6.707
+                }
+              },
+              "scope": "agent_processing_before_conversation_and_trace_commit"
+            }
+          },
+          "latency_ms": 56.467
+        }
+      ]
+    },
+    {
+      "kind": "trace",
+      "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+      "detail": {
+        "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+        "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+        "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+        "session_id": "sr-redis-outage-1-independent",
+        "event_count": 20,
+        "events": [
+          {
+            "id": 310,
+            "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+            "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-redis-outage-1-independent",
+            "event_type": "state_update",
+            "step_index": 1,
+            "status_before": null,
+            "status_after": "initialized",
+            "tool_name": null,
+            "latency_ms": null,
+            "input_summary": {
+              "query": "深圳报备政策"
+            },
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {},
+            "created_at": "2026-11-21T08:14:29.566666"
+          },
+          {
+            "id": 311,
+            "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+            "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-redis-outage-1-independent",
+            "event_type": "stage",
+            "step_index": 2,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 1,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "session_guard",
+              "duration_ms": 0.737,
+              "self_ms": 0.737,
+              "start_offset_ms": 0.689,
+              "parent_stage": null,
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:14:29.566669"
+          },
+          {
+            "id": 312,
+            "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+            "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-redis-outage-1-independent",
+            "event_type": "stage",
+            "step_index": 3,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 5,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "context_read",
+              "duration_ms": 5.086,
+              "self_ms": 5.086,
+              "start_offset_ms": 1.488,
+              "parent_stage": null,
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:14:29.566669"
+          },
+          {
+            "id": 313,
+            "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+            "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-redis-outage-1-independent",
+            "event_type": "stage",
+            "step_index": 4,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 1,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "parser",
+              "duration_ms": 1.085,
+              "self_ms": 1.085,
+              "start_offset_ms": 6.633,
+              "parent_stage": null,
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:14:29.566670"
+          },
+          {
+            "id": 314,
+            "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+            "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-redis-outage-1-independent",
+            "event_type": "parse",
+            "step_index": 5,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": null,
+            "input_summary": null,
+            "output_summary": {
+              "query": "深圳报备政策",
+              "city": "深圳"
+            },
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "intent": "knowledge",
+              "parser_source": "rule"
+            },
+            "created_at": "2026-11-21T08:14:29.566670"
+          },
+          {
+            "id": 315,
+            "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+            "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-redis-outage-1-independent",
+            "event_type": "stage",
+            "step_index": 6,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 0,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "context_merge",
+              "duration_ms": 0.078,
+              "self_ms": 0.078,
+              "start_offset_ms": 7.813,
+              "parent_stage": null,
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:14:29.566671"
+          },
+          {
+            "id": 316,
+            "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+            "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-redis-outage-1-independent",
+            "event_type": "state_update",
+            "step_index": 7,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": null,
+            "input_summary": null,
+            "output_summary": {
+              "task_type": "cruise",
+              "top_k": 3,
+              "city": "深圳",
+              "query": "深圳报备政策"
+            },
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "source": "context_merge",
+              "field_sources": {
+                "task_type": "profile",
+                "top_k": "default",
+                "city": "user_input",
+                "query": "user_input"
+              },
+              "missing_fields": [],
+              "modified_fields": []
+            },
+            "created_at": "2026-11-21T08:14:29.566671"
+          },
+          {
+            "id": 317,
+            "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+            "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-redis-outage-1-independent",
+            "event_type": "state_update",
+            "step_index": 8,
+            "status_before": "ready_to_plan",
+            "status_after": "ready_to_plan",
+            "tool_name": null,
+            "latency_ms": null,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": "allowed",
+            "metadata": {
+              "source": "agent_guardrail",
+              "guardrail_checkpoint": "input",
+              "guardrail_action": "allow",
+              "guardrail_allowed": true,
+              "guardrail_reason": "allowed",
+              "guardrail_user_message": "Guardrail 检查通过。",
+              "guardrail_explanation": {
+                "checkpoint": "input",
+                "action": "allow",
+                "allowed": true,
+                "error_code": null,
+                "reason": "allowed",
+                "user_message": "Guardrail 检查通过。",
+                "violation_type": null,
+                "tool_name": null,
+                "metadata": {
+                  "query_length": 6
+                }
+              },
+              "query_length": 6,
+              "agent_step": 2
+            },
+            "created_at": "2026-11-21T08:14:29.566672"
+          },
+          {
+            "id": 318,
+            "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+            "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-redis-outage-1-independent",
+            "event_type": "stage",
+            "step_index": 9,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 0,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "planner",
+              "duration_ms": 0.171,
+              "self_ms": 0.171,
+              "start_offset_ms": 8.403,
+              "parent_stage": null,
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:14:29.566672"
+          },
+          {
+            "id": 319,
+            "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+            "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-redis-outage-1-independent",
+            "event_type": "plan",
+            "step_index": 10,
+            "status_before": null,
+            "status_after": "ready_to_plan",
+            "tool_name": "query_knowledge_snippets",
+            "latency_ms": null,
+            "input_summary": null,
+            "output_summary": {
+              "action": "call_tool",
+              "reason": "intent=knowledge is ready and maps to tool=query_knowledge_snippets",
+              "tool_name": "query_knowledge_snippets",
+              "tool_input": {
+                "constraint_sources": {
+                  "task_type": "profile",
+                  "city": "user_input"
+                },
+                "query": "深圳报备政策",
+                "city": "深圳",
+                "top_k": 3,
+                "task_type": "cruise"
+              },
+              "missing_fields": [],
+              "metadata": {
+                "intent": "knowledge",
+                "route_kind": "knowledge_query",
+                "target_endpoint": "/knowledge/advice/retrieve",
+                "side_effect": "read_only",
+                "risk_level": "medium",
+                "rag_decision": "use_rag",
+                "rag_reason": "knowledge intent explicitly requires knowledge retrieval",
+                "rag_tool_name": "query_knowledge_snippets"
+              }
+            },
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "agent_step": 2
+            },
+            "created_at": "2026-11-21T08:14:29.566673"
+          },
+          {
+            "id": 320,
+            "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+            "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-redis-outage-1-independent",
+            "event_type": "tool_call",
+            "step_index": 11,
+            "status_before": "tool_running",
+            "status_after": "tool_running",
+            "tool_name": "query_knowledge_snippets",
+            "latency_ms": null,
+            "input_summary": {
+              "constraint_sources": {
+                "task_type": "profile",
+                "city": "user_input"
+              },
+              "query": "深圳报备政策",
+              "city": "深圳",
+              "top_k": 3,
+              "task_type": "cruise"
+            },
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "side_effect": "read_only",
+              "risk_level": "medium",
+              "requires_auth": true,
+              "requires_admin": false,
+              "allowed_roles": [
+                "user",
+                "admin"
+              ],
+              "user_scope": "current_user",
+              "timeout_ms": 30000,
+              "agent_step": 3
+            },
+            "created_at": "2026-11-21T08:14:29.566673"
+          },
+          {
+            "id": 321,
+            "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+            "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-redis-outage-1-independent",
+            "event_type": "stage",
+            "step_index": 12,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 7,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "knowledge",
+              "duration_ms": 7.064,
+              "self_ms": 7.064,
+              "start_offset_ms": 9.028,
+              "parent_stage": "tool",
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:14:29.566674"
+          },
+          {
+            "id": 322,
+            "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+            "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-redis-outage-1-independent",
+            "event_type": "stage",
+            "step_index": 13,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 7,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "tool",
+              "duration_ms": 7.386,
+              "self_ms": 0.322,
+              "start_offset_ms": 8.9,
+              "parent_stage": null,
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:14:29.566674"
+          },
+          {
+            "id": 323,
+            "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+            "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-redis-outage-1-independent",
+            "event_type": "tool_result",
+            "step_index": 14,
+            "status_before": "tool_running",
+            "status_after": "tool_completed",
+            "tool_name": "query_knowledge_snippets",
+            "latency_ms": 7,
+            "input_summary": {
+              "constraint_sources": {
+                "task_type": "profile",
+                "city": "user_input"
+              },
+              "query": "深圳报备政策",
+              "city": "深圳",
+              "top_k": 3,
+              "task_type": "cruise"
+            },
+            "output_summary": {
+              "success": true,
+              "tool_name": "query_knowledge_snippets",
+              "data": {
+                "context": {
+                  "task_type": "cruise",
+                  "overall_decision": null,
+                  "risk_tags": [],
+                  "warning_types": [],
+                  "warning_levels": [],
+                  "limit": 3
+                },
+                "snippets": [
+                  {
+                    "id": "policy-shenzhen-airspace-check-001",
+                    "title": "深圳地区无人机飞行空域核查提示",
+                    "content": "标题: 深圳地区无人机飞行空域核查提示\n片段: 在深圳执行无人机任务前，应核查任务区域是否涉及管制空域、机场净空保护区、人口密集区或临时管控区域。无法确认空域状态时，应降低自动放行倾向，提示用户查询官方平台或联系主管部门确认。\n用于深圳地区政策提示，强调先核查空域再执行任务。\n知识类型: policy_hint\n任务类型: all\n风险标签: \n适用地区: 广东 深圳 深圳\n关键词: 深圳 管制空...",
+                    "score": 22.613689,
+                    "source": "深圳市公安局：无人机飞行空域分类和管理提示",
+                    "source_url": "https://ga.sz.gov.cn/gkmlpt/content/10/10705/post_10705087.html",
+                    "metadata": {
+                      "category": "execution_advice",
+                      "knowledge_type": "policy_hint",
+                      "risk_type": [],
+                      "task_type": [
+                        "all"
+                      ],
+                      "warning_type": [],
+                      "warning_level": [],
+                      "decision_scope": [
+                        "allow",
+                        "caution",
+                        "reject"
+                      ],
+                      "region": "深圳",
+                      "province": "广东",
+                      "city": "深圳",
+                      "visibility": "public",
+                      "tenant_id": "public",
+                      "user_id": null,
+                      "version": "v1",
+                      "effective_at": null,
+                      "expires_at": null,
+                      "review_status": "approved",
+                      "priority": "medium",
+                      "action_type": null,
+                      "keywords": [
+                        "深圳",
+                        "管制空域",
+                        "净空区",
+                        "临时管控",
+                        "空域核查",
+                        "低空飞行"
+                      ],
+                      "knowledge_id": "policy-shenzhen-airspace-check-001",
+                      "chunk_id": "policy-shenzhen-airspace-check-001::chunk-1",
+                      "chunk_type": "policy_clause",
+                      "chunk_index": 0,
+                      "chunk_strategy": "policy_hint",
+                      "retriever": "bm25",
+                      "rerank_boost": 0.8,
+                      "relevance_method": "lexical",
+                      "relevance_evidence": {
+                        "id": "policy-shenzhen-airspace-check-001::chunk-1",
+                        "coverage": 1.0,
+                        "matched_terms": [
+                          "报备"
+                        ],
+                        "missing_terms": []
+                      },
+                      "rag_attempt": 1,
+                      "_truncated": true
+                    }
+                  }
+                ],
+                "advice": [],
+                "retrieval_status": "success",
+                "retrieval_message": null,
+                "retrieval_metadata": {
+                  "query_rewritten": false,
+                  "attempts": [
+                    {
+                      "attempt": 1,
+                      "query": "深圳报备政策",
+                      "status": "success",
+                      "reason": "no_applicable_knowledge",
+                      "top_score": 22.613689,
+                      "result_count": 1,
+                      "threshold": 0.2,
+                      "candidate_count": 6,
+                      "rejected_candidates": [
+                        {
+                          "id": "advice-thunderstorm-cancel-002::chunk-1",
+                          "reasons": [
+                            "task_type_mismatch"
+                          ]
+                        },
+                        {
+                          "id": "advice-thunderstorm-cancel-002::chunk-2",
+                          "reasons": [
+                            "task_type_mismatch"
+                          ]
+                        },
+                        {
+                          "id": "advice-high-wind-change-task-002::chunk-1",
+                          "reasons": [
+                            "task_type_mismatch"
+                          ]
+                        },
+                        {
+                          "id": "advice-high-wind-change-task-002::chunk-2",
+                          "reasons": [
+                            "task_type_mismatch"
+                          ]
+                        },
+                        {
+                          "id": "advice-humidity-equipment-002::chunk-1",
+                          "reasons": [
+                            "task_type_mismatch"
+                          ]
+                        },
+                        {
+                          "id": "advice-humidity-equipment-002::chunk-2",
+                          "reasons": [
+                            "task_type_mismatch"
+                          ]
+                        },
+                        {
+                          "id": "advice-hover-sensitive-001::chunk-1",
+                          "reasons": [
+                            "task_type_mismatch"
+                          ]
+                        },
+                        {
+                          "id": "advice-hover-sensitive-001::chunk-2",
+                          "reasons": [
+                            "task_type_mismatch"
+                          ]
+                        },
+                        {
+                          "id": "advice-survey-precision-002::chunk-1",
+                          "reasons": [
+                            "task_type_mismatch"
+                          ]
+                        },
+                        {
+                          "id": "advice-survey-precision-002::chunk-2",
+                          "reasons": [
+                            "task_type_mismatch"
+                          ]
+                        },
+                        {
+                          "_truncated": true,
+                          "remaining": 6
+                        }
+                      ],
+                      "filter_counts": {
+                        "task_type_mismatch": 10,
+                        "region_mismatch": 1
+                      },
+                      "llm_review_status": "not_needed"
+                    }
+                  ],
+                  "reason_code": "no_applicable_knowledge",
+                  "constraint_sources": {
+                    "task_type": "profile",
+                    "city": "user_input"
+                  },
+                  "retriever": "bm25",
+                  "candidate_limit": 10
+                }
+              },
+              "error_code": null,
+              "message": null,
+              "metadata": {
+                "side_effect": "read_only",
+                "risk_level": "medium",
+                "allowed_roles": [
+                  "user",
+                  "admin"
+                ],
+                "user_scope": "current_user"
+              }
+            },
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "side_effect": "read_only",
+              "risk_level": "medium",
+              "requires_auth": true,
+              "requires_admin": false,
+              "allowed_roles": [
+                "user",
+                "admin"
+              ],
+              "user_scope": "current_user",
+              "timeout_ms": 30000,
+              "agent_step": 3
+            },
+            "created_at": "2026-11-21T08:14:29.566674"
+          },
+          {
+            "id": 324,
+            "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+            "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-redis-outage-1-independent",
+            "event_type": "stage",
+            "step_index": 15,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 0,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "planner",
+              "duration_ms": 0.015,
+              "self_ms": 0.015,
+              "start_offset_ms": 17.141,
+              "parent_stage": null,
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:14:29.566675"
+          },
+          {
+            "id": 325,
+            "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+            "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-redis-outage-1-independent",
+            "event_type": "plan",
+            "step_index": 16,
+            "status_before": null,
+            "status_after": "tool_completed",
+            "tool_name": null,
+            "latency_ms": null,
+            "input_summary": null,
+            "output_summary": {
+              "action": "respond_directly",
+              "reason": "tool result exists and final response can be composed",
+              "tool_name": null,
+              "tool_input": {},
+              "missing_fields": [],
+              "metadata": {
+                "tool_results": [
+                  "query_knowledge_snippets"
+                ]
+              }
+            },
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "agent_step": 4
+            },
+            "created_at": "2026-11-21T08:14:29.566675"
+          },
+          {
+            "id": 326,
+            "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+            "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-redis-outage-1-independent",
+            "event_type": "state_update",
+            "step_index": 17,
+            "status_before": "completed",
+            "status_after": "completed",
+            "tool_name": null,
+            "latency_ms": null,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": "allowed",
+            "metadata": {
+              "source": "agent_guardrail",
+              "guardrail_checkpoint": "output",
+              "guardrail_action": "allow",
+              "guardrail_allowed": true,
+              "guardrail_reason": "allowed",
+              "guardrail_user_message": "Guardrail 检查通过。",
+              "guardrail_explanation": {
+                "checkpoint": "output",
+                "action": "allow",
+                "allowed": true,
+                "error_code": null,
+                "reason": "allowed",
+                "user_message": "Guardrail 检查通过。",
+                "violation_type": null,
+                "tool_name": null,
+                "metadata": {
+                  "intent": "knowledge"
+                }
+              },
+              "intent": "knowledge",
+              "agent_step": 5
+            },
+            "created_at": "2026-11-21T08:14:29.566676"
+          },
+          {
+            "id": 327,
+            "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+            "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-redis-outage-1-independent",
+            "event_type": "stage",
+            "step_index": 18,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 16,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "session_write",
+              "duration_ms": 15.598,
+              "self_ms": 15.598,
+              "start_offset_ms": 18.098,
+              "parent_stage": null,
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:14:29.566676"
+          },
+          {
+            "id": 328,
+            "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+            "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-redis-outage-1-independent",
+            "event_type": "stage",
+            "step_index": 19,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 7,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "profile_write",
+              "duration_ms": 6.707,
+              "self_ms": 6.707,
+              "start_offset_ms": 33.79,
+              "parent_stage": null,
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:14:29.566677"
+          },
+          {
+            "id": 329,
+            "trace_id": "5f471ed0-f197-4e03-a978-d4724a48caa7",
+            "run_id": "2d31e1fd-5f9d-4559-94e1-612e02d30887",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-redis-outage-1-independent",
+            "event_type": "final_response",
+            "step_index": 20,
+            "status_before": null,
+            "status_after": "completed",
+            "tool_name": null,
+            "latency_ms": null,
+            "input_summary": null,
+            "output_summary": {
+              "success": true,
+              "message": "Agent Runtime 已完成工具调用：query_knowledge_snippets。"
+            },
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "outcome": "success",
+              "request_id": null,
+              "conversation_id": "02527894ee3d4c7bbc33e984ce489725",
+              "timings": {
+                "processing_ms": 41.78,
+                "stages": {
+                  "session_guard": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 0.737,
+                    "self_ms": 0.737
+                  },
+                  "context_read": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 5.086,
+                    "self_ms": 5.086
+                  },
+                  "parser": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 1.085,
+                    "self_ms": 1.085
+                  },
+                  "context_merge": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 0.078,
+                    "self_ms": 0.078
+                  },
+                  "planner": {
+                    "calls": 2,
+                    "failures": 0,
+                    "duration_ms": 0.186,
+                    "self_ms": 0.186
+                  },
+                  "knowledge": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 7.064,
+                    "self_ms": 7.064
+                  },
+                  "tool": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 7.386,
+                    "self_ms": 0.322
+                  },
+                  "session_write": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 15.598,
+                    "self_ms": 15.598
+                  },
+                  "profile_write": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 6.707,
+                    "self_ms": 6.707
+                  }
+                },
+                "scope": "agent_processing_before_conversation_and_trace_commit"
+              },
+              "fallback_used": false,
+              "warnings": []
+            },
+            "created_at": "2026-11-21T08:14:29.566677"
+          }
+        ],
+        "request_ids": [],
+        "conversation_ids": [
+          "02527894ee3d4c7bbc33e984ce489725"
+        ],
+        "task_ids": [],
+        "outcome": "success",
+        "timings": {
+          "processing_ms": 41.78,
+          "stages": {
+            "session_guard": {
+              "calls": 1,
+              "failures": 0,
+              "duration_ms": 0.737,
+              "self_ms": 0.737
+            },
+            "context_read": {
+              "calls": 1,
+              "failures": 0,
+              "duration_ms": 5.086,
+              "self_ms": 5.086
+            },
+            "parser": {
+              "calls": 1,
+              "failures": 0,
+              "duration_ms": 1.085,
+              "self_ms": 1.085
+            },
+            "context_merge": {
+              "calls": 1,
+              "failures": 0,
+              "duration_ms": 0.078,
+              "self_ms": 0.078
+            },
+            "planner": {
+              "calls": 2,
+              "failures": 0,
+              "duration_ms": 0.186,
+              "self_ms": 0.186
+            },
+            "knowledge": {
+              "calls": 1,
+              "failures": 0,
+              "duration_ms": 7.064,
+              "self_ms": 7.064
+            },
+            "tool": {
+              "calls": 1,
+              "failures": 0,
+              "duration_ms": 7.386,
+              "self_ms": 0.322
+            },
+            "session_write": {
+              "calls": 1,
+              "failures": 0,
+              "duration_ms": 15.598,
+              "self_ms": 15.598
+            },
+            "profile_write": {
+              "calls": 1,
+              "failures": 0,
+              "duration_ms": 6.707,
+              "self_ms": 6.707
+            }
+          },
+          "scope": "agent_processing_before_conversation_and_trace_commit"
+        }
+      }
+    },
+    {
+      "kind": "process",
+      "action": "start",
+      "service": "redis",
+      "elapsed_ms": 500.0
+    },
+    {
+      "kind": "http",
+      "parallel": false,
+      "requests": [
+        {
+          "url": "http://app_a:8000/nl/parse",
+          "method": "POST",
+          "json": {
+            "query": "后天呢",
+            "session_id": "sr-redis-outage-1"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "session_id": "sr-redis-outage-1",
+            "intent": "evaluate",
+            "target_endpoint": "/cruise/evaluate",
+            "parser_source": "rule",
+            "parsed": {
+              "location": "深圳",
+              "date": "2026-11-23",
+              "start_time": "14:00",
+              "end_time": "15:00",
+              "task_type": "inspection",
+              "purpose": "后天呢"
+            },
+            "context_used": true,
+            "warnings": []
+          },
+          "latency_ms": 49.118
+        }
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "name": "anonymous_seed_ok",
+      "actual": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "explicit_redis_unavailable",
+      "actual": 503,
+      "expected": 503,
+      "passed": true
+    },
+    {
+      "name": "stateless_parse_still_works",
+      "actual": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "postgres_session_independent_of_redis",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "redis_restored_saved_context",
+      "actual": {
+        "intent": "evaluate",
+        "task_type": "inspection",
+        "date": "2026-11-22",
+        "start_time": "14:00",
+        "end_time": "15:00",
+        "location": "深圳"
+      },
+      "expected": {
+        "intent": "evaluate",
+        "task_type": "inspection",
+        "date": "2026-11-22",
+        "start_time": "14:00",
+        "end_time": "15:00",
+        "location": "深圳"
+      },
+      "passed": true
+    },
+    {
+      "name": "redis_continuation_ok",
+      "actual": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "field:redis_location",
+      "actual": "深圳",
+      "expected": "深圳",
+      "passed": true
+    }
+  ],
+  "metrics": {
+    "restoration_eligible": true,
+    "recovery_ms": 5266.0,
+    "continuation_latency_ms": 49.118,
+    "restored": true
+  },
+  "passed": true
+}

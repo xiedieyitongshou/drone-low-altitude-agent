@@ -1,0 +1,3893 @@
+{
+  "id": "SR-app_restart-1",
+  "scenario": "app_restart",
+  "iteration": 1,
+  "actions": [
+    {
+      "kind": "http",
+      "parallel": false,
+      "requests": [
+        {
+          "url": "http://app_a:8000/agent/query",
+          "method": "POST",
+          "token": "[REDACTED]",
+          "json": {
+            "query": "明天下午2点到3点巡检能飞吗",
+            "session_id": "sr-app-restart-1"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "success": false,
+            "session_id": "sr-app-restart-1",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "conversation_id": "b05a68eab2e24328a531ea5749582045",
+            "request_id": null,
+            "trace_id": "07efa01f-8148-4dd7-83c3-a778155112cf",
+            "intent": "evaluate",
+            "target_endpoint": "/cruise/evaluate",
+            "parser_source": "rule",
+            "parsed": {
+              "date": "2026-11-22",
+              "start_time": "14:00",
+              "end_time": "15:00",
+              "task_type": "inspection",
+              "purpose": "明天下午2点到3点巡检能飞吗"
+            },
+            "context_used": false,
+            "message": "还需要补充以下信息后才能继续：任务地点。",
+            "warnings": [],
+            "composed": null,
+            "result": null,
+            "fallback": {
+              "message": "还需要补充以下信息后才能继续：任务地点。",
+              "trace_id": "07efa01f-8148-4dd7-83c3-a778155112cf",
+              "run_id": "13674012-0cab-40e5-aac9-f9a9efab2bd5",
+              "status": "needs_clarification",
+              "tool_name": null,
+              "fallback_used": false,
+              "failure_type": null,
+              "recovery_action": null,
+              "retryable": false,
+              "guardrail": null,
+              "errors": []
+            },
+            "agent_runtime": {
+              "mode": "loop",
+              "trace_id": "07efa01f-8148-4dd7-83c3-a778155112cf",
+              "run_id": "13674012-0cab-40e5-aac9-f9a9efab2bd5",
+              "status": "needs_clarification",
+              "fallback_used": false,
+              "plan_actions": [
+                "ask_clarification"
+              ],
+              "tool_results": [],
+              "errors": [],
+              "timings": {
+                "processing_ms": 9.807,
+                "stages": {
+                  "session_guard": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 0.543,
+                    "self_ms": 0.543
+                  },
+                  "context_read": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 4.257,
+                    "self_ms": 4.257
+                  },
+                  "parser": {
+                    "calls": 1,
+                    "failures": 1,
+                    "duration_ms": 0.105,
+                    "self_ms": 0.105
+                  },
+                  "planner": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 0.013,
+                    "self_ms": 0.013
+                  },
+                  "session_write": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 2.95,
+                    "self_ms": 2.95
+                  }
+                },
+                "scope": "agent_processing_before_conversation_and_trace_commit"
+              }
+            }
+          },
+          "latency_ms": 69.222
+        }
+      ]
+    },
+    {
+      "kind": "http",
+      "parallel": false,
+      "requests": [
+        {
+          "url": "http://app_a:8000/agent/traces/07efa01f-8148-4dd7-83c3-a778155112cf",
+          "method": "GET",
+          "token": "[REDACTED]"
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "trace_id": "07efa01f-8148-4dd7-83c3-a778155112cf",
+            "run_id": "13674012-0cab-40e5-aac9-f9a9efab2bd5",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_count": 11,
+            "events": [
+              {
+                "id": 88,
+                "trace_id": "07efa01f-8148-4dd7-83c3-a778155112cf",
+                "run_id": "13674012-0cab-40e5-aac9-f9a9efab2bd5",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "state_update",
+                "step_index": 1,
+                "status_before": null,
+                "status_after": "initialized",
+                "tool_name": null,
+                "latency_ms": null,
+                "input_summary": {
+                  "query": "明天下午2点到3点巡检能飞吗"
+                },
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {},
+                "created_at": "2026-11-21T08:13:37.582621"
+              },
+              {
+                "id": 89,
+                "trace_id": "07efa01f-8148-4dd7-83c3-a778155112cf",
+                "run_id": "13674012-0cab-40e5-aac9-f9a9efab2bd5",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "stage",
+                "step_index": 2,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 1,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "session_guard",
+                  "duration_ms": 0.543,
+                  "self_ms": 0.543,
+                  "start_offset_ms": 0.326,
+                  "parent_stage": null,
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:13:37.582622"
+              },
+              {
+                "id": 90,
+                "trace_id": "07efa01f-8148-4dd7-83c3-a778155112cf",
+                "run_id": "13674012-0cab-40e5-aac9-f9a9efab2bd5",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "stage",
+                "step_index": 3,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 4,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "context_read",
+                  "duration_ms": 4.257,
+                  "self_ms": 4.257,
+                  "start_offset_ms": 0.933,
+                  "parent_stage": null,
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:13:37.582623"
+              },
+              {
+                "id": 91,
+                "trace_id": "07efa01f-8148-4dd7-83c3-a778155112cf",
+                "run_id": "13674012-0cab-40e5-aac9-f9a9efab2bd5",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "stage",
+                "step_index": 4,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 0,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "parser",
+                  "duration_ms": 0.105,
+                  "self_ms": 0.105,
+                  "start_offset_ms": 5.246,
+                  "parent_stage": null,
+                  "ok": false
+                },
+                "created_at": "2026-11-21T08:13:37.582623"
+              },
+              {
+                "id": 92,
+                "trace_id": "07efa01f-8148-4dd7-83c3-a778155112cf",
+                "run_id": "13674012-0cab-40e5-aac9-f9a9efab2bd5",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "parse",
+                "step_index": 5,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": null,
+                "input_summary": null,
+                "output_summary": {
+                  "date": "2026-11-22",
+                  "start_time": "14:00",
+                  "end_time": "15:00",
+                  "task_type": "inspection",
+                  "purpose": "明天下午2点到3点巡检能飞吗"
+                },
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "intent": "evaluate",
+                  "missing_fields": [
+                    "location"
+                  ]
+                },
+                "created_at": "2026-11-21T08:13:37.582623"
+              },
+              {
+                "id": 93,
+                "trace_id": "07efa01f-8148-4dd7-83c3-a778155112cf",
+                "run_id": "13674012-0cab-40e5-aac9-f9a9efab2bd5",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "state_update",
+                "step_index": 6,
+                "status_before": "needs_clarification",
+                "status_after": "needs_clarification",
+                "tool_name": null,
+                "latency_ms": null,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": "allowed",
+                "metadata": {
+                  "source": "agent_guardrail",
+                  "guardrail_checkpoint": "input",
+                  "guardrail_action": "allow",
+                  "guardrail_allowed": true,
+                  "guardrail_reason": "allowed",
+                  "guardrail_user_message": "Guardrail 检查通过。",
+                  "guardrail_explanation": {
+                    "checkpoint": "input",
+                    "action": "allow",
+                    "allowed": true,
+                    "error_code": null,
+                    "reason": "allowed",
+                    "user_message": "Guardrail 检查通过。",
+                    "violation_type": null,
+                    "tool_name": null,
+                    "metadata": {
+                      "query_length": 14
+                    }
+                  },
+                  "query_length": 14,
+                  "agent_step": 2
+                },
+                "created_at": "2026-11-21T08:13:37.582623"
+              },
+              {
+                "id": 94,
+                "trace_id": "07efa01f-8148-4dd7-83c3-a778155112cf",
+                "run_id": "13674012-0cab-40e5-aac9-f9a9efab2bd5",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "stage",
+                "step_index": 7,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 0,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "planner",
+                  "duration_ms": 0.013,
+                  "self_ms": 0.013,
+                  "start_offset_ms": 5.701,
+                  "parent_stage": null,
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:13:37.582624"
+              },
+              {
+                "id": 95,
+                "trace_id": "07efa01f-8148-4dd7-83c3-a778155112cf",
+                "run_id": "13674012-0cab-40e5-aac9-f9a9efab2bd5",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "plan",
+                "step_index": 8,
+                "status_before": null,
+                "status_after": "needs_clarification",
+                "tool_name": null,
+                "latency_ms": null,
+                "input_summary": null,
+                "output_summary": {
+                  "action": "ask_clarification",
+                  "reason": "required fields are missing before tool planning",
+                  "tool_name": null,
+                  "tool_input": {},
+                  "missing_fields": [
+                    "location"
+                  ],
+                  "metadata": {}
+                },
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "agent_step": 2
+                },
+                "created_at": "2026-11-21T08:13:37.582624"
+              },
+              {
+                "id": 96,
+                "trace_id": "07efa01f-8148-4dd7-83c3-a778155112cf",
+                "run_id": "13674012-0cab-40e5-aac9-f9a9efab2bd5",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "clarification",
+                "step_index": 9,
+                "status_before": null,
+                "status_after": "needs_clarification",
+                "tool_name": null,
+                "latency_ms": null,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": "还需要补充以下信息后才能继续：任务地点。",
+                "metadata": {
+                  "missing_fields": [
+                    "location"
+                  ],
+                  "agent_step": 3
+                },
+                "created_at": "2026-11-21T08:13:37.582624"
+              },
+              {
+                "id": 97,
+                "trace_id": "07efa01f-8148-4dd7-83c3-a778155112cf",
+                "run_id": "13674012-0cab-40e5-aac9-f9a9efab2bd5",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "stage",
+                "step_index": 10,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 3,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "session_write",
+                  "duration_ms": 2.95,
+                  "self_ms": 2.95,
+                  "start_offset_ms": 5.938,
+                  "parent_stage": null,
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:13:37.582624"
+              },
+              {
+                "id": 98,
+                "trace_id": "07efa01f-8148-4dd7-83c3-a778155112cf",
+                "run_id": "13674012-0cab-40e5-aac9-f9a9efab2bd5",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "final_response",
+                "step_index": 11,
+                "status_before": null,
+                "status_after": "needs_clarification",
+                "tool_name": null,
+                "latency_ms": null,
+                "input_summary": null,
+                "output_summary": {
+                  "success": false,
+                  "message": "还需要补充以下信息后才能继续：任务地点。"
+                },
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "outcome": "clarification",
+                  "request_id": null,
+                  "conversation_id": "b05a68eab2e24328a531ea5749582045",
+                  "timings": {
+                    "processing_ms": 9.807,
+                    "stages": {
+                      "session_guard": {
+                        "calls": 1,
+                        "failures": 0,
+                        "duration_ms": 0.543,
+                        "self_ms": 0.543
+                      },
+                      "context_read": {
+                        "calls": 1,
+                        "failures": 0,
+                        "duration_ms": 4.257,
+                        "self_ms": 4.257
+                      },
+                      "parser": {
+                        "calls": 1,
+                        "failures": 1,
+                        "duration_ms": 0.105,
+                        "self_ms": 0.105
+                      },
+                      "planner": {
+                        "calls": 1,
+                        "failures": 0,
+                        "duration_ms": 0.013,
+                        "self_ms": 0.013
+                      },
+                      "session_write": {
+                        "calls": 1,
+                        "failures": 0,
+                        "duration_ms": 2.95,
+                        "self_ms": 2.95
+                      }
+                    },
+                    "scope": "agent_processing_before_conversation_and_trace_commit"
+                  },
+                  "fallback_used": false,
+                  "warnings": []
+                },
+                "created_at": "2026-11-21T08:13:37.582625"
+              }
+            ],
+            "request_ids": [],
+            "conversation_ids": [
+              "b05a68eab2e24328a531ea5749582045"
+            ],
+            "task_ids": [],
+            "outcome": "clarification",
+            "timings": {
+              "processing_ms": 9.807,
+              "stages": {
+                "session_guard": {
+                  "calls": 1,
+                  "failures": 0,
+                  "duration_ms": 0.543,
+                  "self_ms": 0.543
+                },
+                "context_read": {
+                  "calls": 1,
+                  "failures": 0,
+                  "duration_ms": 4.257,
+                  "self_ms": 4.257
+                },
+                "parser": {
+                  "calls": 1,
+                  "failures": 1,
+                  "duration_ms": 0.105,
+                  "self_ms": 0.105
+                },
+                "planner": {
+                  "calls": 1,
+                  "failures": 0,
+                  "duration_ms": 0.013,
+                  "self_ms": 0.013
+                },
+                "session_write": {
+                  "calls": 1,
+                  "failures": 0,
+                  "duration_ms": 2.95,
+                  "self_ms": 2.95
+                }
+              },
+              "scope": "agent_processing_before_conversation_and_trace_commit"
+            }
+          },
+          "latency_ms": 55.329
+        }
+      ]
+    },
+    {
+      "kind": "trace",
+      "trace_id": "07efa01f-8148-4dd7-83c3-a778155112cf",
+      "detail": {
+        "trace_id": "07efa01f-8148-4dd7-83c3-a778155112cf",
+        "run_id": "13674012-0cab-40e5-aac9-f9a9efab2bd5",
+        "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+        "session_id": "sr-app-restart-1",
+        "event_count": 11,
+        "events": [
+          {
+            "id": 88,
+            "trace_id": "07efa01f-8148-4dd7-83c3-a778155112cf",
+            "run_id": "13674012-0cab-40e5-aac9-f9a9efab2bd5",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "state_update",
+            "step_index": 1,
+            "status_before": null,
+            "status_after": "initialized",
+            "tool_name": null,
+            "latency_ms": null,
+            "input_summary": {
+              "query": "明天下午2点到3点巡检能飞吗"
+            },
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {},
+            "created_at": "2026-11-21T08:13:37.582621"
+          },
+          {
+            "id": 89,
+            "trace_id": "07efa01f-8148-4dd7-83c3-a778155112cf",
+            "run_id": "13674012-0cab-40e5-aac9-f9a9efab2bd5",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "stage",
+            "step_index": 2,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 1,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "session_guard",
+              "duration_ms": 0.543,
+              "self_ms": 0.543,
+              "start_offset_ms": 0.326,
+              "parent_stage": null,
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:13:37.582622"
+          },
+          {
+            "id": 90,
+            "trace_id": "07efa01f-8148-4dd7-83c3-a778155112cf",
+            "run_id": "13674012-0cab-40e5-aac9-f9a9efab2bd5",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "stage",
+            "step_index": 3,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 4,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "context_read",
+              "duration_ms": 4.257,
+              "self_ms": 4.257,
+              "start_offset_ms": 0.933,
+              "parent_stage": null,
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:13:37.582623"
+          },
+          {
+            "id": 91,
+            "trace_id": "07efa01f-8148-4dd7-83c3-a778155112cf",
+            "run_id": "13674012-0cab-40e5-aac9-f9a9efab2bd5",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "stage",
+            "step_index": 4,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 0,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "parser",
+              "duration_ms": 0.105,
+              "self_ms": 0.105,
+              "start_offset_ms": 5.246,
+              "parent_stage": null,
+              "ok": false
+            },
+            "created_at": "2026-11-21T08:13:37.582623"
+          },
+          {
+            "id": 92,
+            "trace_id": "07efa01f-8148-4dd7-83c3-a778155112cf",
+            "run_id": "13674012-0cab-40e5-aac9-f9a9efab2bd5",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "parse",
+            "step_index": 5,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": null,
+            "input_summary": null,
+            "output_summary": {
+              "date": "2026-11-22",
+              "start_time": "14:00",
+              "end_time": "15:00",
+              "task_type": "inspection",
+              "purpose": "明天下午2点到3点巡检能飞吗"
+            },
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "intent": "evaluate",
+              "missing_fields": [
+                "location"
+              ]
+            },
+            "created_at": "2026-11-21T08:13:37.582623"
+          },
+          {
+            "id": 93,
+            "trace_id": "07efa01f-8148-4dd7-83c3-a778155112cf",
+            "run_id": "13674012-0cab-40e5-aac9-f9a9efab2bd5",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "state_update",
+            "step_index": 6,
+            "status_before": "needs_clarification",
+            "status_after": "needs_clarification",
+            "tool_name": null,
+            "latency_ms": null,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": "allowed",
+            "metadata": {
+              "source": "agent_guardrail",
+              "guardrail_checkpoint": "input",
+              "guardrail_action": "allow",
+              "guardrail_allowed": true,
+              "guardrail_reason": "allowed",
+              "guardrail_user_message": "Guardrail 检查通过。",
+              "guardrail_explanation": {
+                "checkpoint": "input",
+                "action": "allow",
+                "allowed": true,
+                "error_code": null,
+                "reason": "allowed",
+                "user_message": "Guardrail 检查通过。",
+                "violation_type": null,
+                "tool_name": null,
+                "metadata": {
+                  "query_length": 14
+                }
+              },
+              "query_length": 14,
+              "agent_step": 2
+            },
+            "created_at": "2026-11-21T08:13:37.582623"
+          },
+          {
+            "id": 94,
+            "trace_id": "07efa01f-8148-4dd7-83c3-a778155112cf",
+            "run_id": "13674012-0cab-40e5-aac9-f9a9efab2bd5",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "stage",
+            "step_index": 7,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 0,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "planner",
+              "duration_ms": 0.013,
+              "self_ms": 0.013,
+              "start_offset_ms": 5.701,
+              "parent_stage": null,
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:13:37.582624"
+          },
+          {
+            "id": 95,
+            "trace_id": "07efa01f-8148-4dd7-83c3-a778155112cf",
+            "run_id": "13674012-0cab-40e5-aac9-f9a9efab2bd5",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "plan",
+            "step_index": 8,
+            "status_before": null,
+            "status_after": "needs_clarification",
+            "tool_name": null,
+            "latency_ms": null,
+            "input_summary": null,
+            "output_summary": {
+              "action": "ask_clarification",
+              "reason": "required fields are missing before tool planning",
+              "tool_name": null,
+              "tool_input": {},
+              "missing_fields": [
+                "location"
+              ],
+              "metadata": {}
+            },
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "agent_step": 2
+            },
+            "created_at": "2026-11-21T08:13:37.582624"
+          },
+          {
+            "id": 96,
+            "trace_id": "07efa01f-8148-4dd7-83c3-a778155112cf",
+            "run_id": "13674012-0cab-40e5-aac9-f9a9efab2bd5",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "clarification",
+            "step_index": 9,
+            "status_before": null,
+            "status_after": "needs_clarification",
+            "tool_name": null,
+            "latency_ms": null,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": "还需要补充以下信息后才能继续：任务地点。",
+            "metadata": {
+              "missing_fields": [
+                "location"
+              ],
+              "agent_step": 3
+            },
+            "created_at": "2026-11-21T08:13:37.582624"
+          },
+          {
+            "id": 97,
+            "trace_id": "07efa01f-8148-4dd7-83c3-a778155112cf",
+            "run_id": "13674012-0cab-40e5-aac9-f9a9efab2bd5",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "stage",
+            "step_index": 10,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 3,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "session_write",
+              "duration_ms": 2.95,
+              "self_ms": 2.95,
+              "start_offset_ms": 5.938,
+              "parent_stage": null,
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:13:37.582624"
+          },
+          {
+            "id": 98,
+            "trace_id": "07efa01f-8148-4dd7-83c3-a778155112cf",
+            "run_id": "13674012-0cab-40e5-aac9-f9a9efab2bd5",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "final_response",
+            "step_index": 11,
+            "status_before": null,
+            "status_after": "needs_clarification",
+            "tool_name": null,
+            "latency_ms": null,
+            "input_summary": null,
+            "output_summary": {
+              "success": false,
+              "message": "还需要补充以下信息后才能继续：任务地点。"
+            },
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "outcome": "clarification",
+              "request_id": null,
+              "conversation_id": "b05a68eab2e24328a531ea5749582045",
+              "timings": {
+                "processing_ms": 9.807,
+                "stages": {
+                  "session_guard": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 0.543,
+                    "self_ms": 0.543
+                  },
+                  "context_read": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 4.257,
+                    "self_ms": 4.257
+                  },
+                  "parser": {
+                    "calls": 1,
+                    "failures": 1,
+                    "duration_ms": 0.105,
+                    "self_ms": 0.105
+                  },
+                  "planner": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 0.013,
+                    "self_ms": 0.013
+                  },
+                  "session_write": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 2.95,
+                    "self_ms": 2.95
+                  }
+                },
+                "scope": "agent_processing_before_conversation_and_trace_commit"
+              },
+              "fallback_used": false,
+              "warnings": []
+            },
+            "created_at": "2026-11-21T08:13:37.582625"
+          }
+        ],
+        "request_ids": [],
+        "conversation_ids": [
+          "b05a68eab2e24328a531ea5749582045"
+        ],
+        "task_ids": [],
+        "outcome": "clarification",
+        "timings": {
+          "processing_ms": 9.807,
+          "stages": {
+            "session_guard": {
+              "calls": 1,
+              "failures": 0,
+              "duration_ms": 0.543,
+              "self_ms": 0.543
+            },
+            "context_read": {
+              "calls": 1,
+              "failures": 0,
+              "duration_ms": 4.257,
+              "self_ms": 4.257
+            },
+            "parser": {
+              "calls": 1,
+              "failures": 1,
+              "duration_ms": 0.105,
+              "self_ms": 0.105
+            },
+            "planner": {
+              "calls": 1,
+              "failures": 0,
+              "duration_ms": 0.013,
+              "self_ms": 0.013
+            },
+            "session_write": {
+              "calls": 1,
+              "failures": 0,
+              "duration_ms": 2.95,
+              "self_ms": 2.95
+            }
+          },
+          "scope": "agent_processing_before_conversation_and_trace_commit"
+        }
+      }
+    },
+    {
+      "kind": "session_snapshot",
+      "owner": "owner",
+      "session_id": "sr-app-restart-1",
+      "rows": [
+        {
+          "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+          "session_id": "sr-app-restart-1",
+          "last_context": {
+            "pending_task": {
+              "intent": "evaluate",
+              "parsed": {
+                "date": "2026-11-22",
+                "start_time": "14:00",
+                "end_time": "15:00",
+                "task_type": "inspection",
+                "purpose": "明天下午2点到3点巡检能飞吗"
+              },
+              "missing_fields": [
+                "location"
+              ],
+              "query": "明天下午2点到3点巡检能飞吗"
+            },
+            "intent": "evaluate",
+            "date": "2026-11-22",
+            "start_time": "14:00",
+            "end_time": "15:00",
+            "task_type": "inspection",
+            "purpose": "明天下午2点到3点巡检能飞吗"
+          },
+          "updated_at": "2026-11-21T08:13:37.575741",
+          "expires_at": "2026-12-21T08:13:37.575741"
+        }
+      ]
+    },
+    {
+      "kind": "process",
+      "action": "restart",
+      "service": "app_a",
+      "elapsed_ms": 1265.0
+    },
+    {
+      "kind": "ready",
+      "server": "app_a",
+      "failed_probes": [
+        {
+          "status": 0,
+          "body": {
+            "error_type": "ConnectError"
+          }
+        },
+        {
+          "status": 0,
+          "body": {
+            "error_type": "ConnectError"
+          }
+        },
+        {
+          "status": 0,
+          "body": {
+            "error_type": "ConnectError"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "http",
+      "parallel": false,
+      "requests": [
+        {
+          "url": "http://app_a:8000/agent/query",
+          "method": "POST",
+          "token": "[REDACTED]",
+          "json": {
+            "query": "深圳",
+            "session_id": "sr-app-restart-1"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "success": true,
+            "session_id": "sr-app-restart-1",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "conversation_id": "cb237d62ae04475f9eb8c0d56970520a",
+            "request_id": "1791f72cef8e4cd9b0fd9770617995af",
+            "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+            "intent": "evaluate",
+            "target_endpoint": "/cruise/evaluate",
+            "parser_source": "rule",
+            "parsed": {
+              "task_type": "inspection",
+              "date": "2026-11-22",
+              "start_time": "14:00",
+              "end_time": "15:00",
+              "purpose": "深圳",
+              "intent": "evaluate",
+              "location": "深圳"
+            },
+            "context_used": true,
+            "message": "Agent Runtime 已完成工具调用：evaluate_flight_risk。",
+            "warnings": [],
+            "composed": {
+              "scene": "evaluate",
+              "summary": "深圳 2026-11-22 14:00-15:00 任务结论为 适飞。",
+              "explanation": "当前结论：当前条件下风险较低，但仍需执行飞行前复核。\n主要依据：当前结构化结果中未发现明确高风险因素。\n边界说明：系统结论基于当前输入、天气数据和规则评估结果，执行前仍需复核实时条件。\n建议动作：按既定任务计划准备，同时继续关注天气、预警和现场管制变化。",
+              "explanation_source": "template",
+              "llm_used": false,
+              "overall_decision": "适飞",
+              "allow_execute": true,
+              "risk_reasons": [],
+              "recommended_windows": [],
+              "ranked_locations": [],
+              "history_summary": null,
+              "details": {
+                "request": {
+                  "location": "深圳",
+                  "date": "2026-11-22",
+                  "start_time": "14:00",
+                  "end_time": "15:00",
+                  "task_type": "inspection",
+                  "purpose": "深圳",
+                  "spans_next_day": false,
+                  "start_datetime": "2026-11-22T14:00:00",
+                  "end_datetime": "2026-11-22T15:00:00",
+                  "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                  "request_id": "1791f72cef8e4cd9b0fd9770617995af",
+                  "persistence_status": "saved"
+                },
+                "warning_count": 0,
+                "hour_count": 1,
+                "advice": [
+                  {
+                    "id": "advice-recommend-window-001",
+                    "title": "优先按系统推荐窗口执行",
+                    "advice_text": "若系统已给出推荐窗口，应优先使用推荐窗口而非原始计划时段，以减少执行阶段的天气不确定性。",
+                    "priority": "medium",
+                    "action_type": "reschedule",
+                    "source": "Project recommendation policy",
+                    "source_url": null,
+                    "matched_by": [
+                      "task_type",
+                      "decision_scope"
+                    ]
+                  },
+                  {
+                    "id": "advice-compare-topk-002",
+                    "title": "多地点任务优先按排序前列依次规划",
+                    "advice_text": "在多地点场景下，不建议只依赖单一首选地点，应同时保留 Top-K 备选地点，便于根据实时环境变化快速切换任务次序。",
+                    "priority": "medium",
+                    "action_type": "reduce_risk",
+                    "source": "Project comparison policy",
+                    "source_url": null,
+                    "matched_by": [
+                      "task_type",
+                      "decision_scope"
+                    ]
+                  }
+                ],
+                "knowledge_snippets": [],
+                "knowledge_retrieval_status": "fallback",
+                "knowledge_retrieval_message": "当前知识库没有找到足以回答本次问题的适用依据，请补充具体对象或查询条件。",
+                "explanation_guardrail": [
+                  {
+                    "guardrail_checkpoint": "output",
+                    "guardrail_action": "allow",
+                    "guardrail_allowed": true,
+                    "guardrail_reason": "allowed",
+                    "guardrail_user_message": "Guardrail 检查通过。",
+                    "guardrail_explanation": {
+                      "checkpoint": "output",
+                      "action": "allow",
+                      "allowed": true,
+                      "error_code": null,
+                      "reason": "allowed",
+                      "user_message": "Guardrail 检查通过。",
+                      "violation_type": null,
+                      "tool_name": null,
+                      "metadata": {
+                        "stage": "pre_llm",
+                        "scene": "evaluate",
+                        "has_knowledge_evidence": false
+                      }
+                    },
+                    "stage": "pre_llm",
+                    "scene": "evaluate",
+                    "has_knowledge_evidence": false
+                  }
+                ]
+              }
+            },
+            "result": {
+              "intent": "evaluate",
+              "tool_results": {
+                "evaluate_flight_risk": {
+                  "success": true,
+                  "tool_name": "evaluate_flight_risk",
+                  "data": {
+                    "request": {
+                      "location": "深圳",
+                      "date": "2026-11-22",
+                      "start_time": "14:00",
+                      "end_time": "15:00",
+                      "task_type": "inspection",
+                      "purpose": "深圳",
+                      "spans_next_day": false,
+                      "start_datetime": "2026-11-22T14:00:00",
+                      "end_datetime": "2026-11-22T15:00:00",
+                      "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                      "request_id": "1791f72cef8e4cd9b0fd9770617995af",
+                      "persistence_status": "saved"
+                    },
+                    "weather": {
+                      "location": {
+                        "location_id": "shenzhen",
+                        "name": "深圳",
+                        "latitude": "22.54",
+                        "longitude": "114.05",
+                        "adm1": null,
+                        "adm2": null,
+                        "country": null,
+                        "timezone": null,
+                        "utc_offset": null
+                      },
+                      "update_time": "2026-11-21T16:00:00+08:00",
+                      "hourly_weather": [
+                        {
+                          "fx_time": "2026-11-22T14:00:00+08:00",
+                          "temp": "20",
+                          "text": "晴",
+                          "wind_scale": "1-2",
+                          "wind_speed": "5",
+                          "humidity": "50",
+                          "precip": "0",
+                          "pop": "0",
+                          "pressure": null,
+                          "cloud": null
+                        }
+                      ]
+                    },
+                    "warnings": {
+                      "warnings": [],
+                      "has_warning": false,
+                      "warning_count": 0
+                    },
+                    "advice": {
+                      "allow_cruise": true,
+                      "overall_decision": "适飞",
+                      "summary_risk_factors": [],
+                      "rule_set_id": "system_default:inspection",
+                      "rule_set_version": 1,
+                      "rule_snapshot": {
+                        "rule_set_id": "system_default:inspection",
+                        "rule_set_version": 1,
+                        "source": "system_default",
+                        "task_type": "inspection",
+                        "display_name": "设备巡检",
+                        "description": "通常靠近设施和目标物，要求相对稳定，风速和湿度阈值比巡航更严格。",
+                        "hourly": {
+                          "prohibited_weather_texts": [
+                            "大雨",
+                            "暴雨",
+                            "雷阵雨",
+                            "雷雨"
+                          ],
+                          "caution_weather_texts": [
+                            "小雨",
+                            "阴"
+                          ],
+                          "prohibited_precip_mm": 0.25,
+                          "prohibited_pop_percent": 65,
+                          "prohibited_wind_speed_kmh": 25,
+                          "prohibited_wind_scale_upper": 4,
+                          "caution_precip_min_mm": 0.0,
+                          "caution_precip_max_mm": 0.25,
+                          "caution_pop_min_percent": 25,
+                          "caution_pop_max_percent": 65,
+                          "caution_wind_speed_min_kmh": 15,
+                          "caution_wind_speed_max_kmh": 25,
+                          "caution_wind_scale_upper": 3,
+                          "caution_humidity_percent": 80
+                        },
+                        "warning": {
+                          "high_risk_warning_types": [
+                            "大雾",
+                            "大风",
+                            "强对流",
+                            "暴雨",
+                            "短时强降水",
+                            "雷电",
+                            "雷雨大风"
+                          ],
+                          "force_prohibited_levels": [
+                            "orange",
+                            "red"
+                          ],
+                          "upgrade_to_caution_levels": [
+                            "yellow"
+                          ]
+                        }
+                      },
+                      "rule_hits": [],
+                      "hourly_assessment": [
+                        {
+                          "fx_time": "2026-11-22T14:00:00+08:00",
+                          "decision": "适飞",
+                          "risk_factors": [],
+                          "rule_hits": [],
+                          "weather": {
+                            "fx_time": "2026-11-22T14:00:00+08:00",
+                            "temp": "20",
+                            "text": "晴",
+                            "wind_scale": "1-2",
+                            "wind_speed": "5",
+                            "humidity": "50",
+                            "precip": "0",
+                            "pop": "0",
+                            "pressure": null,
+                            "cloud": null
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "error_code": null,
+                  "message": null,
+                  "metadata": {
+                    "side_effect": "write",
+                    "risk_level": "high",
+                    "allowed_roles": [
+                      "user",
+                      "admin"
+                    ],
+                    "user_scope": "current_user"
+                  }
+                }
+              },
+              "errors": [],
+              "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+              "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24"
+            },
+            "fallback": null,
+            "agent_runtime": {
+              "mode": "loop",
+              "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+              "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+              "status": "completed",
+              "fallback_used": false,
+              "plan_actions": [
+                "call_tool",
+                "respond_directly"
+              ],
+              "tool_results": [
+                "evaluate_flight_risk"
+              ],
+              "errors": [],
+              "context_merge": {
+                "field_sources": {
+                  "task_type": "user_input",
+                  "date": "user_input",
+                  "start_time": "user_input",
+                  "end_time": "user_input",
+                  "purpose": "user_input",
+                  "intent": "session",
+                  "location": "user_input"
+                },
+                "modified_fields": [
+                  "purpose"
+                ],
+                "invalidated_tools": [
+                  "evaluate_flight_risk"
+                ]
+              },
+              "timings": {
+                "processing_ms": 152.787,
+                "stages": {
+                  "session_guard": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 0.992,
+                    "self_ms": 0.992
+                  },
+                  "context_read": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 16.881,
+                    "self_ms": 16.881
+                  },
+                  "parser": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 0.075,
+                    "self_ms": 0.075
+                  },
+                  "context_merge": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 0.055,
+                    "self_ms": 0.055
+                  },
+                  "planner": {
+                    "calls": 2,
+                    "failures": 0,
+                    "duration_ms": 0.053,
+                    "self_ms": 0.053
+                  },
+                  "weather_http": {
+                    "calls": 3,
+                    "failures": 0,
+                    "duration_ms": 6.082,
+                    "self_ms": 6.082
+                  },
+                  "weather": {
+                    "calls": 3,
+                    "failures": 0,
+                    "duration_ms": 6.371,
+                    "self_ms": 0.289
+                  },
+                  "rules": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 0.068,
+                    "self_ms": 0.068
+                  },
+                  "history_write": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 75.078,
+                    "self_ms": 75.078
+                  },
+                  "tool": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 100.425,
+                    "self_ms": 18.908
+                  },
+                  "session_write": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 5.864,
+                    "self_ms": 5.864
+                  },
+                  "profile_write": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 7.987,
+                    "self_ms": 7.987
+                  },
+                  "knowledge": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 7.511,
+                    "self_ms": 7.511
+                  },
+                  "composition": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 11.056,
+                    "self_ms": 3.545
+                  }
+                },
+                "scope": "agent_processing_before_conversation_and_trace_commit"
+              }
+            }
+          },
+          "latency_ms": 227.767
+        }
+      ]
+    },
+    {
+      "kind": "http",
+      "parallel": false,
+      "requests": [
+        {
+          "url": "http://app_a:8000/agent/traces/d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+          "method": "GET",
+          "token": "[REDACTED]"
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+            "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_count": 29,
+            "events": [
+              {
+                "id": 99,
+                "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "state_update",
+                "step_index": 1,
+                "status_before": null,
+                "status_after": "initialized",
+                "tool_name": null,
+                "latency_ms": null,
+                "input_summary": {
+                  "query": "深圳"
+                },
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {},
+                "created_at": "2026-11-21T08:13:44.332011"
+              },
+              {
+                "id": 100,
+                "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "stage",
+                "step_index": 2,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 1,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "session_guard",
+                  "duration_ms": 0.992,
+                  "self_ms": 0.992,
+                  "start_offset_ms": 5.985,
+                  "parent_stage": null,
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:13:44.332014"
+              },
+              {
+                "id": 101,
+                "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "stage",
+                "step_index": 3,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 17,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "context_read",
+                  "duration_ms": 16.881,
+                  "self_ms": 16.881,
+                  "start_offset_ms": 7.05,
+                  "parent_stage": null,
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:13:44.332014"
+              },
+              {
+                "id": 102,
+                "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "stage",
+                "step_index": 4,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 0,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "parser",
+                  "duration_ms": 0.075,
+                  "self_ms": 0.075,
+                  "start_offset_ms": 23.99,
+                  "parent_stage": null,
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:13:44.332015"
+              },
+              {
+                "id": 103,
+                "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "parse",
+                "step_index": 5,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": null,
+                "input_summary": null,
+                "output_summary": {
+                  "location": "深圳",
+                  "date": "2026-11-22",
+                  "start_time": "14:00",
+                  "end_time": "15:00",
+                  "task_type": "inspection",
+                  "purpose": "深圳"
+                },
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "intent": "evaluate",
+                  "parser_source": "rule"
+                },
+                "created_at": "2026-11-21T08:13:44.332015"
+              },
+              {
+                "id": 104,
+                "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "stage",
+                "step_index": 6,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 0,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "context_merge",
+                  "duration_ms": 0.055,
+                  "self_ms": 0.055,
+                  "start_offset_ms": 24.119,
+                  "parent_stage": null,
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:13:44.332016"
+              },
+              {
+                "id": 105,
+                "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "state_update",
+                "step_index": 7,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": null,
+                "input_summary": null,
+                "output_summary": {
+                  "task_type": "inspection",
+                  "date": "2026-11-22",
+                  "start_time": "14:00",
+                  "end_time": "15:00",
+                  "purpose": "深圳",
+                  "intent": "evaluate",
+                  "location": "深圳"
+                },
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "source": "context_merge",
+                  "field_sources": {
+                    "task_type": "user_input",
+                    "date": "user_input",
+                    "start_time": "user_input",
+                    "end_time": "user_input",
+                    "purpose": "user_input",
+                    "intent": "session",
+                    "location": "user_input"
+                  },
+                  "missing_fields": [],
+                  "modified_fields": [
+                    "purpose"
+                  ]
+                },
+                "created_at": "2026-11-21T08:13:44.332016"
+              },
+              {
+                "id": 106,
+                "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "state_update",
+                "step_index": 8,
+                "status_before": "ready_to_plan",
+                "status_after": "ready_to_plan",
+                "tool_name": null,
+                "latency_ms": null,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": "allowed",
+                "metadata": {
+                  "source": "agent_guardrail",
+                  "guardrail_checkpoint": "input",
+                  "guardrail_action": "allow",
+                  "guardrail_allowed": true,
+                  "guardrail_reason": "allowed",
+                  "guardrail_user_message": "Guardrail 检查通过。",
+                  "guardrail_explanation": {
+                    "checkpoint": "input",
+                    "action": "allow",
+                    "allowed": true,
+                    "error_code": null,
+                    "reason": "allowed",
+                    "user_message": "Guardrail 检查通过。",
+                    "violation_type": null,
+                    "tool_name": null,
+                    "metadata": {
+                      "query_length": 2
+                    }
+                  },
+                  "query_length": 2,
+                  "agent_step": 2
+                },
+                "created_at": "2026-11-21T08:13:44.332017"
+              },
+              {
+                "id": 107,
+                "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "stage",
+                "step_index": 9,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 0,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "planner",
+                  "duration_ms": 0.042,
+                  "self_ms": 0.042,
+                  "start_offset_ms": 24.583,
+                  "parent_stage": null,
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:13:44.332017"
+              },
+              {
+                "id": 108,
+                "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "plan",
+                "step_index": 10,
+                "status_before": null,
+                "status_after": "ready_to_plan",
+                "tool_name": "evaluate_flight_risk",
+                "latency_ms": null,
+                "input_summary": null,
+                "output_summary": {
+                  "action": "call_tool",
+                  "reason": "intent=evaluate is ready and maps to tool=evaluate_flight_risk",
+                  "tool_name": "evaluate_flight_risk",
+                  "tool_input": {
+                    "location": "深圳",
+                    "start_time": "14:00",
+                    "end_time": "15:00",
+                    "task_type": "inspection",
+                    "purpose": "深圳",
+                    "date": "2026-11-22"
+                  },
+                  "missing_fields": [],
+                  "metadata": {
+                    "intent": "evaluate",
+                    "route_kind": "business_compute",
+                    "target_endpoint": "/cruise/evaluate",
+                    "side_effect": "write",
+                    "risk_level": "high",
+                    "rag_decision": "skip_rag",
+                    "rag_reason": "risk evaluation should use rule engine first; RAG is optional advice after business result",
+                    "rag_tool_name": null
+                  }
+                },
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "agent_step": 2
+                },
+                "created_at": "2026-11-21T08:13:44.332018"
+              },
+              {
+                "id": 109,
+                "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "tool_call",
+                "step_index": 11,
+                "status_before": "tool_running",
+                "status_after": "tool_running",
+                "tool_name": "evaluate_flight_risk",
+                "latency_ms": null,
+                "input_summary": {
+                  "location": "深圳",
+                  "start_time": "14:00",
+                  "end_time": "15:00",
+                  "task_type": "inspection",
+                  "purpose": "深圳",
+                  "date": "2026-11-22"
+                },
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "side_effect": "write",
+                  "risk_level": "high",
+                  "requires_auth": true,
+                  "requires_admin": false,
+                  "allowed_roles": [
+                    "user",
+                    "admin"
+                  ],
+                  "user_scope": "current_user",
+                  "timeout_ms": 30000,
+                  "agent_step": 3
+                },
+                "created_at": "2026-11-21T08:13:44.332018"
+              },
+              {
+                "id": 110,
+                "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "stage",
+                "step_index": 12,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 2,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "weather_http",
+                  "duration_ms": 2.415,
+                  "self_ms": 2.415,
+                  "start_offset_ms": 42.643,
+                  "parent_stage": "weather",
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:13:44.332018"
+              },
+              {
+                "id": 111,
+                "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "stage",
+                "step_index": 13,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 2,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "weather",
+                  "duration_ms": 2.493,
+                  "self_ms": 0.077,
+                  "start_offset_ms": 42.637,
+                  "parent_stage": "tool",
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:13:44.332019"
+              },
+              {
+                "id": 112,
+                "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "stage",
+                "step_index": 14,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 2,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "weather_http",
+                  "duration_ms": 1.99,
+                  "self_ms": 1.99,
+                  "start_offset_ms": 45.376,
+                  "parent_stage": "weather",
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:13:44.332019"
+              },
+              {
+                "id": 113,
+                "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "stage",
+                "step_index": 15,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 2,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "weather",
+                  "duration_ms": 2.14,
+                  "self_ms": 0.15,
+                  "start_offset_ms": 45.372,
+                  "parent_stage": "tool",
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:13:44.332019"
+              },
+              {
+                "id": 114,
+                "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "stage",
+                "step_index": 16,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 2,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "weather_http",
+                  "duration_ms": 1.677,
+                  "self_ms": 1.677,
+                  "start_offset_ms": 47.708,
+                  "parent_stage": "weather",
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:13:44.332019"
+              },
+              {
+                "id": 115,
+                "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "stage",
+                "step_index": 17,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 2,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "weather",
+                  "duration_ms": 1.738,
+                  "self_ms": 0.062,
+                  "start_offset_ms": 47.704,
+                  "parent_stage": "tool",
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:13:44.332020"
+              },
+              {
+                "id": 116,
+                "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "stage",
+                "step_index": 18,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 0,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "rules",
+                  "duration_ms": 0.068,
+                  "self_ms": 0.068,
+                  "start_offset_ms": 49.975,
+                  "parent_stage": "tool",
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:13:44.332020"
+              },
+              {
+                "id": 117,
+                "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "stage",
+                "step_index": 19,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 75,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "history_write",
+                  "duration_ms": 75.078,
+                  "self_ms": 75.078,
+                  "start_offset_ms": 50.108,
+                  "parent_stage": "tool",
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:13:44.332020"
+              },
+              {
+                "id": 118,
+                "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "stage",
+                "step_index": 20,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 100,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "tool",
+                  "duration_ms": 100.425,
+                  "self_ms": 18.908,
+                  "start_offset_ms": 24.927,
+                  "parent_stage": null,
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:13:44.332021"
+              },
+              {
+                "id": 119,
+                "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "tool_result",
+                "step_index": 21,
+                "status_before": "tool_running",
+                "status_after": "tool_completed",
+                "tool_name": "evaluate_flight_risk",
+                "latency_ms": 100,
+                "input_summary": {
+                  "location": "深圳",
+                  "start_time": "14:00",
+                  "end_time": "15:00",
+                  "task_type": "inspection",
+                  "purpose": "深圳",
+                  "date": "2026-11-22"
+                },
+                "output_summary": {
+                  "success": true,
+                  "tool_name": "evaluate_flight_risk",
+                  "data": {
+                    "request": {
+                      "location": "深圳",
+                      "date": "2026-11-22",
+                      "start_time": "14:00",
+                      "end_time": "15:00",
+                      "task_type": "inspection",
+                      "purpose": "深圳",
+                      "spans_next_day": false,
+                      "start_datetime": "2026-11-22T14:00:00",
+                      "end_datetime": "2026-11-22T15:00:00",
+                      "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                      "request_id": "1791f72cef8e4cd9b0fd9770617995af",
+                      "persistence_status": "saved"
+                    },
+                    "weather": {
+                      "location": {
+                        "location_id": "shenzhen",
+                        "name": "深圳",
+                        "latitude": "22.54",
+                        "longitude": "114.05",
+                        "adm1": null,
+                        "adm2": null,
+                        "country": null,
+                        "timezone": null,
+                        "utc_offset": null
+                      },
+                      "update_time": "2026-11-21T16:00:00+08:00",
+                      "hourly_weather": [
+                        {
+                          "fx_time": "2026-11-22T14:00:00+08:00",
+                          "temp": "20",
+                          "text": "晴",
+                          "wind_scale": "1-2",
+                          "wind_speed": "5",
+                          "humidity": "50",
+                          "precip": "0",
+                          "pop": "0",
+                          "pressure": null,
+                          "cloud": null
+                        }
+                      ]
+                    },
+                    "warnings": {
+                      "warnings": [],
+                      "has_warning": false,
+                      "warning_count": 0
+                    },
+                    "advice": {
+                      "allow_cruise": true,
+                      "overall_decision": "适飞",
+                      "summary_risk_factors": [],
+                      "rule_set_id": "system_default:inspection",
+                      "rule_set_version": 1,
+                      "rule_snapshot": {
+                        "rule_set_id": "system_default:inspection",
+                        "rule_set_version": 1,
+                        "source": "system_default",
+                        "task_type": "inspection",
+                        "display_name": "设备巡检",
+                        "description": "通常靠近设施和目标物，要求相对稳定，风速和湿度阈值比巡航更严格。",
+                        "hourly": {
+                          "prohibited_weather_texts": [
+                            "大雨",
+                            "暴雨",
+                            "雷阵雨",
+                            "雷雨"
+                          ],
+                          "caution_weather_texts": [
+                            "小雨",
+                            "阴"
+                          ],
+                          "prohibited_precip_mm": 0.25,
+                          "prohibited_pop_percent": 65,
+                          "prohibited_wind_speed_kmh": 25,
+                          "prohibited_wind_scale_upper": 4,
+                          "caution_precip_min_mm": 0.0,
+                          "caution_precip_max_mm": 0.25,
+                          "caution_pop_min_percent": 25,
+                          "caution_pop_max_percent": 65,
+                          "caution_wind_speed_min_kmh": 15,
+                          "caution_wind_speed_max_kmh": 25,
+                          "caution_wind_scale_upper": 3,
+                          "caution_humidity_percent": 80
+                        },
+                        "warning": {
+                          "high_risk_warning_types": [
+                            "大雾",
+                            "大风",
+                            "强对流",
+                            "暴雨",
+                            "短时强降水",
+                            "雷电",
+                            "雷雨大风"
+                          ],
+                          "force_prohibited_levels": [
+                            "orange",
+                            "red"
+                          ],
+                          "upgrade_to_caution_levels": [
+                            "yellow"
+                          ]
+                        }
+                      },
+                      "rule_hits": [],
+                      "hourly_assessment": [
+                        {
+                          "fx_time": "2026-11-22T14:00:00+08:00",
+                          "decision": "适飞",
+                          "risk_factors": [],
+                          "rule_hits": [],
+                          "weather": {
+                            "fx_time": "2026-11-22T14:00:00+08:00",
+                            "temp": "20",
+                            "text": "晴",
+                            "wind_scale": "1-2",
+                            "wind_speed": "5",
+                            "humidity": "50",
+                            "precip": "0",
+                            "pop": "0",
+                            "pressure": null,
+                            "cloud": null
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "error_code": null,
+                  "message": null,
+                  "metadata": {
+                    "side_effect": "write",
+                    "risk_level": "high",
+                    "allowed_roles": [
+                      "user",
+                      "admin"
+                    ],
+                    "user_scope": "current_user"
+                  }
+                },
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "side_effect": "write",
+                  "risk_level": "high",
+                  "requires_auth": true,
+                  "requires_admin": false,
+                  "allowed_roles": [
+                    "user",
+                    "admin"
+                  ],
+                  "user_scope": "current_user",
+                  "timeout_ms": 30000,
+                  "agent_step": 3
+                },
+                "created_at": "2026-11-21T08:13:44.332021"
+              },
+              {
+                "id": 120,
+                "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "stage",
+                "step_index": 22,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 0,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "planner",
+                  "duration_ms": 0.011,
+                  "self_ms": 0.011,
+                  "start_offset_ms": 125.803,
+                  "parent_stage": null,
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:13:44.332021"
+              },
+              {
+                "id": 121,
+                "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "plan",
+                "step_index": 23,
+                "status_before": null,
+                "status_after": "tool_completed",
+                "tool_name": null,
+                "latency_ms": null,
+                "input_summary": null,
+                "output_summary": {
+                  "action": "respond_directly",
+                  "reason": "tool result exists and final response can be composed",
+                  "tool_name": null,
+                  "tool_input": {},
+                  "missing_fields": [],
+                  "metadata": {
+                    "tool_results": [
+                      "evaluate_flight_risk"
+                    ]
+                  }
+                },
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "agent_step": 4
+                },
+                "created_at": "2026-11-21T08:13:44.332021"
+              },
+              {
+                "id": 122,
+                "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "state_update",
+                "step_index": 24,
+                "status_before": "completed",
+                "status_after": "completed",
+                "tool_name": null,
+                "latency_ms": null,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": "allowed",
+                "metadata": {
+                  "source": "agent_guardrail",
+                  "guardrail_checkpoint": "output",
+                  "guardrail_action": "allow",
+                  "guardrail_allowed": true,
+                  "guardrail_reason": "allowed",
+                  "guardrail_user_message": "Guardrail 检查通过。",
+                  "guardrail_explanation": {
+                    "checkpoint": "output",
+                    "action": "allow",
+                    "allowed": true,
+                    "error_code": null,
+                    "reason": "allowed",
+                    "user_message": "Guardrail 检查通过。",
+                    "violation_type": null,
+                    "tool_name": null,
+                    "metadata": {
+                      "intent": "evaluate"
+                    }
+                  },
+                  "intent": "evaluate",
+                  "agent_step": 5
+                },
+                "created_at": "2026-11-21T08:13:44.332022"
+              },
+              {
+                "id": 123,
+                "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "stage",
+                "step_index": 25,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 6,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "session_write",
+                  "duration_ms": 5.864,
+                  "self_ms": 5.864,
+                  "start_offset_ms": 126.221,
+                  "parent_stage": null,
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:13:44.332022"
+              },
+              {
+                "id": 124,
+                "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "stage",
+                "step_index": 26,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 8,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "profile_write",
+                  "duration_ms": 7.987,
+                  "self_ms": 7.987,
+                  "start_offset_ms": 132.178,
+                  "parent_stage": null,
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:13:44.332022"
+              },
+              {
+                "id": 125,
+                "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "stage",
+                "step_index": 27,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 8,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "knowledge",
+                  "duration_ms": 7.511,
+                  "self_ms": 7.511,
+                  "start_offset_ms": 144.795,
+                  "parent_stage": "composition",
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:13:44.332022"
+              },
+              {
+                "id": 126,
+                "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "stage",
+                "step_index": 28,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 11,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "composition",
+                  "duration_ms": 11.056,
+                  "self_ms": 3.545,
+                  "start_offset_ms": 141.651,
+                  "parent_stage": null,
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:13:44.332023"
+              },
+              {
+                "id": 127,
+                "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-app-restart-1",
+                "event_type": "final_response",
+                "step_index": 29,
+                "status_before": null,
+                "status_after": "completed",
+                "tool_name": null,
+                "latency_ms": null,
+                "input_summary": null,
+                "output_summary": {
+                  "success": true,
+                  "message": "Agent Runtime 已完成工具调用：evaluate_flight_risk。"
+                },
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "outcome": "success",
+                  "request_id": "1791f72cef8e4cd9b0fd9770617995af",
+                  "conversation_id": "cb237d62ae04475f9eb8c0d56970520a",
+                  "timings": {
+                    "processing_ms": 152.787,
+                    "stages": {
+                      "session_guard": {
+                        "calls": 1,
+                        "failures": 0,
+                        "duration_ms": 0.992,
+                        "self_ms": 0.992
+                      },
+                      "context_read": {
+                        "calls": 1,
+                        "failures": 0,
+                        "duration_ms": 16.881,
+                        "self_ms": 16.881
+                      },
+                      "parser": {
+                        "calls": 1,
+                        "failures": 0,
+                        "duration_ms": 0.075,
+                        "self_ms": 0.075
+                      },
+                      "context_merge": {
+                        "calls": 1,
+                        "failures": 0,
+                        "duration_ms": 0.055,
+                        "self_ms": 0.055
+                      },
+                      "planner": {
+                        "calls": 2,
+                        "failures": 0,
+                        "duration_ms": 0.053,
+                        "self_ms": 0.053
+                      },
+                      "weather_http": {
+                        "calls": 3,
+                        "failures": 0,
+                        "duration_ms": 6.082,
+                        "self_ms": 6.082
+                      },
+                      "weather": {
+                        "calls": 3,
+                        "failures": 0,
+                        "duration_ms": 6.371,
+                        "self_ms": 0.289
+                      },
+                      "rules": {
+                        "calls": 1,
+                        "failures": 0,
+                        "duration_ms": 0.068,
+                        "self_ms": 0.068
+                      },
+                      "history_write": {
+                        "calls": 1,
+                        "failures": 0,
+                        "duration_ms": 75.078,
+                        "self_ms": 75.078
+                      },
+                      "tool": {
+                        "calls": 1,
+                        "failures": 0,
+                        "duration_ms": 100.425,
+                        "self_ms": 18.908
+                      },
+                      "session_write": {
+                        "calls": 1,
+                        "failures": 0,
+                        "duration_ms": 5.864,
+                        "self_ms": 5.864
+                      },
+                      "profile_write": {
+                        "calls": 1,
+                        "failures": 0,
+                        "duration_ms": 7.987,
+                        "self_ms": 7.987
+                      },
+                      "knowledge": {
+                        "calls": 1,
+                        "failures": 0,
+                        "duration_ms": 7.511,
+                        "self_ms": 7.511
+                      },
+                      "composition": {
+                        "calls": 1,
+                        "failures": 0,
+                        "duration_ms": 11.056,
+                        "self_ms": 3.545
+                      }
+                    },
+                    "scope": "agent_processing_before_conversation_and_trace_commit"
+                  },
+                  "fallback_used": false,
+                  "warnings": []
+                },
+                "created_at": "2026-11-21T08:13:44.332023"
+              }
+            ],
+            "request_ids": [
+              "1791f72cef8e4cd9b0fd9770617995af"
+            ],
+            "conversation_ids": [
+              "cb237d62ae04475f9eb8c0d56970520a"
+            ],
+            "task_ids": [],
+            "outcome": "success",
+            "timings": {
+              "processing_ms": 152.787,
+              "stages": {
+                "session_guard": {
+                  "calls": 1,
+                  "failures": 0,
+                  "duration_ms": 0.992,
+                  "self_ms": 0.992
+                },
+                "context_read": {
+                  "calls": 1,
+                  "failures": 0,
+                  "duration_ms": 16.881,
+                  "self_ms": 16.881
+                },
+                "parser": {
+                  "calls": 1,
+                  "failures": 0,
+                  "duration_ms": 0.075,
+                  "self_ms": 0.075
+                },
+                "context_merge": {
+                  "calls": 1,
+                  "failures": 0,
+                  "duration_ms": 0.055,
+                  "self_ms": 0.055
+                },
+                "planner": {
+                  "calls": 2,
+                  "failures": 0,
+                  "duration_ms": 0.053,
+                  "self_ms": 0.053
+                },
+                "weather_http": {
+                  "calls": 3,
+                  "failures": 0,
+                  "duration_ms": 6.082,
+                  "self_ms": 6.082
+                },
+                "weather": {
+                  "calls": 3,
+                  "failures": 0,
+                  "duration_ms": 6.371,
+                  "self_ms": 0.289
+                },
+                "rules": {
+                  "calls": 1,
+                  "failures": 0,
+                  "duration_ms": 0.068,
+                  "self_ms": 0.068
+                },
+                "history_write": {
+                  "calls": 1,
+                  "failures": 0,
+                  "duration_ms": 75.078,
+                  "self_ms": 75.078
+                },
+                "tool": {
+                  "calls": 1,
+                  "failures": 0,
+                  "duration_ms": 100.425,
+                  "self_ms": 18.908
+                },
+                "session_write": {
+                  "calls": 1,
+                  "failures": 0,
+                  "duration_ms": 5.864,
+                  "self_ms": 5.864
+                },
+                "profile_write": {
+                  "calls": 1,
+                  "failures": 0,
+                  "duration_ms": 7.987,
+                  "self_ms": 7.987
+                },
+                "knowledge": {
+                  "calls": 1,
+                  "failures": 0,
+                  "duration_ms": 7.511,
+                  "self_ms": 7.511
+                },
+                "composition": {
+                  "calls": 1,
+                  "failures": 0,
+                  "duration_ms": 11.056,
+                  "self_ms": 3.545
+                }
+              },
+              "scope": "agent_processing_before_conversation_and_trace_commit"
+            }
+          },
+          "latency_ms": 67.054
+        }
+      ]
+    },
+    {
+      "kind": "trace",
+      "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+      "detail": {
+        "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+        "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+        "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+        "session_id": "sr-app-restart-1",
+        "event_count": 29,
+        "events": [
+          {
+            "id": 99,
+            "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+            "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "state_update",
+            "step_index": 1,
+            "status_before": null,
+            "status_after": "initialized",
+            "tool_name": null,
+            "latency_ms": null,
+            "input_summary": {
+              "query": "深圳"
+            },
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {},
+            "created_at": "2026-11-21T08:13:44.332011"
+          },
+          {
+            "id": 100,
+            "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+            "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "stage",
+            "step_index": 2,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 1,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "session_guard",
+              "duration_ms": 0.992,
+              "self_ms": 0.992,
+              "start_offset_ms": 5.985,
+              "parent_stage": null,
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:13:44.332014"
+          },
+          {
+            "id": 101,
+            "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+            "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "stage",
+            "step_index": 3,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 17,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "context_read",
+              "duration_ms": 16.881,
+              "self_ms": 16.881,
+              "start_offset_ms": 7.05,
+              "parent_stage": null,
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:13:44.332014"
+          },
+          {
+            "id": 102,
+            "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+            "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "stage",
+            "step_index": 4,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 0,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "parser",
+              "duration_ms": 0.075,
+              "self_ms": 0.075,
+              "start_offset_ms": 23.99,
+              "parent_stage": null,
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:13:44.332015"
+          },
+          {
+            "id": 103,
+            "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+            "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "parse",
+            "step_index": 5,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": null,
+            "input_summary": null,
+            "output_summary": {
+              "location": "深圳",
+              "date": "2026-11-22",
+              "start_time": "14:00",
+              "end_time": "15:00",
+              "task_type": "inspection",
+              "purpose": "深圳"
+            },
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "intent": "evaluate",
+              "parser_source": "rule"
+            },
+            "created_at": "2026-11-21T08:13:44.332015"
+          },
+          {
+            "id": 104,
+            "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+            "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "stage",
+            "step_index": 6,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 0,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "context_merge",
+              "duration_ms": 0.055,
+              "self_ms": 0.055,
+              "start_offset_ms": 24.119,
+              "parent_stage": null,
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:13:44.332016"
+          },
+          {
+            "id": 105,
+            "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+            "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "state_update",
+            "step_index": 7,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": null,
+            "input_summary": null,
+            "output_summary": {
+              "task_type": "inspection",
+              "date": "2026-11-22",
+              "start_time": "14:00",
+              "end_time": "15:00",
+              "purpose": "深圳",
+              "intent": "evaluate",
+              "location": "深圳"
+            },
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "source": "context_merge",
+              "field_sources": {
+                "task_type": "user_input",
+                "date": "user_input",
+                "start_time": "user_input",
+                "end_time": "user_input",
+                "purpose": "user_input",
+                "intent": "session",
+                "location": "user_input"
+              },
+              "missing_fields": [],
+              "modified_fields": [
+                "purpose"
+              ]
+            },
+            "created_at": "2026-11-21T08:13:44.332016"
+          },
+          {
+            "id": 106,
+            "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+            "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "state_update",
+            "step_index": 8,
+            "status_before": "ready_to_plan",
+            "status_after": "ready_to_plan",
+            "tool_name": null,
+            "latency_ms": null,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": "allowed",
+            "metadata": {
+              "source": "agent_guardrail",
+              "guardrail_checkpoint": "input",
+              "guardrail_action": "allow",
+              "guardrail_allowed": true,
+              "guardrail_reason": "allowed",
+              "guardrail_user_message": "Guardrail 检查通过。",
+              "guardrail_explanation": {
+                "checkpoint": "input",
+                "action": "allow",
+                "allowed": true,
+                "error_code": null,
+                "reason": "allowed",
+                "user_message": "Guardrail 检查通过。",
+                "violation_type": null,
+                "tool_name": null,
+                "metadata": {
+                  "query_length": 2
+                }
+              },
+              "query_length": 2,
+              "agent_step": 2
+            },
+            "created_at": "2026-11-21T08:13:44.332017"
+          },
+          {
+            "id": 107,
+            "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+            "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "stage",
+            "step_index": 9,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 0,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "planner",
+              "duration_ms": 0.042,
+              "self_ms": 0.042,
+              "start_offset_ms": 24.583,
+              "parent_stage": null,
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:13:44.332017"
+          },
+          {
+            "id": 108,
+            "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+            "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "plan",
+            "step_index": 10,
+            "status_before": null,
+            "status_after": "ready_to_plan",
+            "tool_name": "evaluate_flight_risk",
+            "latency_ms": null,
+            "input_summary": null,
+            "output_summary": {
+              "action": "call_tool",
+              "reason": "intent=evaluate is ready and maps to tool=evaluate_flight_risk",
+              "tool_name": "evaluate_flight_risk",
+              "tool_input": {
+                "location": "深圳",
+                "start_time": "14:00",
+                "end_time": "15:00",
+                "task_type": "inspection",
+                "purpose": "深圳",
+                "date": "2026-11-22"
+              },
+              "missing_fields": [],
+              "metadata": {
+                "intent": "evaluate",
+                "route_kind": "business_compute",
+                "target_endpoint": "/cruise/evaluate",
+                "side_effect": "write",
+                "risk_level": "high",
+                "rag_decision": "skip_rag",
+                "rag_reason": "risk evaluation should use rule engine first; RAG is optional advice after business result",
+                "rag_tool_name": null
+              }
+            },
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "agent_step": 2
+            },
+            "created_at": "2026-11-21T08:13:44.332018"
+          },
+          {
+            "id": 109,
+            "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+            "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "tool_call",
+            "step_index": 11,
+            "status_before": "tool_running",
+            "status_after": "tool_running",
+            "tool_name": "evaluate_flight_risk",
+            "latency_ms": null,
+            "input_summary": {
+              "location": "深圳",
+              "start_time": "14:00",
+              "end_time": "15:00",
+              "task_type": "inspection",
+              "purpose": "深圳",
+              "date": "2026-11-22"
+            },
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "side_effect": "write",
+              "risk_level": "high",
+              "requires_auth": true,
+              "requires_admin": false,
+              "allowed_roles": [
+                "user",
+                "admin"
+              ],
+              "user_scope": "current_user",
+              "timeout_ms": 30000,
+              "agent_step": 3
+            },
+            "created_at": "2026-11-21T08:13:44.332018"
+          },
+          {
+            "id": 110,
+            "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+            "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "stage",
+            "step_index": 12,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 2,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "weather_http",
+              "duration_ms": 2.415,
+              "self_ms": 2.415,
+              "start_offset_ms": 42.643,
+              "parent_stage": "weather",
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:13:44.332018"
+          },
+          {
+            "id": 111,
+            "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+            "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "stage",
+            "step_index": 13,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 2,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "weather",
+              "duration_ms": 2.493,
+              "self_ms": 0.077,
+              "start_offset_ms": 42.637,
+              "parent_stage": "tool",
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:13:44.332019"
+          },
+          {
+            "id": 112,
+            "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+            "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "stage",
+            "step_index": 14,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 2,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "weather_http",
+              "duration_ms": 1.99,
+              "self_ms": 1.99,
+              "start_offset_ms": 45.376,
+              "parent_stage": "weather",
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:13:44.332019"
+          },
+          {
+            "id": 113,
+            "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+            "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "stage",
+            "step_index": 15,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 2,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "weather",
+              "duration_ms": 2.14,
+              "self_ms": 0.15,
+              "start_offset_ms": 45.372,
+              "parent_stage": "tool",
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:13:44.332019"
+          },
+          {
+            "id": 114,
+            "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+            "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "stage",
+            "step_index": 16,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 2,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "weather_http",
+              "duration_ms": 1.677,
+              "self_ms": 1.677,
+              "start_offset_ms": 47.708,
+              "parent_stage": "weather",
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:13:44.332019"
+          },
+          {
+            "id": 115,
+            "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+            "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "stage",
+            "step_index": 17,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 2,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "weather",
+              "duration_ms": 1.738,
+              "self_ms": 0.062,
+              "start_offset_ms": 47.704,
+              "parent_stage": "tool",
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:13:44.332020"
+          },
+          {
+            "id": 116,
+            "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+            "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "stage",
+            "step_index": 18,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 0,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "rules",
+              "duration_ms": 0.068,
+              "self_ms": 0.068,
+              "start_offset_ms": 49.975,
+              "parent_stage": "tool",
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:13:44.332020"
+          },
+          {
+            "id": 117,
+            "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+            "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "stage",
+            "step_index": 19,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 75,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "history_write",
+              "duration_ms": 75.078,
+              "self_ms": 75.078,
+              "start_offset_ms": 50.108,
+              "parent_stage": "tool",
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:13:44.332020"
+          },
+          {
+            "id": 118,
+            "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+            "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "stage",
+            "step_index": 20,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 100,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "tool",
+              "duration_ms": 100.425,
+              "self_ms": 18.908,
+              "start_offset_ms": 24.927,
+              "parent_stage": null,
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:13:44.332021"
+          },
+          {
+            "id": 119,
+            "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+            "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "tool_result",
+            "step_index": 21,
+            "status_before": "tool_running",
+            "status_after": "tool_completed",
+            "tool_name": "evaluate_flight_risk",
+            "latency_ms": 100,
+            "input_summary": {
+              "location": "深圳",
+              "start_time": "14:00",
+              "end_time": "15:00",
+              "task_type": "inspection",
+              "purpose": "深圳",
+              "date": "2026-11-22"
+            },
+            "output_summary": {
+              "success": true,
+              "tool_name": "evaluate_flight_risk",
+              "data": {
+                "request": {
+                  "location": "深圳",
+                  "date": "2026-11-22",
+                  "start_time": "14:00",
+                  "end_time": "15:00",
+                  "task_type": "inspection",
+                  "purpose": "深圳",
+                  "spans_next_day": false,
+                  "start_datetime": "2026-11-22T14:00:00",
+                  "end_datetime": "2026-11-22T15:00:00",
+                  "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+                  "request_id": "1791f72cef8e4cd9b0fd9770617995af",
+                  "persistence_status": "saved"
+                },
+                "weather": {
+                  "location": {
+                    "location_id": "shenzhen",
+                    "name": "深圳",
+                    "latitude": "22.54",
+                    "longitude": "114.05",
+                    "adm1": null,
+                    "adm2": null,
+                    "country": null,
+                    "timezone": null,
+                    "utc_offset": null
+                  },
+                  "update_time": "2026-11-21T16:00:00+08:00",
+                  "hourly_weather": [
+                    {
+                      "fx_time": "2026-11-22T14:00:00+08:00",
+                      "temp": "20",
+                      "text": "晴",
+                      "wind_scale": "1-2",
+                      "wind_speed": "5",
+                      "humidity": "50",
+                      "precip": "0",
+                      "pop": "0",
+                      "pressure": null,
+                      "cloud": null
+                    }
+                  ]
+                },
+                "warnings": {
+                  "warnings": [],
+                  "has_warning": false,
+                  "warning_count": 0
+                },
+                "advice": {
+                  "allow_cruise": true,
+                  "overall_decision": "适飞",
+                  "summary_risk_factors": [],
+                  "rule_set_id": "system_default:inspection",
+                  "rule_set_version": 1,
+                  "rule_snapshot": {
+                    "rule_set_id": "system_default:inspection",
+                    "rule_set_version": 1,
+                    "source": "system_default",
+                    "task_type": "inspection",
+                    "display_name": "设备巡检",
+                    "description": "通常靠近设施和目标物，要求相对稳定，风速和湿度阈值比巡航更严格。",
+                    "hourly": {
+                      "prohibited_weather_texts": [
+                        "大雨",
+                        "暴雨",
+                        "雷阵雨",
+                        "雷雨"
+                      ],
+                      "caution_weather_texts": [
+                        "小雨",
+                        "阴"
+                      ],
+                      "prohibited_precip_mm": 0.25,
+                      "prohibited_pop_percent": 65,
+                      "prohibited_wind_speed_kmh": 25,
+                      "prohibited_wind_scale_upper": 4,
+                      "caution_precip_min_mm": 0.0,
+                      "caution_precip_max_mm": 0.25,
+                      "caution_pop_min_percent": 25,
+                      "caution_pop_max_percent": 65,
+                      "caution_wind_speed_min_kmh": 15,
+                      "caution_wind_speed_max_kmh": 25,
+                      "caution_wind_scale_upper": 3,
+                      "caution_humidity_percent": 80
+                    },
+                    "warning": {
+                      "high_risk_warning_types": [
+                        "大雾",
+                        "大风",
+                        "强对流",
+                        "暴雨",
+                        "短时强降水",
+                        "雷电",
+                        "雷雨大风"
+                      ],
+                      "force_prohibited_levels": [
+                        "orange",
+                        "red"
+                      ],
+                      "upgrade_to_caution_levels": [
+                        "yellow"
+                      ]
+                    }
+                  },
+                  "rule_hits": [],
+                  "hourly_assessment": [
+                    {
+                      "fx_time": "2026-11-22T14:00:00+08:00",
+                      "decision": "适飞",
+                      "risk_factors": [],
+                      "rule_hits": [],
+                      "weather": {
+                        "fx_time": "2026-11-22T14:00:00+08:00",
+                        "temp": "20",
+                        "text": "晴",
+                        "wind_scale": "1-2",
+                        "wind_speed": "5",
+                        "humidity": "50",
+                        "precip": "0",
+                        "pop": "0",
+                        "pressure": null,
+                        "cloud": null
+                      }
+                    }
+                  ]
+                }
+              },
+              "error_code": null,
+              "message": null,
+              "metadata": {
+                "side_effect": "write",
+                "risk_level": "high",
+                "allowed_roles": [
+                  "user",
+                  "admin"
+                ],
+                "user_scope": "current_user"
+              }
+            },
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "side_effect": "write",
+              "risk_level": "high",
+              "requires_auth": true,
+              "requires_admin": false,
+              "allowed_roles": [
+                "user",
+                "admin"
+              ],
+              "user_scope": "current_user",
+              "timeout_ms": 30000,
+              "agent_step": 3
+            },
+            "created_at": "2026-11-21T08:13:44.332021"
+          },
+          {
+            "id": 120,
+            "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+            "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "stage",
+            "step_index": 22,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 0,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "planner",
+              "duration_ms": 0.011,
+              "self_ms": 0.011,
+              "start_offset_ms": 125.803,
+              "parent_stage": null,
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:13:44.332021"
+          },
+          {
+            "id": 121,
+            "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+            "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "plan",
+            "step_index": 23,
+            "status_before": null,
+            "status_after": "tool_completed",
+            "tool_name": null,
+            "latency_ms": null,
+            "input_summary": null,
+            "output_summary": {
+              "action": "respond_directly",
+              "reason": "tool result exists and final response can be composed",
+              "tool_name": null,
+              "tool_input": {},
+              "missing_fields": [],
+              "metadata": {
+                "tool_results": [
+                  "evaluate_flight_risk"
+                ]
+              }
+            },
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "agent_step": 4
+            },
+            "created_at": "2026-11-21T08:13:44.332021"
+          },
+          {
+            "id": 122,
+            "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+            "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "state_update",
+            "step_index": 24,
+            "status_before": "completed",
+            "status_after": "completed",
+            "tool_name": null,
+            "latency_ms": null,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": "allowed",
+            "metadata": {
+              "source": "agent_guardrail",
+              "guardrail_checkpoint": "output",
+              "guardrail_action": "allow",
+              "guardrail_allowed": true,
+              "guardrail_reason": "allowed",
+              "guardrail_user_message": "Guardrail 检查通过。",
+              "guardrail_explanation": {
+                "checkpoint": "output",
+                "action": "allow",
+                "allowed": true,
+                "error_code": null,
+                "reason": "allowed",
+                "user_message": "Guardrail 检查通过。",
+                "violation_type": null,
+                "tool_name": null,
+                "metadata": {
+                  "intent": "evaluate"
+                }
+              },
+              "intent": "evaluate",
+              "agent_step": 5
+            },
+            "created_at": "2026-11-21T08:13:44.332022"
+          },
+          {
+            "id": 123,
+            "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+            "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "stage",
+            "step_index": 25,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 6,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "session_write",
+              "duration_ms": 5.864,
+              "self_ms": 5.864,
+              "start_offset_ms": 126.221,
+              "parent_stage": null,
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:13:44.332022"
+          },
+          {
+            "id": 124,
+            "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+            "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "stage",
+            "step_index": 26,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 8,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "profile_write",
+              "duration_ms": 7.987,
+              "self_ms": 7.987,
+              "start_offset_ms": 132.178,
+              "parent_stage": null,
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:13:44.332022"
+          },
+          {
+            "id": 125,
+            "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+            "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "stage",
+            "step_index": 27,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 8,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "knowledge",
+              "duration_ms": 7.511,
+              "self_ms": 7.511,
+              "start_offset_ms": 144.795,
+              "parent_stage": "composition",
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:13:44.332022"
+          },
+          {
+            "id": 126,
+            "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+            "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "stage",
+            "step_index": 28,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 11,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "composition",
+              "duration_ms": 11.056,
+              "self_ms": 3.545,
+              "start_offset_ms": 141.651,
+              "parent_stage": null,
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:13:44.332023"
+          },
+          {
+            "id": 127,
+            "trace_id": "d741f4ac-89ec-4542-9c7e-0277bd8f1787",
+            "run_id": "7a62185e-b2cf-4871-9e80-b900fb575d24",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-app-restart-1",
+            "event_type": "final_response",
+            "step_index": 29,
+            "status_before": null,
+            "status_after": "completed",
+            "tool_name": null,
+            "latency_ms": null,
+            "input_summary": null,
+            "output_summary": {
+              "success": true,
+              "message": "Agent Runtime 已完成工具调用：evaluate_flight_risk。"
+            },
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "outcome": "success",
+              "request_id": "1791f72cef8e4cd9b0fd9770617995af",
+              "conversation_id": "cb237d62ae04475f9eb8c0d56970520a",
+              "timings": {
+                "processing_ms": 152.787,
+                "stages": {
+                  "session_guard": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 0.992,
+                    "self_ms": 0.992
+                  },
+                  "context_read": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 16.881,
+                    "self_ms": 16.881
+                  },
+                  "parser": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 0.075,
+                    "self_ms": 0.075
+                  },
+                  "context_merge": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 0.055,
+                    "self_ms": 0.055
+                  },
+                  "planner": {
+                    "calls": 2,
+                    "failures": 0,
+                    "duration_ms": 0.053,
+                    "self_ms": 0.053
+                  },
+                  "weather_http": {
+                    "calls": 3,
+                    "failures": 0,
+                    "duration_ms": 6.082,
+                    "self_ms": 6.082
+                  },
+                  "weather": {
+                    "calls": 3,
+                    "failures": 0,
+                    "duration_ms": 6.371,
+                    "self_ms": 0.289
+                  },
+                  "rules": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 0.068,
+                    "self_ms": 0.068
+                  },
+                  "history_write": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 75.078,
+                    "self_ms": 75.078
+                  },
+                  "tool": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 100.425,
+                    "self_ms": 18.908
+                  },
+                  "session_write": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 5.864,
+                    "self_ms": 5.864
+                  },
+                  "profile_write": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 7.987,
+                    "self_ms": 7.987
+                  },
+                  "knowledge": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 7.511,
+                    "self_ms": 7.511
+                  },
+                  "composition": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 11.056,
+                    "self_ms": 3.545
+                  }
+                },
+                "scope": "agent_processing_before_conversation_and_trace_commit"
+              },
+              "fallback_used": false,
+              "warnings": []
+            },
+            "created_at": "2026-11-21T08:13:44.332023"
+          }
+        ],
+        "request_ids": [
+          "1791f72cef8e4cd9b0fd9770617995af"
+        ],
+        "conversation_ids": [
+          "cb237d62ae04475f9eb8c0d56970520a"
+        ],
+        "task_ids": [],
+        "outcome": "success",
+        "timings": {
+          "processing_ms": 152.787,
+          "stages": {
+            "session_guard": {
+              "calls": 1,
+              "failures": 0,
+              "duration_ms": 0.992,
+              "self_ms": 0.992
+            },
+            "context_read": {
+              "calls": 1,
+              "failures": 0,
+              "duration_ms": 16.881,
+              "self_ms": 16.881
+            },
+            "parser": {
+              "calls": 1,
+              "failures": 0,
+              "duration_ms": 0.075,
+              "self_ms": 0.075
+            },
+            "context_merge": {
+              "calls": 1,
+              "failures": 0,
+              "duration_ms": 0.055,
+              "self_ms": 0.055
+            },
+            "planner": {
+              "calls": 2,
+              "failures": 0,
+              "duration_ms": 0.053,
+              "self_ms": 0.053
+            },
+            "weather_http": {
+              "calls": 3,
+              "failures": 0,
+              "duration_ms": 6.082,
+              "self_ms": 6.082
+            },
+            "weather": {
+              "calls": 3,
+              "failures": 0,
+              "duration_ms": 6.371,
+              "self_ms": 0.289
+            },
+            "rules": {
+              "calls": 1,
+              "failures": 0,
+              "duration_ms": 0.068,
+              "self_ms": 0.068
+            },
+            "history_write": {
+              "calls": 1,
+              "failures": 0,
+              "duration_ms": 75.078,
+              "self_ms": 75.078
+            },
+            "tool": {
+              "calls": 1,
+              "failures": 0,
+              "duration_ms": 100.425,
+              "self_ms": 18.908
+            },
+            "session_write": {
+              "calls": 1,
+              "failures": 0,
+              "duration_ms": 5.864,
+              "self_ms": 5.864
+            },
+            "profile_write": {
+              "calls": 1,
+              "failures": 0,
+              "duration_ms": 7.987,
+              "self_ms": 7.987
+            },
+            "knowledge": {
+              "calls": 1,
+              "failures": 0,
+              "duration_ms": 7.511,
+              "self_ms": 7.511
+            },
+            "composition": {
+              "calls": 1,
+              "failures": 0,
+              "duration_ms": 11.056,
+              "self_ms": 3.545
+            }
+          },
+          "scope": "agent_processing_before_conversation_and_trace_commit"
+        }
+      }
+    },
+    {
+      "kind": "session_snapshot",
+      "owner": "owner",
+      "session_id": "sr-app-restart-1",
+      "rows": [
+        {
+          "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+          "session_id": "sr-app-restart-1",
+          "last_context": {
+            "intent": "evaluate",
+            "task_type": "inspection",
+            "date": "2026-11-22",
+            "start_time": "14:00",
+            "end_time": "15:00",
+            "location": "深圳"
+          },
+          "updated_at": "2026-11-21T08:13:44.293159",
+          "expires_at": "2026-12-21T08:13:44.293159"
+        }
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "name": "clarification_before_fault",
+      "actual": "needs_clarification",
+      "expected": "needs_clarification",
+      "passed": true
+    },
+    {
+      "name": "pending_persisted",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "business_success",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "field:location",
+      "actual": "深圳",
+      "expected": "深圳",
+      "passed": true
+    },
+    {
+      "name": "field:date",
+      "actual": "2026-11-22",
+      "expected": "2026-11-22",
+      "passed": true
+    },
+    {
+      "name": "field:start_time",
+      "actual": "14:00",
+      "expected": "14:00",
+      "passed": true
+    },
+    {
+      "name": "field:end_time",
+      "actual": "15:00",
+      "expected": "15:00",
+      "passed": true
+    },
+    {
+      "name": "field:task_type",
+      "actual": "inspection",
+      "expected": "inspection",
+      "passed": true
+    },
+    {
+      "name": "actual_tool_call_recorded",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "field:trace_tool_location",
+      "actual": "深圳",
+      "expected": "深圳",
+      "passed": true
+    },
+    {
+      "name": "field:trace_tool_date",
+      "actual": "2026-11-22",
+      "expected": "2026-11-22",
+      "passed": true
+    },
+    {
+      "name": "field:trace_tool_start_time",
+      "actual": "14:00",
+      "expected": "14:00",
+      "passed": true
+    },
+    {
+      "name": "field:trace_tool_end_time",
+      "actual": "15:00",
+      "expected": "15:00",
+      "passed": true
+    },
+    {
+      "name": "field:trace_tool_task_type",
+      "actual": "inspection",
+      "expected": "inspection",
+      "passed": true
+    }
+  ],
+  "metrics": {
+    "restoration_eligible": true,
+    "restored": true,
+    "recovery_ms": 5703.0,
+    "continuation_latency_ms": 227.767
+  },
+  "passed": true
+}

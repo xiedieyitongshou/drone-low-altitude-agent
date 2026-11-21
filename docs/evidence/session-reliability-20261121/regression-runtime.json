@@ -1,0 +1,27 @@
+{
+  "container": "/session-regression-20261121",
+  "image": "sha256:d568b986b3688379563e2eecf83becee5ab16286abe222163bc036b7b3537c3b",
+  "status": "exited",
+  "exit_code": 0,
+  "started_at": "2026-11-21T08:19:31.108567178Z",
+  "finished_at": "2026-11-21T08:20:33.724498953Z",
+  "entrypoint": [
+    "sh"
+  ],
+  "command": [
+    "-ec",
+    "python -m alembic upgrade head >/tmp/migrations.log 2>&1; if python -m pytest -q --tb=short --api-db=postgresql >/tmp/backend-tests.log 2>&1; then cat /tmp/backend-tests.log; else cat /tmp/backend-tests.log; exit 1; fi; if KNOWLEDGE_RETRIEVER=hybrid python -m pytest -q -m eval_fast --tb=short >/tmp/eval-fast.log 2>&1; then cat /tmp/eval-fast.log; else cat /tmp/eval-fast.log; exit 1; fi"
+  ],
+  "environment": {
+    "SESSION_MEMORY_BACKEND": "ttlcache",
+    "NL_PARSER_MODE": "rule",
+    "AGENT_RUNTIME_MODE": "loop",
+    "LLM_ENABLED": "false",
+    "KNOWLEDGE_RETRIEVER": "bm25"
+  },
+  "database_driver": "postgresql+psycopg",
+  "api_database_option": "--api-db=postgresql",
+  "database_name": "session_regression",
+  "database_storage": "disposable tmpfs",
+  "environment_scope": "isolated local Docker; not GitHub Actions or production"
+}

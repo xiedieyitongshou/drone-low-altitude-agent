@@ -1,0 +1,1211 @@
+[
+  {
+    "id": "SR-postgres_outage-1",
+    "scenario": "postgres_outage",
+    "iteration": 1,
+    "checks": [
+      {
+        "name": "clarification_before_fault",
+        "actual": "needs_clarification",
+        "expected": "needs_clarification",
+        "passed": true
+      },
+      {
+        "name": "pending_persisted",
+        "actual": true,
+        "expected": true,
+        "passed": true
+      },
+      {
+        "name": "explicit_storage_unavailable",
+        "actual": 500,
+        "expected": 503,
+        "passed": false
+      },
+      {
+        "name": "no_weather_side_effect_during_outage",
+        "actual": 21,
+        "expected": 21,
+        "passed": true
+      },
+      {
+        "name": "business_success",
+        "actual": true,
+        "expected": true,
+        "passed": true
+      },
+      {
+        "name": "field:location",
+        "actual": "深圳",
+        "expected": "深圳",
+        "passed": true
+      },
+      {
+        "name": "field:date",
+        "actual": "2026-11-22",
+        "expected": "2026-11-22",
+        "passed": true
+      },
+      {
+        "name": "field:start_time",
+        "actual": "14:00",
+        "expected": "14:00",
+        "passed": true
+      },
+      {
+        "name": "field:end_time",
+        "actual": "15:00",
+        "expected": "15:00",
+        "passed": true
+      },
+      {
+        "name": "field:task_type",
+        "actual": "inspection",
+        "expected": "inspection",
+        "passed": true
+      },
+      {
+        "name": "actual_tool_call_recorded",
+        "actual": true,
+        "expected": true,
+        "passed": true
+      },
+      {
+        "name": "field:trace_tool_location",
+        "actual": "深圳",
+        "expected": "深圳",
+        "passed": true
+      },
+      {
+        "name": "field:trace_tool_date",
+        "actual": "2026-11-22",
+        "expected": "2026-11-22",
+        "passed": true
+      },
+      {
+        "name": "field:trace_tool_start_time",
+        "actual": "14:00",
+        "expected": "14:00",
+        "passed": true
+      },
+      {
+        "name": "field:trace_tool_end_time",
+        "actual": "15:00",
+        "expected": "15:00",
+        "passed": true
+      },
+      {
+        "name": "field:trace_tool_task_type",
+        "actual": "inspection",
+        "expected": "inspection",
+        "passed": true
+      }
+    ],
+    "metrics": {
+      "restoration_eligible": true,
+      "restored": true,
+      "recovery_ms": 4687.0,
+      "continuation_latency_ms": 217.161
+    },
+    "passed": false,
+    "actions": [
+      {
+        "kind": "http",
+        "parallel": false,
+        "requests": [
+          {
+            "url": "http://app_a:8000/agent/query",
+            "method": "POST",
+            "token": "[REDACTED]",
+            "json": {
+              "query": "明天下午2点到3点巡检能飞吗",
+              "session_id": "sr-postgres-outage-1"
+            }
+          }
+        ],
+        "responses": [
+          {
+            "status": 200,
+            "latency_ms": 80.509,
+            "body": {
+              "success": false,
+              "message": "还需要补充以下信息后才能继续：任务地点。",
+              "parsed": {
+                "date": "2026-11-22",
+                "start_time": "14:00",
+                "end_time": "15:00",
+                "task_type": "inspection",
+                "purpose": "明天下午2点到3点巡检能飞吗"
+              },
+              "context_used": false,
+              "warnings": [],
+              "trace_id": "3cf997c3-af23-454e-9e27-1964cb7145be"
+            },
+            "runtime_status": "needs_clarification"
+          }
+        ]
+      },
+      {
+        "kind": "http",
+        "parallel": false,
+        "requests": [
+          {
+            "url": "http://app_a:8000/agent/traces/3cf997c3-af23-454e-9e27-1964cb7145be",
+            "method": "GET",
+            "token": "[REDACTED]"
+          }
+        ],
+        "responses": [
+          {
+            "status": 200,
+            "latency_ms": 56.284,
+            "body": {
+              "trace_id": "3cf997c3-af23-454e-9e27-1964cb7145be"
+            },
+            "runtime_status": null
+          }
+        ]
+      },
+      {
+        "kind": "session_snapshot",
+        "owner": "owner",
+        "session_id": "sr-postgres-outage-1",
+        "rows": [
+          {
+            "user_id": "c19e958e-e884-4fdb-a998-e753019b2b35",
+            "session_id": "sr-postgres-outage-1",
+            "last_context": {
+              "pending_task": {
+                "intent": "evaluate",
+                "parsed": {
+                  "date": "2026-11-22",
+                  "start_time": "14:00",
+                  "end_time": "15:00",
+                  "task_type": "inspection",
+                  "purpose": "明天下午2点到3点巡检能飞吗"
+                },
+                "missing_fields": [
+                  "location"
+                ],
+                "query": "明天下午2点到3点巡检能飞吗"
+              },
+              "intent": "evaluate",
+              "date": "2026-11-22",
+              "start_time": "14:00",
+              "end_time": "15:00",
+              "task_type": "inspection",
+              "purpose": "明天下午2点到3点巡检能飞吗"
+            },
+            "updated_at": "2026-11-21T08:05:11.420301",
+            "expires_at": "2026-12-21T08:05:11.420301"
+          }
+        ]
+      },
+      {
+        "kind": "process",
+        "action": "stop",
+        "service": "postgres",
+        "elapsed_ms": 500.0
+      },
+      {
+        "kind": "http",
+        "parallel": false,
+        "requests": [
+          {
+            "url": "http://app_a:8000/agent/query",
+            "method": "POST",
+            "token": "[REDACTED]",
+            "json": {
+              "query": "深圳",
+              "session_id": "sr-postgres-outage-1"
+            }
+          }
+        ],
+        "responses": [
+          {
+            "status": 500,
+            "latency_ms": 53.208,
+            "body": {
+              "success": false,
+              "error_code": "INTERNAL_SERVER_ERROR",
+              "message": "internal server error"
+            },
+            "runtime_status": null
+          }
+        ]
+      },
+      {
+        "kind": "process",
+        "action": "start",
+        "service": "postgres",
+        "elapsed_ms": 484.0
+      },
+      {
+        "kind": "ready",
+        "server": "app_a",
+        "failed_probes": []
+      },
+      {
+        "kind": "http",
+        "parallel": false,
+        "requests": [
+          {
+            "url": "http://app_a:8000/agent/query",
+            "method": "POST",
+            "token": "[REDACTED]",
+            "json": {
+              "query": "深圳",
+              "session_id": "sr-postgres-outage-1"
+            }
+          }
+        ],
+        "responses": [
+          {
+            "status": 200,
+            "latency_ms": 217.161,
+            "body": {
+              "success": true,
+              "message": "Agent Runtime 已完成工具调用：evaluate_flight_risk。",
+              "parsed": {
+                "task_type": "inspection",
+                "date": "2026-11-22",
+                "start_time": "14:00",
+                "end_time": "15:00",
+                "purpose": "深圳",
+                "intent": "evaluate",
+                "location": "深圳"
+              },
+              "context_used": true,
+              "warnings": [],
+              "trace_id": "2cdc3bad-35f9-4f1a-ac30-5a27c88b3325"
+            },
+            "runtime_status": "completed"
+          }
+        ]
+      },
+      {
+        "kind": "http",
+        "parallel": false,
+        "requests": [
+          {
+            "url": "http://app_a:8000/agent/traces/2cdc3bad-35f9-4f1a-ac30-5a27c88b3325",
+            "method": "GET",
+            "token": "[REDACTED]"
+          }
+        ],
+        "responses": [
+          {
+            "status": 200,
+            "latency_ms": 58.884,
+            "body": {
+              "trace_id": "2cdc3bad-35f9-4f1a-ac30-5a27c88b3325"
+            },
+            "runtime_status": null
+          }
+        ]
+      },
+      {
+        "kind": "session_snapshot",
+        "owner": "owner",
+        "session_id": "sr-postgres-outage-1",
+        "rows": [
+          {
+            "user_id": "c19e958e-e884-4fdb-a998-e753019b2b35",
+            "session_id": "sr-postgres-outage-1",
+            "last_context": {
+              "intent": "evaluate",
+              "task_type": "inspection",
+              "date": "2026-11-22",
+              "start_time": "14:00",
+              "end_time": "15:00",
+              "location": "深圳"
+            },
+            "updated_at": "2026-11-21T08:05:16.979336",
+            "expires_at": "2026-12-21T08:05:16.979336"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "SR-redis_outage-1",
+    "scenario": "redis_outage",
+    "iteration": 1,
+    "checks": [
+      {
+        "name": "anonymous_seed_ok",
+        "actual": 200,
+        "expected": 200,
+        "passed": true
+      },
+      {
+        "name": "explicit_redis_unavailable",
+        "actual": 500,
+        "expected": 503,
+        "passed": false
+      },
+      {
+        "name": "stateless_parse_still_works",
+        "actual": 200,
+        "expected": 200,
+        "passed": true
+      },
+      {
+        "name": "postgres_session_independent_of_redis",
+        "actual": true,
+        "expected": true,
+        "passed": true
+      },
+      {
+        "name": "redis_restored_saved_context",
+        "actual": {
+          "intent": "evaluate",
+          "task_type": "inspection",
+          "date": "2026-11-22",
+          "start_time": "14:00",
+          "end_time": "15:00",
+          "location": "深圳"
+        },
+        "expected": {
+          "intent": "evaluate",
+          "task_type": "inspection",
+          "date": "2026-11-22",
+          "start_time": "14:00",
+          "end_time": "15:00",
+          "location": "深圳"
+        },
+        "passed": true
+      },
+      {
+        "name": "redis_continuation_ok",
+        "actual": 200,
+        "expected": 200,
+        "passed": true
+      },
+      {
+        "name": "field:redis_location",
+        "actual": "深圳",
+        "expected": "深圳",
+        "passed": true
+      }
+    ],
+    "metrics": {
+      "restoration_eligible": true,
+      "recovery_ms": 5125.0,
+      "continuation_latency_ms": 49.754,
+      "restored": true
+    },
+    "passed": false,
+    "actions": [
+      {
+        "kind": "http",
+        "parallel": false,
+        "requests": [
+          {
+            "url": "http://app_a:8000/nl/parse",
+            "method": "POST",
+            "json": {
+              "query": "明天下午2点到3点深圳巡检能飞吗",
+              "session_id": "sr-redis-outage-1"
+            }
+          }
+        ],
+        "responses": [
+          {
+            "status": 200,
+            "latency_ms": 60.481,
+            "body": {
+              "parsed": {
+                "location": "深圳",
+                "date": "2026-11-22",
+                "start_time": "14:00",
+                "end_time": "15:00",
+                "task_type": "inspection",
+                "purpose": "明天下午2点到3点深圳巡检能飞吗"
+              },
+              "context_used": false,
+              "warnings": []
+            },
+            "runtime_status": null
+          }
+        ]
+      },
+      {
+        "kind": "redis_snapshot",
+        "key": "reliability:session:anonymous:default_user:sr-redis-outage-1",
+        "context": {
+          "intent": "evaluate",
+          "task_type": "inspection",
+          "date": "2026-11-22",
+          "start_time": "14:00",
+          "end_time": "15:00",
+          "location": "深圳"
+        },
+        "ttl": "1799"
+      },
+      {
+        "kind": "process",
+        "action": "stop",
+        "service": "redis",
+        "elapsed_ms": 531.0
+      },
+      {
+        "kind": "http",
+        "parallel": false,
+        "requests": [
+          {
+            "url": "http://app_a:8000/nl/parse",
+            "method": "POST",
+            "json": {
+              "query": "后天呢",
+              "session_id": "sr-redis-outage-1"
+            }
+          }
+        ],
+        "responses": [
+          {
+            "status": 500,
+            "latency_ms": 67.185,
+            "body": {
+              "success": false,
+              "error_code": "INTERNAL_SERVER_ERROR",
+              "message": "internal server error"
+            },
+            "runtime_status": null
+          }
+        ]
+      },
+      {
+        "kind": "http",
+        "parallel": false,
+        "requests": [
+          {
+            "url": "http://app_a:8000/nl/parse",
+            "method": "POST",
+            "json": {
+              "query": "深圳明天下午2点到3点巡检能飞吗"
+            }
+          }
+        ],
+        "responses": [
+          {
+            "status": 200,
+            "latency_ms": 69.897,
+            "body": {
+              "parsed": {
+                "location": "深圳",
+                "date": "2026-11-22",
+                "start_time": "14:00",
+                "end_time": "15:00",
+                "task_type": "inspection",
+                "purpose": "深圳明天下午2点到3点巡检能飞吗"
+              },
+              "context_used": false,
+              "warnings": []
+            },
+            "runtime_status": null
+          }
+        ]
+      },
+      {
+        "kind": "http",
+        "parallel": false,
+        "requests": [
+          {
+            "url": "http://app_a:8000/agent/query",
+            "method": "POST",
+            "token": "[REDACTED]",
+            "json": {
+              "query": "深圳报备政策",
+              "session_id": "sr-redis-outage-1-independent"
+            }
+          }
+        ],
+        "responses": [
+          {
+            "status": 200,
+            "latency_ms": 76.882,
+            "body": {
+              "success": true,
+              "message": "Agent Runtime 已完成工具调用：query_knowledge_snippets。",
+              "parsed": {
+                "task_type": "cruise",
+                "top_k": 3,
+                "city": "深圳",
+                "query": "深圳报备政策",
+                "constraint_sources": {
+                  "task_type": "profile",
+                  "city": "user_input"
+                }
+              },
+              "context_used": true,
+              "warnings": [],
+              "trace_id": "c0de24f3-42c3-42f4-a066-adf72295bdae"
+            },
+            "runtime_status": "completed"
+          }
+        ]
+      },
+      {
+        "kind": "http",
+        "parallel": false,
+        "requests": [
+          {
+            "url": "http://app_a:8000/agent/traces/c0de24f3-42c3-42f4-a066-adf72295bdae",
+            "method": "GET",
+            "token": "[REDACTED]"
+          }
+        ],
+        "responses": [
+          {
+            "status": 200,
+            "latency_ms": 76.968,
+            "body": {
+              "trace_id": "c0de24f3-42c3-42f4-a066-adf72295bdae"
+            },
+            "runtime_status": null
+          }
+        ]
+      },
+      {
+        "kind": "process",
+        "action": "start",
+        "service": "redis",
+        "elapsed_ms": 437.0
+      },
+      {
+        "kind": "http",
+        "parallel": false,
+        "requests": [
+          {
+            "url": "http://app_a:8000/nl/parse",
+            "method": "POST",
+            "json": {
+              "query": "后天呢",
+              "session_id": "sr-redis-outage-1"
+            }
+          }
+        ],
+        "responses": [
+          {
+            "status": 200,
+            "latency_ms": 49.754,
+            "body": {
+              "parsed": {
+                "location": "深圳",
+                "date": "2026-11-23",
+                "start_time": "14:00",
+                "end_time": "15:00",
+                "task_type": "inspection",
+                "purpose": "后天呢"
+              },
+              "context_used": true,
+              "warnings": []
+            },
+            "runtime_status": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "SR-isolation-1",
+    "scenario": "isolation",
+    "iteration": 1,
+    "checks": [
+      {
+        "name": "business_success",
+        "actual": true,
+        "expected": true,
+        "passed": true
+      },
+      {
+        "name": "field:location",
+        "actual": "深圳",
+        "expected": "深圳",
+        "passed": true
+      },
+      {
+        "name": "field:task_type",
+        "actual": "inspection",
+        "expected": "inspection",
+        "passed": true
+      },
+      {
+        "name": "actual_tool_call_recorded",
+        "actual": true,
+        "expected": true,
+        "passed": true
+      },
+      {
+        "name": "field:trace_tool_location",
+        "actual": "深圳",
+        "expected": "深圳",
+        "passed": true
+      },
+      {
+        "name": "field:trace_tool_task_type",
+        "actual": "inspection",
+        "expected": "inspection",
+        "passed": true
+      },
+      {
+        "name": "business_success",
+        "actual": false,
+        "expected": true,
+        "passed": false
+      },
+      {
+        "name": "field:location",
+        "actual": null,
+        "expected": "广州",
+        "passed": false
+      },
+      {
+        "name": "field:task_type",
+        "actual": null,
+        "expected": "survey",
+        "passed": false
+      },
+      {
+        "name": "actual_tool_call_recorded",
+        "actual": false,
+        "expected": true,
+        "passed": false
+      },
+      {
+        "name": "separate_session_does_not_inherit_location",
+        "actual": true,
+        "expected": true,
+        "passed": true
+      },
+      {
+        "name": "other_user_cannot_read_trace",
+        "actual": 404,
+        "expected": 404,
+        "passed": true
+      }
+    ],
+    "metrics": {
+      "isolation_case": true
+    },
+    "passed": false,
+    "actions": [
+      {
+        "kind": "http",
+        "parallel": false,
+        "requests": [
+          {
+            "url": "http://app_a:8000/agent/query",
+            "method": "POST",
+            "token": "[REDACTED]",
+            "json": {
+              "query": "深圳明天下午2点到3点巡检能飞吗",
+              "session_id": "sr-isolation-1"
+            }
+          }
+        ],
+        "responses": [
+          {
+            "status": 200,
+            "latency_ms": 161.785,
+            "body": {
+              "success": true,
+              "message": "Agent Runtime 已完成工具调用：evaluate_flight_risk。",
+              "parsed": {
+                "task_type": "inspection",
+                "location": "深圳",
+                "date": "2026-11-22",
+                "start_time": "14:00",
+                "end_time": "15:00",
+                "purpose": "深圳明天下午2点到3点巡检能飞吗"
+              },
+              "context_used": false,
+              "warnings": [],
+              "trace_id": "b3ed81dd-2b7e-40c9-8212-e34322efc542"
+            },
+            "runtime_status": "completed"
+          }
+        ]
+      },
+      {
+        "kind": "http",
+        "parallel": false,
+        "requests": [
+          {
+            "url": "http://app_a:8000/agent/traces/b3ed81dd-2b7e-40c9-8212-e34322efc542",
+            "method": "GET",
+            "token": "[REDACTED]"
+          }
+        ],
+        "responses": [
+          {
+            "status": 200,
+            "latency_ms": 51.726,
+            "body": {
+              "trace_id": "b3ed81dd-2b7e-40c9-8212-e34322efc542"
+            },
+            "runtime_status": null
+          }
+        ]
+      },
+      {
+        "kind": "http",
+        "parallel": false,
+        "requests": [
+          {
+            "url": "http://app_b:8000/agent/query",
+            "method": "POST",
+            "token": "[REDACTED]",
+            "json": {
+              "query": "广州明天下午3点到4点测绘能飞吗",
+              "session_id": "sr-isolation-1"
+            }
+          }
+        ],
+        "responses": [
+          {
+            "status": 500,
+            "latency_ms": 52.186,
+            "body": {
+              "success": false,
+              "error_code": "INTERNAL_SERVER_ERROR",
+              "message": "internal server error"
+            },
+            "runtime_status": null
+          }
+        ]
+      },
+      {
+        "kind": "http",
+        "parallel": false,
+        "requests": [
+          {
+            "url": "http://app_a:8000/agent/query",
+            "method": "POST",
+            "token": "[REDACTED]",
+            "json": {
+              "query": "时间改成下午4点到5点",
+              "session_id": "sr-isolation-1"
+            }
+          }
+        ],
+        "responses": [
+          {
+            "status": 200,
+            "latency_ms": 165.808,
+            "body": {
+              "success": true,
+              "message": "Agent Runtime 已完成工具调用：evaluate_flight_risk。",
+              "parsed": {
+                "task_type": "inspection",
+                "intent": "evaluate",
+                "date": "2026-11-22",
+                "start_time": "16:00",
+                "end_time": "17:00",
+                "location": "深圳",
+                "purpose": "时间改成下午4点到5点"
+              },
+              "context_used": true,
+              "warnings": [],
+              "trace_id": "005dca99-d3e6-464c-998a-69cc060bd58e"
+            },
+            "runtime_status": "completed"
+          }
+        ]
+      },
+      {
+        "kind": "http",
+        "parallel": false,
+        "requests": [
+          {
+            "url": "http://app_a:8000/agent/traces/005dca99-d3e6-464c-998a-69cc060bd58e",
+            "method": "GET",
+            "token": "[REDACTED]"
+          }
+        ],
+        "responses": [
+          {
+            "status": 200,
+            "latency_ms": 51.874,
+            "body": {
+              "trace_id": "005dca99-d3e6-464c-998a-69cc060bd58e"
+            },
+            "runtime_status": null
+          }
+        ]
+      },
+      {
+        "kind": "http",
+        "parallel": false,
+        "requests": [
+          {
+            "url": "http://app_b:8000/agent/query",
+            "method": "POST",
+            "token": "[REDACTED]",
+            "json": {
+              "query": "时间改成下午4点到5点",
+              "session_id": "sr-isolation-1"
+            }
+          }
+        ],
+        "responses": [
+          {
+            "status": 200,
+            "latency_ms": 127.968,
+            "body": {
+              "success": false,
+              "message": "还需要补充以下信息后才能继续：任务地点、任务日期。",
+              "parsed": {
+                "start_time": "16:00",
+                "end_time": "17:00",
+                "task_type": "cruise",
+                "purpose": "时间改成下午4点到5点"
+              },
+              "context_used": false,
+              "warnings": [],
+              "trace_id": "e3f9b1fe-1c4b-4089-acdb-32ea08510cea"
+            },
+            "runtime_status": "needs_clarification"
+          }
+        ]
+      },
+      {
+        "kind": "http",
+        "parallel": false,
+        "requests": [
+          {
+            "url": "http://app_b:8000/agent/traces/e3f9b1fe-1c4b-4089-acdb-32ea08510cea",
+            "method": "GET",
+            "token": "[REDACTED]"
+          }
+        ],
+        "responses": [
+          {
+            "status": 200,
+            "latency_ms": 61.882,
+            "body": {
+              "trace_id": "e3f9b1fe-1c4b-4089-acdb-32ea08510cea"
+            },
+            "runtime_status": null
+          }
+        ]
+      },
+      {
+        "kind": "http",
+        "parallel": false,
+        "requests": [
+          {
+            "url": "http://app_a:8000/agent/query",
+            "method": "POST",
+            "token": "[REDACTED]",
+            "json": {
+              "query": "明天下午2点到3点能飞吗",
+              "session_id": "sr-isolation-1-fresh"
+            }
+          }
+        ],
+        "responses": [
+          {
+            "status": 200,
+            "latency_ms": 70.289,
+            "body": {
+              "success": false,
+              "message": "还需要补充以下信息后才能继续：任务地点。",
+              "parsed": {
+                "date": "2026-11-22",
+                "start_time": "14:00",
+                "end_time": "15:00",
+                "task_type": "cruise",
+                "purpose": "明天下午2点到3点能飞吗"
+              },
+              "context_used": false,
+              "warnings": [],
+              "trace_id": "ef2c762a-46c2-4e7f-b858-e2f6e31dcd28"
+            },
+            "runtime_status": "needs_clarification"
+          }
+        ]
+      },
+      {
+        "kind": "http",
+        "parallel": false,
+        "requests": [
+          {
+            "url": "http://app_a:8000/agent/traces/ef2c762a-46c2-4e7f-b858-e2f6e31dcd28",
+            "method": "GET",
+            "token": "[REDACTED]"
+          }
+        ],
+        "responses": [
+          {
+            "status": 200,
+            "latency_ms": 50.933,
+            "body": {
+              "trace_id": "ef2c762a-46c2-4e7f-b858-e2f6e31dcd28"
+            },
+            "runtime_status": null
+          }
+        ]
+      },
+      {
+        "kind": "http",
+        "parallel": false,
+        "requests": [
+          {
+            "url": "http://app_a:8000/agent/traces/005dca99-d3e6-464c-998a-69cc060bd58e",
+            "method": "GET",
+            "token": "[REDACTED]"
+          }
+        ],
+        "responses": [
+          {
+            "status": 404,
+            "latency_ms": 51.233,
+            "body": {},
+            "runtime_status": null
+          }
+        ]
+      },
+      {
+        "kind": "session_snapshot",
+        "owner": "owner",
+        "session_id": "sr-isolation-1",
+        "rows": [
+          {
+            "user_id": "c19e958e-e884-4fdb-a998-e753019b2b35",
+            "session_id": "sr-isolation-1",
+            "last_context": {
+              "intent": "evaluate",
+              "task_type": "inspection",
+              "date": "2026-11-22",
+              "start_time": "16:00",
+              "end_time": "17:00",
+              "location": "深圳"
+            },
+            "updated_at": "2026-11-21T08:05:45.562748",
+            "expires_at": "2026-12-21T08:05:45.562748"
+          }
+        ]
+      },
+      {
+        "kind": "session_snapshot",
+        "owner": "other",
+        "session_id": "sr-isolation-1",
+        "rows": [
+          {
+            "user_id": "7632f58f-22a2-4cb2-b30e-bc37d8cb797a",
+            "session_id": "sr-isolation-1",
+            "last_context": {
+              "pending_task": {
+                "intent": "evaluate",
+                "parsed": {
+                  "start_time": "16:00",
+                  "end_time": "17:00",
+                  "task_type": "cruise",
+                  "purpose": "时间改成下午4点到5点"
+                },
+                "missing_fields": [
+                  "location",
+                  "date"
+                ],
+                "query": "时间改成下午4点到5点"
+              },
+              "intent": "evaluate",
+              "start_time": "16:00",
+              "end_time": "17:00",
+              "task_type": "cruise",
+              "purpose": "时间改成下午4点到5点"
+            },
+            "updated_at": "2026-11-21T08:05:47.006873",
+            "expires_at": "2026-12-21T08:05:47.006873"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "SR-concurrent_update-1",
+    "scenario": "concurrent_update",
+    "iteration": 1,
+    "checks": [
+      {
+        "name": "one_same_session_request_admitted",
+        "actual": 2,
+        "expected": 1,
+        "passed": false
+      },
+      {
+        "name": "other_request_explicitly_rejected",
+        "actual": 0,
+        "expected": 1,
+        "passed": false
+      },
+      {
+        "name": "field:concurrent_location",
+        "actual": "深圳",
+        "expected": "广州",
+        "passed": false
+      },
+      {
+        "name": "field:concurrent_task_type",
+        "actual": "survey",
+        "expected": "survey",
+        "passed": true
+      }
+    ],
+    "metrics": {
+      "concurrent_case": true
+    },
+    "passed": false,
+    "actions": [
+      {
+        "kind": "http",
+        "parallel": false,
+        "requests": [
+          {
+            "url": "http://app_a:8000/agent/query",
+            "method": "POST",
+            "token": "[REDACTED]",
+            "json": {
+              "query": "深圳明天下午2点到3点巡检能飞吗",
+              "session_id": "sr-concurrent-update-1"
+            }
+          }
+        ],
+        "responses": [
+          {
+            "status": 200,
+            "latency_ms": 139.682,
+            "body": {
+              "success": true,
+              "message": "Agent Runtime 已完成工具调用：evaluate_flight_risk。",
+              "parsed": {
+                "task_type": "inspection",
+                "location": "深圳",
+                "date": "2026-11-22",
+                "start_time": "14:00",
+                "end_time": "15:00",
+                "purpose": "深圳明天下午2点到3点巡检能飞吗"
+              },
+              "context_used": false,
+              "warnings": [],
+              "trace_id": "fadb077b-b766-4009-9d0e-92b08faaa77c"
+            },
+            "runtime_status": "completed"
+          }
+        ]
+      },
+      {
+        "kind": "http",
+        "parallel": false,
+        "requests": [
+          {
+            "url": "http://app_a:8000/agent/traces/fadb077b-b766-4009-9d0e-92b08faaa77c",
+            "method": "GET",
+            "token": "[REDACTED]"
+          }
+        ],
+        "responses": [
+          {
+            "status": 200,
+            "latency_ms": 55.612,
+            "body": {
+              "trace_id": "fadb077b-b766-4009-9d0e-92b08faaa77c"
+            },
+            "runtime_status": null
+          }
+        ]
+      },
+      {
+        "kind": "http",
+        "parallel": true,
+        "requests": [
+          {
+            "url": "http://app_a:8000/agent/query",
+            "method": "POST",
+            "token": "[REDACTED]",
+            "json": {
+              "query": "地点改成广州",
+              "session_id": "sr-concurrent-update-1"
+            }
+          },
+          {
+            "url": "http://app_b:8000/agent/query",
+            "method": "POST",
+            "token": "[REDACTED]",
+            "json": {
+              "query": "任务类型改成测绘",
+              "session_id": "sr-concurrent-update-1"
+            }
+          }
+        ],
+        "responses": [
+          {
+            "status": 200,
+            "latency_ms": 933.156,
+            "body": {
+              "success": true,
+              "message": "Agent Runtime 已完成工具调用：evaluate_flight_risk。",
+              "parsed": {
+                "task_type": "inspection",
+                "intent": "evaluate",
+                "date": "2026-11-22",
+                "start_time": "14:00",
+                "end_time": "15:00",
+                "location": "广州",
+                "purpose": "地点改成广州"
+              },
+              "context_used": true,
+              "warnings": [],
+              "trace_id": "2adc2bc9-ff5d-44a6-a359-bb0b5bc9b0c1"
+            },
+            "runtime_status": "completed"
+          },
+          {
+            "status": 200,
+            "latency_ms": 935.494,
+            "body": {
+              "success": true,
+              "message": "Agent Runtime 已完成工具调用：evaluate_flight_risk。",
+              "parsed": {
+                "task_type": "survey",
+                "intent": "evaluate",
+                "date": "2026-11-22",
+                "start_time": "14:00",
+                "end_time": "15:00",
+                "location": "深圳",
+                "purpose": "任务类型改成测绘"
+              },
+              "context_used": true,
+              "warnings": [],
+              "trace_id": "e0948508-b6cc-4172-b324-24a07cc13e22"
+            },
+            "runtime_status": "completed"
+          }
+        ]
+      },
+      {
+        "kind": "session_snapshot",
+        "owner": "owner",
+        "session_id": "sr-concurrent-update-1",
+        "rows": [
+          {
+            "user_id": "c19e958e-e884-4fdb-a998-e753019b2b35",
+            "session_id": "sr-concurrent-update-1",
+            "last_context": {
+              "intent": "evaluate",
+              "task_type": "survey",
+              "date": "2026-11-22",
+              "start_time": "14:00",
+              "end_time": "15:00",
+              "location": "深圳"
+            },
+            "updated_at": "2026-11-21T08:06:00.95473",
+            "expires_at": "2026-12-21T08:06:00.95473"
+          }
+        ]
+      }
+    ]
+  }
+]

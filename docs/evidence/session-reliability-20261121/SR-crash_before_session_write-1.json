@@ -1,0 +1,1146 @@
+{
+  "id": "SR-crash_before_session_write-1",
+  "scenario": "crash_before_session_write",
+  "iteration": 1,
+  "actions": [
+    {
+      "kind": "http",
+      "parallel": false,
+      "requests": [
+        {
+          "url": "http://app_a:8000/agent/query",
+          "method": "POST",
+          "token": "[REDACTED]",
+          "json": {
+            "query": "明天下午2点到3点巡检能飞吗",
+            "session_id": "sr-crash-before-session-write-1"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "success": false,
+            "session_id": "sr-crash-before-session-write-1",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "conversation_id": "27b60ec438e347d6bdf6f387c5c6f2b9",
+            "request_id": null,
+            "trace_id": "58ec9377-baf0-4cb2-95da-15a8a9cce595",
+            "intent": "evaluate",
+            "target_endpoint": "/cruise/evaluate",
+            "parser_source": "rule",
+            "parsed": {
+              "date": "2026-11-22",
+              "start_time": "14:00",
+              "end_time": "15:00",
+              "task_type": "inspection",
+              "purpose": "明天下午2点到3点巡检能飞吗"
+            },
+            "context_used": false,
+            "message": "还需要补充以下信息后才能继续：任务地点。",
+            "warnings": [],
+            "composed": null,
+            "result": null,
+            "fallback": {
+              "message": "还需要补充以下信息后才能继续：任务地点。",
+              "trace_id": "58ec9377-baf0-4cb2-95da-15a8a9cce595",
+              "run_id": "4d60e9c4-f1b1-4415-8f1c-dfb58ef5af57",
+              "status": "needs_clarification",
+              "tool_name": null,
+              "fallback_used": false,
+              "failure_type": null,
+              "recovery_action": null,
+              "retryable": false,
+              "guardrail": null,
+              "errors": []
+            },
+            "agent_runtime": {
+              "mode": "loop",
+              "trace_id": "58ec9377-baf0-4cb2-95da-15a8a9cce595",
+              "run_id": "4d60e9c4-f1b1-4415-8f1c-dfb58ef5af57",
+              "status": "needs_clarification",
+              "fallback_used": false,
+              "plan_actions": [
+                "ask_clarification"
+              ],
+              "tool_results": [],
+              "errors": [],
+              "timings": {
+                "processing_ms": 9.564,
+                "stages": {
+                  "session_guard": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 0.585,
+                    "self_ms": 0.585
+                  },
+                  "context_read": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 3.824,
+                    "self_ms": 3.824
+                  },
+                  "parser": {
+                    "calls": 1,
+                    "failures": 1,
+                    "duration_ms": 0.094,
+                    "self_ms": 0.094
+                  },
+                  "planner": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 0.012,
+                    "self_ms": 0.012
+                  },
+                  "session_write": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 3.207,
+                    "self_ms": 3.207
+                  }
+                },
+                "scope": "agent_processing_before_conversation_and_trace_commit"
+              }
+            }
+          },
+          "latency_ms": 68.524
+        }
+      ]
+    },
+    {
+      "kind": "http",
+      "parallel": false,
+      "requests": [
+        {
+          "url": "http://app_a:8000/agent/traces/58ec9377-baf0-4cb2-95da-15a8a9cce595",
+          "method": "GET",
+          "token": "[REDACTED]"
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "trace_id": "58ec9377-baf0-4cb2-95da-15a8a9cce595",
+            "run_id": "4d60e9c4-f1b1-4415-8f1c-dfb58ef5af57",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-crash-before-session-write-1",
+            "event_count": 11,
+            "events": [
+              {
+                "id": 607,
+                "trace_id": "58ec9377-baf0-4cb2-95da-15a8a9cce595",
+                "run_id": "4d60e9c4-f1b1-4415-8f1c-dfb58ef5af57",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-crash-before-session-write-1",
+                "event_type": "state_update",
+                "step_index": 1,
+                "status_before": null,
+                "status_after": "initialized",
+                "tool_name": null,
+                "latency_ms": null,
+                "input_summary": {
+                  "query": "明天下午2点到3点巡检能飞吗"
+                },
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {},
+                "created_at": "2026-11-21T08:14:58.339987"
+              },
+              {
+                "id": 608,
+                "trace_id": "58ec9377-baf0-4cb2-95da-15a8a9cce595",
+                "run_id": "4d60e9c4-f1b1-4415-8f1c-dfb58ef5af57",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-crash-before-session-write-1",
+                "event_type": "stage",
+                "step_index": 2,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 1,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "session_guard",
+                  "duration_ms": 0.585,
+                  "self_ms": 0.585,
+                  "start_offset_ms": 0.369,
+                  "parent_stage": null,
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:14:58.339988"
+              },
+              {
+                "id": 609,
+                "trace_id": "58ec9377-baf0-4cb2-95da-15a8a9cce595",
+                "run_id": "4d60e9c4-f1b1-4415-8f1c-dfb58ef5af57",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-crash-before-session-write-1",
+                "event_type": "stage",
+                "step_index": 3,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 4,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "context_read",
+                  "duration_ms": 3.824,
+                  "self_ms": 3.824,
+                  "start_offset_ms": 1.015,
+                  "parent_stage": null,
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:14:58.339989"
+              },
+              {
+                "id": 610,
+                "trace_id": "58ec9377-baf0-4cb2-95da-15a8a9cce595",
+                "run_id": "4d60e9c4-f1b1-4415-8f1c-dfb58ef5af57",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-crash-before-session-write-1",
+                "event_type": "stage",
+                "step_index": 4,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 0,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "parser",
+                  "duration_ms": 0.094,
+                  "self_ms": 0.094,
+                  "start_offset_ms": 4.889,
+                  "parent_stage": null,
+                  "ok": false
+                },
+                "created_at": "2026-11-21T08:14:58.339989"
+              },
+              {
+                "id": 611,
+                "trace_id": "58ec9377-baf0-4cb2-95da-15a8a9cce595",
+                "run_id": "4d60e9c4-f1b1-4415-8f1c-dfb58ef5af57",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-crash-before-session-write-1",
+                "event_type": "parse",
+                "step_index": 5,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": null,
+                "input_summary": null,
+                "output_summary": {
+                  "date": "2026-11-22",
+                  "start_time": "14:00",
+                  "end_time": "15:00",
+                  "task_type": "inspection",
+                  "purpose": "明天下午2点到3点巡检能飞吗"
+                },
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "intent": "evaluate",
+                  "missing_fields": [
+                    "location"
+                  ]
+                },
+                "created_at": "2026-11-21T08:14:58.339989"
+              },
+              {
+                "id": 612,
+                "trace_id": "58ec9377-baf0-4cb2-95da-15a8a9cce595",
+                "run_id": "4d60e9c4-f1b1-4415-8f1c-dfb58ef5af57",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-crash-before-session-write-1",
+                "event_type": "state_update",
+                "step_index": 6,
+                "status_before": "needs_clarification",
+                "status_after": "needs_clarification",
+                "tool_name": null,
+                "latency_ms": null,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": "allowed",
+                "metadata": {
+                  "source": "agent_guardrail",
+                  "guardrail_checkpoint": "input",
+                  "guardrail_action": "allow",
+                  "guardrail_allowed": true,
+                  "guardrail_reason": "allowed",
+                  "guardrail_user_message": "Guardrail 检查通过。",
+                  "guardrail_explanation": {
+                    "checkpoint": "input",
+                    "action": "allow",
+                    "allowed": true,
+                    "error_code": null,
+                    "reason": "allowed",
+                    "user_message": "Guardrail 检查通过。",
+                    "violation_type": null,
+                    "tool_name": null,
+                    "metadata": {
+                      "query_length": 14
+                    }
+                  },
+                  "query_length": 14,
+                  "agent_step": 2
+                },
+                "created_at": "2026-11-21T08:14:58.339990"
+              },
+              {
+                "id": 613,
+                "trace_id": "58ec9377-baf0-4cb2-95da-15a8a9cce595",
+                "run_id": "4d60e9c4-f1b1-4415-8f1c-dfb58ef5af57",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-crash-before-session-write-1",
+                "event_type": "stage",
+                "step_index": 7,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 0,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "planner",
+                  "duration_ms": 0.012,
+                  "self_ms": 0.012,
+                  "start_offset_ms": 5.318,
+                  "parent_stage": null,
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:14:58.339990"
+              },
+              {
+                "id": 614,
+                "trace_id": "58ec9377-baf0-4cb2-95da-15a8a9cce595",
+                "run_id": "4d60e9c4-f1b1-4415-8f1c-dfb58ef5af57",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-crash-before-session-write-1",
+                "event_type": "plan",
+                "step_index": 8,
+                "status_before": null,
+                "status_after": "needs_clarification",
+                "tool_name": null,
+                "latency_ms": null,
+                "input_summary": null,
+                "output_summary": {
+                  "action": "ask_clarification",
+                  "reason": "required fields are missing before tool planning",
+                  "tool_name": null,
+                  "tool_input": {},
+                  "missing_fields": [
+                    "location"
+                  ],
+                  "metadata": {}
+                },
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "agent_step": 2
+                },
+                "created_at": "2026-11-21T08:14:58.339990"
+              },
+              {
+                "id": 615,
+                "trace_id": "58ec9377-baf0-4cb2-95da-15a8a9cce595",
+                "run_id": "4d60e9c4-f1b1-4415-8f1c-dfb58ef5af57",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-crash-before-session-write-1",
+                "event_type": "clarification",
+                "step_index": 9,
+                "status_before": null,
+                "status_after": "needs_clarification",
+                "tool_name": null,
+                "latency_ms": null,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": "还需要补充以下信息后才能继续：任务地点。",
+                "metadata": {
+                  "missing_fields": [
+                    "location"
+                  ],
+                  "agent_step": 3
+                },
+                "created_at": "2026-11-21T08:14:58.339991"
+              },
+              {
+                "id": 616,
+                "trace_id": "58ec9377-baf0-4cb2-95da-15a8a9cce595",
+                "run_id": "4d60e9c4-f1b1-4415-8f1c-dfb58ef5af57",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-crash-before-session-write-1",
+                "event_type": "stage",
+                "step_index": 10,
+                "status_before": null,
+                "status_after": null,
+                "tool_name": null,
+                "latency_ms": 3,
+                "input_summary": null,
+                "output_summary": null,
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "stage": "session_write",
+                  "duration_ms": 3.207,
+                  "self_ms": 3.207,
+                  "start_offset_ms": 5.548,
+                  "parent_stage": null,
+                  "ok": true
+                },
+                "created_at": "2026-11-21T08:14:58.339991"
+              },
+              {
+                "id": 617,
+                "trace_id": "58ec9377-baf0-4cb2-95da-15a8a9cce595",
+                "run_id": "4d60e9c4-f1b1-4415-8f1c-dfb58ef5af57",
+                "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+                "session_id": "sr-crash-before-session-write-1",
+                "event_type": "final_response",
+                "step_index": 11,
+                "status_before": null,
+                "status_after": "needs_clarification",
+                "tool_name": null,
+                "latency_ms": null,
+                "input_summary": null,
+                "output_summary": {
+                  "success": false,
+                  "message": "还需要补充以下信息后才能继续：任务地点。"
+                },
+                "error_code": null,
+                "message": null,
+                "metadata": {
+                  "outcome": "clarification",
+                  "request_id": null,
+                  "conversation_id": "27b60ec438e347d6bdf6f387c5c6f2b9",
+                  "timings": {
+                    "processing_ms": 9.564,
+                    "stages": {
+                      "session_guard": {
+                        "calls": 1,
+                        "failures": 0,
+                        "duration_ms": 0.585,
+                        "self_ms": 0.585
+                      },
+                      "context_read": {
+                        "calls": 1,
+                        "failures": 0,
+                        "duration_ms": 3.824,
+                        "self_ms": 3.824
+                      },
+                      "parser": {
+                        "calls": 1,
+                        "failures": 1,
+                        "duration_ms": 0.094,
+                        "self_ms": 0.094
+                      },
+                      "planner": {
+                        "calls": 1,
+                        "failures": 0,
+                        "duration_ms": 0.012,
+                        "self_ms": 0.012
+                      },
+                      "session_write": {
+                        "calls": 1,
+                        "failures": 0,
+                        "duration_ms": 3.207,
+                        "self_ms": 3.207
+                      }
+                    },
+                    "scope": "agent_processing_before_conversation_and_trace_commit"
+                  },
+                  "fallback_used": false,
+                  "warnings": []
+                },
+                "created_at": "2026-11-21T08:14:58.339991"
+              }
+            ],
+            "request_ids": [],
+            "conversation_ids": [
+              "27b60ec438e347d6bdf6f387c5c6f2b9"
+            ],
+            "task_ids": [],
+            "outcome": "clarification",
+            "timings": {
+              "processing_ms": 9.564,
+              "stages": {
+                "session_guard": {
+                  "calls": 1,
+                  "failures": 0,
+                  "duration_ms": 0.585,
+                  "self_ms": 0.585
+                },
+                "context_read": {
+                  "calls": 1,
+                  "failures": 0,
+                  "duration_ms": 3.824,
+                  "self_ms": 3.824
+                },
+                "parser": {
+                  "calls": 1,
+                  "failures": 1,
+                  "duration_ms": 0.094,
+                  "self_ms": 0.094
+                },
+                "planner": {
+                  "calls": 1,
+                  "failures": 0,
+                  "duration_ms": 0.012,
+                  "self_ms": 0.012
+                },
+                "session_write": {
+                  "calls": 1,
+                  "failures": 0,
+                  "duration_ms": 3.207,
+                  "self_ms": 3.207
+                }
+              },
+              "scope": "agent_processing_before_conversation_and_trace_commit"
+            }
+          },
+          "latency_ms": 52.935
+        }
+      ]
+    },
+    {
+      "kind": "trace",
+      "trace_id": "58ec9377-baf0-4cb2-95da-15a8a9cce595",
+      "detail": {
+        "trace_id": "58ec9377-baf0-4cb2-95da-15a8a9cce595",
+        "run_id": "4d60e9c4-f1b1-4415-8f1c-dfb58ef5af57",
+        "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+        "session_id": "sr-crash-before-session-write-1",
+        "event_count": 11,
+        "events": [
+          {
+            "id": 607,
+            "trace_id": "58ec9377-baf0-4cb2-95da-15a8a9cce595",
+            "run_id": "4d60e9c4-f1b1-4415-8f1c-dfb58ef5af57",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-crash-before-session-write-1",
+            "event_type": "state_update",
+            "step_index": 1,
+            "status_before": null,
+            "status_after": "initialized",
+            "tool_name": null,
+            "latency_ms": null,
+            "input_summary": {
+              "query": "明天下午2点到3点巡检能飞吗"
+            },
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {},
+            "created_at": "2026-11-21T08:14:58.339987"
+          },
+          {
+            "id": 608,
+            "trace_id": "58ec9377-baf0-4cb2-95da-15a8a9cce595",
+            "run_id": "4d60e9c4-f1b1-4415-8f1c-dfb58ef5af57",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-crash-before-session-write-1",
+            "event_type": "stage",
+            "step_index": 2,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 1,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "session_guard",
+              "duration_ms": 0.585,
+              "self_ms": 0.585,
+              "start_offset_ms": 0.369,
+              "parent_stage": null,
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:14:58.339988"
+          },
+          {
+            "id": 609,
+            "trace_id": "58ec9377-baf0-4cb2-95da-15a8a9cce595",
+            "run_id": "4d60e9c4-f1b1-4415-8f1c-dfb58ef5af57",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-crash-before-session-write-1",
+            "event_type": "stage",
+            "step_index": 3,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 4,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "context_read",
+              "duration_ms": 3.824,
+              "self_ms": 3.824,
+              "start_offset_ms": 1.015,
+              "parent_stage": null,
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:14:58.339989"
+          },
+          {
+            "id": 610,
+            "trace_id": "58ec9377-baf0-4cb2-95da-15a8a9cce595",
+            "run_id": "4d60e9c4-f1b1-4415-8f1c-dfb58ef5af57",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-crash-before-session-write-1",
+            "event_type": "stage",
+            "step_index": 4,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 0,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "parser",
+              "duration_ms": 0.094,
+              "self_ms": 0.094,
+              "start_offset_ms": 4.889,
+              "parent_stage": null,
+              "ok": false
+            },
+            "created_at": "2026-11-21T08:14:58.339989"
+          },
+          {
+            "id": 611,
+            "trace_id": "58ec9377-baf0-4cb2-95da-15a8a9cce595",
+            "run_id": "4d60e9c4-f1b1-4415-8f1c-dfb58ef5af57",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-crash-before-session-write-1",
+            "event_type": "parse",
+            "step_index": 5,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": null,
+            "input_summary": null,
+            "output_summary": {
+              "date": "2026-11-22",
+              "start_time": "14:00",
+              "end_time": "15:00",
+              "task_type": "inspection",
+              "purpose": "明天下午2点到3点巡检能飞吗"
+            },
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "intent": "evaluate",
+              "missing_fields": [
+                "location"
+              ]
+            },
+            "created_at": "2026-11-21T08:14:58.339989"
+          },
+          {
+            "id": 612,
+            "trace_id": "58ec9377-baf0-4cb2-95da-15a8a9cce595",
+            "run_id": "4d60e9c4-f1b1-4415-8f1c-dfb58ef5af57",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-crash-before-session-write-1",
+            "event_type": "state_update",
+            "step_index": 6,
+            "status_before": "needs_clarification",
+            "status_after": "needs_clarification",
+            "tool_name": null,
+            "latency_ms": null,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": "allowed",
+            "metadata": {
+              "source": "agent_guardrail",
+              "guardrail_checkpoint": "input",
+              "guardrail_action": "allow",
+              "guardrail_allowed": true,
+              "guardrail_reason": "allowed",
+              "guardrail_user_message": "Guardrail 检查通过。",
+              "guardrail_explanation": {
+                "checkpoint": "input",
+                "action": "allow",
+                "allowed": true,
+                "error_code": null,
+                "reason": "allowed",
+                "user_message": "Guardrail 检查通过。",
+                "violation_type": null,
+                "tool_name": null,
+                "metadata": {
+                  "query_length": 14
+                }
+              },
+              "query_length": 14,
+              "agent_step": 2
+            },
+            "created_at": "2026-11-21T08:14:58.339990"
+          },
+          {
+            "id": 613,
+            "trace_id": "58ec9377-baf0-4cb2-95da-15a8a9cce595",
+            "run_id": "4d60e9c4-f1b1-4415-8f1c-dfb58ef5af57",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-crash-before-session-write-1",
+            "event_type": "stage",
+            "step_index": 7,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 0,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "planner",
+              "duration_ms": 0.012,
+              "self_ms": 0.012,
+              "start_offset_ms": 5.318,
+              "parent_stage": null,
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:14:58.339990"
+          },
+          {
+            "id": 614,
+            "trace_id": "58ec9377-baf0-4cb2-95da-15a8a9cce595",
+            "run_id": "4d60e9c4-f1b1-4415-8f1c-dfb58ef5af57",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-crash-before-session-write-1",
+            "event_type": "plan",
+            "step_index": 8,
+            "status_before": null,
+            "status_after": "needs_clarification",
+            "tool_name": null,
+            "latency_ms": null,
+            "input_summary": null,
+            "output_summary": {
+              "action": "ask_clarification",
+              "reason": "required fields are missing before tool planning",
+              "tool_name": null,
+              "tool_input": {},
+              "missing_fields": [
+                "location"
+              ],
+              "metadata": {}
+            },
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "agent_step": 2
+            },
+            "created_at": "2026-11-21T08:14:58.339990"
+          },
+          {
+            "id": 615,
+            "trace_id": "58ec9377-baf0-4cb2-95da-15a8a9cce595",
+            "run_id": "4d60e9c4-f1b1-4415-8f1c-dfb58ef5af57",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-crash-before-session-write-1",
+            "event_type": "clarification",
+            "step_index": 9,
+            "status_before": null,
+            "status_after": "needs_clarification",
+            "tool_name": null,
+            "latency_ms": null,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": "还需要补充以下信息后才能继续：任务地点。",
+            "metadata": {
+              "missing_fields": [
+                "location"
+              ],
+              "agent_step": 3
+            },
+            "created_at": "2026-11-21T08:14:58.339991"
+          },
+          {
+            "id": 616,
+            "trace_id": "58ec9377-baf0-4cb2-95da-15a8a9cce595",
+            "run_id": "4d60e9c4-f1b1-4415-8f1c-dfb58ef5af57",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-crash-before-session-write-1",
+            "event_type": "stage",
+            "step_index": 10,
+            "status_before": null,
+            "status_after": null,
+            "tool_name": null,
+            "latency_ms": 3,
+            "input_summary": null,
+            "output_summary": null,
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "stage": "session_write",
+              "duration_ms": 3.207,
+              "self_ms": 3.207,
+              "start_offset_ms": 5.548,
+              "parent_stage": null,
+              "ok": true
+            },
+            "created_at": "2026-11-21T08:14:58.339991"
+          },
+          {
+            "id": 617,
+            "trace_id": "58ec9377-baf0-4cb2-95da-15a8a9cce595",
+            "run_id": "4d60e9c4-f1b1-4415-8f1c-dfb58ef5af57",
+            "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+            "session_id": "sr-crash-before-session-write-1",
+            "event_type": "final_response",
+            "step_index": 11,
+            "status_before": null,
+            "status_after": "needs_clarification",
+            "tool_name": null,
+            "latency_ms": null,
+            "input_summary": null,
+            "output_summary": {
+              "success": false,
+              "message": "还需要补充以下信息后才能继续：任务地点。"
+            },
+            "error_code": null,
+            "message": null,
+            "metadata": {
+              "outcome": "clarification",
+              "request_id": null,
+              "conversation_id": "27b60ec438e347d6bdf6f387c5c6f2b9",
+              "timings": {
+                "processing_ms": 9.564,
+                "stages": {
+                  "session_guard": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 0.585,
+                    "self_ms": 0.585
+                  },
+                  "context_read": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 3.824,
+                    "self_ms": 3.824
+                  },
+                  "parser": {
+                    "calls": 1,
+                    "failures": 1,
+                    "duration_ms": 0.094,
+                    "self_ms": 0.094
+                  },
+                  "planner": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 0.012,
+                    "self_ms": 0.012
+                  },
+                  "session_write": {
+                    "calls": 1,
+                    "failures": 0,
+                    "duration_ms": 3.207,
+                    "self_ms": 3.207
+                  }
+                },
+                "scope": "agent_processing_before_conversation_and_trace_commit"
+              },
+              "fallback_used": false,
+              "warnings": []
+            },
+            "created_at": "2026-11-21T08:14:58.339991"
+          }
+        ],
+        "request_ids": [],
+        "conversation_ids": [
+          "27b60ec438e347d6bdf6f387c5c6f2b9"
+        ],
+        "task_ids": [],
+        "outcome": "clarification",
+        "timings": {
+          "processing_ms": 9.564,
+          "stages": {
+            "session_guard": {
+              "calls": 1,
+              "failures": 0,
+              "duration_ms": 0.585,
+              "self_ms": 0.585
+            },
+            "context_read": {
+              "calls": 1,
+              "failures": 0,
+              "duration_ms": 3.824,
+              "self_ms": 3.824
+            },
+            "parser": {
+              "calls": 1,
+              "failures": 1,
+              "duration_ms": 0.094,
+              "self_ms": 0.094
+            },
+            "planner": {
+              "calls": 1,
+              "failures": 0,
+              "duration_ms": 0.012,
+              "self_ms": 0.012
+            },
+            "session_write": {
+              "calls": 1,
+              "failures": 0,
+              "duration_ms": 3.207,
+              "self_ms": 3.207
+            }
+          },
+          "scope": "agent_processing_before_conversation_and_trace_commit"
+        }
+      }
+    },
+    {
+      "kind": "session_snapshot",
+      "owner": "owner",
+      "session_id": "sr-crash-before-session-write-1",
+      "rows": [
+        {
+          "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+          "session_id": "sr-crash-before-session-write-1",
+          "last_context": {
+            "pending_task": {
+              "intent": "evaluate",
+              "parsed": {
+                "date": "2026-11-22",
+                "start_time": "14:00",
+                "end_time": "15:00",
+                "task_type": "inspection",
+                "purpose": "明天下午2点到3点巡检能飞吗"
+              },
+              "missing_fields": [
+                "location"
+              ],
+              "query": "明天下午2点到3点巡检能飞吗"
+            },
+            "intent": "evaluate",
+            "date": "2026-11-22",
+            "start_time": "14:00",
+            "end_time": "15:00",
+            "task_type": "inspection",
+            "purpose": "明天下午2点到3点巡检能飞吗"
+          },
+          "updated_at": "2026-11-21T08:14:58.332655",
+          "expires_at": "2026-12-21T08:14:58.332655"
+        }
+      ]
+    },
+    {
+      "kind": "database_fault",
+      "point": "session_write_after_business_commit",
+      "mode": "sleep"
+    },
+    {
+      "kind": "http",
+      "parallel": false,
+      "requests": [
+        {
+          "url": "http://app_a:8000/agent/query",
+          "method": "POST",
+          "token": "[REDACTED]",
+          "json": {
+            "query": "帮我创建一个深圳明天下午2点到3点巡检任务",
+            "session_id": "sr-crash-before-session-write-1"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 0,
+          "body": {
+            "error_type": "RemoteProtocolError"
+          },
+          "latency_ms": 1043.019
+        }
+      ]
+    },
+    {
+      "kind": "process",
+      "action": "SIGKILL_after_business_commit_before_session_write",
+      "active_queries": [
+        {
+          "pid": 33,
+          "wait_event": "PgSleep",
+          "query": "INSERT INTO session_records (session_id, user_id, title, last_context, created_at, updated_at, expires_at) VALUES ($1::VARCHAR, $2::VARCHAR, $3::VARCHAR, $4::JSON, $5::TIMESTAMP WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE) ON CONFLICT (user_id, session_id) DO UPDATE SET title = $8::VARCHAR, last_context = excluded.last_context, updated_at = excluded.updated_at, expires_at = excluded.expires_at RETURNING session_records.id"
+        }
+      ]
+    },
+    {
+      "kind": "process",
+      "action": "start",
+      "service": "app_a",
+      "elapsed_ms": 1078.0
+    },
+    {
+      "kind": "ready",
+      "server": "app_a",
+      "failed_probes": [
+        {
+          "status": 0,
+          "body": {
+            "error_type": "ConnectError"
+          }
+        },
+        {
+          "status": 0,
+          "body": {
+            "error_type": "ConnectError"
+          }
+        },
+        {
+          "status": 0,
+          "body": {
+            "error_type": "ConnectError"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "session_snapshot",
+      "owner": "owner",
+      "session_id": "sr-crash-before-session-write-1",
+      "rows": [
+        {
+          "user_id": "d901739b-a4b4-4054-86c5-69580d4a88a2",
+          "session_id": "sr-crash-before-session-write-1",
+          "last_context": {
+            "pending_task": {
+              "intent": "evaluate",
+              "parsed": {
+                "date": "2026-11-22",
+                "start_time": "14:00",
+                "end_time": "15:00",
+                "task_type": "inspection",
+                "purpose": "明天下午2点到3点巡检能飞吗"
+              },
+              "missing_fields": [
+                "location"
+              ],
+              "query": "明天下午2点到3点巡检能飞吗"
+            },
+            "intent": "evaluate",
+            "date": "2026-11-22",
+            "start_time": "14:00",
+            "end_time": "15:00",
+            "task_type": "inspection",
+            "purpose": "明天下午2点到3点巡检能飞吗"
+          },
+          "updated_at": "2026-11-21T08:14:58.332655",
+          "expires_at": "2026-12-21T08:14:58.332655"
+        }
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "name": "clarification_before_fault",
+      "actual": "needs_clarification",
+      "expected": "needs_clarification",
+      "passed": true
+    },
+    {
+      "name": "pending_persisted",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "reached_postcommit_fault_point",
+      "actual": true,
+      "expected": true,
+      "passed": true
+    },
+    {
+      "name": "business_committed_before_crash",
+      "actual": 1,
+      "expected": 1,
+      "passed": true
+    },
+    {
+      "name": "interrupted_request_not_acknowledged",
+      "actual": 0,
+      "expected": 0,
+      "passed": true
+    },
+    {
+      "name": "no_automatic_duplicate_task",
+      "actual": 1,
+      "expected": 1,
+      "passed": true
+    },
+    {
+      "name": "previous_acknowledged_context_survives",
+      "actual": {
+        "pending_task": {
+          "intent": "evaluate",
+          "parsed": {
+            "date": "2026-11-22",
+            "start_time": "14:00",
+            "end_time": "15:00",
+            "task_type": "inspection",
+            "purpose": "明天下午2点到3点巡检能飞吗"
+          },
+          "missing_fields": [
+            "location"
+          ],
+          "query": "明天下午2点到3点巡检能飞吗"
+        },
+        "intent": "evaluate",
+        "date": "2026-11-22",
+        "start_time": "14:00",
+        "end_time": "15:00",
+        "task_type": "inspection",
+        "purpose": "明天下午2点到3点巡检能飞吗"
+      },
+      "expected": {
+        "pending_task": {
+          "intent": "evaluate",
+          "parsed": {
+            "date": "2026-11-22",
+            "start_time": "14:00",
+            "end_time": "15:00",
+            "task_type": "inspection",
+            "purpose": "明天下午2点到3点巡检能飞吗"
+          },
+          "missing_fields": [
+            "location"
+          ],
+          "query": "明天下午2点到3点巡检能飞吗"
+        },
+        "intent": "evaluate",
+        "date": "2026-11-22",
+        "start_time": "14:00",
+        "end_time": "15:00",
+        "task_type": "inspection",
+        "purpose": "明天下午2点到3点巡检能飞吗"
+      },
+      "passed": true
+    }
+  ],
+  "metrics": {
+    "inflight_request_not_replayed": true,
+    "recovery_ms": 7812.0
+  },
+  "passed": true
+}

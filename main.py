@@ -14,6 +14,8 @@ from fastapi.security import HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import OperationalError
+from redis.exceptions import RedisError
 
 from app.core.config import load_environment
 from app.db.models import User
@@ -253,6 +255,20 @@ async def weather_auth_exception_handler(request: Request, exc: WeatherAuthentic
         message=str(exc),
     )
     return JSONResponse(status_code=500, content=payload.model_dump())
+
+
+@app.exception_handler(OperationalError)
+async def database_unavailable_handler(request: Request, exc: OperationalError) -> JSONResponse:
+    logger.warning("Database unavailable", exc_info=True)
+    payload = ErrorResponse(error_code="DATABASE_UNAVAILABLE", message="数据库暂时不可用，请稍后重试。")
+    return JSONResponse(status_code=503, content=payload.model_dump())
+
+
+@app.exception_handler(RedisError)
+async def session_storage_unavailable_handler(request: Request, exc: RedisError) -> JSONResponse:
+    logger.warning("Redis Session storage unavailable", exc_info=True)
+    payload = ErrorResponse(error_code="SESSION_STORAGE_UNAVAILABLE", message="会话存储暂时不可用，请稍后重试。")
+    return JSONResponse(status_code=503, content=payload.model_dump())
 
 
 @app.exception_handler(LocationNotFoundError)

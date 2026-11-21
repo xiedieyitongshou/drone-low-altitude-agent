@@ -1,0 +1,4549 @@
+{
+  "run_at": "2026-11-21T16:18:41.646964+08:00",
+  "project": "session-reliability-final-20261121",
+  "code_commit": "f12acb8686ec5b53bd14000cc3021dbe424ea8b3",
+  "image": "drone-low-altitude-agent:session-reliability-validation",
+  "image_id": "sha256:d568b986b3688379563e2eecf83becee5ab16286abe222163bc036b7b3537c3b",
+  "source_sha256": {
+    "main.py": "d8d061a4cb1e39f429c203185674e5f9dd2b1467b2708cfe3af71107814ffb64",
+    "app/db/session.py": "9d90294cfb2e610729eec99291d98863da9b113d693bd6d09ed81d468e2b4d1e",
+    "app/services/task_orchestrator.py": "144ec7281df3fd89d5b8a4245f7ea909f6edbb6bf556098fbdfb03660f93ef14",
+    "app/services/session_execution.py": "352ccb50691045c80fdd321537ef72d35939158aa68a681c89ea5ba0c04316ca",
+    "scripts/session_reliability_eval.py": "12ce66373ab6febb19d43705c7bb97396b79b81f364861f9395236b80ec3c456",
+    "scripts/session_reliability_probe.py": "97b1eb5c46815ef241cd23e00569b040a01c2d6de0278efd67bca977f99c85ab",
+    "scripts/session_reliability_fixture.py": "ae2c4d7ff813bb2e9cc8aef480b1b9245470da69fdfce6d6102158065f274e3b",
+    "docker/session_reliability.compose.yml": "6002bb7be5ad6d1f5168921472eae7e4b7de9baa7f0814392e58c360fb4b15ee"
+  },
+  "repeats": 3,
+  "scenarios": [
+    "multiturn",
+    "app_restart",
+    "app_kill",
+    "cross_instance",
+    "postgres_restart",
+    "postgres_outage",
+    "postgres_expiry",
+    "redis_expiry",
+    "redis_outage",
+    "redis_restart",
+    "isolation",
+    "session_save_failure",
+    "concurrent_update",
+    "crash_before_session_write"
+  ],
+  "configuration": {
+    "authenticated_session": "PostgreSQL",
+    "anonymous_session": "Redis AOF",
+    "app_instances": 2,
+    "parser": "rule",
+    "llm": "disabled",
+    "weather": "real HTTP to deterministic local fixture",
+    "external_network": "disabled"
+  },
+  "summary": {
+    "cases": 42,
+    "passed": 42,
+    "restoration_eligible": 24,
+    "restoration_passed": 24,
+    "fields_checked": 288,
+    "fields_correct": 288
+  },
+  "by_scenario": {
+    "multiturn": {
+      "cases": 3,
+      "passed": 3,
+      "recovery_ms": {
+        "samples": [],
+        "median": null,
+        "max": null,
+        "p95": null
+      },
+      "continuation_latency_ms": []
+    },
+    "app_restart": {
+      "cases": 3,
+      "passed": 3,
+      "recovery_ms": {
+        "samples": [
+          5703.0,
+          5781.0,
+          5969.0
+        ],
+        "median": 5781.0,
+        "max": 5969.0,
+        "p95": null
+      },
+      "continuation_latency_ms": [
+        227.767,
+        229.205,
+        268.352
+      ]
+    },
+    "app_kill": {
+      "cases": 3,
+      "passed": 3,
+      "recovery_ms": {
+        "samples": [
+          5984.0,
+          5954.0,
+          6187.0
+        ],
+        "median": 5984.0,
+        "max": 6187.0,
+        "p95": null
+      },
+      "continuation_latency_ms": [
+        233.618,
+        222.374,
+        214.571
+      ]
+    },
+    "cross_instance": {
+      "cases": 3,
+      "passed": 3,
+      "recovery_ms": {
+        "samples": [],
+        "median": null,
+        "max": null,
+        "p95": null
+      },
+      "continuation_latency_ms": [
+        260.539,
+        166.236,
+        153.095
+      ]
+    },
+    "postgres_restart": {
+      "cases": 3,
+      "passed": 3,
+      "recovery_ms": {
+        "samples": [
+          2438.0,
+          2484.0,
+          2531.0
+        ],
+        "median": 2484.0,
+        "max": 2531.0,
+        "p95": null
+      },
+      "continuation_latency_ms": [
+        178.381,
+        181.194,
+        178.41
+      ]
+    },
+    "postgres_outage": {
+      "cases": 3,
+      "passed": 3,
+      "recovery_ms": {
+        "samples": [
+          4063.0,
+          6172.0,
+          4250.0
+        ],
+        "median": 4250.0,
+        "max": 6172.0,
+        "p95": null
+      },
+      "continuation_latency_ms": [
+        205.081,
+        231.693,
+        250.025
+      ]
+    },
+    "postgres_expiry": {
+      "cases": 3,
+      "passed": 3,
+      "recovery_ms": {
+        "samples": [],
+        "median": null,
+        "max": null,
+        "p95": null
+      },
+      "continuation_latency_ms": []
+    },
+    "redis_expiry": {
+      "cases": 3,
+      "passed": 3,
+      "recovery_ms": {
+        "samples": [],
+        "median": null,
+        "max": null,
+        "p95": null
+      },
+      "continuation_latency_ms": []
+    },
+    "redis_outage": {
+      "cases": 3,
+      "passed": 3,
+      "recovery_ms": {
+        "samples": [
+          5266.0,
+          5297.0,
+          5406.0
+        ],
+        "median": 5297.0,
+        "max": 5406.0,
+        "p95": null
+      },
+      "continuation_latency_ms": [
+        49.118,
+        48.759,
+        57.544
+      ]
+    },
+    "redis_restart": {
+      "cases": 3,
+      "passed": 3,
+      "recovery_ms": {
+        "samples": [
+          2047.0,
+          2000.0,
+          2140.0
+        ],
+        "median": 2047.0,
+        "max": 2140.0,
+        "p95": null
+      },
+      "continuation_latency_ms": [
+        54.203,
+        49.252,
+        59.704
+      ]
+    },
+    "isolation": {
+      "cases": 3,
+      "passed": 3,
+      "recovery_ms": {
+        "samples": [],
+        "median": null,
+        "max": null,
+        "p95": null
+      },
+      "continuation_latency_ms": []
+    },
+    "session_save_failure": {
+      "cases": 3,
+      "passed": 3,
+      "recovery_ms": {
+        "samples": [],
+        "median": null,
+        "max": null,
+        "p95": null
+      },
+      "continuation_latency_ms": [
+        153.685,
+        140.318,
+        193.632
+      ]
+    },
+    "concurrent_update": {
+      "cases": 3,
+      "passed": 3,
+      "recovery_ms": {
+        "samples": [],
+        "median": null,
+        "max": null,
+        "p95": null
+      },
+      "continuation_latency_ms": []
+    },
+    "crash_before_session_write": {
+      "cases": 3,
+      "passed": 3,
+      "recovery_ms": {
+        "samples": [
+          7812.0,
+          7969.0,
+          8344.0
+        ],
+        "median": 7969.0,
+        "max": 8344.0,
+        "p95": null
+      },
+      "continuation_latency_ms": []
+    }
+  },
+  "observability": {
+    "agent_request_outcomes": {
+      "success": 51,
+      "clarification": 30,
+      "http_error": 3,
+      "degraded": 3,
+      "busy": 3,
+      "transport_error": 3
+    },
+    "legacy_fallback_count": 0,
+    "returned_tool_results": 54,
+    "successful_tool_results": 54,
+    "failed_tool_results": 0
+  },
+  "results": [
+    {
+      "id": "SR-multiturn-1",
+      "scenario": "multiturn",
+      "iteration": 1,
+      "checks": [
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "field:start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "persisted_fields_match_tool",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "广州",
+          "expected": "广州",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "field:start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "广州",
+          "expected": "广州",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "persisted_fields_match_tool",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "广州",
+          "expected": "广州",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "survey",
+          "expected": "survey",
+          "passed": true
+        },
+        {
+          "name": "field:start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "广州",
+          "expected": "广州",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "survey",
+          "expected": "survey",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "persisted_fields_match_tool",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        }
+      ],
+      "metrics": {},
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-multiturn-1.json",
+        "sha256": "da9c7561ed0d922e58b49b8fcb225f9a55c2ab23cbc8466708cae113d2a849bb",
+        "bytes": 331233
+      },
+      "trace_ids": [
+        "aeaa68cf-9b86-480f-a909-e3a146e5f7ef",
+        "45b0f176-2355-4e2b-b351-1070adb97827",
+        "742570a0-4430-4fc0-ab2f-868efa99c691"
+      ]
+    },
+    {
+      "id": "SR-app_restart-1",
+      "scenario": "app_restart",
+      "iteration": 1,
+      "checks": [
+        {
+          "name": "clarification_before_fault",
+          "actual": "needs_clarification",
+          "expected": "needs_clarification",
+          "passed": true
+        },
+        {
+          "name": "pending_persisted",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "restoration_eligible": true,
+        "restored": true,
+        "recovery_ms": 5703.0,
+        "continuation_latency_ms": 227.767
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-app_restart-1.json",
+        "sha256": "4e7ddde6d52033cfe5ebc759388e75cb799cfb21fc7118cd3c664d73ce8d0ae6",
+        "bytes": 146541
+      },
+      "trace_ids": [
+        "07efa01f-8148-4dd7-83c3-a778155112cf",
+        "d741f4ac-89ec-4542-9c7e-0277bd8f1787"
+      ]
+    },
+    {
+      "id": "SR-app_kill-1",
+      "scenario": "app_kill",
+      "iteration": 1,
+      "checks": [
+        {
+          "name": "clarification_before_fault",
+          "actual": "needs_clarification",
+          "expected": "needs_clarification",
+          "passed": true
+        },
+        {
+          "name": "pending_persisted",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "restoration_eligible": true,
+        "restored": true,
+        "recovery_ms": 5984.0,
+        "continuation_latency_ms": 233.618
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-app_kill-1.json",
+        "sha256": "93c31b3f5bf2142bb792613f585206898008741cd6887cc689efecb2fef05230",
+        "bytes": 146408
+      },
+      "trace_ids": [
+        "4de95a5e-b85b-4389-9a49-dddd3785681d",
+        "d919efb6-1161-493a-a927-a85168914b9f"
+      ]
+    },
+    {
+      "id": "SR-cross_instance-1",
+      "scenario": "cross_instance",
+      "iteration": 1,
+      "checks": [
+        {
+          "name": "clarification_before_fault",
+          "actual": "needs_clarification",
+          "expected": "needs_clarification",
+          "passed": true
+        },
+        {
+          "name": "pending_persisted",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "restoration_eligible": true,
+        "restored": true,
+        "continuation_latency_ms": 260.539
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-cross_instance-1.json",
+        "sha256": "b5c1d10cd016641c9c3b33c5e62afa61b57382b0fb8d3e435aa696b0f4309d67",
+        "bytes": 146265
+      },
+      "trace_ids": [
+        "b84d931f-9392-4df5-9949-69cd5971cc6b",
+        "014d7923-99f5-4404-98ae-c3ede86b81a9"
+      ]
+    },
+    {
+      "id": "SR-postgres_restart-1",
+      "scenario": "postgres_restart",
+      "iteration": 1,
+      "checks": [
+        {
+          "name": "clarification_before_fault",
+          "actual": "needs_clarification",
+          "expected": "needs_clarification",
+          "passed": true
+        },
+        {
+          "name": "pending_persisted",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "restoration_eligible": true,
+        "restored": true,
+        "recovery_ms": 2438.0,
+        "continuation_latency_ms": 178.381
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-postgres_restart-1.json",
+        "sha256": "3ca5bc15169c5a7a0cba9e8a569a5eaa21b1f3d7dc6ca18f49da9f9a995eb9e7",
+        "bytes": 146581
+      },
+      "trace_ids": [
+        "a80cac0d-547a-4105-9534-83e75e0248f5",
+        "1b3c6a69-5885-4f75-87ac-44e0b5a7d138"
+      ]
+    },
+    {
+      "id": "SR-postgres_outage-1",
+      "scenario": "postgres_outage",
+      "iteration": 1,
+      "checks": [
+        {
+          "name": "clarification_before_fault",
+          "actual": "needs_clarification",
+          "expected": "needs_clarification",
+          "passed": true
+        },
+        {
+          "name": "pending_persisted",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "explicit_storage_unavailable",
+          "actual": 503,
+          "expected": 503,
+          "passed": true
+        },
+        {
+          "name": "no_weather_side_effect_during_outage",
+          "actual": 21,
+          "expected": 21,
+          "passed": true
+        },
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "restoration_eligible": true,
+        "restored": true,
+        "recovery_ms": 4063.0,
+        "continuation_latency_ms": 205.081
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-postgres_outage-1.json",
+        "sha256": "dcf4d156a5d71707a59333db0abb98d538b5a551183f97bd0e6259a4722c51e1",
+        "bytes": 147593
+      },
+      "trace_ids": [
+        "74f66ae3-05d4-4049-87ab-994d43e7570b",
+        "52d89498-d7fc-4168-945b-e9e286ea5596"
+      ]
+    },
+    {
+      "id": "SR-postgres_expiry-1",
+      "scenario": "postgres_expiry",
+      "iteration": 1,
+      "checks": [
+        {
+          "name": "clarification_before_fault",
+          "actual": "needs_clarification",
+          "expected": "needs_clarification",
+          "passed": true
+        },
+        {
+          "name": "pending_persisted",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "expired_session_does_not_execute",
+          "actual": false,
+          "expected": false,
+          "passed": true
+        },
+        {
+          "name": "expired_fields_not_reused",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "no_weather_after_expiry",
+          "actual": 24,
+          "expected": 24,
+          "passed": true
+        },
+        {
+          "name": "history_retained_after_expiry",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "expected_expiry": true
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-postgres_expiry-1.json",
+        "sha256": "2a48c4a94b689d3c3721112cff8cddf76dd266bf98e377b2b9db04ecad85e97c",
+        "bytes": 72320
+      },
+      "trace_ids": [
+        "c5880aee-2e3a-4f55-89c5-01560ec52385",
+        "0d011944-2a66-4b70-aa0b-c8551fab67ac"
+      ]
+    },
+    {
+      "id": "SR-redis_expiry-1",
+      "scenario": "redis_expiry",
+      "iteration": 1,
+      "checks": [
+        {
+          "name": "anonymous_seed_ok",
+          "actual": 200,
+          "expected": 200,
+          "passed": true
+        },
+        {
+          "name": "expired_redis_key_removed",
+          "actual": "0",
+          "expected": "0",
+          "passed": true
+        },
+        {
+          "name": "expired_redis_requires_fields",
+          "actual": 422,
+          "expected": 422,
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "expected_expiry": true
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-redis_expiry-1.json",
+        "sha256": "46b06f627e1221b6491887535420263e47e9eb0d94bb75c59a8e6c45b0cc558b",
+        "bytes": 2748
+      },
+      "trace_ids": []
+    },
+    {
+      "id": "SR-redis_outage-1",
+      "scenario": "redis_outage",
+      "iteration": 1,
+      "checks": [
+        {
+          "name": "anonymous_seed_ok",
+          "actual": 200,
+          "expected": 200,
+          "passed": true
+        },
+        {
+          "name": "explicit_redis_unavailable",
+          "actual": 503,
+          "expected": 503,
+          "passed": true
+        },
+        {
+          "name": "stateless_parse_still_works",
+          "actual": 200,
+          "expected": 200,
+          "passed": true
+        },
+        {
+          "name": "postgres_session_independent_of_redis",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "redis_restored_saved_context",
+          "actual": {
+            "intent": "evaluate",
+            "task_type": "inspection",
+            "date": "2026-11-22",
+            "start_time": "14:00",
+            "end_time": "15:00",
+            "location": "深圳"
+          },
+          "expected": {
+            "intent": "evaluate",
+            "task_type": "inspection",
+            "date": "2026-11-22",
+            "start_time": "14:00",
+            "end_time": "15:00",
+            "location": "深圳"
+          },
+          "passed": true
+        },
+        {
+          "name": "redis_continuation_ok",
+          "actual": 200,
+          "expected": 200,
+          "passed": true
+        },
+        {
+          "name": "field:redis_location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "restoration_eligible": true,
+        "recovery_ms": 5266.0,
+        "continuation_latency_ms": 49.118,
+        "restored": true
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-redis_outage-1.json",
+        "sha256": "1cccb8988718602a7c40cd60e72c5bd96128b6e5b47e946e9ed35853f3b32ba4",
+        "bytes": 95880
+      },
+      "trace_ids": [
+        "5f471ed0-f197-4e03-a978-d4724a48caa7"
+      ]
+    },
+    {
+      "id": "SR-redis_restart-1",
+      "scenario": "redis_restart",
+      "iteration": 1,
+      "checks": [
+        {
+          "name": "anonymous_seed_ok",
+          "actual": 200,
+          "expected": 200,
+          "passed": true
+        },
+        {
+          "name": "redis_restored_saved_context",
+          "actual": {
+            "intent": "evaluate",
+            "task_type": "inspection",
+            "date": "2026-11-22",
+            "start_time": "14:00",
+            "end_time": "15:00",
+            "location": "深圳"
+          },
+          "expected": {
+            "intent": "evaluate",
+            "task_type": "inspection",
+            "date": "2026-11-22",
+            "start_time": "14:00",
+            "end_time": "15:00",
+            "location": "深圳"
+          },
+          "passed": true
+        },
+        {
+          "name": "redis_continuation_ok",
+          "actual": 200,
+          "expected": 200,
+          "passed": true
+        },
+        {
+          "name": "field:redis_location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "restoration_eligible": true,
+        "recovery_ms": 2047.0,
+        "continuation_latency_ms": 54.203,
+        "restored": true
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-redis_restart-1.json",
+        "sha256": "703ab572af535de3c04f1b362458c39df778dd39a3fa963d779308994c70005b",
+        "bytes": 3822
+      },
+      "trace_ids": []
+    },
+    {
+      "id": "SR-isolation-1",
+      "scenario": "isolation",
+      "iteration": 1,
+      "checks": [
+        {
+          "name": "different_users_are_not_serialized_together",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "广州",
+          "expected": "广州",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "survey",
+          "expected": "survey",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "广州",
+          "expected": "广州",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "survey",
+          "expected": "survey",
+          "passed": true
+        },
+        {
+          "name": "separate_session_does_not_inherit_location",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "other_user_cannot_read_trace",
+          "actual": 404,
+          "expected": 404,
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "isolation_case": true
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-isolation-1.json",
+        "sha256": "7ad811b8501cec04aba7050c39d9b4336cfd966175772bac1f846456560e5fde",
+        "bytes": 288368
+      },
+      "trace_ids": [
+        "939b9eee-7da6-4d3c-b399-e7d2ef7a71f7",
+        "655e5378-2f69-4b57-a931-833ee809ef31",
+        "2b225644-e26e-44b5-ae1c-31762172b951"
+      ]
+    },
+    {
+      "id": "SR-session_save_failure-1",
+      "scenario": "session_save_failure",
+      "iteration": 1,
+      "checks": [
+        {
+          "name": "clarification_before_fault",
+          "actual": "needs_clarification",
+          "expected": "needs_clarification",
+          "passed": true
+        },
+        {
+          "name": "pending_persisted",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "business_retained_on_save_failure",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "save_failure_not_acknowledged",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "exactly_one_task_after_fault",
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        },
+        {
+          "name": "previous_acknowledged_session_unchanged",
+          "actual": {
+            "pending_task": {
+              "intent": "evaluate",
+              "parsed": {
+                "date": "2026-11-22",
+                "start_time": "14:00",
+                "end_time": "15:00",
+                "task_type": "inspection",
+                "purpose": "明天下午2点到3点巡检能飞吗"
+              },
+              "missing_fields": [
+                "location"
+              ],
+              "query": "明天下午2点到3点巡检能飞吗"
+            },
+            "intent": "evaluate",
+            "date": "2026-11-22",
+            "start_time": "14:00",
+            "end_time": "15:00",
+            "task_type": "inspection",
+            "purpose": "明天下午2点到3点巡检能飞吗"
+          },
+          "expected": {
+            "pending_task": {
+              "intent": "evaluate",
+              "parsed": {
+                "date": "2026-11-22",
+                "start_time": "14:00",
+                "end_time": "15:00",
+                "task_type": "inspection",
+                "purpose": "明天下午2点到3点巡检能飞吗"
+              },
+              "missing_fields": [
+                "location"
+              ],
+              "query": "明天下午2点到3点巡检能飞吗"
+            },
+            "intent": "evaluate",
+            "date": "2026-11-22",
+            "start_time": "14:00",
+            "end_time": "15:00",
+            "task_type": "inspection",
+            "purpose": "明天下午2点到3点巡检能飞吗"
+          },
+          "passed": true
+        },
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "restoration_eligible": true,
+        "restored": true,
+        "continuation_latency_ms": 153.685
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-session_save_failure-1.json",
+        "sha256": "c2458365b0b42a17fcf6a0aaca2ff21da5cebc61869ade6d8999ecf01a0a69ca",
+        "bytes": 215743
+      },
+      "trace_ids": [
+        "70cdd554-a6b9-4031-900a-699e15379284",
+        "cec83ffe-117c-4837-a841-50802e52fcea",
+        "a54bebab-7c48-44c3-96ee-39e342a5b06d"
+      ]
+    },
+    {
+      "id": "SR-concurrent_update-1",
+      "scenario": "concurrent_update",
+      "iteration": 1,
+      "checks": [
+        {
+          "name": "one_same_session_request_admitted",
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        },
+        {
+          "name": "other_request_explicitly_rejected",
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        },
+        {
+          "name": "field:concurrent_location",
+          "actual": "广州",
+          "expected": "广州",
+          "passed": true
+        },
+        {
+          "name": "field:concurrent_task_type",
+          "actual": "survey",
+          "expected": "survey",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "concurrent_case": true
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-concurrent_update-1.json",
+        "sha256": "134bc56671f31429a566aef4887e74c845d9dd835c46eac5c51ddf1a7428343f",
+        "bytes": 237852
+      },
+      "trace_ids": [
+        "5b5e55e4-7eb0-4e38-871e-b0842f14755e",
+        "ce9d3143-5cc1-40a6-bb0e-773eda32ead8"
+      ]
+    },
+    {
+      "id": "SR-crash_before_session_write-1",
+      "scenario": "crash_before_session_write",
+      "iteration": 1,
+      "checks": [
+        {
+          "name": "clarification_before_fault",
+          "actual": "needs_clarification",
+          "expected": "needs_clarification",
+          "passed": true
+        },
+        {
+          "name": "pending_persisted",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "reached_postcommit_fault_point",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "business_committed_before_crash",
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        },
+        {
+          "name": "interrupted_request_not_acknowledged",
+          "actual": 0,
+          "expected": 0,
+          "passed": true
+        },
+        {
+          "name": "no_automatic_duplicate_task",
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        },
+        {
+          "name": "previous_acknowledged_context_survives",
+          "actual": {
+            "pending_task": {
+              "intent": "evaluate",
+              "parsed": {
+                "date": "2026-11-22",
+                "start_time": "14:00",
+                "end_time": "15:00",
+                "task_type": "inspection",
+                "purpose": "明天下午2点到3点巡检能飞吗"
+              },
+              "missing_fields": [
+                "location"
+              ],
+              "query": "明天下午2点到3点巡检能飞吗"
+            },
+            "intent": "evaluate",
+            "date": "2026-11-22",
+            "start_time": "14:00",
+            "end_time": "15:00",
+            "task_type": "inspection",
+            "purpose": "明天下午2点到3点巡检能飞吗"
+          },
+          "expected": {
+            "pending_task": {
+              "intent": "evaluate",
+              "parsed": {
+                "date": "2026-11-22",
+                "start_time": "14:00",
+                "end_time": "15:00",
+                "task_type": "inspection",
+                "purpose": "明天下午2点到3点巡检能飞吗"
+              },
+              "missing_fields": [
+                "location"
+              ],
+              "query": "明天下午2点到3点巡检能飞吗"
+            },
+            "intent": "evaluate",
+            "date": "2026-11-22",
+            "start_time": "14:00",
+            "end_time": "15:00",
+            "task_type": "inspection",
+            "purpose": "明天下午2点到3点巡检能飞吗"
+          },
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "inflight_request_not_replayed": true,
+        "recovery_ms": 7812.0
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-crash_before_session_write-1.json",
+        "sha256": "e1009731ce0365aa64991940dcececefa8498e19a24328f517b59539e63f7737",
+        "bytes": 41253
+      },
+      "trace_ids": [
+        "58ec9377-baf0-4cb2-95da-15a8a9cce595"
+      ]
+    },
+    {
+      "id": "SR-multiturn-2",
+      "scenario": "multiturn",
+      "iteration": 2,
+      "checks": [
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "field:start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "persisted_fields_match_tool",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "广州",
+          "expected": "广州",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "field:start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "广州",
+          "expected": "广州",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "persisted_fields_match_tool",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "广州",
+          "expected": "广州",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "survey",
+          "expected": "survey",
+          "passed": true
+        },
+        {
+          "name": "field:start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "广州",
+          "expected": "广州",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "survey",
+          "expected": "survey",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "persisted_fields_match_tool",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        }
+      ],
+      "metrics": {},
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-multiturn-2.json",
+        "sha256": "7ca63afbb9313b87c8edb29807f12e542a499df3ac89d0a8ca364e4ef7a7fb30",
+        "bytes": 331462
+      },
+      "trace_ids": [
+        "7fa5fb44-3dbc-4664-945b-f48f6a3beca0",
+        "dc78fbd6-9a0c-4521-84fe-ea9bba11a008",
+        "37f10a77-88d1-440c-9567-9c107c9ce4bd"
+      ]
+    },
+    {
+      "id": "SR-app_restart-2",
+      "scenario": "app_restart",
+      "iteration": 2,
+      "checks": [
+        {
+          "name": "clarification_before_fault",
+          "actual": "needs_clarification",
+          "expected": "needs_clarification",
+          "passed": true
+        },
+        {
+          "name": "pending_persisted",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "restoration_eligible": true,
+        "restored": true,
+        "recovery_ms": 5781.0,
+        "continuation_latency_ms": 229.205
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-app_restart-2.json",
+        "sha256": "dd87935563998eb1c307c6329eec15d72eadf351ffc4f1679d87c07cb1e72c74",
+        "bytes": 146553
+      },
+      "trace_ids": [
+        "e39cc743-89d6-42b1-9b85-21c285770492",
+        "338d93b0-db19-4d99-975b-2b2b5a507a8f"
+      ]
+    },
+    {
+      "id": "SR-app_kill-2",
+      "scenario": "app_kill",
+      "iteration": 2,
+      "checks": [
+        {
+          "name": "clarification_before_fault",
+          "actual": "needs_clarification",
+          "expected": "needs_clarification",
+          "passed": true
+        },
+        {
+          "name": "pending_persisted",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "restoration_eligible": true,
+        "restored": true,
+        "recovery_ms": 5954.0,
+        "continuation_latency_ms": 222.374
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-app_kill-2.json",
+        "sha256": "4982790864c75c53dd54030a7779794ef630df79c0bb67319ca7249798d8bb41",
+        "bytes": 146359
+      },
+      "trace_ids": [
+        "7b9cf0c0-37a7-4296-b7d0-41c814aac6b9",
+        "adde1ce5-ccd0-4670-b74c-f44cd4700900"
+      ]
+    },
+    {
+      "id": "SR-cross_instance-2",
+      "scenario": "cross_instance",
+      "iteration": 2,
+      "checks": [
+        {
+          "name": "clarification_before_fault",
+          "actual": "needs_clarification",
+          "expected": "needs_clarification",
+          "passed": true
+        },
+        {
+          "name": "pending_persisted",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "restoration_eligible": true,
+        "restored": true,
+        "continuation_latency_ms": 166.236
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-cross_instance-2.json",
+        "sha256": "0a3a31db9c5e73e0316bfca35822572cf931b4edaac6f6658fcb79cb09fc6fc1",
+        "bytes": 146180
+      },
+      "trace_ids": [
+        "3efabf81-bfa9-467b-9412-f67bd6a5dbbd",
+        "4ba907af-0c53-498f-9cca-52e5c8025193"
+      ]
+    },
+    {
+      "id": "SR-postgres_restart-2",
+      "scenario": "postgres_restart",
+      "iteration": 2,
+      "checks": [
+        {
+          "name": "clarification_before_fault",
+          "actual": "needs_clarification",
+          "expected": "needs_clarification",
+          "passed": true
+        },
+        {
+          "name": "pending_persisted",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "restoration_eligible": true,
+        "restored": true,
+        "recovery_ms": 2484.0,
+        "continuation_latency_ms": 181.194
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-postgres_restart-2.json",
+        "sha256": "3709fe3002fc9ccced6317b57acfbd0fe9fec34ac8ae5326548bc289cba8ebca",
+        "bytes": 146631
+      },
+      "trace_ids": [
+        "35ec7e51-9bd9-44df-a0b3-d218698547f9",
+        "98b372f4-3692-418b-b4e8-79c0f51b0716"
+      ]
+    },
+    {
+      "id": "SR-postgres_outage-2",
+      "scenario": "postgres_outage",
+      "iteration": 2,
+      "checks": [
+        {
+          "name": "clarification_before_fault",
+          "actual": "needs_clarification",
+          "expected": "needs_clarification",
+          "passed": true
+        },
+        {
+          "name": "pending_persisted",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "explicit_storage_unavailable",
+          "actual": 503,
+          "expected": 503,
+          "passed": true
+        },
+        {
+          "name": "no_weather_side_effect_during_outage",
+          "actual": 69,
+          "expected": 69,
+          "passed": true
+        },
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "restoration_eligible": true,
+        "restored": true,
+        "recovery_ms": 6172.0,
+        "continuation_latency_ms": 231.693
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-postgres_outage-2.json",
+        "sha256": "00281d42a2269864ce7cbc3ca53c7bd366f44800def4950eda23b58d67eda148",
+        "bytes": 147607
+      },
+      "trace_ids": [
+        "3bc9a817-9720-4404-8aca-e1be2c27477e",
+        "d688b387-f919-4e0c-bd34-7e08d6b0386a"
+      ]
+    },
+    {
+      "id": "SR-postgres_expiry-2",
+      "scenario": "postgres_expiry",
+      "iteration": 2,
+      "checks": [
+        {
+          "name": "clarification_before_fault",
+          "actual": "needs_clarification",
+          "expected": "needs_clarification",
+          "passed": true
+        },
+        {
+          "name": "pending_persisted",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "expired_session_does_not_execute",
+          "actual": false,
+          "expected": false,
+          "passed": true
+        },
+        {
+          "name": "expired_fields_not_reused",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "no_weather_after_expiry",
+          "actual": 72,
+          "expected": 72,
+          "passed": true
+        },
+        {
+          "name": "history_retained_after_expiry",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "expected_expiry": true
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-postgres_expiry-2.json",
+        "sha256": "0c80c03a6668ad3de8e65b9df2f9657d1482d344a9b09f51e0ea5a3163adab9a",
+        "bytes": 72341
+      },
+      "trace_ids": [
+        "12235898-7d34-4440-b0a9-0065f1e0d624",
+        "6171fab2-5c23-4111-83a4-6fb6342d60ff"
+      ]
+    },
+    {
+      "id": "SR-redis_expiry-2",
+      "scenario": "redis_expiry",
+      "iteration": 2,
+      "checks": [
+        {
+          "name": "anonymous_seed_ok",
+          "actual": 200,
+          "expected": 200,
+          "passed": true
+        },
+        {
+          "name": "expired_redis_key_removed",
+          "actual": "0",
+          "expected": "0",
+          "passed": true
+        },
+        {
+          "name": "expired_redis_requires_fields",
+          "actual": 422,
+          "expected": 422,
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "expected_expiry": true
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-redis_expiry-2.json",
+        "sha256": "b05ccceee29b1733395539f0005dcb8232326c1bb9ef372c73a8e03595e5121c",
+        "bytes": 2749
+      },
+      "trace_ids": []
+    },
+    {
+      "id": "SR-redis_outage-2",
+      "scenario": "redis_outage",
+      "iteration": 2,
+      "checks": [
+        {
+          "name": "anonymous_seed_ok",
+          "actual": 200,
+          "expected": 200,
+          "passed": true
+        },
+        {
+          "name": "explicit_redis_unavailable",
+          "actual": 503,
+          "expected": 503,
+          "passed": true
+        },
+        {
+          "name": "stateless_parse_still_works",
+          "actual": 200,
+          "expected": 200,
+          "passed": true
+        },
+        {
+          "name": "postgres_session_independent_of_redis",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "redis_restored_saved_context",
+          "actual": {
+            "intent": "evaluate",
+            "task_type": "inspection",
+            "date": "2026-11-22",
+            "start_time": "14:00",
+            "end_time": "15:00",
+            "location": "深圳"
+          },
+          "expected": {
+            "intent": "evaluate",
+            "task_type": "inspection",
+            "date": "2026-11-22",
+            "start_time": "14:00",
+            "end_time": "15:00",
+            "location": "深圳"
+          },
+          "passed": true
+        },
+        {
+          "name": "redis_continuation_ok",
+          "actual": 200,
+          "expected": 200,
+          "passed": true
+        },
+        {
+          "name": "field:redis_location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "restoration_eligible": true,
+        "recovery_ms": 5297.0,
+        "continuation_latency_ms": 48.759,
+        "restored": true
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-redis_outage-2.json",
+        "sha256": "99e0c8d5b8ee0ba21fafdc33d71f77e5c90407cd0b3cc54e9bb9e5f5e4b6e0f9",
+        "bytes": 95883
+      },
+      "trace_ids": [
+        "2461a63c-cd6e-40d4-870e-56700912ea4d"
+      ]
+    },
+    {
+      "id": "SR-redis_restart-2",
+      "scenario": "redis_restart",
+      "iteration": 2,
+      "checks": [
+        {
+          "name": "anonymous_seed_ok",
+          "actual": 200,
+          "expected": 200,
+          "passed": true
+        },
+        {
+          "name": "redis_restored_saved_context",
+          "actual": {
+            "intent": "evaluate",
+            "task_type": "inspection",
+            "date": "2026-11-22",
+            "start_time": "14:00",
+            "end_time": "15:00",
+            "location": "深圳"
+          },
+          "expected": {
+            "intent": "evaluate",
+            "task_type": "inspection",
+            "date": "2026-11-22",
+            "start_time": "14:00",
+            "end_time": "15:00",
+            "location": "深圳"
+          },
+          "passed": true
+        },
+        {
+          "name": "redis_continuation_ok",
+          "actual": 200,
+          "expected": 200,
+          "passed": true
+        },
+        {
+          "name": "field:redis_location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "restoration_eligible": true,
+        "recovery_ms": 2000.0,
+        "continuation_latency_ms": 49.252,
+        "restored": true
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-redis_restart-2.json",
+        "sha256": "97bc4973daa40fb0601921dfe993adeb476fd10f7b6db85451a441b87b800ce8",
+        "bytes": 3822
+      },
+      "trace_ids": []
+    },
+    {
+      "id": "SR-isolation-2",
+      "scenario": "isolation",
+      "iteration": 2,
+      "checks": [
+        {
+          "name": "different_users_are_not_serialized_together",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "广州",
+          "expected": "广州",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "survey",
+          "expected": "survey",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "广州",
+          "expected": "广州",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "survey",
+          "expected": "survey",
+          "passed": true
+        },
+        {
+          "name": "separate_session_does_not_inherit_location",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "other_user_cannot_read_trace",
+          "actual": 404,
+          "expected": 404,
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "isolation_case": true
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-isolation-2.json",
+        "sha256": "d0a6731a795cd4966b6e76fe915c9106fa38360caf21b06ecf2cb53d9d646865",
+        "bytes": 288537
+      },
+      "trace_ids": [
+        "5f36cf19-26a9-4810-82c8-b9f2d2ed357d",
+        "bbe77bc1-cb57-4ae9-8523-2f2a6cb0b9b8",
+        "e212422c-24fb-46dc-9ff0-d263681b2788"
+      ]
+    },
+    {
+      "id": "SR-session_save_failure-2",
+      "scenario": "session_save_failure",
+      "iteration": 2,
+      "checks": [
+        {
+          "name": "clarification_before_fault",
+          "actual": "needs_clarification",
+          "expected": "needs_clarification",
+          "passed": true
+        },
+        {
+          "name": "pending_persisted",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "business_retained_on_save_failure",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "save_failure_not_acknowledged",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "exactly_one_task_after_fault",
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        },
+        {
+          "name": "previous_acknowledged_session_unchanged",
+          "actual": {
+            "pending_task": {
+              "intent": "evaluate",
+              "parsed": {
+                "date": "2026-11-22",
+                "start_time": "14:00",
+                "end_time": "15:00",
+                "task_type": "inspection",
+                "purpose": "明天下午2点到3点巡检能飞吗"
+              },
+              "missing_fields": [
+                "location"
+              ],
+              "query": "明天下午2点到3点巡检能飞吗"
+            },
+            "intent": "evaluate",
+            "date": "2026-11-22",
+            "start_time": "14:00",
+            "end_time": "15:00",
+            "task_type": "inspection",
+            "purpose": "明天下午2点到3点巡检能飞吗"
+          },
+          "expected": {
+            "pending_task": {
+              "intent": "evaluate",
+              "parsed": {
+                "date": "2026-11-22",
+                "start_time": "14:00",
+                "end_time": "15:00",
+                "task_type": "inspection",
+                "purpose": "明天下午2点到3点巡检能飞吗"
+              },
+              "missing_fields": [
+                "location"
+              ],
+              "query": "明天下午2点到3点巡检能飞吗"
+            },
+            "intent": "evaluate",
+            "date": "2026-11-22",
+            "start_time": "14:00",
+            "end_time": "15:00",
+            "task_type": "inspection",
+            "purpose": "明天下午2点到3点巡检能飞吗"
+          },
+          "passed": true
+        },
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "restoration_eligible": true,
+        "restored": true,
+        "continuation_latency_ms": 140.318
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-session_save_failure-2.json",
+        "sha256": "bed12c8322165c38bd596bc6865c7df6d11b21cf8a46888004bb40b803bc8a70",
+        "bytes": 215935
+      },
+      "trace_ids": [
+        "e02b18ed-d139-434f-b035-b37a53ad4633",
+        "faa928ac-7436-4b72-8dcd-f2266cbc689d",
+        "a9b6e5e4-0dd8-4b28-9428-9d2909032dc2"
+      ]
+    },
+    {
+      "id": "SR-concurrent_update-2",
+      "scenario": "concurrent_update",
+      "iteration": 2,
+      "checks": [
+        {
+          "name": "one_same_session_request_admitted",
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        },
+        {
+          "name": "other_request_explicitly_rejected",
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        },
+        {
+          "name": "field:concurrent_location",
+          "actual": "广州",
+          "expected": "广州",
+          "passed": true
+        },
+        {
+          "name": "field:concurrent_task_type",
+          "actual": "survey",
+          "expected": "survey",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "concurrent_case": true
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-concurrent_update-2.json",
+        "sha256": "faa40dc89bf49d8eb785ffb3150f4cab4432cf85614f37f3c0be032d3577d177",
+        "bytes": 237965
+      },
+      "trace_ids": [
+        "2b890d87-12de-446c-8d43-daaed7802b31",
+        "bc6fd7d1-a7be-41da-b07d-17f681708238"
+      ]
+    },
+    {
+      "id": "SR-crash_before_session_write-2",
+      "scenario": "crash_before_session_write",
+      "iteration": 2,
+      "checks": [
+        {
+          "name": "clarification_before_fault",
+          "actual": "needs_clarification",
+          "expected": "needs_clarification",
+          "passed": true
+        },
+        {
+          "name": "pending_persisted",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "reached_postcommit_fault_point",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "business_committed_before_crash",
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        },
+        {
+          "name": "interrupted_request_not_acknowledged",
+          "actual": 0,
+          "expected": 0,
+          "passed": true
+        },
+        {
+          "name": "no_automatic_duplicate_task",
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        },
+        {
+          "name": "previous_acknowledged_context_survives",
+          "actual": {
+            "pending_task": {
+              "intent": "evaluate",
+              "parsed": {
+                "date": "2026-11-22",
+                "start_time": "14:00",
+                "end_time": "15:00",
+                "task_type": "inspection",
+                "purpose": "明天下午2点到3点巡检能飞吗"
+              },
+              "missing_fields": [
+                "location"
+              ],
+              "query": "明天下午2点到3点巡检能飞吗"
+            },
+            "intent": "evaluate",
+            "date": "2026-11-22",
+            "start_time": "14:00",
+            "end_time": "15:00",
+            "task_type": "inspection",
+            "purpose": "明天下午2点到3点巡检能飞吗"
+          },
+          "expected": {
+            "pending_task": {
+              "intent": "evaluate",
+              "parsed": {
+                "date": "2026-11-22",
+                "start_time": "14:00",
+                "end_time": "15:00",
+                "task_type": "inspection",
+                "purpose": "明天下午2点到3点巡检能飞吗"
+              },
+              "missing_fields": [
+                "location"
+              ],
+              "query": "明天下午2点到3点巡检能飞吗"
+            },
+            "intent": "evaluate",
+            "date": "2026-11-22",
+            "start_time": "14:00",
+            "end_time": "15:00",
+            "task_type": "inspection",
+            "purpose": "明天下午2点到3点巡检能飞吗"
+          },
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "inflight_request_not_replayed": true,
+        "recovery_ms": 7969.0
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-crash_before_session_write-2.json",
+        "sha256": "ae19236a61b8d0793a21a195e0d07215de93972b05f57521d39392b9672ae3e2",
+        "bytes": 41275
+      },
+      "trace_ids": [
+        "30e5dca2-8105-4b1d-9dbb-b177194bb1be"
+      ]
+    },
+    {
+      "id": "SR-multiturn-3",
+      "scenario": "multiturn",
+      "iteration": 3,
+      "checks": [
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "field:start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "persisted_fields_match_tool",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "广州",
+          "expected": "广州",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "field:start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "广州",
+          "expected": "广州",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "persisted_fields_match_tool",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "广州",
+          "expected": "广州",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "survey",
+          "expected": "survey",
+          "passed": true
+        },
+        {
+          "name": "field:start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "广州",
+          "expected": "广州",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "survey",
+          "expected": "survey",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "persisted_fields_match_tool",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        }
+      ],
+      "metrics": {},
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-multiturn-3.json",
+        "sha256": "35b3e28c95af1fffd61e215600a67e40504977eeacb43f3d64501ede587a3533",
+        "bytes": 331602
+      },
+      "trace_ids": [
+        "683b68e0-3886-4bdc-a753-ce82b8e0e3cf",
+        "a0455ea0-6298-4402-8724-f2ef57a2fb13",
+        "d65536b9-4bd4-4c7d-b690-98d7b0cd27a9"
+      ]
+    },
+    {
+      "id": "SR-app_restart-3",
+      "scenario": "app_restart",
+      "iteration": 3,
+      "checks": [
+        {
+          "name": "clarification_before_fault",
+          "actual": "needs_clarification",
+          "expected": "needs_clarification",
+          "passed": true
+        },
+        {
+          "name": "pending_persisted",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "restoration_eligible": true,
+        "restored": true,
+        "recovery_ms": 5969.0,
+        "continuation_latency_ms": 268.352
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-app_restart-3.json",
+        "sha256": "99f9498d6825b435266ce04e52c698bc70981cc07a22d2da061f3e0c6094f2e7",
+        "bytes": 146665
+      },
+      "trace_ids": [
+        "3d208e36-3c5b-4b9a-920a-629b4ddc80c6",
+        "9c5121a6-cf2a-4834-a796-b9b8b76bc05e"
+      ]
+    },
+    {
+      "id": "SR-app_kill-3",
+      "scenario": "app_kill",
+      "iteration": 3,
+      "checks": [
+        {
+          "name": "clarification_before_fault",
+          "actual": "needs_clarification",
+          "expected": "needs_clarification",
+          "passed": true
+        },
+        {
+          "name": "pending_persisted",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "restoration_eligible": true,
+        "restored": true,
+        "recovery_ms": 6187.0,
+        "continuation_latency_ms": 214.571
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-app_kill-3.json",
+        "sha256": "1dc759eb1c3322b7e4d41280c203d601e0d20e9acf43c116ee1ba86752f4b267",
+        "bytes": 146427
+      },
+      "trace_ids": [
+        "ce229bbd-3378-4a12-93d2-3eec7d272dba",
+        "3d8f056e-2c9f-4adc-ae76-3522176ea8bb"
+      ]
+    },
+    {
+      "id": "SR-cross_instance-3",
+      "scenario": "cross_instance",
+      "iteration": 3,
+      "checks": [
+        {
+          "name": "clarification_before_fault",
+          "actual": "needs_clarification",
+          "expected": "needs_clarification",
+          "passed": true
+        },
+        {
+          "name": "pending_persisted",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "restoration_eligible": true,
+        "restored": true,
+        "continuation_latency_ms": 153.095
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-cross_instance-3.json",
+        "sha256": "5e76c6ffa80a8c042c93efaca7328f1ba384ebda7b96967938351e1de03b97da",
+        "bytes": 146230
+      },
+      "trace_ids": [
+        "45571934-1e04-40a2-8e32-d8af67f17cc6",
+        "322baa3d-0b1d-4a59-a82b-ff304a631673"
+      ]
+    },
+    {
+      "id": "SR-postgres_restart-3",
+      "scenario": "postgres_restart",
+      "iteration": 3,
+      "checks": [
+        {
+          "name": "clarification_before_fault",
+          "actual": "needs_clarification",
+          "expected": "needs_clarification",
+          "passed": true
+        },
+        {
+          "name": "pending_persisted",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "restoration_eligible": true,
+        "restored": true,
+        "recovery_ms": 2531.0,
+        "continuation_latency_ms": 178.41
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-postgres_restart-3.json",
+        "sha256": "99286c2dd924b08522dab5ef43861c038bf09a9e34a89bacf66c4f4eac29050a",
+        "bytes": 146711
+      },
+      "trace_ids": [
+        "39443098-90a2-40a3-a393-6da1f4044ccc",
+        "1840a34d-070c-4967-9395-ad3efe15e7c0"
+      ]
+    },
+    {
+      "id": "SR-postgres_outage-3",
+      "scenario": "postgres_outage",
+      "iteration": 3,
+      "checks": [
+        {
+          "name": "clarification_before_fault",
+          "actual": "needs_clarification",
+          "expected": "needs_clarification",
+          "passed": true
+        },
+        {
+          "name": "pending_persisted",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "explicit_storage_unavailable",
+          "actual": 503,
+          "expected": 503,
+          "passed": true
+        },
+        {
+          "name": "no_weather_side_effect_during_outage",
+          "actual": 117,
+          "expected": 117,
+          "passed": true
+        },
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "restoration_eligible": true,
+        "restored": true,
+        "recovery_ms": 4250.0,
+        "continuation_latency_ms": 250.025
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-postgres_outage-3.json",
+        "sha256": "4d7cc67f013261d1517a741dd117cec961ecd77bed59c0e8ee2d1d3475760554",
+        "bytes": 147713
+      },
+      "trace_ids": [
+        "e0d0733a-962f-4860-b416-ee2c622e7b4e",
+        "ebac62ba-a547-405e-bee9-6d653c3940d0"
+      ]
+    },
+    {
+      "id": "SR-postgres_expiry-3",
+      "scenario": "postgres_expiry",
+      "iteration": 3,
+      "checks": [
+        {
+          "name": "clarification_before_fault",
+          "actual": "needs_clarification",
+          "expected": "needs_clarification",
+          "passed": true
+        },
+        {
+          "name": "pending_persisted",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "expired_session_does_not_execute",
+          "actual": false,
+          "expected": false,
+          "passed": true
+        },
+        {
+          "name": "expired_fields_not_reused",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "no_weather_after_expiry",
+          "actual": 120,
+          "expected": 120,
+          "passed": true
+        },
+        {
+          "name": "history_retained_after_expiry",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "expected_expiry": true
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-postgres_expiry-3.json",
+        "sha256": "7490cc826b60249c032b8c22c9114a93065884cd4d05ff3407d3a6b0a5274523",
+        "bytes": 72387
+      },
+      "trace_ids": [
+        "000d58db-6ebc-4b17-8d38-f96c799c930a",
+        "90373ae0-39e9-42e1-b670-0a548a180b9b"
+      ]
+    },
+    {
+      "id": "SR-redis_expiry-3",
+      "scenario": "redis_expiry",
+      "iteration": 3,
+      "checks": [
+        {
+          "name": "anonymous_seed_ok",
+          "actual": 200,
+          "expected": 200,
+          "passed": true
+        },
+        {
+          "name": "expired_redis_key_removed",
+          "actual": "0",
+          "expected": "0",
+          "passed": true
+        },
+        {
+          "name": "expired_redis_requires_fields",
+          "actual": 422,
+          "expected": 422,
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "expected_expiry": true
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-redis_expiry-3.json",
+        "sha256": "f7fb39f27e386c95159ee3a30bbfef5c8d8b5604796e31aba393194d3b0b9076",
+        "bytes": 2749
+      },
+      "trace_ids": []
+    },
+    {
+      "id": "SR-redis_outage-3",
+      "scenario": "redis_outage",
+      "iteration": 3,
+      "checks": [
+        {
+          "name": "anonymous_seed_ok",
+          "actual": 200,
+          "expected": 200,
+          "passed": true
+        },
+        {
+          "name": "explicit_redis_unavailable",
+          "actual": 503,
+          "expected": 503,
+          "passed": true
+        },
+        {
+          "name": "stateless_parse_still_works",
+          "actual": 200,
+          "expected": 200,
+          "passed": true
+        },
+        {
+          "name": "postgres_session_independent_of_redis",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "redis_restored_saved_context",
+          "actual": {
+            "intent": "evaluate",
+            "task_type": "inspection",
+            "date": "2026-11-22",
+            "start_time": "14:00",
+            "end_time": "15:00",
+            "location": "深圳"
+          },
+          "expected": {
+            "intent": "evaluate",
+            "task_type": "inspection",
+            "date": "2026-11-22",
+            "start_time": "14:00",
+            "end_time": "15:00",
+            "location": "深圳"
+          },
+          "passed": true
+        },
+        {
+          "name": "redis_continuation_ok",
+          "actual": 200,
+          "expected": 200,
+          "passed": true
+        },
+        {
+          "name": "field:redis_location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "restoration_eligible": true,
+        "recovery_ms": 5406.0,
+        "continuation_latency_ms": 57.544,
+        "restored": true
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-redis_outage-3.json",
+        "sha256": "c4cf6d79daf24d75c5e53714fcebae7cd4d367d0db4d6f012e101a581f8c6296",
+        "bytes": 95909
+      },
+      "trace_ids": [
+        "1da4eed9-d97e-4ea1-bc6c-137b0198f1d6"
+      ]
+    },
+    {
+      "id": "SR-redis_restart-3",
+      "scenario": "redis_restart",
+      "iteration": 3,
+      "checks": [
+        {
+          "name": "anonymous_seed_ok",
+          "actual": 200,
+          "expected": 200,
+          "passed": true
+        },
+        {
+          "name": "redis_restored_saved_context",
+          "actual": {
+            "intent": "evaluate",
+            "task_type": "inspection",
+            "date": "2026-11-22",
+            "start_time": "14:00",
+            "end_time": "15:00",
+            "location": "深圳"
+          },
+          "expected": {
+            "intent": "evaluate",
+            "task_type": "inspection",
+            "date": "2026-11-22",
+            "start_time": "14:00",
+            "end_time": "15:00",
+            "location": "深圳"
+          },
+          "passed": true
+        },
+        {
+          "name": "redis_continuation_ok",
+          "actual": 200,
+          "expected": 200,
+          "passed": true
+        },
+        {
+          "name": "field:redis_location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "restoration_eligible": true,
+        "recovery_ms": 2140.0,
+        "continuation_latency_ms": 59.704,
+        "restored": true
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-redis_restart-3.json",
+        "sha256": "5fc545ee5a50bbb8c7e4d04f92876f3fac640ca93c5d367a8812354b7f45013b",
+        "bytes": 3822
+      },
+      "trace_ids": []
+    },
+    {
+      "id": "SR-isolation-3",
+      "scenario": "isolation",
+      "iteration": 3,
+      "checks": [
+        {
+          "name": "different_users_are_not_serialized_together",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "广州",
+          "expected": "广州",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "survey",
+          "expected": "survey",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "广州",
+          "expected": "广州",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "survey",
+          "expected": "survey",
+          "passed": true
+        },
+        {
+          "name": "separate_session_does_not_inherit_location",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "other_user_cannot_read_trace",
+          "actual": 404,
+          "expected": 404,
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "isolation_case": true
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-isolation-3.json",
+        "sha256": "162576f0e071494a0a9be16287dec0b9f820a63c8a94f2e3803ce7cdc447de39",
+        "bytes": 288545
+      },
+      "trace_ids": [
+        "9c4bcfd4-3793-47cb-8d69-291ab39a08f8",
+        "c4865bb4-0c4e-4bff-a3a0-1ac3e6a02447",
+        "f12f0193-ff7a-4a13-8498-f9bb2eab08e0"
+      ]
+    },
+    {
+      "id": "SR-session_save_failure-3",
+      "scenario": "session_save_failure",
+      "iteration": 3,
+      "checks": [
+        {
+          "name": "clarification_before_fault",
+          "actual": "needs_clarification",
+          "expected": "needs_clarification",
+          "passed": true
+        },
+        {
+          "name": "pending_persisted",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "business_retained_on_save_failure",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "save_failure_not_acknowledged",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "exactly_one_task_after_fault",
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        },
+        {
+          "name": "previous_acknowledged_session_unchanged",
+          "actual": {
+            "pending_task": {
+              "intent": "evaluate",
+              "parsed": {
+                "date": "2026-11-22",
+                "start_time": "14:00",
+                "end_time": "15:00",
+                "task_type": "inspection",
+                "purpose": "明天下午2点到3点巡检能飞吗"
+              },
+              "missing_fields": [
+                "location"
+              ],
+              "query": "明天下午2点到3点巡检能飞吗"
+            },
+            "intent": "evaluate",
+            "date": "2026-11-22",
+            "start_time": "14:00",
+            "end_time": "15:00",
+            "task_type": "inspection",
+            "purpose": "明天下午2点到3点巡检能飞吗"
+          },
+          "expected": {
+            "pending_task": {
+              "intent": "evaluate",
+              "parsed": {
+                "date": "2026-11-22",
+                "start_time": "14:00",
+                "end_time": "15:00",
+                "task_type": "inspection",
+                "purpose": "明天下午2点到3点巡检能飞吗"
+              },
+              "missing_fields": [
+                "location"
+              ],
+              "query": "明天下午2点到3点巡检能飞吗"
+            },
+            "intent": "evaluate",
+            "date": "2026-11-22",
+            "start_time": "14:00",
+            "end_time": "15:00",
+            "task_type": "inspection",
+            "purpose": "明天下午2点到3点巡检能飞吗"
+          },
+          "passed": true
+        },
+        {
+          "name": "business_success",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        },
+        {
+          "name": "actual_tool_call_recorded",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_location",
+          "actual": "深圳",
+          "expected": "深圳",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_date",
+          "actual": "2026-11-22",
+          "expected": "2026-11-22",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_start_time",
+          "actual": "14:00",
+          "expected": "14:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_end_time",
+          "actual": "15:00",
+          "expected": "15:00",
+          "passed": true
+        },
+        {
+          "name": "field:trace_tool_task_type",
+          "actual": "inspection",
+          "expected": "inspection",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "restoration_eligible": true,
+        "restored": true,
+        "continuation_latency_ms": 193.632
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-session_save_failure-3.json",
+        "sha256": "f829c25ffd0f1aad11c8ee4609c1544850b3b9adc501968c4404c73184d2b148",
+        "bytes": 215958
+      },
+      "trace_ids": [
+        "e67b9a52-2234-4e5e-b7ae-224fbc0fa429",
+        "a62b5154-ea66-425f-8dd4-54cb738944f1",
+        "0b161ac5-56aa-4277-b69f-699cc0598b77"
+      ]
+    },
+    {
+      "id": "SR-concurrent_update-3",
+      "scenario": "concurrent_update",
+      "iteration": 3,
+      "checks": [
+        {
+          "name": "one_same_session_request_admitted",
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        },
+        {
+          "name": "other_request_explicitly_rejected",
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        },
+        {
+          "name": "field:concurrent_location",
+          "actual": "广州",
+          "expected": "广州",
+          "passed": true
+        },
+        {
+          "name": "field:concurrent_task_type",
+          "actual": "survey",
+          "expected": "survey",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "concurrent_case": true
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-concurrent_update-3.json",
+        "sha256": "ad76242e031d500614d064d341323598d2861b79dca3ef76c3288c79aa83d380",
+        "bytes": 238061
+      },
+      "trace_ids": [
+        "4026064c-5670-4317-838e-0e2bece9286b",
+        "b315f7e7-b69c-43d9-93a1-c99b741b1759"
+      ]
+    },
+    {
+      "id": "SR-crash_before_session_write-3",
+      "scenario": "crash_before_session_write",
+      "iteration": 3,
+      "checks": [
+        {
+          "name": "clarification_before_fault",
+          "actual": "needs_clarification",
+          "expected": "needs_clarification",
+          "passed": true
+        },
+        {
+          "name": "pending_persisted",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "reached_postcommit_fault_point",
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "name": "business_committed_before_crash",
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        },
+        {
+          "name": "interrupted_request_not_acknowledged",
+          "actual": 0,
+          "expected": 0,
+          "passed": true
+        },
+        {
+          "name": "no_automatic_duplicate_task",
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        },
+        {
+          "name": "previous_acknowledged_context_survives",
+          "actual": {
+            "pending_task": {
+              "intent": "evaluate",
+              "parsed": {
+                "date": "2026-11-22",
+                "start_time": "14:00",
+                "end_time": "15:00",
+                "task_type": "inspection",
+                "purpose": "明天下午2点到3点巡检能飞吗"
+              },
+              "missing_fields": [
+                "location"
+              ],
+              "query": "明天下午2点到3点巡检能飞吗"
+            },
+            "intent": "evaluate",
+            "date": "2026-11-22",
+            "start_time": "14:00",
+            "end_time": "15:00",
+            "task_type": "inspection",
+            "purpose": "明天下午2点到3点巡检能飞吗"
+          },
+          "expected": {
+            "pending_task": {
+              "intent": "evaluate",
+              "parsed": {
+                "date": "2026-11-22",
+                "start_time": "14:00",
+                "end_time": "15:00",
+                "task_type": "inspection",
+                "purpose": "明天下午2点到3点巡检能飞吗"
+              },
+              "missing_fields": [
+                "location"
+              ],
+              "query": "明天下午2点到3点巡检能飞吗"
+            },
+            "intent": "evaluate",
+            "date": "2026-11-22",
+            "start_time": "14:00",
+            "end_time": "15:00",
+            "task_type": "inspection",
+            "purpose": "明天下午2点到3点巡检能飞吗"
+          },
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "inflight_request_not_replayed": true,
+        "recovery_ms": 8344.0
+      },
+      "passed": true,
+      "raw_artifact": {
+        "file": "SR-crash_before_session_write-3.json",
+        "sha256": "fff0599eef73b95638697c847e3f0e216c8b45e56e2753b1f83c2d04689f2a5d",
+        "bytes": 41238
+      },
+      "trace_ids": [
+        "ba1d10a6-7003-4c04-ac44-234e9aed8ef6"
+      ]
+    }
+  ]
+}

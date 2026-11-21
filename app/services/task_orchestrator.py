@@ -47,6 +47,7 @@ from app.services.response_composer import (
 )
 from app.services.session_memory import build_session_context, session_memory_store
 from app.services.run_observability import current_observation, measure_stage, observe_run, timed_stage
+from app.services.session_execution import session_execution_guard
 
 
 logger = logging.getLogger(__name__)
@@ -64,7 +65,17 @@ def orchestrate_task_query(
     with observe_run(user_id=normalize_user_id(user_id), session_id=session_id) as observation:
         observation.emit("state_update", status_after="initialized", input_payload={"query": query})
         try:
-            response = _execute_task_query(query, session_id=session_id, user_id=user_id, db=db)
+            with session_execution_guard(user_id=observation.user_id, session_id=session_id, db=db) as admitted:
+                if admitted:
+                    response = _execute_task_query(query, session_id=session_id, user_id=user_id, db=db)
+                else:
+                    response = OrchestratorResponse(
+                        success=False, user_id=observation.user_id, session_id=session_id,
+                        intent="unknown", target_endpoint="/agent/query", parsed={},
+                        message="同一会话的上一条请求仍在处理中，请稍后重试。",
+                        fallback={"error_code": "SESSION_BUSY", "retryable": True},
+                        agent_runtime={"mode": os.getenv("AGENT_RUNTIME_MODE", "legacy"), "status": "failed", "fallback_used": False},
+                    )
         except Exception as exc:
             observation.emit("error", error_code="ORCHESTRATION_FAILED", metadata={"error_type": type(exc).__name__})
             observation.emit("final_response", status_after="failed", metadata={"outcome": "failed", "timings": observation.timing_summary()})

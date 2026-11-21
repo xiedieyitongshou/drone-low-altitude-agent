@@ -1,0 +1,4 @@
+# Preserve recorded evidence bytes so SHA-256 manifests survive Git checkout.
+docs/evidence/session-reliability-20261121/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+# Container log whitespace is part of the original captured evidence.
+docs/evidence/session-reliability-20261121/*.log -whitespace

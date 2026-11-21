@@ -1,0 +1,1556 @@
+app_a-1     | 2026-11-21T08:04:24.369712326Z INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+app_a-1     | 2026-11-21T08:04:24.369749088Z INFO  [alembic.runtime.migration] Will assume transactional DDL.
+app_a-1     | 2026-11-21T08:04:24.399548818Z INFO  [alembic.runtime.migration] Running upgrade  -> ba594bf836bf, create day18 initial tables
+app_a-1     | 2026-11-21T08:04:24.533267447Z INFO  [alembic.runtime.migration] Running upgrade ba594bf836bf -> c3f8a91d2b7e, add profile and conversation memory
+app_a-1     | 2026-11-21T08:04:24.565384455Z INFO  [alembic.runtime.migration] Running upgrade c3f8a91d2b7e -> ee7f4c2b9a10, add users table and memory user links
+app_a-1     | 2026-11-21T08:04:24.589668067Z INFO  [alembic.runtime.migration] Running upgrade ee7f4c2b9a10 -> f4b7c2e1d903, add session records
+redis-1     | 2026-11-21T08:04:20.507423415Z 1:C 21 Nov 2026 08:04:20.507 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+app_a-1     | 2026-11-21T08:04:24.606090376Z INFO  [alembic.runtime.migration] Running upgrade f4b7c2e1d903 -> a1d9c3f2e8b4, add agent trace events
+app_a-1     | 2026-11-21T08:04:24.642642332Z INFO  [alembic.runtime.migration] Running upgrade a1d9c3f2e8b4 -> d6c4b1e2f9a8, add rule sets and rule items
+app_b-1     | 2026-11-21T08:04:35.012010192Z INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+redis-1     | 2026-11-21T08:04:20.507452703Z 1:C 21 Nov 2026 08:04:20.507 * Redis version=7.4.11, bits=64, commit=00000000, modified=0, pid=1, just started
+postgres-1  | 2026-11-21T08:04:20.510079495Z The files belonging to this database system will be owned by user "postgres".
+redis-1     | 2026-11-21T08:04:20.507455114Z 1:C 21 Nov 2026 08:04:20.507 * Configuration loaded
+postgres-1  | 2026-11-21T08:04:20.510107105Z This user must also own the server process.
+postgres-1  | 2026-11-21T08:04:20.510109460Z 
+postgres-1  | 2026-11-21T08:04:20.510308666Z The database cluster will be initialized with locale "en_US.utf8".
+redis-1     | 2026-11-21T08:04:20.509374152Z 1:M 21 Nov 2026 08:04:20.509 * monotonic clock: POSIX clock_gettime
+app_a-1     | 2026-11-21T08:04:24.721813035Z INFO  [alembic.runtime.migration] Running upgrade d6c4b1e2f9a8 -> e8f2c4a91b37, add rule snapshots to assessments
+app_b-1     | 2026-11-21T08:04:35.012051181Z INFO  [alembic.runtime.migration] Will assume transactional DDL.
+app_b-1     | 2026-11-21T08:04:37.575191458Z INFO:     Started server process [1]
+app_a-1     | 2026-11-21T08:04:24.731158547Z INFO  [alembic.runtime.migration] Running upgrade e8f2c4a91b37 -> f9a3d7c61e20, add knowledge documents
+app_a-1     | 2026-11-21T08:04:24.798598471Z INFO  [alembic.runtime.migration] Running upgrade f9a3d7c61e20 -> b7e6a2c4d913, add mission tasks
+postgres-1  | 2026-11-21T08:04:20.510317756Z The default database encoding has accordingly been set to "UTF8".
+postgres-1  | 2026-11-21T08:04:20.510319848Z The default text search configuration will be set to "english".
+redis-1     | 2026-11-21T08:04:20.517604652Z 1:M 21 Nov 2026 08:04:20.517 * Running mode=standalone, port=6379.
+app_a-1     | 2026-11-21T08:04:24.850151059Z INFO  [alembic.runtime.migration] Running upgrade b7e6a2c4d913 -> c6a2f41d8e90, Link Agent business evaluations, conversations and Trace.
+redis-1     | 2026-11-21T08:04:20.519473144Z 1:M 21 Nov 2026 08:04:20.519 * Server initialized
+app_a-1     | 2026-11-21T08:04:28.319951460Z INFO:     Started server process [1]
+app_b-1     | 2026-11-21T08:04:37.575211403Z INFO:     Waiting for application startup.
+app_b-1     | 2026-11-21T08:04:37.575279236Z 2026-11-21 16:04:37,575 | INFO | drone-low-altitude-agent | Application starting
+redis-1     | 2026-11-21T08:04:20.523841117Z 1:M 21 Nov 2026 08:04:20.523 * Creating AOF base file appendonly.aof.1.base.rdb on server start
+app_a-1     | 2026-11-21T08:04:28.319976071Z INFO:     Waiting for application startup.
+postgres-1  | 2026-11-21T08:04:20.510321369Z 
+app_a-1     | 2026-11-21T08:04:28.320240203Z 2026-11-21 16:04:28,320 | INFO | drone-low-altitude-agent | Application starting
+postgres-1  | 2026-11-21T08:04:20.510322591Z Data page checksums are disabled.
+app_a-1     | 2026-11-21T08:04:28.326026227Z INFO:     Application startup complete.
+redis-1     | 2026-11-21T08:04:20.527144326Z 1:M 21 Nov 2026 08:04:20.527 * Creating AOF incr file appendonly.aof.1.incr.aof on server start
+app_b-1     | 2026-11-21T08:04:37.580885652Z INFO:     Application startup complete.
+app_b-1     | 2026-11-21T08:04:37.596828489Z INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+app_b-1     | 2026-11-21T08:04:37.762179994Z INFO:     172.22.0.3:39270 - "GET /health HTTP/1.1" 200 OK
+postgres-1  | 2026-11-21T08:04:20.510323810Z 
+app_b-1     | 2026-11-21T08:05:03.248439351Z 2026-11-21 16:05:03,248 | INFO | drone-low-altitude-agent | Starting task orchestration
+app_b-1     | 2026-11-21T08:05:03.266323868Z 2026-11-21 16:05:03,266 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+postgres-1  | 2026-11-21T08:04:20.510351641Z fixing permissions on existing directory /var/lib/postgresql/data ... ok
+app_a-1     | 2026-11-21T08:04:28.342036395Z INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+app_a-1     | 2026-11-21T08:04:28.928581909Z INFO:     172.22.0.3:37636 - "GET /health HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:04:29.935113214Z INFO:     172.22.0.3:37644 - "POST /auth/register HTTP/1.1" 201 Created
+app_a-1     | 2026-11-21T08:04:30.870293618Z INFO:     172.22.0.3:37652 - "POST /auth/login HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:04:31.877241820Z INFO:     172.22.0.3:37658 - "POST /auth/register HTTP/1.1" 201 Created
+app_a-1     | 2026-11-21T08:04:32.882997167Z INFO:     172.22.0.3:37666 - "POST /auth/login HTTP/1.1" 200 OK
+postgres-1  | 2026-11-21T08:04:20.513887741Z creating subdirectories ... ok
+postgres-1  | 2026-11-21T08:04:20.513900456Z selecting dynamic shared memory implementation ... posix
+app_b-1     | 2026-11-21T08:05:03.266504235Z 2026-11-21 16:05:03,266 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_b-1     | 2026-11-21T08:05:03.266632563Z 2026-11-21 16:05:03,266 | INFO | drone-low-altitude-agent.agent | agent tool call
+redis-1     | 2026-11-21T08:04:20.527157860Z 1:M 21 Nov 2026 08:04:20.527 * Ready to accept connections tcp
+app_b-1     | 2026-11-21T08:05:03.291256292Z 2026-11-21 16:05:03,291 | INFO | httpx | HTTP Request: GET http://weather:8080/geo/v2/city/lookup?location=%E6%B7%B1%E5%9C%B3&number=1&lang=zh "HTTP/1.0 200 OK"
+app_b-1     | 2026-11-21T08:05:03.293700585Z 2026-11-21 16:05:03,293 | INFO | httpx | HTTP Request: GET http://weather:8080/v7/weather/72h?location=shenzhen&lang=zh "HTTP/1.0 200 OK"
+redis-1     | 2026-11-21T08:05:33.830741717Z 1:signal-handler (1795248333) Received SIGTERM scheduling shutdown...
+postgres-1  | 2026-11-21T08:04:20.535084838Z selecting default max_connections ... 100
+postgres-1  | 2026-11-21T08:04:20.554220969Z selecting default shared_buffers ... 128MB
+redis-1     | 2026-11-21T08:05:33.869175699Z 1:M 21 Nov 2026 08:05:33.868 * User requested shutdown...
+redis-1     | 2026-11-21T08:05:33.870252050Z 1:M 21 Nov 2026 08:05:33.869 * Calling fsync() on the AOF file.
+redis-1     | 2026-11-21T08:05:33.871220384Z 1:M 21 Nov 2026 08:05:33.870 * Saving the final RDB snapshot before exiting.
+app_a-1     | 2026-11-21T08:04:38.462778088Z 2026-11-21 16:04:38,462 | INFO | drone-low-altitude-agent | Starting task orchestration
+redis-1     | 2026-11-21T08:05:33.879270298Z 1:M 21 Nov 2026 08:05:33.878 * DB saved on disk
+app_a-1     | 2026-11-21T08:04:38.484536878Z 2026-11-21 16:04:38,484 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_b-1     | 2026-11-21T08:05:03.295809647Z 2026-11-21 16:05:03,295 | INFO | httpx | HTTP Request: GET http://weather:8080/weatheralert/v1/current/22.54/114.05?lang=zh "HTTP/1.0 200 OK"
+app_b-1     | 2026-11-21T08:05:03.370949386Z 2026-11-21 16:05:03,370 | INFO | drone-low-altitude-agent.agent | agent tool result
+redis-1     | 2026-11-21T08:05:33.879317047Z 1:M 21 Nov 2026 08:05:33.878 # Redis is now ready to exit, bye bye...
+redis-1     | 2026-11-21T08:05:37.396318555Z 1:C 21 Nov 2026 08:05:37.395 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+redis-1     | 2026-11-21T08:05:37.396379020Z 1:C 21 Nov 2026 08:05:37.396 * Redis version=7.4.11, bits=64, commit=00000000, modified=0, pid=1, just started
+redis-1     | 2026-11-21T08:05:37.396389230Z 1:C 21 Nov 2026 08:05:37.396 * Configuration loaded
+app_b-1     | 2026-11-21T08:05:03.371273401Z 2026-11-21 16:05:03,371 | INFO | drone-low-altitude-agent.agent | agent plan generated
+redis-1     | 2026-11-21T08:05:37.397693923Z 1:M 21 Nov 2026 08:05:37.397 * monotonic clock: POSIX clock_gettime
+app_a-1     | 2026-11-21T08:04:38.484766884Z 2026-11-21 16:04:38,484 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_b-1     | 2026-11-21T08:05:03.371433004Z 2026-11-21 16:05:03,371 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_b-1     | 2026-11-21T08:05:03.371613965Z 2026-11-21 16:05:03,371 | INFO | drone-low-altitude-agent.agent | agent loop completed
+app_b-1     | 2026-11-21T08:05:03.398580010Z 2026-11-21 16:05:03,398 | INFO | app.services.llm_client | LLM generation skipped
+app_a-1     | 2026-11-21T08:04:38.484878802Z 2026-11-21 16:04:38,484 | INFO | drone-low-altitude-agent.agent | agent tool call
+app_a-1     | 2026-11-21T08:04:38.506452020Z 2026-11-21 16:04:38,506 | INFO | httpx | HTTP Request: GET http://weather:8080/geo/v2/city/lookup?location=%E6%B7%B1%E5%9C%B3&number=1&lang=zh "HTTP/1.0 200 OK"
+app_a-1     | 2026-11-21T08:04:38.508880341Z 2026-11-21 16:04:38,508 | INFO | httpx | HTTP Request: GET http://weather:8080/v7/weather/72h?location=shenzhen&lang=zh "HTTP/1.0 200 OK"
+postgres-1  | 2026-11-21T08:04:20.898356156Z selecting default time zone ... UTC
+postgres-1  | 2026-11-21T08:04:20.902883066Z creating configuration files ... ok
+postgres-1  | 2026-11-21T08:04:21.060162875Z running bootstrap script ... ok
+postgres-1  | 2026-11-21T08:04:21.309473023Z sh: locale: not found
+app_b-1     | 2026-11-21T08:05:03.424939859Z 2026-11-21 16:05:03,424 | INFO | drone-low-altitude-agent | Task orchestration completed
+postgres-1  | 2026-11-21T08:04:21.310117294Z 2026-11-21 08:04:21.309 UTC [35] WARNING:  no usable system locales were found
+app_b-1     | 2026-11-21T08:05:03.425805432Z INFO:     172.22.0.3:39718 - "POST /agent/query HTTP/1.1" 200 OK
+redis-1     | 2026-11-21T08:05:37.400839638Z 1:M 21 Nov 2026 08:05:37.400 * Running mode=standalone, port=6379.
+app_a-1     | 2026-11-21T08:04:38.512165358Z 2026-11-21 16:04:38,512 | INFO | httpx | HTTP Request: GET http://weather:8080/weatheralert/v1/current/22.54/114.05?lang=zh "HTTP/1.0 200 OK"
+app_a-1     | 2026-11-21T08:04:38.577296405Z 2026-11-21 16:04:38,577 | INFO | drone-low-altitude-agent.agent | agent tool result
+app_a-1     | 2026-11-21T08:04:38.577523258Z 2026-11-21 16:04:38,577 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:04:38.577645751Z 2026-11-21 16:04:38,577 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+redis-1     | 2026-11-21T08:05:37.402016355Z 1:M 21 Nov 2026 08:05:37.401 * Server initialized
+redis-1     | 2026-11-21T08:05:37.403688441Z 1:M 21 Nov 2026 08:05:37.403 * Reading RDB base file on AOF loading...
+postgres-1  | 2026-11-21T08:04:21.776362016Z performing post-bootstrap initialization ... ok
+app_b-1     | 2026-11-21T08:05:04.154767153Z INFO:     172.22.0.3:48068 - "GET /agent/traces/3258079c-62eb-4648-a4e4-084f73e6f9db HTTP/1.1" 200 OK
+postgres-1  | 2026-11-21T08:04:22.016994338Z initdb: warning: enabling "trust" authentication for local connections
+postgres-1  | 2026-11-21T08:04:22.017024428Z initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+postgres-1  | 2026-11-21T08:04:22.017071909Z syncing data to disk ... ok
+app_b-1     | 2026-11-21T08:05:44.736013066Z INFO:     172.22.0.3:43708 - "POST /agent/query HTTP/1.1" 500 Internal Server Error
+postgres-1  | 2026-11-21T08:04:22.017085384Z 
+app_b-1     | 2026-11-21T08:05:44.736059111Z 2026-11-21 16:05:44,730 | ERROR | drone-low-altitude-agent | Unhandled application error
+postgres-1  | 2026-11-21T08:04:22.017087478Z 
+app_a-1     | 2026-11-21T08:04:38.577733349Z 2026-11-21 16:04:38,577 | INFO | drone-low-altitude-agent.agent | agent loop completed
+app_a-1     | 2026-11-21T08:04:38.604723261Z 2026-11-21 16:04:38,604 | INFO | app.services.llm_client | LLM generation skipped
+redis-1     | 2026-11-21T08:05:37.404874580Z 1:M 21 Nov 2026 08:05:37.404 * Loading RDB produced by version 7.4.11
+redis-1     | 2026-11-21T08:05:37.404915255Z 1:M 21 Nov 2026 08:05:37.404 * RDB age 77 seconds
+redis-1     | 2026-11-21T08:05:37.404924011Z 1:M 21 Nov 2026 08:05:37.404 * RDB memory usage when created 0.90 Mb
+redis-1     | 2026-11-21T08:05:37.404930677Z 1:M 21 Nov 2026 08:05:37.404 * RDB is base AOF
+redis-1     | 2026-11-21T08:05:37.404936837Z 1:M 21 Nov 2026 08:05:37.404 * Done loading RDB, keys loaded: 0, keys expired: 0.
+postgres-1  | 2026-11-21T08:04:22.017089006Z Success. You can now start the database server using:
+redis-1     | 2026-11-21T08:05:37.406277457Z 1:M 21 Nov 2026 08:05:37.405 * DB loaded from base file appendonly.aof.1.base.rdb: 0.003 seconds
+redis-1     | 2026-11-21T08:05:37.407636064Z 1:M 21 Nov 2026 08:05:37.407 * DB loaded from incr file appendonly.aof.1.incr.aof: 0.001 seconds
+postgres-1  | 2026-11-21T08:04:22.017090551Z 
+postgres-1  | 2026-11-21T08:04:22.017091801Z     pg_ctl -D /var/lib/postgresql/data -l logfile start
+postgres-1  | 2026-11-21T08:04:22.017093154Z 
+app_b-1     | 2026-11-21T08:05:44.736062116Z Traceback (most recent call last):
+postgres-1  | 2026-11-21T08:04:22.068489253Z waiting for server to start....2026-11-21 08:04:22.068 UTC [47] LOG:  starting PostgreSQL 16.15 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+app_b-1     | 2026-11-21T08:05:44.736064019Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+redis-1     | 2026-11-21T08:05:37.407697688Z 1:M 21 Nov 2026 08:05:37.407 * DB loaded from append only file: 0.005 seconds
+postgres-1  | 2026-11-21T08:04:22.069967174Z 2026-11-21 08:04:22.069 UTC [47] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+app_b-1     | 2026-11-21T08:05:44.736076875Z     self.dialect.do_execute(
+postgres-1  | 2026-11-21T08:04:22.076424227Z 2026-11-21 08:04:22.076 UTC [50] LOG:  database system was shut down at 2026-11-21 08:04:21 UTC
+postgres-1  | 2026-11-21T08:04:22.083845382Z 2026-11-21 08:04:22.083 UTC [47] LOG:  database system is ready to accept connections
+app_b-1     | 2026-11-21T08:05:44.736078227Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+app_a-1     | 2026-11-21T08:04:38.621549440Z 2026-11-21 16:04:38,621 | INFO | drone-low-altitude-agent | Task orchestration completed
+app_a-1     | 2026-11-21T08:04:38.622448223Z INFO:     172.22.0.3:59292 - "POST /agent/query HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:04:39.420445793Z INFO:     172.22.0.3:59298 - "GET /agent/traces/33adcf7a-2bd8-4984-970e-85763af7baa1 HTTP/1.1" 200 OK
+postgres-1  | 2026-11-21T08:04:22.144122312Z  done
+redis-1     | 2026-11-21T08:05:37.407704124Z 1:M 21 Nov 2026 08:05:37.407 * Opening AOF incr file appendonly.aof.1.incr.aof on server start
+redis-1     | 2026-11-21T08:05:37.407707330Z 1:M 21 Nov 2026 08:05:37.407 * Ready to accept connections tcp
+redis-1     | 2026-11-21T08:05:40.835960213Z 1:signal-handler (1795248340) Received SIGTERM scheduling shutdown...
+app_b-1     | 2026-11-21T08:05:44.736079528Z     cursor.execute(statement, parameters)
+app_a-1     | 2026-11-21T08:04:40.455764609Z 2026-11-21 16:04:40,455 | INFO | drone-low-altitude-agent | Starting task orchestration
+app_a-1     | 2026-11-21T08:04:40.459907644Z 2026-11-21 16:04:40,459 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:04:40.460041337Z 2026-11-21 16:04:40,459 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:04:40.460107221Z 2026-11-21 16:04:40,460 | INFO | drone-low-altitude-agent.agent | agent tool call
+app_a-1     | 2026-11-21T08:04:40.467196759Z 2026-11-21 16:04:40,467 | INFO | httpx | HTTP Request: GET http://weather:8080/geo/v2/city/lookup?location=%E5%B9%BF%E5%B7%9E&number=1&lang=zh "HTTP/1.0 200 OK"
+redis-1     | 2026-11-21T08:05:40.935263089Z 1:M 21 Nov 2026 08:05:40.934 * User requested shutdown...
+app_b-1     | 2026-11-21T08:05:44.736080691Z   File "/usr/local/lib/python3.11/site-packages/psycopg/cursor.py", line 117, in execute
+app_b-1     | 2026-11-21T08:05:44.736081982Z     raise ex.with_traceback(None)
+app_b-1     | 2026-11-21T08:05:44.736083149Z psycopg.errors.AdminShutdown: terminating connection due to administrator command
+postgres-1  | 2026-11-21T08:04:22.144160487Z server started
+app_a-1     | 2026-11-21T08:04:40.469451335Z 2026-11-21 16:04:40,469 | INFO | httpx | HTTP Request: GET http://weather:8080/v7/weather/72h?location=guangzhou&lang=zh "HTTP/1.0 200 OK"
+postgres-1  | 2026-11-21T08:04:22.267583723Z CREATE DATABASE
+app_a-1     | 2026-11-21T08:04:40.471676643Z 2026-11-21 16:04:40,471 | INFO | httpx | HTTP Request: GET http://weather:8080/weatheralert/v1/current/23.13/113.26?lang=zh "HTTP/1.0 200 OK"
+postgres-1  | 2026-11-21T08:04:22.268385805Z 
+app_a-1     | 2026-11-21T08:04:40.516390163Z 2026-11-21 16:04:40,516 | INFO | drone-low-altitude-agent.agent | agent tool result
+postgres-1  | 2026-11-21T08:04:22.268533566Z 
+postgres-1  | 2026-11-21T08:04:22.268538113Z /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+app_b-1     | 2026-11-21T08:05:44.736084759Z 
+postgres-1  | 2026-11-21T08:04:22.268540906Z 
+postgres-1  | 2026-11-21T08:04:22.269423568Z waiting for server to shut down....2026-11-21 08:04:22.269 UTC [47] LOG:  received fast shutdown request
+postgres-1  | 2026-11-21T08:04:22.271813544Z 2026-11-21 08:04:22.271 UTC [47] LOG:  aborting any active transactions
+app_b-1     | 2026-11-21T08:05:44.736085901Z The above exception was the direct cause of the following exception:
+postgres-1  | 2026-11-21T08:04:22.273809679Z 2026-11-21 08:04:22.273 UTC [47] LOG:  background worker "logical replication launcher" (PID 53) exited with exit code 1
+app_b-1     | 2026-11-21T08:05:44.736087129Z 
+app_a-1     | 2026-11-21T08:04:40.516586358Z 2026-11-21 16:04:40,516 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:04:40.516739117Z 2026-11-21 16:04:40,516 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:04:40.516837853Z 2026-11-21 16:04:40,516 | INFO | drone-low-altitude-agent.agent | agent loop completed
+postgres-1  | 2026-11-21T08:04:22.273958416Z 2026-11-21 08:04:22.273 UTC [48] LOG:  shutting down
+app_b-1     | 2026-11-21T08:05:44.736088165Z Traceback (most recent call last):
+postgres-1  | 2026-11-21T08:04:22.275974750Z 2026-11-21 08:04:22.275 UTC [48] LOG:  checkpoint starting: shutdown immediate
+redis-1     | 2026-11-21T08:05:40.935300239Z 1:M 21 Nov 2026 08:05:40.934 * Calling fsync() on the AOF file.
+app_b-1     | 2026-11-21T08:05:44.736089252Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/errors.py", line 164, in __call__
+app_b-1     | 2026-11-21T08:05:44.736090517Z     await self.app(scope, receive, _send)
+app_b-1     | 2026-11-21T08:05:44.736091640Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/cors.py", line 91, in __call__
+postgres-1  | 2026-11-21T08:04:22.374763842Z 2026-11-21 08:04:22.374 UTC [48] LOG:  checkpoint complete: wrote 926 buffers (5.7%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.026 s, sync=0.068 s, total=0.101 s; sync files=301, longest=0.010 s, average=0.001 s; distance=4283 kB, estimate=4283 kB; lsn=0/1925D70, redo lsn=0/1925D70
+app_a-1     | 2026-11-21T08:04:40.528310284Z 2026-11-21 16:04:40,528 | INFO | app.services.llm_client | LLM generation skipped
+app_a-1     | 2026-11-21T08:04:40.539049861Z 2026-11-21 16:04:40,538 | INFO | drone-low-altitude-agent | Task orchestration completed
+app_a-1     | 2026-11-21T08:04:40.539598911Z INFO:     172.22.0.3:59314 - "POST /agent/query HTTP/1.1" 200 OK
+postgres-1  | 2026-11-21T08:04:22.383062408Z 2026-11-21 08:04:22.382 UTC [47] LOG:  database system is shut down
+postgres-1  | 2026-11-21T08:04:22.470079261Z  done
+app_b-1     | 2026-11-21T08:05:44.736092967Z     await self.simple_response(scope, receive, send, request_headers=headers)
+app_b-1     | 2026-11-21T08:05:44.736094173Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/cors.py", line 149, in simple_response
+app_a-1     | 2026-11-21T08:04:41.194451636Z INFO:     172.22.0.3:59322 - "GET /agent/traces/493c9902-14ae-444b-bf1a-641ef5b654d3 HTTP/1.1" 200 OK
+redis-1     | 2026-11-21T08:05:40.936288558Z 1:M 21 Nov 2026 08:05:40.935 * Saving the final RDB snapshot before exiting.
+redis-1     | 2026-11-21T08:05:40.944688149Z 1:M 21 Nov 2026 08:05:40.944 * DB saved on disk
+redis-1     | 2026-11-21T08:05:40.944716852Z 1:M 21 Nov 2026 08:05:40.944 # Redis is now ready to exit, bye bye...
+app_a-1     | 2026-11-21T08:04:42.196611475Z 2026-11-21 16:04:42,196 | INFO | drone-low-altitude-agent | Starting task orchestration
+app_b-1     | 2026-11-21T08:05:44.736095414Z     await self.app(scope, receive, send)
+app_a-1     | 2026-11-21T08:04:42.201246023Z 2026-11-21 16:04:42,200 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_b-1     | 2026-11-21T08:05:44.736096507Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+app_a-1     | 2026-11-21T08:04:42.201258956Z 2026-11-21 16:04:42,201 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_b-1     | 2026-11-21T08:05:44.736097758Z     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+redis-1     | 2026-11-21T08:05:41.368005917Z 1:C 21 Nov 2026 08:05:41.367 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+app_b-1     | 2026-11-21T08:05:44.736098886Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+redis-1     | 2026-11-21T08:05:41.368032958Z 1:C 21 Nov 2026 08:05:41.367 * Redis version=7.4.11, bits=64, commit=00000000, modified=0, pid=1, just started
+redis-1     | 2026-11-21T08:05:41.368035718Z 1:C 21 Nov 2026 08:05:41.367 * Configuration loaded
+app_b-1     | 2026-11-21T08:05:44.736100221Z     raise exc
+app_a-1     | 2026-11-21T08:04:42.201390493Z 2026-11-21 16:04:42,201 | INFO | drone-low-altitude-agent.agent | agent tool call
+app_b-1     | 2026-11-21T08:05:44.736101315Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+app_a-1     | 2026-11-21T08:04:42.208612944Z 2026-11-21 16:04:42,208 | INFO | httpx | HTTP Request: GET http://weather:8080/geo/v2/city/lookup?location=%E5%B9%BF%E5%B7%9E&number=1&lang=zh "HTTP/1.0 200 OK"
+app_b-1     | 2026-11-21T08:05:44.736102558Z     await app(scope, receive, sender)
+app_b-1     | 2026-11-21T08:05:44.736103657Z   File "/usr/local/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+app_b-1     | 2026-11-21T08:05:44.736104894Z     await self.app(scope, receive, send)
+app_b-1     | 2026-11-21T08:05:44.736106028Z   File "/usr/local/lib/python3.11/site-packages/starlette/routing.py", line 683, in __call__
+app_a-1     | 2026-11-21T08:04:42.210991959Z 2026-11-21 16:04:42,210 | INFO | httpx | HTTP Request: GET http://weather:8080/v7/weather/72h?location=guangzhou&lang=zh "HTTP/1.0 200 OK"
+app_a-1     | 2026-11-21T08:04:42.213698795Z 2026-11-21 16:04:42,213 | INFO | httpx | HTTP Request: GET http://weather:8080/weatheralert/v1/current/23.13/113.26?lang=zh "HTTP/1.0 200 OK"
+app_a-1     | 2026-11-21T08:04:42.258177703Z 2026-11-21 16:04:42,257 | INFO | drone-low-altitude-agent.agent | agent tool result
+app_b-1     | 2026-11-21T08:05:44.736107337Z     await self.middleware_stack(scope, receive, send)
+postgres-1  | 2026-11-21T08:04:22.470113119Z server stopped
+postgres-1  | 2026-11-21T08:04:22.471698130Z 
+postgres-1  | 2026-11-21T08:04:22.471717649Z PostgreSQL init process complete; ready for start up.
+postgres-1  | 2026-11-21T08:04:22.471721055Z 
+app_b-1     | 2026-11-21T08:05:44.736108461Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 2683, in app
+redis-1     | 2026-11-21T08:05:41.368372049Z 1:M 21 Nov 2026 08:05:41.368 * monotonic clock: POSIX clock_gettime
+redis-1     | 2026-11-21T08:05:41.369323247Z 1:M 21 Nov 2026 08:05:41.369 * Running mode=standalone, port=6379.
+app_a-1     | 2026-11-21T08:04:42.258438716Z 2026-11-21 16:04:42,258 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:04:42.258680608Z 2026-11-21 16:04:42,258 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+redis-1     | 2026-11-21T08:05:41.369793666Z 1:M 21 Nov 2026 08:05:41.369 * Server initialized
+app_a-1     | 2026-11-21T08:04:42.258684824Z 2026-11-21 16:04:42,258 | INFO | drone-low-altitude-agent.agent | agent loop completed
+redis-1     | 2026-11-21T08:05:41.369950403Z 1:M 21 Nov 2026 08:05:41.369 * Reading RDB base file on AOF loading...
+app_a-1     | 2026-11-21T08:04:42.268809650Z 2026-11-21 16:04:42,268 | INFO | app.services.llm_client | LLM generation skipped
+redis-1     | 2026-11-21T08:05:41.369960526Z 1:M 21 Nov 2026 08:05:41.369 * Loading RDB produced by version 7.4.11
+app_a-1     | 2026-11-21T08:04:42.280200154Z 2026-11-21 16:04:42,279 | INFO | drone-low-altitude-agent | Task orchestration completed
+app_a-1     | 2026-11-21T08:04:42.280894766Z INFO:     172.22.0.3:59338 - "POST /agent/query HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:04:42.959510796Z INFO:     172.22.0.3:59342 - "GET /agent/traces/a04346c3-19a5-4fca-afe3-9d5a74720b13 HTTP/1.1" 200 OK
+postgres-1  | 2026-11-21T08:04:22.512566026Z 2026-11-21 08:04:22.512 UTC [1] LOG:  starting PostgreSQL 16.15 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+postgres-1  | 2026-11-21T08:04:22.513198032Z 2026-11-21 08:04:22.512 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+postgres-1  | 2026-11-21T08:04:22.513230779Z 2026-11-21 08:04:22.512 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+app_a-1     | 2026-11-21T08:04:44.107033728Z 2026-11-21 16:04:44,106 | INFO | drone-low-altitude-agent | Starting task orchestration
+app_b-1     | 2026-11-21T08:05:44.736109972Z     await route.handle(scope, receive, send)
+app_b-1     | 2026-11-21T08:05:44.736111110Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 1266, in handle
+redis-1     | 2026-11-21T08:05:41.369962895Z 1:M 21 Nov 2026 08:05:41.369 * RDB age 81 seconds
+app_b-1     | 2026-11-21T08:05:44.736112348Z     await super().handle(scope, receive, send)
+redis-1     | 2026-11-21T08:05:41.369964804Z 1:M 21 Nov 2026 08:05:41.369 * RDB memory usage when created 0.90 Mb
+redis-1     | 2026-11-21T08:05:41.369966714Z 1:M 21 Nov 2026 08:05:41.369 * RDB is base AOF
+redis-1     | 2026-11-21T08:05:41.369968546Z 1:M 21 Nov 2026 08:05:41.369 * Done loading RDB, keys loaded: 0, keys expired: 0.
+app_a-1     | 2026-11-21T08:04:44.111772051Z 2026-11-21 16:04:44,111 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_b-1     | 2026-11-21T08:05:44.736115369Z   File "/usr/local/lib/python3.11/site-packages/starlette/routing.py", line 289, in handle
+app_b-1     | 2026-11-21T08:05:44.736116735Z     await self.app(scope, receive, send)
+postgres-1  | 2026-11-21T08:04:22.519263030Z 2026-11-21 08:04:22.519 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+postgres-1  | 2026-11-21T08:04:22.526454066Z 2026-11-21 08:04:22.526 UTC [64] LOG:  database system was shut down at 2026-11-21 08:04:22 UTC
+postgres-1  | 2026-11-21T08:04:22.535770291Z 2026-11-21 08:04:22.535 UTC [1] LOG:  database system is ready to accept connections
+redis-1     | 2026-11-21T08:05:41.370000219Z 1:M 21 Nov 2026 08:05:41.369 * DB loaded from base file appendonly.aof.1.base.rdb: 0.000 seconds
+redis-1     | 2026-11-21T08:05:41.370899330Z 1:M 21 Nov 2026 08:05:41.370 * DB loaded from incr file appendonly.aof.1.incr.aof: 0.001 seconds
+redis-1     | 2026-11-21T08:05:41.370908658Z 1:M 21 Nov 2026 08:05:41.370 * DB loaded from append only file: 0.001 seconds
+redis-1     | 2026-11-21T08:05:41.370910459Z 1:M 21 Nov 2026 08:05:41.370 * Opening AOF incr file appendonly.aof.1.incr.aof on server start
+app_b-1     | 2026-11-21T08:05:44.736117866Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 150, in app
+postgres-1  | 2026-11-21T08:05:06.555601099Z 2026-11-21 08:05:06.555 UTC [1] LOG:  received fast shutdown request
+postgres-1  | 2026-11-21T08:05:06.557479238Z 2026-11-21 08:05:06.557 UTC [1] LOG:  aborting any active transactions
+redis-1     | 2026-11-21T08:05:41.370911741Z 1:M 21 Nov 2026 08:05:41.370 * Ready to accept connections tcp
+app_b-1     | 2026-11-21T08:05:44.736119099Z     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+app_b-1     | 2026-11-21T08:05:44.736120314Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+app_b-1     | 2026-11-21T08:05:44.736121636Z     raise exc
+postgres-1  | 2026-11-21T08:05:06.560219249Z 2026-11-21 08:05:06.558 UTC [364] FATAL:  terminating connection due to administrator command
+app_a-1     | 2026-11-21T08:04:44.111940553Z 2026-11-21 16:04:44,111 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:04:44.112009036Z 2026-11-21 16:04:44,111 | INFO | drone-low-altitude-agent.agent | agent clarification required
+app_b-1     | 2026-11-21T08:05:44.736122686Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+app_b-1     | 2026-11-21T08:05:44.736123942Z     await app(scope, receive, sender)
+postgres-1  | 2026-11-21T08:05:06.560241071Z 2026-11-21 08:05:06.558 UTC [400] FATAL:  terminating connection due to administrator command
+app_b-1     | 2026-11-21T08:05:44.736125040Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 136, in app
+app_b-1     | 2026-11-21T08:05:44.736126304Z     response = await f(request)
+postgres-1  | 2026-11-21T08:05:06.560332279Z 2026-11-21 08:05:06.560 UTC [1] LOG:  background worker "logical replication launcher" (PID 71) exited with exit code 1
+postgres-1  | 2026-11-21T08:05:06.560410768Z 2026-11-21 08:05:06.560 UTC [168] FATAL:  terminating connection due to administrator command
+postgres-1  | 2026-11-21T08:05:06.560427004Z 2026-11-21 08:05:06.560 UTC [356] FATAL:  terminating connection due to administrator command
+postgres-1  | 2026-11-21T08:05:06.563273372Z 2026-11-21 08:05:06.563 UTC [62] LOG:  shutting down
+app_b-1     | 2026-11-21T08:05:44.736127440Z                ^^^^^^^^^^^^^^^^
+app_b-1     | 2026-11-21T08:05:44.736129611Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 473, in app
+app_a-1     | 2026-11-21T08:04:44.134012504Z 2026-11-21 16:04:44,133 | INFO | drone-low-altitude-agent | Task orchestration completed
+app_a-1     | 2026-11-21T08:04:44.134576163Z INFO:     172.22.0.3:59354 - "POST /agent/query HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:04:44.824819849Z INFO:     172.22.0.3:48724 - "GET /agent/traces/efca8ffe-d455-4cf7-9bfb-ba4396006394 HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:04:45.510894583Z INFO:     Shutting down
+postgres-1  | 2026-11-21T08:05:06.567267176Z 2026-11-21 08:05:06.567 UTC [62] LOG:  checkpoint starting: shutdown immediate
+postgres-1  | 2026-11-21T08:05:06.623874505Z 2026-11-21 08:05:06.623 UTC [62] LOG:  checkpoint complete: wrote 364 buffers (2.2%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.007 s, sync=0.045 s, total=0.061 s; sync files=236, longest=0.002 s, average=0.001 s; distance=1805 kB, estimate=1805 kB; lsn=0/1AE91F8, redo lsn=0/1AE91F8
+postgres-1  | 2026-11-21T08:05:06.629392713Z 2026-11-21 08:05:06.629 UTC [1] LOG:  database system is shut down
+app_b-1     | 2026-11-21T08:05:44.736130829Z     solved_result = await solve_dependencies(
+app_a-1     | 2026-11-21T08:04:45.612536692Z INFO:     Waiting for application shutdown.
+app_b-1     | 2026-11-21T08:05:44.736131986Z                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+app_b-1     | 2026-11-21T08:05:44.736133154Z   File "/usr/local/lib/python3.11/site-packages/fastapi/dependencies/utils.py", line 680, in solve_dependencies
+app_b-1     | 2026-11-21T08:05:44.736134422Z     solved = await run_in_threadpool(call, **solved_result.values)
+postgres-1  | 2026-11-21T08:05:07.098973288Z 
+app_b-1     | 2026-11-21T08:05:44.736135574Z              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_b-1     | 2026-11-21T08:05:44.736136756Z   File "/usr/local/lib/python3.11/site-packages/starlette/concurrency.py", line 34, in run_in_threadpool
+app_b-1     | 2026-11-21T08:05:44.736137991Z     return await anyio.to_thread.run_sync(func)
+app_b-1     | 2026-11-21T08:05:44.736139091Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_b-1     | 2026-11-21T08:05:44.736140228Z   File "/usr/local/lib/python3.11/site-packages/anyio/to_thread.py", line 65, in run_sync
+app_a-1     | 2026-11-21T08:04:45.613077277Z INFO:     Application shutdown complete.
+app_b-1     | 2026-11-21T08:05:44.736141487Z     return await get_async_backend().run_sync_in_worker_thread(
+app_a-1     | 2026-11-21T08:04:45.613091324Z INFO:     Finished server process [1]
+app_b-1     | 2026-11-21T08:05:44.736142600Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+postgres-1  | 2026-11-21T08:05:07.098995006Z PostgreSQL Database directory appears to contain a database; Skipping initialization
+app_b-1     | 2026-11-21T08:05:44.736143816Z   File "/usr/local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 2779, in run_sync_in_worker_thread
+postgres-1  | 2026-11-21T08:05:07.098997125Z 
+app_a-1     | 2026-11-21T08:04:47.292230289Z INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+postgres-1  | 2026-11-21T08:05:07.121967225Z 2026-11-21 08:05:07.121 UTC [1] LOG:  starting PostgreSQL 16.15 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+postgres-1  | 2026-11-21T08:05:07.121989791Z 2026-11-21 08:05:07.121 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+postgres-1  | 2026-11-21T08:05:07.121991835Z 2026-11-21 08:05:07.121 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+app_a-1     | 2026-11-21T08:04:47.292253620Z INFO  [alembic.runtime.migration] Will assume transactional DDL.
+postgres-1  | 2026-11-21T08:05:07.125503065Z 2026-11-21 08:05:07.125 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+app_a-1     | 2026-11-21T08:04:49.798693014Z INFO:     Started server process [1]
+app_b-1     | 2026-11-21T08:05:44.736145113Z     return await future
+app_b-1     | 2026-11-21T08:05:44.736146223Z            ^^^^^^^^^^^^
+app_b-1     | 2026-11-21T08:05:44.736147290Z   File "/usr/local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1124, in run
+app_b-1     | 2026-11-21T08:05:44.736148582Z     result = context.run(func, *args)
+postgres-1  | 2026-11-21T08:05:07.129768660Z 2026-11-21 08:05:07.129 UTC [29] LOG:  database system was shut down at 2026-11-21 08:05:06 UTC
+app_b-1     | 2026-11-21T08:05:44.736149719Z              ^^^^^^^^^^^^^^^^^^^^^^^^
+postgres-1  | 2026-11-21T08:05:07.136100286Z 2026-11-21 08:05:07.135 UTC [1] LOG:  database system is ready to accept connections
+postgres-1  | 2026-11-21T08:05:13.389824765Z 2026-11-21 08:05:13.389 UTC [1] LOG:  received fast shutdown request
+postgres-1  | 2026-11-21T08:05:13.391635598Z 2026-11-21 08:05:13.391 UTC [1] LOG:  aborting any active transactions
+postgres-1  | 2026-11-21T08:05:13.391671338Z 2026-11-21 08:05:13.391 UTC [48] FATAL:  terminating connection due to administrator command
+app_b-1     | 2026-11-21T08:05:44.736151046Z   File "/app/app/dependencies/auth.py", line 43, in get_current_user
+app_a-1     | 2026-11-21T08:04:49.798728839Z INFO:     Waiting for application startup.
+app_a-1     | 2026-11-21T08:04:49.798830989Z 2026-11-21 16:04:49,798 | INFO | drone-low-altitude-agent | Application starting
+postgres-1  | 2026-11-21T08:05:13.391694730Z 2026-11-21 08:05:13.391 UTC [40] FATAL:  terminating connection due to administrator command
+app_a-1     | 2026-11-21T08:04:49.804613543Z INFO:     Application startup complete.
+postgres-1  | 2026-11-21T08:05:13.394189176Z 2026-11-21 08:05:13.393 UTC [1] LOG:  background worker "logical replication launcher" (PID 32) exited with exit code 1
+app_b-1     | 2026-11-21T08:05:44.736153963Z     user = db.get(User, user_id)
+postgres-1  | 2026-11-21T08:05:13.395063732Z 2026-11-21 08:05:13.394 UTC [27] LOG:  shutting down
+app_a-1     | 2026-11-21T08:04:49.823378854Z INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+app_b-1     | 2026-11-21T08:05:44.736155112Z            ^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:04:50.066841794Z INFO:     172.22.0.3:48772 - "GET /auth/me HTTP/1.1" 200 OK
+postgres-1  | 2026-11-21T08:05:13.397407683Z 2026-11-21 08:05:13.397 UTC [27] LOG:  checkpoint starting: shutdown immediate
+app_a-1     | 2026-11-21T08:04:50.714789889Z 2026-11-21 16:04:50,714 | INFO | drone-low-altitude-agent | Starting task orchestration
+app_a-1     | 2026-11-21T08:04:50.732601529Z 2026-11-21 16:04:50,732 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+postgres-1  | 2026-11-21T08:05:13.423722878Z 2026-11-21 08:05:13.423 UTC [27] LOG:  checkpoint complete: wrote 95 buffers (0.6%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.004 s, sync=0.017 s, total=0.029 s; sync files=80, longest=0.003 s, average=0.001 s; distance=269 kB, estimate=269 kB; lsn=0/1B2C858, redo lsn=0/1B2C858
+app_a-1     | 2026-11-21T08:04:50.732797498Z 2026-11-21 16:04:50,732 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:04:50.732951500Z 2026-11-21 16:04:50,732 | INFO | drone-low-altitude-agent.agent | agent tool call
+app_b-1     | 2026-11-21T08:05:44.736156201Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 3702, in get
+app_a-1     | 2026-11-21T08:04:50.753289954Z 2026-11-21 16:04:50,753 | INFO | httpx | HTTP Request: GET http://weather:8080/geo/v2/city/lookup?location=%E6%B7%B1%E5%9C%B3&number=1&lang=zh "HTTP/1.0 200 OK"
+app_a-1     | 2026-11-21T08:04:50.755726367Z 2026-11-21 16:04:50,755 | INFO | httpx | HTTP Request: GET http://weather:8080/v7/weather/72h?location=shenzhen&lang=zh "HTTP/1.0 200 OK"
+app_a-1     | 2026-11-21T08:04:50.757794136Z 2026-11-21 16:04:50,757 | INFO | httpx | HTTP Request: GET http://weather:8080/weatheralert/v1/current/22.54/114.05?lang=zh "HTTP/1.0 200 OK"
+app_a-1     | 2026-11-21T08:04:50.821036606Z 2026-11-21 16:04:50,820 | INFO | drone-low-altitude-agent.agent | agent tool result
+app_a-1     | 2026-11-21T08:04:50.821250174Z 2026-11-21 16:04:50,821 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:04:50.821532796Z 2026-11-21 16:04:50,821 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+postgres-1  | 2026-11-21T08:05:13.428681935Z 2026-11-21 08:05:13.428 UTC [1] LOG:  database system is shut down
+postgres-1  | 2026-11-21T08:05:15.451746749Z 
+postgres-1  | 2026-11-21T08:05:15.451768976Z PostgreSQL Database directory appears to contain a database; Skipping initialization
+app_b-1     | 2026-11-21T08:05:44.736157435Z     return self._get_impl(
+postgres-1  | 2026-11-21T08:05:15.451782234Z 
+app_b-1     | 2026-11-21T08:05:44.736158536Z            ^^^^^^^^^^^^^^^
+app_b-1     | 2026-11-21T08:05:44.736159613Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 3881, in _get_impl
+app_b-1     | 2026-11-21T08:05:44.736160903Z     return db_load_fn(
+postgres-1  | 2026-11-21T08:05:15.473748562Z 2026-11-21 08:05:15.473 UTC [1] LOG:  starting PostgreSQL 16.15 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+postgres-1  | 2026-11-21T08:05:15.474174538Z 2026-11-21 08:05:15.474 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+app_b-1     | 2026-11-21T08:05:44.736162009Z            ^^^^^^^^^^^
+postgres-1  | 2026-11-21T08:05:15.474184455Z 2026-11-21 08:05:15.474 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+postgres-1  | 2026-11-21T08:05:15.478401419Z 2026-11-21 08:05:15.478 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+app_a-1     | 2026-11-21T08:04:50.821539248Z 2026-11-21 16:04:50,821 | INFO | drone-low-altitude-agent.agent | agent loop completed
+app_a-1     | 2026-11-21T08:04:50.837658994Z 2026-11-21 16:04:50,837 | INFO | app.services.llm_client | LLM generation skipped
+postgres-1  | 2026-11-21T08:05:15.483127696Z 2026-11-21 08:05:15.482 UTC [29] LOG:  database system was shut down at 2026-11-21 08:05:13 UTC
+app_b-1     | 2026-11-21T08:05:44.736163112Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/loading.py", line 695, in load_on_pk_identity
+postgres-1  | 2026-11-21T08:05:15.489803495Z 2026-11-21 08:05:15.489 UTC [1] LOG:  database system is ready to accept connections
+postgres-1  | 2026-11-21T08:05:53.724050306Z 2026-11-21 08:05:53.723 UTC [33] ERROR:  session reliability injected save failure
+app_b-1     | 2026-11-21T08:05:44.736164358Z     session.execute(
+postgres-1  | 2026-11-21T08:05:53.724067467Z 2026-11-21 08:05:53.723 UTC [33] CONTEXT:  PL/pgSQL function reliability_session_fault() line 1 at RAISE
+postgres-1  | 2026-11-21T08:05:53.724070109Z 2026-11-21 08:05:53.723 UTC [33] STATEMENT:  INSERT INTO session_records (session_id, user_id, title, last_context, created_at, updated_at, expires_at) VALUES ($1::VARCHAR, $2::VARCHAR, $3::VARCHAR, $4::JSON, $5::TIMESTAMP WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE) ON CONFLICT (user_id, session_id) DO UPDATE SET title = $8::VARCHAR, last_context = excluded.last_context, updated_at = excluded.updated_at, expires_at = excluded.expires_at RETURNING session_records.id
+postgres-1  | 2026-11-21T08:06:06.701498527Z 2026-11-21 08:06:06.701 UTC [41] FATAL:  terminating connection due to administrator command
+app_b-1     | 2026-11-21T08:05:44.736165485Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2373, in execute
+app_b-1     | 2026-11-21T08:05:44.736166734Z     return self._execute_internal(
+app_b-1     | 2026-11-21T08:05:44.736167844Z            ^^^^^^^^^^^^^^^^^^^^^^^
+app_b-1     | 2026-11-21T08:05:44.736168924Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2271, in _execute_internal
+app_b-1     | 2026-11-21T08:05:44.736170191Z     result: Result[Any] = compile_state_cls.orm_execute_statement(
+app_a-1     | 2026-11-21T08:04:50.855219786Z 2026-11-21 16:04:50,854 | INFO | drone-low-altitude-agent | Task orchestration completed
+app_a-1     | 2026-11-21T08:04:50.856069428Z INFO:     172.22.0.3:48786 - "POST /agent/query HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:04:51.528067674Z INFO:     172.22.0.3:48788 - "GET /agent/traces/b424065f-6f0f-4347-8262-3d5a85a78a3e HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:04:52.560200188Z 2026-11-21 16:04:52,559 | INFO | drone-low-altitude-agent | Starting task orchestration
+app_a-1     | 2026-11-21T08:04:52.565025887Z 2026-11-21 16:04:52,564 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_b-1     | 2026-11-21T08:05:44.736171376Z                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:04:52.565188682Z 2026-11-21 16:04:52,565 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:04:52.565390824Z 2026-11-21 16:04:52,565 | INFO | drone-low-altitude-agent.agent | agent clarification required
+postgres-1  | 2026-11-21T08:06:06.701520224Z 2026-11-21 08:06:06.701 UTC [41] CONTEXT:  SQL statement "SELECT pg_sleep(30)"
+app_b-1     | 2026-11-21T08:05:44.736172561Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+postgres-1  | 2026-11-21T08:06:06.701522114Z 	PL/pgSQL function reliability_session_fault() line 1 at PERFORM
+app_b-1     | 2026-11-21T08:05:44.736173842Z     result = conn.execute(
+app_a-1     | 2026-11-21T08:04:52.605752201Z 2026-11-21 16:04:52,605 | INFO | drone-low-altitude-agent | Task orchestration completed
+app_a-1     | 2026-11-21T08:04:52.606637180Z INFO:     172.22.0.3:48794 - "POST /agent/query HTTP/1.1" 200 OK
+app_b-1     | 2026-11-21T08:05:44.736174964Z              ^^^^^^^^^^^^^
+app_b-1     | 2026-11-21T08:05:44.736176111Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
+postgres-1  | 2026-11-21T08:06:06.701529213Z 2026-11-21 08:06:06.701 UTC [41] STATEMENT:  INSERT INTO session_records (session_id, user_id, title, last_context, created_at, updated_at, expires_at) VALUES ($1::VARCHAR, $2::VARCHAR, $3::VARCHAR, $4::JSON, $5::TIMESTAMP WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE) ON CONFLICT (user_id, session_id) DO UPDATE SET title = $8::VARCHAR, last_context = excluded.last_context, updated_at = excluded.updated_at, expires_at = excluded.expires_at RETURNING session_records.id
+app_b-1     | 2026-11-21T08:05:44.736177382Z     return meth(
+app_b-1     | 2026-11-21T08:05:44.736178478Z            ^^^^^
+app_b-1     | 2026-11-21T08:05:44.736179509Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+app_b-1     | 2026-11-21T08:05:44.736180778Z     return connection._execute_clauseelement(
+app_b-1     | 2026-11-21T08:05:44.736181898Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:04:53.298368558Z INFO:     172.22.0.3:48808 - "GET /agent/traces/6b871229-13f1-4728-8ca2-4914e4843a56 HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:04:56.086350940Z INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+app_a-1     | 2026-11-21T08:04:56.086378082Z INFO  [alembic.runtime.migration] Will assume transactional DDL.
+app_b-1     | 2026-11-21T08:05:44.736182996Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
+app_a-1     | 2026-11-21T08:04:58.600244940Z INFO:     Started server process [1]
+app_a-1     | 2026-11-21T08:04:58.600268968Z INFO:     Waiting for application startup.
+app_b-1     | 2026-11-21T08:05:44.736184241Z     ret = self._execute_context(
+app_a-1     | 2026-11-21T08:04:58.600271370Z 2026-11-21 16:04:58,600 | INFO | drone-low-altitude-agent | Application starting
+app_a-1     | 2026-11-21T08:04:58.606172785Z INFO:     Application startup complete.
+app_a-1     | 2026-11-21T08:04:58.617351142Z INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+app_a-1     | 2026-11-21T08:04:58.878324849Z INFO:     172.22.0.3:45120 - "GET /auth/me HTTP/1.1" 200 OK
+app_b-1     | 2026-11-21T08:05:44.736185351Z           ^^^^^^^^^^^^^^^^^^^^^^
+app_b-1     | 2026-11-21T08:05:44.736186400Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+app_a-1     | 2026-11-21T08:04:59.581204779Z 2026-11-21 16:04:59,580 | INFO | drone-low-altitude-agent | Starting task orchestration
+app_a-1     | 2026-11-21T08:04:59.606062882Z 2026-11-21 16:04:59,605 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:04:59.606276661Z 2026-11-21 16:04:59,606 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_b-1     | 2026-11-21T08:05:44.736187678Z     return self._exec_single_context(
+app_b-1     | 2026-11-21T08:05:44.736188815Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:04:59.606394811Z 2026-11-21 16:04:59,606 | INFO | drone-low-altitude-agent.agent | agent tool call
+app_b-1     | 2026-11-21T08:05:44.736189904Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1988, in _exec_single_context
+app_a-1     | 2026-11-21T08:04:59.631024576Z 2026-11-21 16:04:59,630 | INFO | httpx | HTTP Request: GET http://weather:8080/geo/v2/city/lookup?location=%E6%B7%B1%E5%9C%B3&number=1&lang=zh "HTTP/1.0 200 OK"
+app_a-1     | 2026-11-21T08:04:59.633787526Z 2026-11-21 16:04:59,633 | INFO | httpx | HTTP Request: GET http://weather:8080/v7/weather/72h?location=shenzhen&lang=zh "HTTP/1.0 200 OK"
+app_b-1     | 2026-11-21T08:05:44.736192587Z     self._handle_dbapi_exception(
+app_b-1     | 2026-11-21T08:05:44.736193941Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2365, in _handle_dbapi_exception
+app_b-1     | 2026-11-21T08:05:44.736195574Z     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+app_a-1     | 2026-11-21T08:04:59.635972215Z 2026-11-21 16:04:59,635 | INFO | httpx | HTTP Request: GET http://weather:8080/weatheralert/v1/current/22.54/114.05?lang=zh "HTTP/1.0 200 OK"
+app_a-1     | 2026-11-21T08:04:59.709071490Z 2026-11-21 16:04:59,708 | INFO | drone-low-altitude-agent.agent | agent tool result
+app_a-1     | 2026-11-21T08:04:59.709483643Z 2026-11-21 16:04:59,709 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_b-1     | 2026-11-21T08:05:44.736196802Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+app_b-1     | 2026-11-21T08:05:44.736198053Z     self.dialect.do_execute(
+app_a-1     | 2026-11-21T08:04:59.709732854Z 2026-11-21 16:04:59,709 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:04:59.709896963Z 2026-11-21 16:04:59,709 | INFO | drone-low-altitude-agent.agent | agent loop completed
+app_b-1     | 2026-11-21T08:05:44.736199153Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+app_a-1     | 2026-11-21T08:04:59.730049628Z 2026-11-21 16:04:59,729 | INFO | app.services.llm_client | LLM generation skipped
+app_a-1     | 2026-11-21T08:04:59.748684593Z 2026-11-21 16:04:59,748 | INFO | drone-low-altitude-agent | Task orchestration completed
+app_b-1     | 2026-11-21T08:05:44.736200405Z     cursor.execute(statement, parameters)
+app_b-1     | 2026-11-21T08:05:44.736201506Z   File "/usr/local/lib/python3.11/site-packages/psycopg/cursor.py", line 117, in execute
+app_b-1     | 2026-11-21T08:05:44.736202759Z     raise ex.with_traceback(None)
+app_b-1     | 2026-11-21T08:05:44.736203824Z sqlalchemy.exc.OperationalError: (psycopg.errors.AdminShutdown) terminating connection due to administrator command
+app_a-1     | 2026-11-21T08:04:59.749597979Z INFO:     172.22.0.3:45130 - "POST /agent/query HTTP/1.1" 200 OK
+app_b-1     | 2026-11-21T08:05:44.736205321Z [SQL: SELECT users.id AS users_id, users.username AS users_username, users.password_hash AS users_password_hash, users.display_name AS users_display_name, users.role AS users_role, users.is_active AS users_is_active, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+app_b-1     | 2026-11-21T08:05:44.736207437Z FROM users 
+app_a-1     | 2026-11-21T08:05:00.443818964Z INFO:     172.22.0.3:45132 - "GET /agent/traces/c01fbf27-7c9f-4add-8785-ce6be4df005d HTTP/1.1" 200 OK
+app_b-1     | 2026-11-21T08:05:44.736208527Z WHERE users.id = %(pk_1)s::VARCHAR]
+app_a-1     | 2026-11-21T08:05:01.622638320Z 2026-11-21 16:05:01,622 | INFO | drone-low-altitude-agent | Starting task orchestration
+app_b-1     | 2026-11-21T08:05:44.736209656Z [parameters: {'pk_1': '7632f58f-22a2-4cb2-b30e-bc37d8cb797a'}]
+app_a-1     | 2026-11-21T08:05:01.626811096Z 2026-11-21 16:05:01,626 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:05:01.626882643Z 2026-11-21 16:05:01,626 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:05:01.626989247Z 2026-11-21 16:05:01,626 | INFO | drone-low-altitude-agent.agent | agent clarification required
+app_a-1     | 2026-11-21T08:05:01.647511696Z 2026-11-21 16:05:01,647 | INFO | drone-low-altitude-agent | Task orchestration completed
+app_b-1     | 2026-11-21T08:05:44.736210837Z (Background on this error at: https://sqlalche.me/e/20/e3q8)
+app_b-1     | 2026-11-21T08:05:44.738602099Z ERROR:    Exception in ASGI application
+app_b-1     | 2026-11-21T08:05:44.738618880Z Traceback (most recent call last):
+app_a-1     | 2026-11-21T08:05:01.648494310Z INFO:     172.22.0.3:45134 - "POST /agent/query HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:02.265952020Z INFO:     172.22.0.3:45146 - "GET /agent/traces/aa616d03-1424-42e5-8a86-633e6da8cf41 HTTP/1.1" 200 OK
+app_b-1     | 2026-11-21T08:05:44.738620794Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+app_a-1     | 2026-11-21T08:05:05.231625377Z 2026-11-21 16:05:05,231 | INFO | drone-low-altitude-agent | Starting task orchestration
+app_a-1     | 2026-11-21T08:05:05.235686663Z 2026-11-21 16:05:05,235 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:05:05.235852888Z 2026-11-21 16:05:05,235 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_b-1     | 2026-11-21T08:05:44.738622384Z     self.dialect.do_execute(
+app_b-1     | 2026-11-21T08:05:44.738623652Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+app_b-1     | 2026-11-21T08:05:44.738624915Z     cursor.execute(statement, parameters)
+app_a-1     | 2026-11-21T08:05:05.235861379Z 2026-11-21 16:05:05,235 | INFO | drone-low-altitude-agent.agent | agent clarification required
+app_b-1     | 2026-11-21T08:05:44.738626056Z   File "/usr/local/lib/python3.11/site-packages/psycopg/cursor.py", line 117, in execute
+app_a-1     | 2026-11-21T08:05:05.246089144Z 2026-11-21 16:05:05,245 | INFO | drone-low-altitude-agent | Task orchestration completed
+app_a-1     | 2026-11-21T08:05:05.246588544Z INFO:     172.22.0.3:33230 - "POST /agent/query HTTP/1.1" 200 OK
+app_b-1     | 2026-11-21T08:05:44.738627339Z     raise ex.with_traceback(None)
+app_a-1     | 2026-11-21T08:05:05.991121723Z INFO:     172.22.0.3:33232 - "GET /agent/traces/633cbe5c-3851-475e-95a8-7e9b2709d611 HTTP/1.1" 200 OK
+app_b-1     | 2026-11-21T08:05:44.738628467Z psycopg.errors.AdminShutdown: terminating connection due to administrator command
+app_b-1     | 2026-11-21T08:05:44.738629768Z 
+app_b-1     | 2026-11-21T08:05:44.738630882Z The above exception was the direct cause of the following exception:
+app_b-1     | 2026-11-21T08:05:44.738632051Z 
+app_b-1     | 2026-11-21T08:05:44.738633087Z Traceback (most recent call last):
+app_a-1     | 2026-11-21T08:05:07.727088473Z 2026-11-21 16:05:07,703 | ERROR | drone-low-altitude-agent | Unhandled application error
+app_a-1     | 2026-11-21T08:05:07.727114178Z Traceback (most recent call last):
+app_b-1     | 2026-11-21T08:05:44.738634230Z   File "/usr/local/lib/python3.11/site-packages/uvicorn/protocols/http/h11_impl.py", line 416, in run_asgi
+app_b-1     | 2026-11-21T08:05:44.738642240Z     result = await app(  # type: ignore[func-returns-value]
+app_a-1     | 2026-11-21T08:05:07.727116179Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+app_a-1     | 2026-11-21T08:05:07.727117777Z     self.dialect.do_execute(
+app_b-1     | 2026-11-21T08:05:44.738643625Z              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_b-1     | 2026-11-21T08:05:44.738644766Z   File "/usr/local/lib/python3.11/site-packages/uvicorn/middleware/proxy_headers.py", line 63, in __call__
+app_b-1     | 2026-11-21T08:05:44.738646075Z     return await self.app(scope, receive, send)
+app_b-1     | 2026-11-21T08:05:44.738647218Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.727118995Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+app_b-1     | 2026-11-21T08:05:44.738648397Z   File "/usr/local/lib/python3.11/site-packages/fastapi/applications.py", line 1163, in __call__
+app_b-1     | 2026-11-21T08:05:44.738649653Z     await super().__call__(scope, receive, send)
+app_b-1     | 2026-11-21T08:05:44.738650783Z   File "/usr/local/lib/python3.11/site-packages/starlette/applications.py", line 96, in __call__
+app_b-1     | 2026-11-21T08:05:44.738652006Z     await self.middleware_stack(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:07.727120358Z     cursor.execute(statement, parameters)
+app_b-1     | 2026-11-21T08:05:44.738653260Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/errors.py", line 186, in __call__
+app_b-1     | 2026-11-21T08:05:44.738654681Z     raise exc
+app_a-1     | 2026-11-21T08:05:07.727121554Z   File "/usr/local/lib/python3.11/site-packages/psycopg/cursor.py", line 117, in execute
+app_b-1     | 2026-11-21T08:05:44.738655818Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/errors.py", line 164, in __call__
+app_b-1     | 2026-11-21T08:05:44.738657040Z     await self.app(scope, receive, _send)
+app_b-1     | 2026-11-21T08:05:44.738658195Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/cors.py", line 91, in __call__
+app_b-1     | 2026-11-21T08:05:44.738659419Z     await self.simple_response(scope, receive, send, request_headers=headers)
+app_a-1     | 2026-11-21T08:05:07.727124240Z     raise ex.with_traceback(None)
+app_b-1     | 2026-11-21T08:05:44.738660605Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/cors.py", line 149, in simple_response
+app_a-1     | 2026-11-21T08:05:07.727125467Z psycopg.errors.AdminShutdown: terminating connection due to administrator command
+app_a-1     | 2026-11-21T08:05:07.727126746Z 
+app_b-1     | 2026-11-21T08:05:44.738661909Z     await self.app(scope, receive, send)
+app_b-1     | 2026-11-21T08:05:44.738663596Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+app_a-1     | 2026-11-21T08:05:07.727127833Z The above exception was the direct cause of the following exception:
+app_a-1     | 2026-11-21T08:05:07.727128999Z 
+app_b-1     | 2026-11-21T08:05:44.738664892Z     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:07.727130056Z Traceback (most recent call last):
+app_b-1     | 2026-11-21T08:05:44.738666097Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+app_b-1     | 2026-11-21T08:05:44.738667320Z     raise exc
+app_b-1     | 2026-11-21T08:05:44.738668398Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+app_a-1     | 2026-11-21T08:05:07.727139494Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/errors.py", line 164, in __call__
+app_a-1     | 2026-11-21T08:05:07.727140889Z     await self.app(scope, receive, _send)
+app_b-1     | 2026-11-21T08:05:44.738669646Z     await app(scope, receive, sender)
+app_b-1     | 2026-11-21T08:05:44.738670792Z   File "/usr/local/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+app_b-1     | 2026-11-21T08:05:44.738672017Z     await self.app(scope, receive, send)
+app_b-1     | 2026-11-21T08:05:44.738673124Z   File "/usr/local/lib/python3.11/site-packages/starlette/routing.py", line 683, in __call__
+app_a-1     | 2026-11-21T08:05:07.727142030Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/cors.py", line 91, in __call__
+app_b-1     | 2026-11-21T08:05:44.738674349Z     await self.middleware_stack(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:07.727143285Z     await self.simple_response(scope, receive, send, request_headers=headers)
+app_a-1     | 2026-11-21T08:05:07.727144436Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/cors.py", line 149, in simple_response
+app_b-1     | 2026-11-21T08:05:44.738675507Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 2683, in app
+app_a-1     | 2026-11-21T08:05:07.727145640Z     await self.app(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:07.727146755Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+app_b-1     | 2026-11-21T08:05:44.738676754Z     await route.handle(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:07.727147971Z     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:07.727149098Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+app_a-1     | 2026-11-21T08:05:07.727150346Z     raise exc
+app_a-1     | 2026-11-21T08:05:07.727151413Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+app_a-1     | 2026-11-21T08:05:07.727152634Z     await app(scope, receive, sender)
+app_b-1     | 2026-11-21T08:05:44.738679656Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 1266, in handle
+app_b-1     | 2026-11-21T08:05:44.738680911Z     await super().handle(scope, receive, send)
+app_b-1     | 2026-11-21T08:05:44.738682052Z   File "/usr/local/lib/python3.11/site-packages/starlette/routing.py", line 289, in handle
+app_a-1     | 2026-11-21T08:05:07.727153744Z   File "/usr/local/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+app_b-1     | 2026-11-21T08:05:44.738683281Z     await self.app(scope, receive, send)
+app_b-1     | 2026-11-21T08:05:44.738684468Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 150, in app
+app_a-1     | 2026-11-21T08:05:07.727154959Z     await self.app(scope, receive, send)
+app_b-1     | 2026-11-21T08:05:44.738685690Z     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+app_b-1     | 2026-11-21T08:05:44.738686894Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+app_a-1     | 2026-11-21T08:05:07.727156086Z   File "/usr/local/lib/python3.11/site-packages/starlette/routing.py", line 683, in __call__
+app_b-1     | 2026-11-21T08:05:44.738688150Z     raise exc
+app_b-1     | 2026-11-21T08:05:44.738689217Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+app_b-1     | 2026-11-21T08:05:44.738690460Z     await app(scope, receive, sender)
+app_b-1     | 2026-11-21T08:05:44.738691622Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 136, in app
+app_b-1     | 2026-11-21T08:05:44.738692896Z     response = await f(request)
+app_a-1     | 2026-11-21T08:05:07.727157325Z     await self.middleware_stack(scope, receive, send)
+app_b-1     | 2026-11-21T08:05:44.738694000Z                ^^^^^^^^^^^^^^^^
+app_b-1     | 2026-11-21T08:05:44.738695137Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 473, in app
+app_b-1     | 2026-11-21T08:05:44.738697620Z     solved_result = await solve_dependencies(
+app_a-1     | 2026-11-21T08:05:07.727158449Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 2683, in app
+app_b-1     | 2026-11-21T08:05:44.738698819Z                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+app_b-1     | 2026-11-21T08:05:44.738699972Z   File "/usr/local/lib/python3.11/site-packages/fastapi/dependencies/utils.py", line 680, in solve_dependencies
+app_b-1     | 2026-11-21T08:05:44.738701225Z     solved = await run_in_threadpool(call, **solved_result.values)
+app_b-1     | 2026-11-21T08:05:44.738702608Z              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_b-1     | 2026-11-21T08:05:44.738703779Z   File "/usr/local/lib/python3.11/site-packages/starlette/concurrency.py", line 34, in run_in_threadpool
+app_b-1     | 2026-11-21T08:05:44.738705040Z     return await anyio.to_thread.run_sync(func)
+app_b-1     | 2026-11-21T08:05:44.738706199Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_b-1     | 2026-11-21T08:05:44.738707308Z   File "/usr/local/lib/python3.11/site-packages/anyio/to_thread.py", line 65, in run_sync
+app_b-1     | 2026-11-21T08:05:44.738708516Z     return await get_async_backend().run_sync_in_worker_thread(
+app_b-1     | 2026-11-21T08:05:44.738709649Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.727160294Z     await route.handle(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:07.727161447Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 1266, in handle
+app_a-1     | 2026-11-21T08:05:07.727162692Z     await super().handle(scope, receive, send)
+app_b-1     | 2026-11-21T08:05:44.738710753Z   File "/usr/local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 2779, in run_sync_in_worker_thread
+app_b-1     | 2026-11-21T08:05:44.738712029Z     return await future
+app_a-1     | 2026-11-21T08:05:07.727163796Z   File "/usr/local/lib/python3.11/site-packages/starlette/routing.py", line 289, in handle
+app_a-1     | 2026-11-21T08:05:07.727164998Z     await self.app(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:07.727166094Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 150, in app
+app_a-1     | 2026-11-21T08:05:07.727167282Z     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+app_b-1     | 2026-11-21T08:05:44.738713100Z            ^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.727168454Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+app_a-1     | 2026-11-21T08:05:07.727169661Z     raise exc
+app_b-1     | 2026-11-21T08:05:44.738714214Z   File "/usr/local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1124, in run
+app_a-1     | 2026-11-21T08:05:07.727170701Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+app_b-1     | 2026-11-21T08:05:44.738715499Z     result = context.run(func, *args)
+app_b-1     | 2026-11-21T08:05:44.738718113Z              ^^^^^^^^^^^^^^^^^^^^^^^^
+app_b-1     | 2026-11-21T08:05:44.738719288Z   File "/app/app/dependencies/auth.py", line 43, in get_current_user
+app_b-1     | 2026-11-21T08:05:44.738720541Z     user = db.get(User, user_id)
+app_b-1     | 2026-11-21T08:05:44.738721652Z            ^^^^^^^^^^^^^^^^^^^^^
+app_b-1     | 2026-11-21T08:05:44.738722797Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 3702, in get
+app_a-1     | 2026-11-21T08:05:07.727171921Z     await app(scope, receive, sender)
+app_b-1     | 2026-11-21T08:05:44.738724036Z     return self._get_impl(
+app_a-1     | 2026-11-21T08:05:07.727174760Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 136, in app
+app_b-1     | 2026-11-21T08:05:44.738725135Z            ^^^^^^^^^^^^^^^
+app_b-1     | 2026-11-21T08:05:44.738726195Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 3881, in _get_impl
+app_b-1     | 2026-11-21T08:05:44.738727434Z     return db_load_fn(
+app_a-1     | 2026-11-21T08:05:07.727176040Z     response = await f(request)
+app_b-1     | 2026-11-21T08:05:44.738728499Z            ^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.727177198Z                ^^^^^^^^^^^^^^^^
+app_b-1     | 2026-11-21T08:05:44.738729539Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/loading.py", line 695, in load_on_pk_identity
+app_a-1     | 2026-11-21T08:05:07.727178314Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 473, in app
+app_b-1     | 2026-11-21T08:05:44.738730779Z     session.execute(
+app_a-1     | 2026-11-21T08:05:07.727179509Z     solved_result = await solve_dependencies(
+app_a-1     | 2026-11-21T08:05:07.727180640Z                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.727181748Z   File "/usr/local/lib/python3.11/site-packages/fastapi/dependencies/utils.py", line 680, in solve_dependencies
+app_b-1     | 2026-11-21T08:05:44.738731809Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2373, in execute
+app_a-1     | 2026-11-21T08:05:07.727182982Z     solved = await run_in_threadpool(call, **solved_result.values)
+app_a-1     | 2026-11-21T08:05:07.727184115Z              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.727185225Z   File "/usr/local/lib/python3.11/site-packages/starlette/concurrency.py", line 34, in run_in_threadpool
+app_a-1     | 2026-11-21T08:05:07.727186491Z     return await anyio.to_thread.run_sync(func)
+app_b-1     | 2026-11-21T08:05:44.738733112Z     return self._execute_internal(
+app_b-1     | 2026-11-21T08:05:44.738734613Z            ^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.727187598Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_b-1     | 2026-11-21T08:05:44.738735726Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2271, in _execute_internal
+app_b-1     | 2026-11-21T08:05:44.738736963Z     result: Result[Any] = compile_state_cls.orm_execute_statement(
+app_b-1     | 2026-11-21T08:05:44.738738145Z                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.727188713Z   File "/usr/local/lib/python3.11/site-packages/anyio/to_thread.py", line 65, in run_sync
+app_a-1     | 2026-11-21T08:05:07.727189915Z     return await get_async_backend().run_sync_in_worker_thread(
+app_b-1     | 2026-11-21T08:05:44.738739278Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+app_a-1     | 2026-11-21T08:05:07.727191033Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_b-1     | 2026-11-21T08:05:44.738740505Z     result = conn.execute(
+app_b-1     | 2026-11-21T08:05:44.738741580Z              ^^^^^^^^^^^^^
+app_b-1     | 2026-11-21T08:05:44.738742816Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
+app_a-1     | 2026-11-21T08:05:07.727192154Z   File "/usr/local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 2779, in run_sync_in_worker_thread
+app_b-1     | 2026-11-21T08:05:44.738744126Z     return meth(
+app_a-1     | 2026-11-21T08:05:07.727193411Z     return await future
+app_b-1     | 2026-11-21T08:05:44.738745489Z            ^^^^^
+app_b-1     | 2026-11-21T08:05:44.738746564Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+app_b-1     | 2026-11-21T08:05:44.738747839Z     return connection._execute_clauseelement(
+app_b-1     | 2026-11-21T08:05:44.738748992Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_b-1     | 2026-11-21T08:05:44.738750054Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
+app_b-1     | 2026-11-21T08:05:44.738751323Z     ret = self._execute_context(
+app_b-1     | 2026-11-21T08:05:44.738752425Z           ^^^^^^^^^^^^^^^^^^^^^^
+app_b-1     | 2026-11-21T08:05:44.738753473Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+app_b-1     | 2026-11-21T08:05:44.738754736Z     return self._exec_single_context(
+app_b-1     | 2026-11-21T08:05:44.738757250Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.727194468Z            ^^^^^^^^^^^^
+app_b-1     | 2026-11-21T08:05:44.738758409Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1988, in _exec_single_context
+app_a-1     | 2026-11-21T08:05:07.727195530Z   File "/usr/local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1124, in run
+app_a-1     | 2026-11-21T08:05:07.727196761Z     result = context.run(func, *args)
+app_b-1     | 2026-11-21T08:05:44.738759733Z     self._handle_dbapi_exception(
+app_b-1     | 2026-11-21T08:05:44.738760833Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2365, in _handle_dbapi_exception
+app_a-1     | 2026-11-21T08:05:07.727197890Z              ^^^^^^^^^^^^^^^^^^^^^^^^
+app_b-1     | 2026-11-21T08:05:44.738762075Z     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+app_b-1     | 2026-11-21T08:05:44.738763230Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+app_b-1     | 2026-11-21T08:05:44.738764484Z     self.dialect.do_execute(
+app_b-1     | 2026-11-21T08:05:44.738765577Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+app_a-1     | 2026-11-21T08:05:07.727199341Z   File "/app/app/dependencies/auth.py", line 43, in get_current_user
+app_a-1     | 2026-11-21T08:05:07.727200654Z     user = db.get(User, user_id)
+app_b-1     | 2026-11-21T08:05:44.738766821Z     cursor.execute(statement, parameters)
+app_b-1     | 2026-11-21T08:05:44.738767925Z   File "/usr/local/lib/python3.11/site-packages/psycopg/cursor.py", line 117, in execute
+app_b-1     | 2026-11-21T08:05:44.738769146Z     raise ex.with_traceback(None)
+app_a-1     | 2026-11-21T08:05:07.727201739Z            ^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.727202857Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 3702, in get
+app_b-1     | 2026-11-21T08:05:44.738770198Z sqlalchemy.exc.OperationalError: (psycopg.errors.AdminShutdown) terminating connection due to administrator command
+app_a-1     | 2026-11-21T08:05:07.727204076Z     return self._get_impl(
+app_a-1     | 2026-11-21T08:05:07.727205148Z            ^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.727206229Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 3881, in _get_impl
+app_a-1     | 2026-11-21T08:05:07.727207451Z     return db_load_fn(
+app_a-1     | 2026-11-21T08:05:07.727208503Z            ^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.727209534Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/loading.py", line 695, in load_on_pk_identity
+app_b-1     | 2026-11-21T08:05:44.738771703Z [SQL: SELECT users.id AS users_id, users.username AS users_username, users.password_hash AS users_password_hash, users.display_name AS users_display_name, users.role AS users_role, users.is_active AS users_is_active, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+app_b-1     | 2026-11-21T08:05:44.738773609Z FROM users 
+app_b-1     | 2026-11-21T08:05:44.738774713Z WHERE users.id = %(pk_1)s::VARCHAR]
+app_a-1     | 2026-11-21T08:05:07.727210775Z     session.execute(
+app_b-1     | 2026-11-21T08:05:44.738775829Z [parameters: {'pk_1': '7632f58f-22a2-4cb2-b30e-bc37d8cb797a'}]
+app_a-1     | 2026-11-21T08:05:07.727213350Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2373, in execute
+app_a-1     | 2026-11-21T08:05:07.727214669Z     return self._execute_internal(
+app_a-1     | 2026-11-21T08:05:07.727215784Z            ^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.727216885Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2271, in _execute_internal
+app_a-1     | 2026-11-21T08:05:07.727218130Z     result: Result[Any] = compile_state_cls.orm_execute_statement(
+app_a-1     | 2026-11-21T08:05:07.727219349Z                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.727220488Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+app_a-1     | 2026-11-21T08:05:07.727221717Z     result = conn.execute(
+app_a-1     | 2026-11-21T08:05:07.727222781Z              ^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.727223828Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
+app_b-1     | 2026-11-21T08:05:44.738777012Z (Background on this error at: https://sqlalche.me/e/20/e3q8)
+app_b-1     | 2026-11-21T08:05:46.978398504Z 2026-11-21 16:05:46,978 | INFO | drone-low-altitude-agent | Starting task orchestration
+app_b-1     | 2026-11-21T08:05:47.006676442Z 2026-11-21 16:05:47,006 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:05:07.727225099Z     return meth(
+app_b-1     | 2026-11-21T08:05:47.006903237Z 2026-11-21 16:05:47,006 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:05:07.727226178Z            ^^^^^
+app_a-1     | 2026-11-21T08:05:07.727227235Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+app_a-1     | 2026-11-21T08:05:07.727228502Z     return connection._execute_clauseelement(
+app_a-1     | 2026-11-21T08:05:07.727229633Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.727230755Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
+app_b-1     | 2026-11-21T08:05:47.006911974Z 2026-11-21 16:05:47,006 | INFO | drone-low-altitude-agent.agent | agent clarification required
+app_a-1     | 2026-11-21T08:05:07.727232016Z     ret = self._execute_context(
+app_b-1     | 2026-11-21T08:05:47.026000025Z 2026-11-21 16:05:47,025 | INFO | drone-low-altitude-agent | Task orchestration completed
+app_b-1     | 2026-11-21T08:05:47.026759182Z INFO:     172.22.0.3:43724 - "POST /agent/query HTTP/1.1" 200 OK
+app_b-1     | 2026-11-21T08:05:47.687318882Z INFO:     172.22.0.3:43728 - "GET /agent/traces/e3f9b1fe-1c4b-4089-acdb-32ea08510cea HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:07.727233091Z           ^^^^^^^^^^^^^^^^^^^^^^
+app_b-1     | 2026-11-21T08:06:00.096548263Z 2026-11-21 16:06:00,096 | INFO | drone-low-altitude-agent | Starting task orchestration
+app_a-1     | 2026-11-21T08:05:07.727234120Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+app_b-1     | 2026-11-21T08:06:00.101221196Z 2026-11-21 16:06:00,101 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_b-1     | 2026-11-21T08:06:00.101370761Z 2026-11-21 16:06:00,101 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:05:07.727235391Z     return self._exec_single_context(
+app_a-1     | 2026-11-21T08:05:07.727236501Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.727237593Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1988, in _exec_single_context
+app_a-1     | 2026-11-21T08:05:07.727238830Z     self._handle_dbapi_exception(
+app_a-1     | 2026-11-21T08:05:07.727240200Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2365, in _handle_dbapi_exception
+app_b-1     | 2026-11-21T08:06:00.101454637Z 2026-11-21 16:06:00,101 | INFO | drone-low-altitude-agent.agent | agent tool call
+app_a-1     | 2026-11-21T08:05:07.727241579Z     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+app_b-1     | 2026-11-21T08:06:00.361466725Z 2026-11-21 16:06:00,360 | INFO | httpx | HTTP Request: GET http://weather:8080/geo/v2/city/lookup?location=%E6%B7%B1%E5%9C%B3&number=1&lang=zh "HTTP/1.0 200 OK"
+app_b-1     | 2026-11-21T08:06:00.617477082Z 2026-11-21 16:06:00,616 | INFO | httpx | HTTP Request: GET http://weather:8080/v7/weather/72h?location=shenzhen&lang=zh "HTTP/1.0 200 OK"
+app_b-1     | 2026-11-21T08:06:00.874625765Z 2026-11-21 16:06:00,873 | INFO | httpx | HTTP Request: GET http://weather:8080/weatheralert/v1/current/22.54/114.05?lang=zh "HTTP/1.0 200 OK"
+app_a-1     | 2026-11-21T08:05:07.727242725Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+app_a-1     | 2026-11-21T08:05:07.727243940Z     self.dialect.do_execute(
+app_a-1     | 2026-11-21T08:05:07.727245020Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+app_a-1     | 2026-11-21T08:05:07.727246275Z     cursor.execute(statement, parameters)
+app_a-1     | 2026-11-21T08:05:07.727247389Z   File "/usr/local/lib/python3.11/site-packages/psycopg/cursor.py", line 117, in execute
+app_a-1     | 2026-11-21T08:05:07.727249992Z     raise ex.with_traceback(None)
+app_b-1     | 2026-11-21T08:06:00.954202725Z 2026-11-21 16:06:00,954 | INFO | drone-low-altitude-agent.agent | agent tool result
+app_b-1     | 2026-11-21T08:06:00.954526825Z 2026-11-21 16:06:00,954 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:05:07.727251167Z sqlalchemy.exc.OperationalError: (psycopg.errors.AdminShutdown) terminating connection due to administrator command
+app_b-1     | 2026-11-21T08:06:00.954643805Z 2026-11-21 16:06:00,954 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_b-1     | 2026-11-21T08:06:00.954704966Z 2026-11-21 16:06:00,954 | INFO | drone-low-altitude-agent.agent | agent loop completed
+app_b-1     | 2026-11-21T08:06:00.966514140Z 2026-11-21 16:06:00,966 | INFO | app.services.llm_client | LLM generation skipped
+app_b-1     | 2026-11-21T08:06:00.978178368Z 2026-11-21 16:06:00,977 | INFO | drone-low-altitude-agent | Task orchestration completed
+app_a-1     | 2026-11-21T08:05:07.727252843Z [SQL: SELECT users.id AS users_id, users.username AS users_username, users.password_hash AS users_password_hash, users.display_name AS users_display_name, users.role AS users_role, users.is_active AS users_is_active, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+app_b-1     | 2026-11-21T08:06:00.978753870Z INFO:     172.22.0.3:60910 - "POST /agent/query HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:07.727254929Z FROM users 
+app_a-1     | 2026-11-21T08:05:07.727256040Z WHERE users.id = %(pk_1)s::VARCHAR]
+app_a-1     | 2026-11-21T08:05:07.727257176Z [parameters: {'pk_1': 'c19e958e-e884-4fdb-a998-e753019b2b35'}]
+app_a-1     | 2026-11-21T08:05:07.727258366Z (Background on this error at: https://sqlalche.me/e/20/e3q8)
+app_a-1     | 2026-11-21T08:05:07.727256848Z INFO:     172.22.0.3:33246 - "GET /auth/me HTTP/1.1" 500 Internal Server Error
+app_a-1     | 2026-11-21T08:05:07.733575683Z ERROR:    Exception in ASGI application
+app_a-1     | 2026-11-21T08:05:07.733596974Z Traceback (most recent call last):
+app_a-1     | 2026-11-21T08:05:07.733599285Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+app_a-1     | 2026-11-21T08:05:07.733601102Z     self.dialect.do_execute(
+app_a-1     | 2026-11-21T08:05:07.733602386Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+app_a-1     | 2026-11-21T08:05:07.733603818Z     cursor.execute(statement, parameters)
+app_a-1     | 2026-11-21T08:05:07.733605077Z   File "/usr/local/lib/python3.11/site-packages/psycopg/cursor.py", line 117, in execute
+app_a-1     | 2026-11-21T08:05:07.733606403Z     raise ex.with_traceback(None)
+app_a-1     | 2026-11-21T08:05:07.733607559Z psycopg.errors.AdminShutdown: terminating connection due to administrator command
+app_a-1     | 2026-11-21T08:05:07.733608857Z 
+app_a-1     | 2026-11-21T08:05:07.733609973Z The above exception was the direct cause of the following exception:
+app_a-1     | 2026-11-21T08:05:07.733611187Z 
+app_a-1     | 2026-11-21T08:05:07.733612244Z Traceback (most recent call last):
+app_a-1     | 2026-11-21T08:05:07.733613405Z   File "/usr/local/lib/python3.11/site-packages/uvicorn/protocols/http/h11_impl.py", line 416, in run_asgi
+app_a-1     | 2026-11-21T08:05:07.733614723Z     result = await app(  # type: ignore[func-returns-value]
+app_a-1     | 2026-11-21T08:05:07.733615968Z              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.733617176Z   File "/usr/local/lib/python3.11/site-packages/uvicorn/middleware/proxy_headers.py", line 63, in __call__
+app_a-1     | 2026-11-21T08:05:07.733618459Z     return await self.app(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:07.733619635Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.733620822Z   File "/usr/local/lib/python3.11/site-packages/fastapi/applications.py", line 1163, in __call__
+app_a-1     | 2026-11-21T08:05:07.733622095Z     await super().__call__(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:07.733623279Z   File "/usr/local/lib/python3.11/site-packages/starlette/applications.py", line 96, in __call__
+app_a-1     | 2026-11-21T08:05:07.733633661Z     await self.middleware_stack(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:07.733634940Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/errors.py", line 186, in __call__
+app_a-1     | 2026-11-21T08:05:07.733636698Z     raise exc
+app_a-1     | 2026-11-21T08:05:07.733637879Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/errors.py", line 164, in __call__
+app_a-1     | 2026-11-21T08:05:07.733639202Z     await self.app(scope, receive, _send)
+app_a-1     | 2026-11-21T08:05:07.733640338Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/cors.py", line 91, in __call__
+app_a-1     | 2026-11-21T08:05:07.733641625Z     await self.simple_response(scope, receive, send, request_headers=headers)
+app_a-1     | 2026-11-21T08:05:07.733644010Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/cors.py", line 149, in simple_response
+app_a-1     | 2026-11-21T08:05:07.733645356Z     await self.app(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:07.733647261Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+app_a-1     | 2026-11-21T08:05:07.733648636Z     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:07.733649869Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+app_a-1     | 2026-11-21T08:05:07.733651132Z     raise exc
+app_a-1     | 2026-11-21T08:05:07.733652206Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+app_a-1     | 2026-11-21T08:05:07.733653472Z     await app(scope, receive, sender)
+app_a-1     | 2026-11-21T08:05:07.733654609Z   File "/usr/local/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+app_a-1     | 2026-11-21T08:05:07.733655904Z     await self.app(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:07.733657051Z   File "/usr/local/lib/python3.11/site-packages/starlette/routing.py", line 683, in __call__
+app_a-1     | 2026-11-21T08:05:07.733658315Z     await self.middleware_stack(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:07.733659499Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 2683, in app
+app_a-1     | 2026-11-21T08:05:07.733660736Z     await route.handle(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:07.733661902Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 1266, in handle
+app_a-1     | 2026-11-21T08:05:07.733663170Z     await super().handle(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:07.733664336Z   File "/usr/local/lib/python3.11/site-packages/starlette/routing.py", line 289, in handle
+app_a-1     | 2026-11-21T08:05:07.733665582Z     await self.app(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:07.733666790Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 150, in app
+app_a-1     | 2026-11-21T08:05:07.733668071Z     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:07.733669356Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+app_a-1     | 2026-11-21T08:05:07.733672531Z     raise exc
+app_a-1     | 2026-11-21T08:05:07.733673689Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+app_a-1     | 2026-11-21T08:05:07.733675017Z     await app(scope, receive, sender)
+app_a-1     | 2026-11-21T08:05:07.733676166Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 136, in app
+app_a-1     | 2026-11-21T08:05:07.733677429Z     response = await f(request)
+app_a-1     | 2026-11-21T08:05:07.733678645Z                ^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.733679764Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 473, in app
+app_a-1     | 2026-11-21T08:05:07.733681011Z     solved_result = await solve_dependencies(
+app_a-1     | 2026-11-21T08:05:07.733682194Z                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.733683372Z   File "/usr/local/lib/python3.11/site-packages/fastapi/dependencies/utils.py", line 680, in solve_dependencies
+app_a-1     | 2026-11-21T08:05:07.733684677Z     solved = await run_in_threadpool(call, **solved_result.values)
+app_a-1     | 2026-11-21T08:05:07.733686186Z              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.733687462Z   File "/usr/local/lib/python3.11/site-packages/starlette/concurrency.py", line 34, in run_in_threadpool
+app_a-1     | 2026-11-21T08:05:07.733688749Z     return await anyio.to_thread.run_sync(func)
+app_a-1     | 2026-11-21T08:05:07.733689909Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.733691067Z   File "/usr/local/lib/python3.11/site-packages/anyio/to_thread.py", line 65, in run_sync
+app_a-1     | 2026-11-21T08:05:07.733692325Z     return await get_async_backend().run_sync_in_worker_thread(
+app_a-1     | 2026-11-21T08:05:07.733693537Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.733694720Z   File "/usr/local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 2779, in run_sync_in_worker_thread
+app_a-1     | 2026-11-21T08:05:07.733696021Z     return await future
+app_a-1     | 2026-11-21T08:05:07.733697134Z            ^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.733698236Z   File "/usr/local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1124, in run
+app_a-1     | 2026-11-21T08:05:07.733699516Z     result = context.run(func, *args)
+app_a-1     | 2026-11-21T08:05:07.733700668Z              ^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.733701798Z   File "/app/app/dependencies/auth.py", line 43, in get_current_user
+app_a-1     | 2026-11-21T08:05:07.733703096Z     user = db.get(User, user_id)
+app_a-1     | 2026-11-21T08:05:07.733704216Z            ^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.733705337Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 3702, in get
+app_a-1     | 2026-11-21T08:05:07.733706597Z     return self._get_impl(
+app_a-1     | 2026-11-21T08:05:07.733707734Z            ^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.733708817Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 3881, in _get_impl
+app_a-1     | 2026-11-21T08:05:07.733711710Z     return db_load_fn(
+app_a-1     | 2026-11-21T08:05:07.733712876Z            ^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.733714017Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/loading.py", line 695, in load_on_pk_identity
+app_a-1     | 2026-11-21T08:05:07.733715310Z     session.execute(
+app_a-1     | 2026-11-21T08:05:07.733716493Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2373, in execute
+app_a-1     | 2026-11-21T08:05:07.733717772Z     return self._execute_internal(
+app_a-1     | 2026-11-21T08:05:07.733718971Z            ^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.733720152Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2271, in _execute_internal
+app_a-1     | 2026-11-21T08:05:07.733721447Z     result: Result[Any] = compile_state_cls.orm_execute_statement(
+app_a-1     | 2026-11-21T08:05:07.733722696Z                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.733723937Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+app_a-1     | 2026-11-21T08:05:07.733725224Z     result = conn.execute(
+app_a-1     | 2026-11-21T08:05:07.733726387Z              ^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.733727506Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
+app_a-1     | 2026-11-21T08:05:07.733728845Z     return meth(
+app_a-1     | 2026-11-21T08:05:07.733730287Z            ^^^^^
+app_a-1     | 2026-11-21T08:05:07.733731442Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+app_a-1     | 2026-11-21T08:05:07.733732760Z     return connection._execute_clauseelement(
+app_a-1     | 2026-11-21T08:05:07.733733939Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.733735050Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
+app_a-1     | 2026-11-21T08:05:07.733736421Z     ret = self._execute_context(
+app_a-1     | 2026-11-21T08:05:07.733737546Z           ^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.733738625Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+app_a-1     | 2026-11-21T08:05:07.733740209Z     return self._exec_single_context(
+app_a-1     | 2026-11-21T08:05:07.733741365Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:07.733742518Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1988, in _exec_single_context
+app_a-1     | 2026-11-21T08:05:07.733743794Z     self._handle_dbapi_exception(
+app_a-1     | 2026-11-21T08:05:07.733744911Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2365, in _handle_dbapi_exception
+app_a-1     | 2026-11-21T08:05:07.733746241Z     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+app_a-1     | 2026-11-21T08:05:07.733747412Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+app_a-1     | 2026-11-21T08:05:07.733748694Z     self.dialect.do_execute(
+app_a-1     | 2026-11-21T08:05:07.733751236Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+app_a-1     | 2026-11-21T08:05:07.733752564Z     cursor.execute(statement, parameters)
+app_a-1     | 2026-11-21T08:05:07.733753757Z   File "/usr/local/lib/python3.11/site-packages/psycopg/cursor.py", line 117, in execute
+app_a-1     | 2026-11-21T08:05:07.733755020Z     raise ex.with_traceback(None)
+app_a-1     | 2026-11-21T08:05:07.733756145Z sqlalchemy.exc.OperationalError: (psycopg.errors.AdminShutdown) terminating connection due to administrator command
+app_a-1     | 2026-11-21T08:05:07.733757740Z [SQL: SELECT users.id AS users_id, users.username AS users_username, users.password_hash AS users_password_hash, users.display_name AS users_display_name, users.role AS users_role, users.is_active AS users_is_active, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+app_a-1     | 2026-11-21T08:05:07.733759801Z FROM users 
+app_a-1     | 2026-11-21T08:05:07.733761057Z WHERE users.id = %(pk_1)s::VARCHAR]
+app_a-1     | 2026-11-21T08:05:07.733762229Z [parameters: {'pk_1': 'c19e958e-e884-4fdb-a998-e753019b2b35'}]
+app_a-1     | 2026-11-21T08:05:07.733763466Z (Background on this error at: https://sqlalche.me/e/20/e3q8)
+app_a-1     | 2026-11-21T08:05:08.768058821Z INFO:     172.22.0.3:33248 - "GET /auth/me HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:09.432120244Z 2026-11-21 16:05:09,431 | INFO | drone-low-altitude-agent | Starting task orchestration
+app_a-1     | 2026-11-21T08:05:09.439024562Z 2026-11-21 16:05:09,438 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:05:09.439160856Z 2026-11-21 16:05:09,439 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:05:09.439236100Z 2026-11-21 16:05:09,439 | INFO | drone-low-altitude-agent.agent | agent tool call
+app_a-1     | 2026-11-21T08:05:09.446375952Z 2026-11-21 16:05:09,446 | INFO | httpx | HTTP Request: GET http://weather:8080/geo/v2/city/lookup?location=%E6%B7%B1%E5%9C%B3&number=1&lang=zh "HTTP/1.0 200 OK"
+app_a-1     | 2026-11-21T08:05:09.448527282Z 2026-11-21 16:05:09,448 | INFO | httpx | HTTP Request: GET http://weather:8080/v7/weather/72h?location=shenzhen&lang=zh "HTTP/1.0 200 OK"
+app_a-1     | 2026-11-21T08:05:09.450407702Z 2026-11-21 16:05:09,450 | INFO | httpx | HTTP Request: GET http://weather:8080/weatheralert/v1/current/22.54/114.05?lang=zh "HTTP/1.0 200 OK"
+app_a-1     | 2026-11-21T08:05:09.529466794Z 2026-11-21 16:05:09,529 | INFO | drone-low-altitude-agent.agent | agent tool result
+app_a-1     | 2026-11-21T08:05:09.529817773Z 2026-11-21 16:05:09,529 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:05:09.530058576Z 2026-11-21 16:05:09,529 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:05:09.530084565Z 2026-11-21 16:05:09,529 | INFO | drone-low-altitude-agent.agent | agent loop completed
+app_a-1     | 2026-11-21T08:05:09.544166859Z 2026-11-21 16:05:09,543 | INFO | app.services.llm_client | LLM generation skipped
+app_a-1     | 2026-11-21T08:05:09.561091509Z 2026-11-21 16:05:09,560 | INFO | drone-low-altitude-agent | Task orchestration completed
+app_a-1     | 2026-11-21T08:05:09.561830167Z INFO:     172.22.0.3:33264 - "POST /agent/query HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:10.204553586Z INFO:     172.22.0.3:33266 - "GET /agent/traces/76a55bf4-faa1-4d68-9de2-ead99fb2fc7c HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:11.414225421Z 2026-11-21 16:05:11,414 | INFO | drone-low-altitude-agent | Starting task orchestration
+app_a-1     | 2026-11-21T08:05:11.420100657Z 2026-11-21 16:05:11,419 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:05:11.420261364Z 2026-11-21 16:05:11,420 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:05:11.420332045Z 2026-11-21 16:05:11,420 | INFO | drone-low-altitude-agent.agent | agent clarification required
+app_a-1     | 2026-11-21T08:05:11.442457683Z 2026-11-21 16:05:11,442 | INFO | drone-low-altitude-agent | Task orchestration completed
+app_a-1     | 2026-11-21T08:05:11.443265914Z INFO:     172.22.0.3:33276 - "POST /agent/query HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:12.100632093Z INFO:     172.22.0.3:33290 - "GET /agent/traces/3cf997c3-af23-454e-9e27-1964cb7145be HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:14.283335703Z 2026-11-21 16:05:14,281 | ERROR | drone-low-altitude-agent | Unhandled application error
+app_a-1     | 2026-11-21T08:05:14.283365035Z Traceback (most recent call last):
+app_a-1     | 2026-11-21T08:05:14.283367821Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+app_a-1     | 2026-11-21T08:05:14.283369997Z     self.dialect.do_execute(
+app_a-1     | 2026-11-21T08:05:14.283371838Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+app_a-1     | 2026-11-21T08:05:14.283374088Z     cursor.execute(statement, parameters)
+app_a-1     | 2026-11-21T08:05:14.283375885Z   File "/usr/local/lib/python3.11/site-packages/psycopg/cursor.py", line 117, in execute
+app_a-1     | 2026-11-21T08:05:14.283377960Z     raise ex.with_traceback(None)
+app_a-1     | 2026-11-21T08:05:14.283379866Z psycopg.errors.AdminShutdown: terminating connection due to administrator command
+app_a-1     | 2026-11-21T08:05:14.283381737Z 
+app_a-1     | 2026-11-21T08:05:14.283383444Z The above exception was the direct cause of the following exception:
+app_a-1     | 2026-11-21T08:05:14.283385234Z 
+app_a-1     | 2026-11-21T08:05:14.283386909Z Traceback (most recent call last):
+app_a-1     | 2026-11-21T08:05:14.283383835Z INFO:     172.22.0.3:41842 - "POST /agent/query HTTP/1.1" 500 Internal Server Error
+app_a-1     | 2026-11-21T08:05:14.283388663Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/errors.py", line 164, in __call__
+app_a-1     | 2026-11-21T08:05:14.283407632Z     await self.app(scope, receive, _send)
+app_a-1     | 2026-11-21T08:05:14.283409895Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/cors.py", line 91, in __call__
+app_a-1     | 2026-11-21T08:05:14.283411982Z     await self.simple_response(scope, receive, send, request_headers=headers)
+app_a-1     | 2026-11-21T08:05:14.283413727Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/cors.py", line 149, in simple_response
+app_a-1     | 2026-11-21T08:05:14.283415535Z     await self.app(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:14.283417193Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+app_a-1     | 2026-11-21T08:05:14.283430790Z     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:14.283432148Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+app_a-1     | 2026-11-21T08:05:14.283433402Z     raise exc
+app_a-1     | 2026-11-21T08:05:14.283434516Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+app_a-1     | 2026-11-21T08:05:14.283435764Z     await app(scope, receive, sender)
+app_a-1     | 2026-11-21T08:05:14.283436842Z   File "/usr/local/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+app_a-1     | 2026-11-21T08:05:14.283438043Z     await self.app(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:14.283439153Z   File "/usr/local/lib/python3.11/site-packages/starlette/routing.py", line 683, in __call__
+app_a-1     | 2026-11-21T08:05:14.283440353Z     await self.middleware_stack(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:14.283441449Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 2683, in app
+app_a-1     | 2026-11-21T08:05:14.283443968Z     await route.handle(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:14.283445068Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 1266, in handle
+app_a-1     | 2026-11-21T08:05:14.283446236Z     await super().handle(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:14.283447297Z   File "/usr/local/lib/python3.11/site-packages/starlette/routing.py", line 289, in handle
+app_a-1     | 2026-11-21T08:05:14.283448532Z     await self.app(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:14.283449591Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 150, in app
+app_a-1     | 2026-11-21T08:05:14.283450719Z     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:14.283451837Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+app_a-1     | 2026-11-21T08:05:14.283453017Z     raise exc
+app_a-1     | 2026-11-21T08:05:14.283454038Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+app_a-1     | 2026-11-21T08:05:14.283455202Z     await app(scope, receive, sender)
+app_a-1     | 2026-11-21T08:05:14.283456254Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 136, in app
+app_a-1     | 2026-11-21T08:05:14.283457439Z     response = await f(request)
+app_a-1     | 2026-11-21T08:05:14.283458491Z                ^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.283459565Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 473, in app
+app_a-1     | 2026-11-21T08:05:14.283460709Z     solved_result = await solve_dependencies(
+app_a-1     | 2026-11-21T08:05:14.283461787Z                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.283462841Z   File "/usr/local/lib/python3.11/site-packages/fastapi/dependencies/utils.py", line 680, in solve_dependencies
+app_a-1     | 2026-11-21T08:05:14.283464018Z     solved = await run_in_threadpool(call, **solved_result.values)
+app_a-1     | 2026-11-21T08:05:14.283465163Z              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.283468729Z   File "/usr/local/lib/python3.11/site-packages/starlette/concurrency.py", line 34, in run_in_threadpool
+app_a-1     | 2026-11-21T08:05:14.283470085Z     return await anyio.to_thread.run_sync(func)
+app_a-1     | 2026-11-21T08:05:14.283471249Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.283472347Z   File "/usr/local/lib/python3.11/site-packages/anyio/to_thread.py", line 65, in run_sync
+app_a-1     | 2026-11-21T08:05:14.283473547Z     return await get_async_backend().run_sync_in_worker_thread(
+app_a-1     | 2026-11-21T08:05:14.283474646Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.283475806Z   File "/usr/local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 2779, in run_sync_in_worker_thread
+app_a-1     | 2026-11-21T08:05:14.283477150Z     return await future
+app_a-1     | 2026-11-21T08:05:14.283478858Z            ^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.283479926Z   File "/usr/local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1124, in run
+app_a-1     | 2026-11-21T08:05:14.283481131Z     result = context.run(func, *args)
+app_a-1     | 2026-11-21T08:05:14.283482241Z              ^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.283483634Z   File "/app/app/dependencies/auth.py", line 43, in get_current_user
+app_a-1     | 2026-11-21T08:05:14.283484867Z     user = db.get(User, user_id)
+app_a-1     | 2026-11-21T08:05:14.283485952Z            ^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.283487028Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 3702, in get
+app_a-1     | 2026-11-21T08:05:14.283488211Z     return self._get_impl(
+app_a-1     | 2026-11-21T08:05:14.283489255Z            ^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.283490315Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 3881, in _get_impl
+app_a-1     | 2026-11-21T08:05:14.283491506Z     return db_load_fn(
+app_a-1     | 2026-11-21T08:05:14.283492526Z            ^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.283493560Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/loading.py", line 695, in load_on_pk_identity
+app_a-1     | 2026-11-21T08:05:14.283494802Z     session.execute(
+app_a-1     | 2026-11-21T08:05:14.283495859Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2373, in execute
+app_a-1     | 2026-11-21T08:05:14.283497097Z     return self._execute_internal(
+app_a-1     | 2026-11-21T08:05:14.283498219Z            ^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.283499316Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2271, in _execute_internal
+app_a-1     | 2026-11-21T08:05:14.283500512Z     result: Result[Any] = compile_state_cls.orm_execute_statement(
+app_a-1     | 2026-11-21T08:05:14.283501650Z                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.283502768Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+app_a-1     | 2026-11-21T08:05:14.283503970Z     result = conn.execute(
+app_a-1     | 2026-11-21T08:05:14.283506725Z              ^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.283507797Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
+app_a-1     | 2026-11-21T08:05:14.283509019Z     return meth(
+app_a-1     | 2026-11-21T08:05:14.283510089Z            ^^^^^
+app_a-1     | 2026-11-21T08:05:14.283511104Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+app_a-1     | 2026-11-21T08:05:14.283512294Z     return connection._execute_clauseelement(
+app_a-1     | 2026-11-21T08:05:14.283513365Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.283514449Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
+app_a-1     | 2026-11-21T08:05:14.283515644Z     ret = self._execute_context(
+app_a-1     | 2026-11-21T08:05:14.283516700Z           ^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.283517759Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+app_a-1     | 2026-11-21T08:05:14.283518957Z     return self._exec_single_context(
+app_a-1     | 2026-11-21T08:05:14.283520018Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.283521063Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1988, in _exec_single_context
+app_a-1     | 2026-11-21T08:05:14.283522297Z     self._handle_dbapi_exception(
+app_a-1     | 2026-11-21T08:05:14.283523742Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2365, in _handle_dbapi_exception
+app_a-1     | 2026-11-21T08:05:14.283524999Z     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+app_a-1     | 2026-11-21T08:05:14.283526097Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+app_a-1     | 2026-11-21T08:05:14.283527328Z     self.dialect.do_execute(
+app_a-1     | 2026-11-21T08:05:14.283528390Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+app_a-1     | 2026-11-21T08:05:14.283529659Z     cursor.execute(statement, parameters)
+app_a-1     | 2026-11-21T08:05:14.283530862Z   File "/usr/local/lib/python3.11/site-packages/psycopg/cursor.py", line 117, in execute
+app_a-1     | 2026-11-21T08:05:14.283532113Z     raise ex.with_traceback(None)
+app_a-1     | 2026-11-21T08:05:14.283533180Z sqlalchemy.exc.OperationalError: (psycopg.errors.AdminShutdown) terminating connection due to administrator command
+app_a-1     | 2026-11-21T08:05:14.283534869Z [SQL: SELECT users.id AS users_id, users.username AS users_username, users.password_hash AS users_password_hash, users.display_name AS users_display_name, users.role AS users_role, users.is_active AS users_is_active, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+app_a-1     | 2026-11-21T08:05:14.283536754Z FROM users 
+app_a-1     | 2026-11-21T08:05:14.283557016Z WHERE users.id = %(pk_1)s::VARCHAR]
+app_a-1     | 2026-11-21T08:05:14.283558216Z [parameters: {'pk_1': 'c19e958e-e884-4fdb-a998-e753019b2b35'}]
+app_a-1     | 2026-11-21T08:05:14.283559419Z (Background on this error at: https://sqlalche.me/e/20/e3q8)
+app_a-1     | 2026-11-21T08:05:14.285567120Z ERROR:    Exception in ASGI application
+app_a-1     | 2026-11-21T08:05:14.285585772Z Traceback (most recent call last):
+app_a-1     | 2026-11-21T08:05:14.285587347Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+app_a-1     | 2026-11-21T08:05:14.285588719Z     self.dialect.do_execute(
+app_a-1     | 2026-11-21T08:05:14.285589861Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+app_a-1     | 2026-11-21T08:05:14.285591096Z     cursor.execute(statement, parameters)
+app_a-1     | 2026-11-21T08:05:14.285592255Z   File "/usr/local/lib/python3.11/site-packages/psycopg/cursor.py", line 117, in execute
+app_a-1     | 2026-11-21T08:05:14.285593510Z     raise ex.with_traceback(None)
+app_a-1     | 2026-11-21T08:05:14.285594641Z psycopg.errors.AdminShutdown: terminating connection due to administrator command
+app_a-1     | 2026-11-21T08:05:14.285595777Z 
+app_a-1     | 2026-11-21T08:05:14.285596882Z The above exception was the direct cause of the following exception:
+app_a-1     | 2026-11-21T08:05:14.285598016Z 
+app_a-1     | 2026-11-21T08:05:14.285599012Z Traceback (most recent call last):
+app_a-1     | 2026-11-21T08:05:14.285600089Z   File "/usr/local/lib/python3.11/site-packages/uvicorn/protocols/http/h11_impl.py", line 416, in run_asgi
+app_a-1     | 2026-11-21T08:05:14.285601288Z     result = await app(  # type: ignore[func-returns-value]
+app_a-1     | 2026-11-21T08:05:14.285602377Z              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.285603471Z   File "/usr/local/lib/python3.11/site-packages/uvicorn/middleware/proxy_headers.py", line 63, in __call__
+app_a-1     | 2026-11-21T08:05:14.285604645Z     return await self.app(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:14.285605690Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.285606775Z   File "/usr/local/lib/python3.11/site-packages/fastapi/applications.py", line 1163, in __call__
+app_a-1     | 2026-11-21T08:05:14.285608019Z     await super().__call__(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:14.285609097Z   File "/usr/local/lib/python3.11/site-packages/starlette/applications.py", line 96, in __call__
+app_a-1     | 2026-11-21T08:05:14.285610289Z     await self.middleware_stack(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:14.285611394Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/errors.py", line 186, in __call__
+app_a-1     | 2026-11-21T08:05:14.285612601Z     raise exc
+app_a-1     | 2026-11-21T08:05:14.285613623Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/errors.py", line 164, in __call__
+app_a-1     | 2026-11-21T08:05:14.285614781Z     await self.app(scope, receive, _send)
+app_a-1     | 2026-11-21T08:05:14.285615855Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/cors.py", line 91, in __call__
+app_a-1     | 2026-11-21T08:05:14.285617069Z     await self.simple_response(scope, receive, send, request_headers=headers)
+app_a-1     | 2026-11-21T08:05:14.285618170Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/cors.py", line 149, in simple_response
+app_a-1     | 2026-11-21T08:05:14.285628300Z     await self.app(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:14.285630152Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+app_a-1     | 2026-11-21T08:05:14.285631498Z     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:14.285632676Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+app_a-1     | 2026-11-21T08:05:14.285633874Z     raise exc
+app_a-1     | 2026-11-21T08:05:14.285634867Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+app_a-1     | 2026-11-21T08:05:14.285636044Z     await app(scope, receive, sender)
+app_a-1     | 2026-11-21T08:05:14.285637119Z   File "/usr/local/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+app_a-1     | 2026-11-21T08:05:14.285638321Z     await self.app(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:14.285639382Z   File "/usr/local/lib/python3.11/site-packages/starlette/routing.py", line 683, in __call__
+app_a-1     | 2026-11-21T08:05:14.285640561Z     await self.middleware_stack(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:14.285641646Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 2683, in app
+app_a-1     | 2026-11-21T08:05:14.285642816Z     await route.handle(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:14.285643923Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 1266, in handle
+app_a-1     | 2026-11-21T08:05:14.285645092Z     await super().handle(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:14.285646168Z   File "/usr/local/lib/python3.11/site-packages/starlette/routing.py", line 289, in handle
+app_a-1     | 2026-11-21T08:05:14.285647323Z     await self.app(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:14.285648416Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 150, in app
+app_a-1     | 2026-11-21T08:05:14.285649563Z     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:14.285650692Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+app_a-1     | 2026-11-21T08:05:14.285651860Z     raise exc
+app_a-1     | 2026-11-21T08:05:14.285654402Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+app_a-1     | 2026-11-21T08:05:14.285655752Z     await app(scope, receive, sender)
+app_a-1     | 2026-11-21T08:05:14.285656894Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 136, in app
+app_a-1     | 2026-11-21T08:05:14.285658286Z     response = await f(request)
+app_a-1     | 2026-11-21T08:05:14.285659405Z                ^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.285660529Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 473, in app
+app_a-1     | 2026-11-21T08:05:14.285661697Z     solved_result = await solve_dependencies(
+app_a-1     | 2026-11-21T08:05:14.285662945Z                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.285664029Z   File "/usr/local/lib/python3.11/site-packages/fastapi/dependencies/utils.py", line 680, in solve_dependencies
+app_a-1     | 2026-11-21T08:05:14.285667183Z     solved = await run_in_threadpool(call, **solved_result.values)
+app_a-1     | 2026-11-21T08:05:14.285668554Z              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.285669696Z   File "/usr/local/lib/python3.11/site-packages/starlette/concurrency.py", line 34, in run_in_threadpool
+app_a-1     | 2026-11-21T08:05:14.285670907Z     return await anyio.to_thread.run_sync(func)
+app_a-1     | 2026-11-21T08:05:14.285671988Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.285673091Z   File "/usr/local/lib/python3.11/site-packages/anyio/to_thread.py", line 65, in run_sync
+app_a-1     | 2026-11-21T08:05:14.285674249Z     return await get_async_backend().run_sync_in_worker_thread(
+app_a-1     | 2026-11-21T08:05:14.285675338Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.285676438Z   File "/usr/local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 2779, in run_sync_in_worker_thread
+app_a-1     | 2026-11-21T08:05:14.285677671Z     return await future
+app_a-1     | 2026-11-21T08:05:14.285678700Z            ^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.285679805Z   File "/usr/local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1124, in run
+app_a-1     | 2026-11-21T08:05:14.285680985Z     result = context.run(func, *args)
+app_a-1     | 2026-11-21T08:05:14.285682042Z              ^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.285683111Z   File "/app/app/dependencies/auth.py", line 43, in get_current_user
+app_a-1     | 2026-11-21T08:05:14.285684332Z     user = db.get(User, user_id)
+app_a-1     | 2026-11-21T08:05:14.285685353Z            ^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.285686385Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 3702, in get
+app_a-1     | 2026-11-21T08:05:14.285687594Z     return self._get_impl(
+app_a-1     | 2026-11-21T08:05:14.285688709Z            ^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.285689731Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 3881, in _get_impl
+app_a-1     | 2026-11-21T08:05:14.285690925Z     return db_load_fn(
+app_a-1     | 2026-11-21T08:05:14.285691972Z            ^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.285693089Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/loading.py", line 695, in load_on_pk_identity
+app_a-1     | 2026-11-21T08:05:14.285694303Z     session.execute(
+app_a-1     | 2026-11-21T08:05:14.285695329Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2373, in execute
+app_a-1     | 2026-11-21T08:05:14.285696502Z     return self._execute_internal(
+app_a-1     | 2026-11-21T08:05:14.285697567Z            ^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.285698610Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2271, in _execute_internal
+app_a-1     | 2026-11-21T08:05:14.285699866Z     result: Result[Any] = compile_state_cls.orm_execute_statement(
+app_a-1     | 2026-11-21T08:05:14.285701017Z                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.285703690Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+app_a-1     | 2026-11-21T08:05:14.285704968Z     result = conn.execute(
+app_a-1     | 2026-11-21T08:05:14.285706011Z              ^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.285707052Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
+app_a-1     | 2026-11-21T08:05:14.285708345Z     return meth(
+app_a-1     | 2026-11-21T08:05:14.285709621Z            ^^^^^
+app_a-1     | 2026-11-21T08:05:14.285710701Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+app_a-1     | 2026-11-21T08:05:14.285711946Z     return connection._execute_clauseelement(
+app_a-1     | 2026-11-21T08:05:14.285713235Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.285714276Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
+app_a-1     | 2026-11-21T08:05:14.285715501Z     ret = self._execute_context(
+app_a-1     | 2026-11-21T08:05:14.285717721Z           ^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.285718824Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+app_a-1     | 2026-11-21T08:05:14.285720031Z     return self._exec_single_context(
+app_a-1     | 2026-11-21T08:05:14.285721067Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:14.285722130Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1988, in _exec_single_context
+app_a-1     | 2026-11-21T08:05:14.285723348Z     self._handle_dbapi_exception(
+app_a-1     | 2026-11-21T08:05:14.285724402Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2365, in _handle_dbapi_exception
+app_a-1     | 2026-11-21T08:05:14.285725617Z     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+app_a-1     | 2026-11-21T08:05:14.285727095Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+app_a-1     | 2026-11-21T08:05:14.285728334Z     self.dialect.do_execute(
+app_a-1     | 2026-11-21T08:05:14.285729360Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+app_a-1     | 2026-11-21T08:05:14.285730565Z     cursor.execute(statement, parameters)
+app_a-1     | 2026-11-21T08:05:14.285731618Z   File "/usr/local/lib/python3.11/site-packages/psycopg/cursor.py", line 117, in execute
+app_a-1     | 2026-11-21T08:05:14.285732832Z     raise ex.with_traceback(None)
+app_a-1     | 2026-11-21T08:05:14.285733871Z sqlalchemy.exc.OperationalError: (psycopg.errors.AdminShutdown) terminating connection due to administrator command
+app_a-1     | 2026-11-21T08:05:14.285735143Z [SQL: SELECT users.id AS users_id, users.username AS users_username, users.password_hash AS users_password_hash, users.display_name AS users_display_name, users.role AS users_role, users.is_active AS users_is_active, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+app_a-1     | 2026-11-21T08:05:14.285736567Z FROM users 
+app_a-1     | 2026-11-21T08:05:14.285737606Z WHERE users.id = %(pk_1)s::VARCHAR]
+app_a-1     | 2026-11-21T08:05:14.285740185Z [parameters: {'pk_1': 'c19e958e-e884-4fdb-a998-e753019b2b35'}]
+app_a-1     | 2026-11-21T08:05:14.285741701Z (Background on this error at: https://sqlalche.me/e/20/e3q8)
+app_a-1     | 2026-11-21T08:05:16.124420669Z INFO:     172.22.0.3:41850 - "GET /auth/me HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:16.872543442Z 2026-11-21 16:05:16,872 | INFO | drone-low-altitude-agent | Starting task orchestration
+app_a-1     | 2026-11-21T08:05:16.881808222Z 2026-11-21 16:05:16,881 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:05:16.881984452Z 2026-11-21 16:05:16,881 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:05:16.882227530Z 2026-11-21 16:05:16,881 | INFO | drone-low-altitude-agent.agent | agent tool call
+app_a-1     | 2026-11-21T08:05:16.891289630Z 2026-11-21 16:05:16,891 | INFO | httpx | HTTP Request: GET http://weather:8080/geo/v2/city/lookup?location=%E6%B7%B1%E5%9C%B3&number=1&lang=zh "HTTP/1.0 200 OK"
+app_a-1     | 2026-11-21T08:05:16.895554490Z 2026-11-21 16:05:16,895 | INFO | httpx | HTTP Request: GET http://weather:8080/v7/weather/72h?location=shenzhen&lang=zh "HTTP/1.0 200 OK"
+app_a-1     | 2026-11-21T08:05:16.898436488Z 2026-11-21 16:05:16,898 | INFO | httpx | HTTP Request: GET http://weather:8080/weatheralert/v1/current/22.54/114.05?lang=zh "HTTP/1.0 200 OK"
+app_a-1     | 2026-11-21T08:05:16.978604593Z 2026-11-21 16:05:16,978 | INFO | drone-low-altitude-agent.agent | agent tool result
+app_a-1     | 2026-11-21T08:05:16.979054991Z 2026-11-21 16:05:16,978 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:05:16.979244254Z 2026-11-21 16:05:16,979 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:05:16.979329756Z 2026-11-21 16:05:16,979 | INFO | drone-low-altitude-agent.agent | agent loop completed
+app_a-1     | 2026-11-21T08:05:16.996149865Z 2026-11-21 16:05:16,995 | INFO | app.services.llm_client | LLM generation skipped
+app_a-1     | 2026-11-21T08:05:17.014609218Z 2026-11-21 16:05:17,014 | INFO | drone-low-altitude-agent | Task orchestration completed
+app_a-1     | 2026-11-21T08:05:17.015316169Z INFO:     172.22.0.3:41854 - "POST /agent/query HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:17.750905583Z INFO:     172.22.0.3:41862 - "GET /agent/traces/2cdc3bad-35f9-4f1a-ac30-5a27c88b3325 HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:18.833045994Z 2026-11-21 16:05:18,832 | INFO | drone-low-altitude-agent | Starting task orchestration
+app_a-1     | 2026-11-21T08:05:18.837445749Z 2026-11-21 16:05:18,837 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:05:18.837600299Z 2026-11-21 16:05:18,837 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:05:18.837604150Z 2026-11-21 16:05:18,837 | INFO | drone-low-altitude-agent.agent | agent clarification required
+app_a-1     | 2026-11-21T08:05:18.858313790Z 2026-11-21 16:05:18,857 | INFO | drone-low-altitude-agent | Task orchestration completed
+app_a-1     | 2026-11-21T08:05:18.858724980Z INFO:     172.22.0.3:41868 - "POST /agent/query HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:19.636805074Z INFO:     172.22.0.3:41870 - "GET /agent/traces/d648700e-affe-4601-9d90-f7039e77dc18 HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:20.587773430Z INFO:     172.22.0.3:41884 - "GET /agent/conversations?session_id=sr-postgres-expiry-1 HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:24.646378044Z 2026-11-21 16:05:24,646 | INFO | drone-low-altitude-agent | Starting task orchestration
+app_a-1     | 2026-11-21T08:05:24.662032195Z 2026-11-21 16:05:24,661 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:05:24.662132908Z 2026-11-21 16:05:24,662 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:05:24.662256484Z 2026-11-21 16:05:24,662 | INFO | drone-low-altitude-agent.agent | agent clarification required
+app_a-1     | 2026-11-21T08:05:24.669828049Z 2026-11-21 16:05:24,669 | INFO | drone-low-altitude-agent | Task orchestration completed
+app_a-1     | 2026-11-21T08:05:24.670303733Z INFO:     172.22.0.3:39386 - "POST /agent/query HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:25.333014266Z INFO:     172.22.0.3:39396 - "GET /agent/traces/0bf2ba62-2874-4ee7-8cc2-97aca1e7f0dd HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:26.720706878Z INFO:     172.22.0.3:39412 - "GET /agent/conversations?session_id=sr-postgres-expiry-1 HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:27.605941191Z 2026-11-21 16:05:27,605 | INFO | drone-low-altitude-agent | Starting natural language parse
+app_a-1     | 2026-11-21T08:05:27.660962613Z 2026-11-21 16:05:27,660 | INFO | drone-low-altitude-agent | Natural language parse completed
+app_a-1     | 2026-11-21T08:05:27.663490396Z INFO:     172.22.0.3:39426 - "POST /nl/parse HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:31.669285060Z 2026-11-21 16:05:31,668 | INFO | drone-low-altitude-agent | Starting natural language parse
+app_a-1     | 2026-11-21T08:05:31.669958617Z INFO:     172.22.0.3:39430 - "POST /nl/parse HTTP/1.1" 422 Unprocessable Entity
+app_a-1     | 2026-11-21T08:05:32.805815280Z 2026-11-21 16:05:32,805 | INFO | drone-low-altitude-agent | Starting natural language parse
+app_a-1     | 2026-11-21T08:05:32.806393393Z 2026-11-21 16:05:32,806 | INFO | drone-low-altitude-agent | Natural language parse completed
+app_a-1     | 2026-11-21T08:05:32.816524221Z INFO:     172.22.0.3:39444 - "POST /nl/parse HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:34.784287470Z 2026-11-21 16:05:34,784 | INFO | drone-low-altitude-agent | Starting natural language parse
+app_a-1     | 2026-11-21T08:05:34.802924266Z 2026-11-21 16:05:34,794 | ERROR | drone-low-altitude-agent | Unhandled application error
+app_a-1     | 2026-11-21T08:05:34.802963231Z Traceback (most recent call last):
+app_a-1     | 2026-11-21T08:05:34.802968469Z   File "/usr/local/lib/python3.11/site-packages/redis/connection.py", line 1428, in get_connection
+app_a-1     | 2026-11-21T08:05:34.802975310Z     if connection.can_read() and self.cache is None:
+app_a-1     | 2026-11-21T08:05:34.802979102Z        ^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.802982669Z   File "/usr/local/lib/python3.11/site-packages/redis/connection.py", line 570, in can_read
+app_a-1     | 2026-11-21T08:05:34.802986343Z     return self._parser.can_read(timeout)
+app_a-1     | 2026-11-21T08:05:34.802989681Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.802993300Z   File "/usr/local/lib/python3.11/site-packages/redis/_parsers/base.py", line 128, in can_read
+app_a-1     | 2026-11-21T08:05:34.802997299Z     return self._buffer and self._buffer.can_read(timeout)
+app_a-1     | 2026-11-21T08:05:34.803017752Z                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.803020338Z   File "/usr/local/lib/python3.11/site-packages/redis/_parsers/socket.py", line 95, in can_read
+app_a-1     | 2026-11-21T08:05:34.803022812Z     return bool(self.unread_bytes()) or self._read_from_socket(
+app_a-1     | 2026-11-21T08:05:34.803025087Z                                         ^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.803027355Z   File "/usr/local/lib/python3.11/site-packages/redis/_parsers/socket.py", line 68, in _read_from_socket
+app_a-1     | 2026-11-21T08:05:34.803029683Z     raise ConnectionError(SERVER_CLOSED_CONNECTION_ERROR)
+app_a-1     | 2026-11-21T08:05:34.803031815Z redis.exceptions.ConnectionError: Connection closed by server.
+app_a-1     | 2026-11-21T08:05:34.803034094Z 
+app_a-1     | 2026-11-21T08:05:34.803036177Z During handling of the above exception, another exception occurred:
+app_a-1     | 2026-11-21T08:05:34.803038598Z 
+app_a-1     | 2026-11-21T08:05:34.803040562Z Traceback (most recent call last):
+app_a-1     | 2026-11-21T08:05:34.803042892Z   File "/usr/local/lib/python3.11/site-packages/redis/connection.py", line 357, in connect
+app_a-1     | 2026-11-21T08:05:34.803045363Z     sock = self.retry.call_with_retry(
+app_a-1     | 2026-11-21T08:05:34.803047548Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.803049746Z   File "/usr/local/lib/python3.11/site-packages/redis/retry.py", line 62, in call_with_retry
+app_a-1     | 2026-11-21T08:05:34.803052215Z     return do()
+app_a-1     | 2026-11-21T08:05:34.803054401Z            ^^^^
+app_a-1     | 2026-11-21T08:05:34.803057650Z   File "/usr/local/lib/python3.11/site-packages/redis/connection.py", line 358, in <lambda>
+app_a-1     | 2026-11-21T08:05:34.803060473Z     lambda: self._connect(), lambda error: self.disconnect(error)
+app_a-1     | 2026-11-21T08:05:34.803062805Z             ^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.803064921Z   File "/usr/local/lib/python3.11/site-packages/redis/connection.py", line 698, in _connect
+app_a-1     | 2026-11-21T08:05:34.803067535Z     for res in socket.getaddrinfo(
+app_a-1     | 2026-11-21T08:05:34.803069689Z                ^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.803071766Z   File "/usr/local/lib/python3.11/socket.py", line 974, in getaddrinfo
+app_a-1     | 2026-11-21T08:05:34.803074098Z     for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+app_a-1     | 2026-11-21T08:05:34.803077223Z                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.803079746Z socket.gaierror: [Errno -3] Temporary failure in name resolution
+app_a-1     | 2026-11-21T08:05:34.803082082Z 
+app_a-1     | 2026-11-21T08:05:34.803084762Z During handling of the above exception, another exception occurred:
+app_a-1     | 2026-11-21T08:05:34.803086986Z 
+app_a-1     | 2026-11-21T08:05:34.803089129Z Traceback (most recent call last):
+app_a-1     | 2026-11-21T08:05:34.803091397Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/errors.py", line 164, in __call__
+app_a-1     | 2026-11-21T08:05:34.803097494Z     await self.app(scope, receive, _send)
+app_a-1     | 2026-11-21T08:05:34.803099864Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/cors.py", line 91, in __call__
+app_a-1     | 2026-11-21T08:05:34.803102464Z     await self.simple_response(scope, receive, send, request_headers=headers)
+app_a-1     | 2026-11-21T08:05:34.803104851Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/cors.py", line 149, in simple_response
+app_a-1     | 2026-11-21T08:05:34.803107179Z     await self.app(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:34.803109305Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+app_a-1     | 2026-11-21T08:05:34.803111670Z     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:34.803113950Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+app_a-1     | 2026-11-21T08:05:34.803116401Z     raise exc
+app_a-1     | 2026-11-21T08:05:34.803118708Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+app_a-1     | 2026-11-21T08:05:34.803121135Z     await app(scope, receive, sender)
+app_a-1     | 2026-11-21T08:05:34.803123433Z   File "/usr/local/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+app_a-1     | 2026-11-21T08:05:34.803125799Z     await self.app(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:34.803128016Z   File "/usr/local/lib/python3.11/site-packages/starlette/routing.py", line 683, in __call__
+app_a-1     | 2026-11-21T08:05:34.803131054Z     await self.middleware_stack(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:34.803133267Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 2683, in app
+app_a-1     | 2026-11-21T08:05:34.803135621Z     await route.handle(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:34.803137785Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 1266, in handle
+app_a-1     | 2026-11-21T08:05:34.803140218Z     await super().handle(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:34.803142523Z   File "/usr/local/lib/python3.11/site-packages/starlette/routing.py", line 289, in handle
+app_a-1     | 2026-11-21T08:05:34.803144818Z     await self.app(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:34.803146914Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 150, in app
+app_a-1     | 2026-11-21T08:05:34.803149206Z     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:34.803151844Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+app_a-1     | 2026-11-21T08:05:34.803154351Z     raise exc
+app_a-1     | 2026-11-21T08:05:34.803156327Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+app_a-1     | 2026-11-21T08:05:34.803158750Z     await app(scope, receive, sender)
+app_a-1     | 2026-11-21T08:05:34.803161041Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 136, in app
+app_a-1     | 2026-11-21T08:05:34.803163625Z     response = await f(request)
+app_a-1     | 2026-11-21T08:05:34.803168837Z                ^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.803171026Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 690, in app
+app_a-1     | 2026-11-21T08:05:34.803173490Z     raw_response = await run_endpoint_function(
+app_a-1     | 2026-11-21T08:05:34.803176503Z                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.803178674Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 346, in run_endpoint_function
+app_a-1     | 2026-11-21T08:05:34.803181291Z     return await run_in_threadpool(dependant.call, **values)
+app_a-1     | 2026-11-21T08:05:34.803183722Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.803185990Z   File "/usr/local/lib/python3.11/site-packages/starlette/concurrency.py", line 34, in run_in_threadpool
+app_a-1     | 2026-11-21T08:05:34.803188842Z     return await anyio.to_thread.run_sync(func)
+app_a-1     | 2026-11-21T08:05:34.803191215Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.803193468Z   File "/usr/local/lib/python3.11/site-packages/anyio/to_thread.py", line 65, in run_sync
+app_a-1     | 2026-11-21T08:05:34.803195828Z     return await get_async_backend().run_sync_in_worker_thread(
+app_a-1     | 2026-11-21T08:05:34.803198034Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.803200260Z   File "/usr/local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 2779, in run_sync_in_worker_thread
+app_a-1     | 2026-11-21T08:05:34.803202918Z     return await future
+app_a-1     | 2026-11-21T08:05:34.803205003Z            ^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.803207071Z   File "/usr/local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1124, in run
+app_a-1     | 2026-11-21T08:05:34.803209459Z     result = context.run(func, *args)
+app_a-1     | 2026-11-21T08:05:34.803211659Z              ^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.803213737Z   File "/app/main.py", line 964, in parse_natural_language
+app_a-1     | 2026-11-21T08:05:34.803216168Z     context = anonymous_session_memory_store.get(payload.session_id) if payload.session_id else None
+app_a-1     | 2026-11-21T08:05:34.803218521Z               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.803220684Z   File "/app/app/services/session_memory.py", line 223, in get
+app_a-1     | 2026-11-21T08:05:34.803222946Z     return self._get_store().get(session_id, user_id=user_id)
+app_a-1     | 2026-11-21T08:05:34.803225213Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.803227491Z   File "/app/app/services/session_memory.py", line 91, in get
+app_a-1     | 2026-11-21T08:05:34.803230439Z     raw_value = self._client.get(self._key(session_id, user_id))
+app_a-1     | 2026-11-21T08:05:34.803232863Z                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.803235083Z   File "/usr/local/lib/python3.11/site-packages/redis/commands/core.py", line 1822, in get
+app_a-1     | 2026-11-21T08:05:34.803237403Z     return self.execute_command("GET", name, keys=[name])
+app_a-1     | 2026-11-21T08:05:34.803242525Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.803244953Z   File "/usr/local/lib/python3.11/site-packages/redis/client.py", line 559, in execute_command
+app_a-1     | 2026-11-21T08:05:34.803247865Z     return self._execute_command(*args, **options)
+app_a-1     | 2026-11-21T08:05:34.803250082Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.803252479Z   File "/usr/local/lib/python3.11/site-packages/redis/client.py", line 565, in _execute_command
+app_a-1     | 2026-11-21T08:05:34.803254886Z     conn = self.connection or pool.get_connection(command_name, **options)
+app_a-1     | 2026-11-21T08:05:34.803257166Z                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.803259411Z   File "/usr/local/lib/python3.11/site-packages/redis/connection.py", line 1432, in get_connection
+app_a-1     | 2026-11-21T08:05:34.803261962Z     connection.connect()
+app_a-1     | 2026-11-21T08:05:34.803264146Z   File "/usr/local/lib/python3.11/site-packages/redis/connection.py", line 363, in connect
+app_a-1     | 2026-11-21T08:05:34.803266542Z     raise ConnectionError(self._error_message(e))
+app_a-1     | 2026-11-21T08:05:34.803268888Z redis.exceptions.ConnectionError: Error -3 connecting to redis:6379. Temporary failure in name resolution.
+app_a-1     | 2026-11-21T08:05:34.803262353Z INFO:     172.22.0.3:49304 - "POST /nl/parse HTTP/1.1" 500 Internal Server Error
+app_a-1     | 2026-11-21T08:05:34.805787468Z ERROR:    Exception in ASGI application
+app_a-1     | 2026-11-21T08:05:34.805802522Z Traceback (most recent call last):
+app_a-1     | 2026-11-21T08:05:34.805804228Z   File "/usr/local/lib/python3.11/site-packages/redis/connection.py", line 1428, in get_connection
+app_a-1     | 2026-11-21T08:05:34.805805775Z     if connection.can_read() and self.cache is None:
+app_a-1     | 2026-11-21T08:05:34.805806952Z        ^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.805808083Z   File "/usr/local/lib/python3.11/site-packages/redis/connection.py", line 570, in can_read
+app_a-1     | 2026-11-21T08:05:34.805809347Z     return self._parser.can_read(timeout)
+app_a-1     | 2026-11-21T08:05:34.805810479Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.805811617Z   File "/usr/local/lib/python3.11/site-packages/redis/_parsers/base.py", line 128, in can_read
+app_a-1     | 2026-11-21T08:05:34.805813061Z     return self._buffer and self._buffer.can_read(timeout)
+app_a-1     | 2026-11-21T08:05:34.805814179Z                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.805815322Z   File "/usr/local/lib/python3.11/site-packages/redis/_parsers/socket.py", line 95, in can_read
+app_a-1     | 2026-11-21T08:05:34.805816474Z     return bool(self.unread_bytes()) or self._read_from_socket(
+app_a-1     | 2026-11-21T08:05:34.805817548Z                                         ^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.805818674Z   File "/usr/local/lib/python3.11/site-packages/redis/_parsers/socket.py", line 68, in _read_from_socket
+app_a-1     | 2026-11-21T08:05:34.805819870Z     raise ConnectionError(SERVER_CLOSED_CONNECTION_ERROR)
+app_a-1     | 2026-11-21T08:05:34.805821088Z redis.exceptions.ConnectionError: Connection closed by server.
+app_a-1     | 2026-11-21T08:05:34.805829113Z 
+app_a-1     | 2026-11-21T08:05:34.805830386Z During handling of the above exception, another exception occurred:
+app_a-1     | 2026-11-21T08:05:34.805831562Z 
+app_a-1     | 2026-11-21T08:05:34.805832539Z Traceback (most recent call last):
+app_a-1     | 2026-11-21T08:05:34.805833632Z   File "/usr/local/lib/python3.11/site-packages/redis/connection.py", line 357, in connect
+app_a-1     | 2026-11-21T08:05:34.805834840Z     sock = self.retry.call_with_retry(
+app_a-1     | 2026-11-21T08:05:34.805835917Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.805837050Z   File "/usr/local/lib/python3.11/site-packages/redis/retry.py", line 62, in call_with_retry
+app_a-1     | 2026-11-21T08:05:34.805838312Z     return do()
+app_a-1     | 2026-11-21T08:05:34.805839395Z            ^^^^
+app_a-1     | 2026-11-21T08:05:34.805840448Z   File "/usr/local/lib/python3.11/site-packages/redis/connection.py", line 358, in <lambda>
+app_a-1     | 2026-11-21T08:05:34.805841807Z     lambda: self._connect(), lambda error: self.disconnect(error)
+app_a-1     | 2026-11-21T08:05:34.805842970Z             ^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.805844068Z   File "/usr/local/lib/python3.11/site-packages/redis/connection.py", line 698, in _connect
+app_a-1     | 2026-11-21T08:05:34.805845253Z     for res in socket.getaddrinfo(
+app_a-1     | 2026-11-21T08:05:34.805846314Z                ^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.805847357Z   File "/usr/local/lib/python3.11/socket.py", line 974, in getaddrinfo
+app_a-1     | 2026-11-21T08:05:34.805848508Z     for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+app_a-1     | 2026-11-21T08:05:34.805850008Z                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.805851162Z socket.gaierror: [Errno -3] Temporary failure in name resolution
+app_a-1     | 2026-11-21T08:05:34.805852276Z 
+app_a-1     | 2026-11-21T08:05:34.805853267Z During handling of the above exception, another exception occurred:
+app_a-1     | 2026-11-21T08:05:34.805854390Z 
+app_a-1     | 2026-11-21T08:05:34.805855384Z Traceback (most recent call last):
+app_a-1     | 2026-11-21T08:05:34.805856445Z   File "/usr/local/lib/python3.11/site-packages/uvicorn/protocols/http/h11_impl.py", line 416, in run_asgi
+app_a-1     | 2026-11-21T08:05:34.805857684Z     result = await app(  # type: ignore[func-returns-value]
+app_a-1     | 2026-11-21T08:05:34.805858795Z              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.805859851Z   File "/usr/local/lib/python3.11/site-packages/uvicorn/middleware/proxy_headers.py", line 63, in __call__
+app_a-1     | 2026-11-21T08:05:34.805861039Z     return await self.app(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:34.805862111Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.805863177Z   File "/usr/local/lib/python3.11/site-packages/fastapi/applications.py", line 1163, in __call__
+app_a-1     | 2026-11-21T08:05:34.805864442Z     await super().__call__(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:34.805865714Z   File "/usr/local/lib/python3.11/site-packages/starlette/applications.py", line 96, in __call__
+app_a-1     | 2026-11-21T08:05:34.805868838Z     await self.middleware_stack(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:34.805870001Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/errors.py", line 186, in __call__
+app_a-1     | 2026-11-21T08:05:34.805871229Z     raise exc
+app_a-1     | 2026-11-21T08:05:34.805872315Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/errors.py", line 164, in __call__
+app_a-1     | 2026-11-21T08:05:34.805873524Z     await self.app(scope, receive, _send)
+app_a-1     | 2026-11-21T08:05:34.805874603Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/cors.py", line 91, in __call__
+app_a-1     | 2026-11-21T08:05:34.805875836Z     await self.simple_response(scope, receive, send, request_headers=headers)
+app_a-1     | 2026-11-21T08:05:34.805876968Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/cors.py", line 149, in simple_response
+app_a-1     | 2026-11-21T08:05:34.805878187Z     await self.app(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:34.805879263Z   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+app_a-1     | 2026-11-21T08:05:34.805880481Z     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:34.805881618Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+app_a-1     | 2026-11-21T08:05:34.805882800Z     raise exc
+app_a-1     | 2026-11-21T08:05:34.805883891Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+app_a-1     | 2026-11-21T08:05:34.805885070Z     await app(scope, receive, sender)
+app_a-1     | 2026-11-21T08:05:34.805886389Z   File "/usr/local/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+app_a-1     | 2026-11-21T08:05:34.805887770Z     await self.app(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:34.805888894Z   File "/usr/local/lib/python3.11/site-packages/starlette/routing.py", line 683, in __call__
+app_a-1     | 2026-11-21T08:05:34.805890110Z     await self.middleware_stack(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:34.805891229Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 2683, in app
+app_a-1     | 2026-11-21T08:05:34.805892397Z     await route.handle(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:34.805893493Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 1266, in handle
+app_a-1     | 2026-11-21T08:05:34.805894662Z     await super().handle(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:34.805895739Z   File "/usr/local/lib/python3.11/site-packages/starlette/routing.py", line 289, in handle
+app_a-1     | 2026-11-21T08:05:34.805896917Z     await self.app(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:34.805897973Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 150, in app
+app_a-1     | 2026-11-21T08:05:34.805899143Z     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+app_a-1     | 2026-11-21T08:05:34.805900365Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+app_a-1     | 2026-11-21T08:05:34.805903254Z     raise exc
+app_a-1     | 2026-11-21T08:05:34.805904331Z   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+app_a-1     | 2026-11-21T08:05:34.805905559Z     await app(scope, receive, sender)
+app_a-1     | 2026-11-21T08:05:34.805906617Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 136, in app
+app_a-1     | 2026-11-21T08:05:34.805907821Z     response = await f(request)
+app_a-1     | 2026-11-21T08:05:34.805908941Z                ^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.805910011Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 690, in app
+app_a-1     | 2026-11-21T08:05:34.805911172Z     raw_response = await run_endpoint_function(
+app_a-1     | 2026-11-21T08:05:34.805912257Z                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.805913354Z   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 346, in run_endpoint_function
+app_a-1     | 2026-11-21T08:05:34.805914587Z     return await run_in_threadpool(dependant.call, **values)
+app_a-1     | 2026-11-21T08:05:34.805915670Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.805916772Z   File "/usr/local/lib/python3.11/site-packages/starlette/concurrency.py", line 34, in run_in_threadpool
+app_a-1     | 2026-11-21T08:05:34.805917948Z     return await anyio.to_thread.run_sync(func)
+app_a-1     | 2026-11-21T08:05:34.805919003Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.805920137Z   File "/usr/local/lib/python3.11/site-packages/anyio/to_thread.py", line 65, in run_sync
+app_a-1     | 2026-11-21T08:05:34.805921332Z     return await get_async_backend().run_sync_in_worker_thread(
+app_a-1     | 2026-11-21T08:05:34.805922388Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.805923628Z   File "/usr/local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 2779, in run_sync_in_worker_thread
+app_a-1     | 2026-11-21T08:05:34.805924857Z     return await future
+app_a-1     | 2026-11-21T08:05:34.805925904Z            ^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.805926999Z   File "/usr/local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1124, in run
+app_a-1     | 2026-11-21T08:05:34.805928213Z     result = context.run(func, *args)
+app_a-1     | 2026-11-21T08:05:34.805929289Z              ^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.805930322Z   File "/app/main.py", line 964, in parse_natural_language
+app_a-1     | 2026-11-21T08:05:34.805931488Z     context = anonymous_session_memory_store.get(payload.session_id) if payload.session_id else None
+app_a-1     | 2026-11-21T08:05:34.805932635Z               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.805933742Z   File "/app/app/services/session_memory.py", line 223, in get
+app_a-1     | 2026-11-21T08:05:34.805934847Z     return self._get_store().get(session_id, user_id=user_id)
+app_a-1     | 2026-11-21T08:05:34.805935964Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.805937047Z   File "/app/app/services/session_memory.py", line 91, in get
+app_a-1     | 2026-11-21T08:05:34.805944380Z     raw_value = self._client.get(self._key(session_id, user_id))
+app_a-1     | 2026-11-21T08:05:34.805945669Z                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.805946804Z   File "/usr/local/lib/python3.11/site-packages/redis/commands/core.py", line 1822, in get
+app_a-1     | 2026-11-21T08:05:34.805947951Z     return self.execute_command("GET", name, keys=[name])
+app_a-1     | 2026-11-21T08:05:34.805949142Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.805950304Z   File "/usr/local/lib/python3.11/site-packages/redis/client.py", line 559, in execute_command
+app_a-1     | 2026-11-21T08:05:34.805951454Z     return self._execute_command(*args, **options)
+app_a-1     | 2026-11-21T08:05:34.805952998Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.805954087Z   File "/usr/local/lib/python3.11/site-packages/redis/client.py", line 565, in _execute_command
+app_a-1     | 2026-11-21T08:05:34.805955295Z     conn = self.connection or pool.get_connection(command_name, **options)
+app_a-1     | 2026-11-21T08:05:34.805956433Z                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:34.805957577Z   File "/usr/local/lib/python3.11/site-packages/redis/connection.py", line 1432, in get_connection
+app_a-1     | 2026-11-21T08:05:34.805958756Z     connection.connect()
+app_a-1     | 2026-11-21T08:05:34.805959790Z   File "/usr/local/lib/python3.11/site-packages/redis/connection.py", line 363, in connect
+app_a-1     | 2026-11-21T08:05:34.805960979Z     raise ConnectionError(self._error_message(e))
+app_a-1     | 2026-11-21T08:05:34.805962093Z redis.exceptions.ConnectionError: Error -3 connecting to redis:6379. Temporary failure in name resolution.
+app_a-1     | 2026-11-21T08:05:35.537653020Z 2026-11-21 16:05:35,537 | INFO | drone-low-altitude-agent | Starting natural language parse
+app_a-1     | 2026-11-21T08:05:35.537673046Z 2026-11-21 16:05:35,537 | INFO | drone-low-altitude-agent | Natural language parse completed
+app_a-1     | 2026-11-21T08:05:35.538409564Z INFO:     172.22.0.3:49310 - "POST /nl/parse HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:36.183770032Z 2026-11-21 16:05:36,183 | INFO | drone-low-altitude-agent | Starting task orchestration
+app_a-1     | 2026-11-21T08:05:36.188641869Z 2026-11-21 16:05:36,188 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:05:36.188944097Z 2026-11-21 16:05:36,188 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:05:36.189057209Z 2026-11-21 16:05:36,188 | INFO | drone-low-altitude-agent.agent | agent tool call
+app_a-1     | 2026-11-21T08:05:36.193810914Z 2026-11-21 16:05:36,193 | INFO | drone-low-altitude-agent.agent | agent tool result
+app_a-1     | 2026-11-21T08:05:36.194096994Z 2026-11-21 16:05:36,193 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:05:36.194203941Z 2026-11-21 16:05:36,194 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:05:36.194318596Z 2026-11-21 16:05:36,194 | INFO | drone-low-altitude-agent.agent | agent loop completed
+app_a-1     | 2026-11-21T08:05:36.211729327Z 2026-11-21 16:05:36,211 | INFO | drone-low-altitude-agent | Task orchestration completed
+app_a-1     | 2026-11-21T08:05:36.212328161Z INFO:     172.22.0.3:49314 - "POST /agent/query HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:36.922342746Z INFO:     172.22.0.3:49318 - "GET /agent/traces/c0de24f3-42c3-42f4-a066-adf72295bdae HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:38.670426037Z 2026-11-21 16:05:38,670 | INFO | drone-low-altitude-agent | Starting natural language parse
+app_a-1     | 2026-11-21T08:05:38.671581509Z 2026-11-21 16:05:38,671 | INFO | drone-low-altitude-agent | Natural language parse completed
+app_a-1     | 2026-11-21T08:05:38.672565390Z INFO:     172.22.0.3:49330 - "POST /nl/parse HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:39.432634838Z 2026-11-21 16:05:39,432 | INFO | drone-low-altitude-agent | Starting natural language parse
+app_a-1     | 2026-11-21T08:05:39.433131023Z 2026-11-21 16:05:39,432 | INFO | drone-low-altitude-agent | Natural language parse completed
+app_a-1     | 2026-11-21T08:05:39.434486066Z INFO:     172.22.0.3:49342 - "POST /nl/parse HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:42.610538877Z 2026-11-21 16:05:42,610 | INFO | drone-low-altitude-agent | Starting natural language parse
+app_a-1     | 2026-11-21T08:05:42.611792741Z 2026-11-21 16:05:42,611 | INFO | drone-low-altitude-agent | Natural language parse completed
+app_a-1     | 2026-11-21T08:05:42.612702763Z INFO:     172.22.0.3:49358 - "POST /nl/parse HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:43.345332668Z 2026-11-21 16:05:43,345 | INFO | drone-low-altitude-agent | Starting task orchestration
+app_a-1     | 2026-11-21T08:05:43.350142973Z 2026-11-21 16:05:43,349 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:05:43.350338963Z 2026-11-21 16:05:43,350 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:05:43.350460191Z 2026-11-21 16:05:43,350 | INFO | drone-low-altitude-agent.agent | agent tool call
+app_a-1     | 2026-11-21T08:05:43.358837940Z 2026-11-21 16:05:43,358 | INFO | httpx | HTTP Request: GET http://weather:8080/geo/v2/city/lookup?location=%E6%B7%B1%E5%9C%B3&number=1&lang=zh "HTTP/1.0 200 OK"
+app_a-1     | 2026-11-21T08:05:43.364277097Z 2026-11-21 16:05:43,363 | INFO | httpx | HTTP Request: GET http://weather:8080/v7/weather/72h?location=shenzhen&lang=zh "HTTP/1.0 200 OK"
+app_a-1     | 2026-11-21T08:05:43.366408253Z 2026-11-21 16:05:43,366 | INFO | httpx | HTTP Request: GET http://weather:8080/weatheralert/v1/current/22.54/114.05?lang=zh "HTTP/1.0 200 OK"
+app_a-1     | 2026-11-21T08:05:43.426084946Z 2026-11-21 16:05:43,425 | INFO | drone-low-altitude-agent.agent | agent tool result
+app_a-1     | 2026-11-21T08:05:43.427163299Z 2026-11-21 16:05:43,426 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:05:43.427179221Z 2026-11-21 16:05:43,426 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:05:43.427182169Z 2026-11-21 16:05:43,426 | INFO | drone-low-altitude-agent.agent | agent loop completed
+app_a-1     | 2026-11-21T08:05:43.442179942Z 2026-11-21 16:05:43,441 | INFO | app.services.llm_client | LLM generation skipped
+app_a-1     | 2026-11-21T08:05:43.457422420Z 2026-11-21 16:05:43,457 | INFO | drone-low-altitude-agent | Task orchestration completed
+app_a-1     | 2026-11-21T08:05:43.458440843Z INFO:     172.22.0.3:49366 - "POST /agent/query HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:44.120280437Z INFO:     172.22.0.3:49374 - "GET /agent/traces/b3ed81dd-2b7e-40c9-8212-e34322efc542 HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:45.476482131Z 2026-11-21 16:05:45,476 | INFO | drone-low-altitude-agent | Starting task orchestration
+app_a-1     | 2026-11-21T08:05:45.480482025Z 2026-11-21 16:05:45,480 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:05:45.480686162Z 2026-11-21 16:05:45,480 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:05:45.480700901Z 2026-11-21 16:05:45,480 | INFO | drone-low-altitude-agent.agent | agent tool call
+app_a-1     | 2026-11-21T08:05:45.489979294Z 2026-11-21 16:05:45,489 | INFO | httpx | HTTP Request: GET http://weather:8080/geo/v2/city/lookup?location=%E6%B7%B1%E5%9C%B3&number=1&lang=zh "HTTP/1.0 200 OK"
+app_a-1     | 2026-11-21T08:05:45.492250808Z 2026-11-21 16:05:45,492 | INFO | httpx | HTTP Request: GET http://weather:8080/v7/weather/72h?location=shenzhen&lang=zh "HTTP/1.0 200 OK"
+app_a-1     | 2026-11-21T08:05:45.494115364Z 2026-11-21 16:05:45,493 | INFO | httpx | HTTP Request: GET http://weather:8080/weatheralert/v1/current/22.54/114.05?lang=zh "HTTP/1.0 200 OK"
+app_a-1     | 2026-11-21T08:05:45.562290067Z 2026-11-21 16:05:45,561 | INFO | drone-low-altitude-agent.agent | agent tool result
+app_a-1     | 2026-11-21T08:05:45.562566043Z 2026-11-21 16:05:45,562 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:05:45.562672519Z 2026-11-21 16:05:45,562 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:05:45.562790170Z 2026-11-21 16:05:45,562 | INFO | drone-low-altitude-agent.agent | agent loop completed
+app_a-1     | 2026-11-21T08:05:45.575653863Z 2026-11-21 16:05:45,575 | INFO | app.services.llm_client | LLM generation skipped
+app_a-1     | 2026-11-21T08:05:45.593580580Z 2026-11-21 16:05:45,593 | INFO | drone-low-altitude-agent | Task orchestration completed
+app_a-1     | 2026-11-21T08:05:45.594208522Z INFO:     172.22.0.3:35188 - "POST /agent/query HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:46.274891775Z INFO:     172.22.0.3:35198 - "GET /agent/traces/005dca99-d3e6-464c-998a-69cc060bd58e HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:48.377468077Z 2026-11-21 16:05:48,377 | INFO | drone-low-altitude-agent | Starting task orchestration
+app_a-1     | 2026-11-21T08:05:48.382003910Z 2026-11-21 16:05:48,381 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:05:48.386469983Z 2026-11-21 16:05:48,381 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:05:48.386478165Z 2026-11-21 16:05:48,382 | INFO | drone-low-altitude-agent.agent | agent clarification required
+app_a-1     | 2026-11-21T08:05:48.398605741Z 2026-11-21 16:05:48,398 | INFO | drone-low-altitude-agent | Task orchestration completed
+app_a-1     | 2026-11-21T08:05:48.399248423Z INFO:     172.22.0.3:35210 - "POST /agent/query HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:49.111683419Z INFO:     172.22.0.3:35218 - "GET /agent/traces/ef2c762a-46c2-4e7f-b858-e2f6e31dcd28 HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:49.787871761Z INFO:     172.22.0.3:35226 - "GET /agent/traces/005dca99-d3e6-464c-998a-69cc060bd58e HTTP/1.1" 404 Not Found
+app_a-1     | 2026-11-21T08:05:51.295728846Z 2026-11-21 16:05:51,295 | INFO | drone-low-altitude-agent | Starting task orchestration
+app_a-1     | 2026-11-21T08:05:51.299600872Z 2026-11-21 16:05:51,299 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:05:51.299734369Z 2026-11-21 16:05:51,299 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:05:51.299898459Z 2026-11-21 16:05:51,299 | INFO | drone-low-altitude-agent.agent | agent clarification required
+app_a-1     | 2026-11-21T08:05:51.310038382Z 2026-11-21 16:05:51,309 | INFO | drone-low-altitude-agent | Task orchestration completed
+app_a-1     | 2026-11-21T08:05:51.310590554Z INFO:     172.22.0.3:35232 - "POST /agent/query HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:51.996244846Z INFO:     172.22.0.3:35248 - "GET /agent/traces/d041ae5b-3871-4ed9-826a-80096a33c56b HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:53.709623103Z 2026-11-21 16:05:53,709 | INFO | drone-low-altitude-agent | Starting task orchestration
+app_a-1     | 2026-11-21T08:05:53.714160236Z 2026-11-21 16:05:53,713 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:05:53.720010184Z 2026-11-21 16:05:53,714 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:05:53.720017022Z 2026-11-21 16:05:53,714 | INFO | drone-low-altitude-agent.agent | agent tool call
+app_a-1     | 2026-11-21T08:05:53.721148754Z 2026-11-21 16:05:53,720 | INFO | drone-low-altitude-agent.agent | agent tool result
+app_a-1     | 2026-11-21T08:05:53.721390116Z 2026-11-21 16:05:53,721 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:05:53.721541204Z 2026-11-21 16:05:53,721 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:05:53.721544788Z 2026-11-21 16:05:53,721 | INFO | drone-low-altitude-agent.agent | agent loop completed
+app_a-1     | 2026-11-21T08:05:53.726901764Z 2026-11-21 16:05:53,724 | ERROR | app.services.task_orchestrator | Could not save the completed request's Session
+app_a-1     | 2026-11-21T08:05:53.726923548Z Traceback (most recent call last):
+app_a-1     | 2026-11-21T08:05:53.726925588Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+app_a-1     | 2026-11-21T08:05:53.726927109Z     self.dialect.do_execute(
+app_a-1     | 2026-11-21T08:05:53.726928359Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+app_a-1     | 2026-11-21T08:05:53.726929624Z     cursor.execute(statement, parameters)
+app_a-1     | 2026-11-21T08:05:53.726930783Z   File "/usr/local/lib/python3.11/site-packages/psycopg/cursor.py", line 117, in execute
+app_a-1     | 2026-11-21T08:05:53.726932068Z     raise ex.with_traceback(None)
+app_a-1     | 2026-11-21T08:05:53.726933133Z psycopg.errors.RaiseException: session reliability injected save failure
+app_a-1     | 2026-11-21T08:05:53.726934344Z CONTEXT:  PL/pgSQL function reliability_session_fault() line 1 at RAISE
+app_a-1     | 2026-11-21T08:05:53.726935458Z 
+app_a-1     | 2026-11-21T08:05:53.726936516Z The above exception was the direct cause of the following exception:
+app_a-1     | 2026-11-21T08:05:53.726937679Z 
+app_a-1     | 2026-11-21T08:05:53.726947579Z Traceback (most recent call last):
+app_a-1     | 2026-11-21T08:05:53.726948758Z   File "/app/app/services/task_orchestrator.py", line 695, in _save_completed_context
+app_a-1     | 2026-11-21T08:05:53.726950012Z     _save_context(
+app_a-1     | 2026-11-21T08:05:53.726951065Z   File "/app/app/services/run_observability.py", line 114, in measured
+app_a-1     | 2026-11-21T08:05:53.726952258Z     return function(*args, **kwargs)
+app_a-1     | 2026-11-21T08:05:53.726953383Z            ^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:53.726954434Z   File "/app/app/services/task_orchestrator.py", line 726, in _save_context
+app_a-1     | 2026-11-21T08:05:53.726955698Z     session_memory_store.set(session_id, context, user_id=user_id, title=query[:80])
+app_a-1     | 2026-11-21T08:05:53.726956871Z   File "/app/app/services/session_memory.py", line 233, in set
+app_a-1     | 2026-11-21T08:05:53.726958061Z     self._get_store().set(session_id, context, user_id=user_id, title=title)
+app_a-1     | 2026-11-21T08:05:53.726959182Z   File "/app/app/services/session_memory.py", line 187, in set
+app_a-1     | 2026-11-21T08:05:53.726960339Z     session.execute(
+app_a-1     | 2026-11-21T08:05:53.726961439Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2373, in execute
+app_a-1     | 2026-11-21T08:05:53.726962650Z     return self._execute_internal(
+app_a-1     | 2026-11-21T08:05:53.726963825Z            ^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:53.726964944Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2271, in _execute_internal
+app_a-1     | 2026-11-21T08:05:53.726966156Z     result: Result[Any] = compile_state_cls.orm_execute_statement(
+app_a-1     | 2026-11-21T08:05:53.726967237Z                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:53.726968358Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/bulk_persistence.py", line 1306, in orm_execute_statement
+app_a-1     | 2026-11-21T08:05:53.726969573Z     result = conn.execute(
+app_a-1     | 2026-11-21T08:05:53.726970632Z              ^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:53.726972231Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
+app_a-1     | 2026-11-21T08:05:53.726973469Z     return meth(
+app_a-1     | 2026-11-21T08:05:53.726974523Z            ^^^^^
+app_a-1     | 2026-11-21T08:05:53.726975603Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+app_a-1     | 2026-11-21T08:05:53.726976786Z     return connection._execute_clauseelement(
+app_a-1     | 2026-11-21T08:05:53.726977892Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:53.726979010Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
+app_a-1     | 2026-11-21T08:05:53.726980281Z     ret = self._execute_context(
+app_a-1     | 2026-11-21T08:05:53.726981382Z           ^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:53.726982436Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+app_a-1     | 2026-11-21T08:05:53.726983665Z     return self._exec_single_context(
+app_a-1     | 2026-11-21T08:05:53.726986799Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+app_a-1     | 2026-11-21T08:05:53.726987939Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1988, in _exec_single_context
+app_a-1     | 2026-11-21T08:05:53.726989344Z     self._handle_dbapi_exception(
+app_a-1     | 2026-11-21T08:05:53.726990442Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2365, in _handle_dbapi_exception
+app_a-1     | 2026-11-21T08:05:53.726991722Z     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+app_a-1     | 2026-11-21T08:05:53.726992840Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+app_a-1     | 2026-11-21T08:05:53.726994101Z     self.dialect.do_execute(
+app_a-1     | 2026-11-21T08:05:53.726995147Z   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+app_a-1     | 2026-11-21T08:05:53.726996342Z     cursor.execute(statement, parameters)
+app_a-1     | 2026-11-21T08:05:53.726997422Z   File "/usr/local/lib/python3.11/site-packages/psycopg/cursor.py", line 117, in execute
+app_a-1     | 2026-11-21T08:05:53.726998594Z     raise ex.with_traceback(None)
+app_a-1     | 2026-11-21T08:05:53.726999667Z sqlalchemy.exc.ProgrammingError: (psycopg.errors.RaiseException) session reliability injected save failure
+app_a-1     | 2026-11-21T08:05:53.727000843Z CONTEXT:  PL/pgSQL function reliability_session_fault() line 1 at RAISE
+app_a-1     | 2026-11-21T08:05:53.727003184Z [SQL: INSERT INTO session_records (session_id, user_id, title, last_context, created_at, updated_at, expires_at) VALUES (%(session_id)s::VARCHAR, %(user_id)s::VARCHAR, %(title)s::VARCHAR, %(last_context)s::JSON, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, %(expires_at)s::TIMESTAMP WITHOUT TIME ZONE) ON CONFLICT (user_id, session_id) DO UPDATE SET title = %(param_1)s::VARCHAR, last_context = excluded.last_context, updated_at = excluded.updated_at, expires_at = excluded.expires_at RETURNING session_records.id]
+app_a-1     | 2026-11-21T08:05:53.727006090Z [parameters: {'session_id': 'sr-session-save-failure-1', 'user_id': 'c19e958e-e884-4fdb-a998-e753019b2b35', 'title': '帮我创建一个深圳明天下午2点到3点巡检任务', 'last_context': Json({'intent': 'create_task', 'task_typ ... (231 chars)), 'created_at': datetime.datetime(2026, 11, 21, 8, 5, 53, 721489), 'updated_at': datetime.datetime(2026, 11, 21, 8, 5, 53, 721489), 'expires_at': datetime.datetime(2026, 12, 21, 8, 5, 53, 721489), 'param_1': '帮我创建一个深圳明天下午2点到3点巡检任务'}]
+app_a-1     | 2026-11-21T08:05:53.727008518Z (Background on this error at: https://sqlalche.me/e/20/f405)
+app_a-1     | 2026-11-21T08:05:53.736324768Z 2026-11-21 16:05:53,736 | INFO | drone-low-altitude-agent | Task orchestration completed
+app_a-1     | 2026-11-21T08:05:53.736841129Z INFO:     172.22.0.3:35252 - "POST /agent/query HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:54.414205373Z INFO:     172.22.0.3:45716 - "GET /agent/traces/4667c0cd-1c8f-4947-9e64-2ec433c60a11 HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:55.949998516Z 2026-11-21 16:05:55,949 | INFO | drone-low-altitude-agent | Starting task orchestration
+app_a-1     | 2026-11-21T08:05:55.954415159Z 2026-11-21 16:05:55,954 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:05:55.954749108Z 2026-11-21 16:05:55,954 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:05:55.954857321Z 2026-11-21 16:05:55,954 | INFO | drone-low-altitude-agent.agent | agent tool call
+app_a-1     | 2026-11-21T08:05:55.961599340Z 2026-11-21 16:05:55,961 | INFO | httpx | HTTP Request: GET http://weather:8080/geo/v2/city/lookup?location=%E6%B7%B1%E5%9C%B3&number=1&lang=zh "HTTP/1.0 200 OK"
+app_a-1     | 2026-11-21T08:05:55.963686371Z 2026-11-21 16:05:55,963 | INFO | httpx | HTTP Request: GET http://weather:8080/v7/weather/72h?location=shenzhen&lang=zh "HTTP/1.0 200 OK"
+app_a-1     | 2026-11-21T08:05:55.965670655Z 2026-11-21 16:05:55,965 | INFO | httpx | HTTP Request: GET http://weather:8080/weatheralert/v1/current/22.54/114.05?lang=zh "HTTP/1.0 200 OK"
+app_a-1     | 2026-11-21T08:05:56.026965185Z 2026-11-21 16:05:56,026 | INFO | drone-low-altitude-agent.agent | agent tool result
+app_a-1     | 2026-11-21T08:05:56.027453411Z 2026-11-21 16:05:56,027 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:05:56.027699833Z 2026-11-21 16:05:56,027 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:05:56.027874394Z 2026-11-21 16:05:56,027 | INFO | drone-low-altitude-agent.agent | agent loop completed
+app_a-1     | 2026-11-21T08:05:56.042263943Z 2026-11-21 16:05:56,041 | INFO | app.services.llm_client | LLM generation skipped
+app_a-1     | 2026-11-21T08:05:56.053832734Z 2026-11-21 16:05:56,053 | INFO | drone-low-altitude-agent | Task orchestration completed
+app_a-1     | 2026-11-21T08:05:56.054375054Z INFO:     172.22.0.3:45724 - "POST /agent/query HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:56.748315412Z INFO:     172.22.0.3:45732 - "GET /agent/traces/251c47d6-8fa2-4fa0-a43c-e06b7c160d8d HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:57.950366833Z 2026-11-21 16:05:57,950 | INFO | drone-low-altitude-agent | Starting task orchestration
+app_a-1     | 2026-11-21T08:05:57.954589350Z 2026-11-21 16:05:57,954 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:05:57.954772520Z 2026-11-21 16:05:57,954 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:05:57.954942436Z 2026-11-21 16:05:57,954 | INFO | drone-low-altitude-agent.agent | agent tool call
+app_a-1     | 2026-11-21T08:05:57.961759293Z 2026-11-21 16:05:57,961 | INFO | httpx | HTTP Request: GET http://weather:8080/geo/v2/city/lookup?location=%E6%B7%B1%E5%9C%B3&number=1&lang=zh "HTTP/1.0 200 OK"
+app_a-1     | 2026-11-21T08:05:57.964079551Z 2026-11-21 16:05:57,963 | INFO | httpx | HTTP Request: GET http://weather:8080/v7/weather/72h?location=shenzhen&lang=zh "HTTP/1.0 200 OK"
+app_a-1     | 2026-11-21T08:05:57.966188401Z 2026-11-21 16:05:57,966 | INFO | httpx | HTTP Request: GET http://weather:8080/weatheralert/v1/current/22.54/114.05?lang=zh "HTTP/1.0 200 OK"
+app_a-1     | 2026-11-21T08:05:58.018651420Z 2026-11-21 16:05:58,018 | INFO | drone-low-altitude-agent.agent | agent tool result
+app_a-1     | 2026-11-21T08:05:58.018920848Z 2026-11-21 16:05:58,018 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:05:58.019061453Z 2026-11-21 16:05:58,018 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:05:58.019117270Z 2026-11-21 16:05:58,019 | INFO | drone-low-altitude-agent.agent | agent loop completed
+app_a-1     | 2026-11-21T08:05:58.028367507Z 2026-11-21 16:05:58,028 | INFO | app.services.llm_client | LLM generation skipped
+app_a-1     | 2026-11-21T08:05:58.039418169Z 2026-11-21 16:05:58,039 | INFO | drone-low-altitude-agent | Task orchestration completed
+app_a-1     | 2026-11-21T08:05:58.040034078Z INFO:     172.22.0.3:45742 - "POST /agent/query HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:05:58.730075286Z INFO:     172.22.0.3:45756 - "GET /agent/traces/fadb077b-b766-4009-9d0e-92b08faaa77c HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:06:00.096612491Z 2026-11-21 16:06:00,096 | INFO | drone-low-altitude-agent | Starting task orchestration
+app_a-1     | 2026-11-21T08:06:00.101185759Z 2026-11-21 16:06:00,100 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:06:00.101391547Z 2026-11-21 16:06:00,101 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:06:00.101449093Z 2026-11-21 16:06:00,101 | INFO | drone-low-altitude-agent.agent | agent tool call
+app_a-1     | 2026-11-21T08:06:00.361030608Z 2026-11-21 16:06:00,359 | INFO | httpx | HTTP Request: GET http://weather:8080/geo/v2/city/lookup?location=%E5%B9%BF%E5%B7%9E&number=1&lang=zh "HTTP/1.0 200 OK"
+app_a-1     | 2026-11-21T08:06:00.617196856Z 2026-11-21 16:06:00,616 | INFO | httpx | HTTP Request: GET http://weather:8080/v7/weather/72h?location=guangzhou&lang=zh "HTTP/1.0 200 OK"
+app_a-1     | 2026-11-21T08:06:00.874637915Z 2026-11-21 16:06:00,873 | INFO | httpx | HTTP Request: GET http://weather:8080/weatheralert/v1/current/23.13/113.26?lang=zh "HTTP/1.0 200 OK"
+app_a-1     | 2026-11-21T08:06:00.953693354Z 2026-11-21 16:06:00,953 | INFO | drone-low-altitude-agent.agent | agent tool result
+app_a-1     | 2026-11-21T08:06:00.953920116Z 2026-11-21 16:06:00,953 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:06:00.954034435Z 2026-11-21 16:06:00,953 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:06:00.954097945Z 2026-11-21 16:06:00,954 | INFO | drone-low-altitude-agent.agent | agent loop completed
+app_a-1     | 2026-11-21T08:06:00.964400113Z 2026-11-21 16:06:00,964 | INFO | app.services.llm_client | LLM generation skipped
+app_a-1     | 2026-11-21T08:06:00.975913608Z 2026-11-21 16:06:00,975 | INFO | drone-low-altitude-agent | Task orchestration completed
+app_a-1     | 2026-11-21T08:06:00.976539093Z INFO:     172.22.0.3:45770 - "POST /agent/query HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:06:02.864347164Z 2026-11-21 16:06:02,864 | INFO | drone-low-altitude-agent | Starting task orchestration
+app_a-1     | 2026-11-21T08:06:02.868601123Z 2026-11-21 16:06:02,868 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:06:02.868684454Z 2026-11-21 16:06:02,868 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:06:02.868794657Z 2026-11-21 16:06:02,868 | INFO | drone-low-altitude-agent.agent | agent clarification required
+app_a-1     | 2026-11-21T08:06:02.887992820Z 2026-11-21 16:06:02,887 | INFO | drone-low-altitude-agent | Task orchestration completed
+app_a-1     | 2026-11-21T08:06:02.888704183Z INFO:     172.22.0.3:45784 - "POST /agent/query HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:06:03.637708226Z INFO:     172.22.0.3:45794 - "GET /agent/traces/a90da5d8-b206-469f-8523-9faca911d780 HTTP/1.1" 200 OK
+app_a-1     | 2026-11-21T08:06:05.383201447Z 2026-11-21 16:06:05,382 | INFO | drone-low-altitude-agent | Starting task orchestration
+app_a-1     | 2026-11-21T08:06:05.388126558Z 2026-11-21 16:06:05,387 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:06:05.388287907Z 2026-11-21 16:06:05,388 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:06:05.388350293Z 2026-11-21 16:06:05,388 | INFO | drone-low-altitude-agent.agent | agent tool call
+app_a-1     | 2026-11-21T08:06:05.391519317Z 2026-11-21 16:06:05,391 | INFO | drone-low-altitude-agent.agent | agent tool result
+app_a-1     | 2026-11-21T08:06:05.391728122Z 2026-11-21 16:06:05,391 | INFO | drone-low-altitude-agent.agent | agent plan generated
+app_a-1     | 2026-11-21T08:06:05.391794656Z 2026-11-21 16:06:05,391 | INFO | drone-low-altitude-agent.agent | agent guardrail check
+app_a-1     | 2026-11-21T08:06:05.391871376Z 2026-11-21 16:06:05,391 | INFO | drone-low-altitude-agent.agent | agent loop completed
+app_a-1     | 2026-11-21T08:06:08.304117253Z INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+app_a-1     | 2026-11-21T08:06:08.304150409Z INFO  [alembic.runtime.migration] Will assume transactional DDL.
+app_a-1     | 2026-11-21T08:06:10.059671678Z INFO:     Started server process [1]
+app_a-1     | 2026-11-21T08:06:10.059699715Z INFO:     Waiting for application startup.
+app_a-1     | 2026-11-21T08:06:10.059747458Z 2026-11-21 16:06:10,059 | INFO | drone-low-altitude-agent | Application starting
+app_a-1     | 2026-11-21T08:06:10.065287692Z INFO:     Application startup complete.
+app_a-1     | 2026-11-21T08:06:10.076430284Z INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+app_a-1     | 2026-11-21T08:06:10.502132726Z INFO:     172.22.0.3:60780 - "GET /auth/me HTTP/1.1" 200 OK

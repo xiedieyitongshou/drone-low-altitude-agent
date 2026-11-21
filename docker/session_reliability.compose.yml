@@ -1,0 +1,70 @@
+x-app: &app
+  image: ${SESSION_RELIABILITY_IMAGE:-drone-low-altitude-agent:session-reliability-validation}
+  environment: &environment
+    DATABASE_URL: postgresql+psycopg://session_test:session_test_password@postgres:5432/session_reliability
+    SESSION_MEMORY_BACKEND: database
+    SESSION_MEMORY_TTL_SECONDS: "2592000"
+    REDIS_URL: redis://redis:6379/0
+    ANONYMOUS_SESSION_TTL_SECONDS: "1800"
+    SESSION_MEMORY_REDIS_KEY_PREFIX: "reliability:session:"
+    AGENT_RUNTIME_MODE: loop
+    NL_PARSER_MODE: rule
+    LLM_ENABLED: "false"
+    JWT_SECRET_KEY: isolated-session-reliability-test-only
+    QWEATHER_API_KEY: isolated-fixture-only
+    QWEATHER_GEO_BASE_URL: http://weather:8080
+    QWEATHER_WEATHER_BASE_URL: http://weather:8080
+    QWEATHER_WARNING_BASE_URL: http://weather:8080
+    QWEATHER_MAX_RETRIES: "1"
+    QWEATHER_RETRY_BACKOFF_SECONDS: "0"
+  command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    weather:
+      condition: service_started
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: session_reliability
+      POSTGRES_USER: session_test
+      POSTGRES_PASSWORD: session_test_password
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U session_test -d session_reliability"]
+      interval: 1s
+      timeout: 2s
+      retries: 30
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      timeout: 2s
+      retries: 30
+  weather:
+    image: ${SESSION_RELIABILITY_IMAGE:-drone-low-altitude-agent:session-reliability-validation}
+    entrypoint: ["python", "scripts/session_reliability_fixture.py"]
+  app_a:
+    <<: *app
+  app_b:
+    <<: *app
+  probe:
+    image: ${SESSION_RELIABILITY_IMAGE:-drone-low-altitude-agent:session-reliability-validation}
+    entrypoint: ["python", "-c", "import time; time.sleep(86400)"]
+
+networks:
+  default:
+    internal: true
+
+volumes:
+  pg_data:
+  redis_data:

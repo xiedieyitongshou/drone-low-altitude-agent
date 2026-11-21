@@ -1,0 +1,84 @@
+{
+  "artifacts": [
+    {
+      "file": "backend-tests.log",
+      "sha256": "bdf82dd1ef782264fc1215882e4bea0997d399693f9c55206bc3d502e3119002",
+      "bytes": 1181
+    },
+    {
+      "file": "baseline-container.log",
+      "sha256": "d2310cd5e693d2ef353f591f42563f48d2f4b43b0b707331c276d8789c53487c",
+      "bytes": 185577
+    },
+    {
+      "file": "baseline-failures.json",
+      "sha256": "ccfca227450f30e933d24d53ef8830f632acddb7ec7f19920e713c5056bb37e7",
+      "bytes": 34049
+    },
+    {
+      "file": "baseline-summary.json",
+      "sha256": "438e770baf1fd902b22abafb045100f23ef07f75554146e4e149e938bc93f84a",
+      "bytes": 39285
+    },
+    {
+      "file": "eval-fast.log",
+      "sha256": "f1ff1c150aa05a1a89a65c5017993d2c173931038c110b093ae651e7c0107c32",
+      "bytes": 594
+    },
+    {
+      "file": "final-container.log",
+      "sha256": "aaf370ffbebb65211fd74d839f68145d4ce9870237e38c70f433af24b4b5dee4",
+      "bytes": 309971
+    },
+    {
+      "file": "final-summary.json",
+      "sha256": "f946fd23a7f7b6aae5f0560ba2d615e720699748136e63f0fec06365afa8b1c5",
+      "bytes": 122766
+    },
+    {
+      "file": "migrations.log",
+      "sha256": "797d70cc8255e955b12ade176c99fefb3988fe259f158bc313d75ef0dd06262c",
+      "bytes": 1224
+    },
+    {
+      "file": "regression-runtime.json",
+      "sha256": "d6bc54dd5c50c0b2ddba1a953128cd643cb11a1d9222e5ead68fb73b4fef3080",
+      "bytes": 1210
+    },
+    {
+      "file": "SR-app_restart-1.json",
+      "sha256": "4e7ddde6d52033cfe5ebc759388e75cb799cfb21fc7118cd3c664d73ce8d0ae6",
+      "bytes": 146541
+    },
+    {
+      "file": "SR-concurrent_update-1.json",
+      "sha256": "134bc56671f31429a566aef4887e74c845d9dd835c46eac5c51ddf1a7428343f",
+      "bytes": 237852
+    },
+    {
+      "file": "SR-crash_before_session_write-1.json",
+      "sha256": "e1009731ce0365aa64991940dcececefa8498e19a24328f517b59539e63f7737",
+      "bytes": 41253
+    },
+    {
+      "file": "SR-redis_outage-1.json",
+      "sha256": "1cccb8988718602a7c40cd60e72c5bd96128b6e5b47e946e9ed35853f3b32ba4",
+      "bytes": 95880
+    },
+    {
+      "file": "SR-session_save_failure-1.json",
+      "sha256": "c2458365b0b42a17fcf6a0aaca2ff21da5cebc61869ade6d8999ecf01a0a69ca",
+      "bytes": 215743
+    }
+  ],
+  "raw_runs": {
+    "baseline": {
+      "directory": "data/eval-reports/session-reliability/baseline-20261121",
+      "report_sha256": "088a72ff388c75d5ebf1ddb9fab6c6686d4fb411ee9bd36fdc7d80b0910c9666"
+    },
+    "final": {
+      "directory": "data/eval-reports/session-reliability/final-20261121",
+      "report_sha256": "8c17c018516dd15300e8a18b5ffdaf4f3ac0dcf39e5b8151e562a3e1679ca362"
+    }
+  }
+}
