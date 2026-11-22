@@ -112,7 +112,9 @@ npm run build
 - Tool Calling：意图识别、工具选择、缺失工具调用、误调用工具。
 - 多轮状态：状态继承、状态覆盖、工具输入一致性、上下文污染、session 隔离。
 - 失败恢复：失败分类、恢复动作、fallback 决策、trace 错误覆盖、权限绕过率。
-- RAG Hybrid：Recall@K、Hit@K、metadata filter、权限泄露率、P95 延迟。
+- RAG Hybrid：Recall@K、Hit@K、metadata filter、权限泄露率、fallback 通过率、P95 延迟。
+
+RAG 门禁当前还要求 `fallback_pass_rate == 1.0`。BM25 完整样例通过与无答案行为另有 `tests/test_rag_eval.py` 覆盖；具体分母和模拟模型边界见 [RAG Eval 指标](RAG%20Eval%20测试指标设计.md)。
 
 本地运行：
 
@@ -146,6 +148,10 @@ evals/reports/
 ```
 
 GitHub Actions 会把该目录上传为 `eval-reports` artifact。
+
+artifact 不会自动提交回仓库。pytest 调用 RAG 的 `run_eval()` 只做内存计算，不调用 `write_reports()`；只有报告脚本入口才写 Markdown/JSON。因此，实现或测试更新后，仓库中的旧报告仍可能未同步。
+
+目前仓库 RAG 报告已于 2026-11-22 同步为 2026-11-20 保存的原始结果，不是本次新运行或新的 GitHub Actions 验证。[来源清单](evidence/rag-applicability-20261120/README.md) · [当前说明](RAG检索与无答案处理说明.md)
 
 本地运行完整 Eval：
 

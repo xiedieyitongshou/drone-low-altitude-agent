@@ -1,0 +1,67 @@
+{
+  "results_date": "2026-11-20",
+  "documentation_sync_date": "2026-11-22",
+  "related_commit": "db85a63ae847f7c31b557f261480ee51158f48e5",
+  "provenance": "Copied byte-for-byte from the existing local RAG applicability evaluation artifacts. Tests and evals were not rerun for this synchronization. Artifacts were produced before the related commit was created; no image or exact runtime commit identifier is asserted.",
+  "artifacts": [
+    {
+      "source_file": "真实知识库Agent回放.json",
+      "file": "真实知识库Agent回放.json",
+      "sha256": "b0448f910951a047a80d55787e904300116ec64c7310f04e3d71d0934759160d",
+      "bytes": 55155
+    },
+    {
+      "source_file": "规则结论与无预警传输核验.json",
+      "file": "规则结论与无预警传输核验.json",
+      "sha256": "b9ae315f48f1b6b36df0a46192a4c280b2fd4089a2d9f6d939fe4719d16c0da7",
+      "bytes": 1833
+    },
+    {
+      "source_file": "backend-tests.log",
+      "file": "backend-tests.log",
+      "sha256": "5c4444668cb164cfa7eb7ef271f6a56e6bbdf79978f53618b4db72a2316e2b6c",
+      "bytes": 1181
+    },
+    {
+      "source_file": "eval-fast.log",
+      "file": "eval-fast.log",
+      "sha256": "2e09572e81aa8725998fdce25c3f4e132cf30a5d9f12ddba7d346431a2a07b54",
+      "bytes": 594
+    },
+    {
+      "source_file": "final-focused.log",
+      "file": "final-focused.log",
+      "sha256": "66f73c742eecdf0d9ecebd9c90b28f63391c577504eb0f99d8f5780a31180ee8",
+      "bytes": 579
+    },
+    {
+      "source_file": "rag_eval.md",
+      "file": "../../../evals/reports/rag_eval.md",
+      "sha256": "7f94cddbf14e797ba555320207458eb3fd0d1ad629557a541cf4d77a8772d2f3",
+      "bytes": 2956
+    },
+    {
+      "source_file": "rag_eval.json",
+      "file": "../../../evals/reports/rag_eval.json",
+      "sha256": "82a00c2307836f5964450b79c05b9a243c74b577494ba6f2759913b086363ddd",
+      "bytes": 421781
+    }
+  ],
+  "input_versions": {
+    "evals/rag/cases.json": {
+      "related_commit": "db85a63",
+      "git_blob_sha256": "3549ede54d6ed2ca0bdb38ad0dfb35c1bb302efc9ddf762a4dfe5678088119bc",
+      "current_content_matches_commit_ignoring_crlf": true
+    },
+    "evals/rag/fixtures.json": {
+      "related_commit": "db85a63",
+      "git_blob_sha256": "8c20e232827c577eb10d5b15d99e74bc5bc8066916f8263cdef76388cdc5eb71",
+      "current_content_matches_commit_ignoring_crlf": true
+    },
+    "data/knowledge/advice_rules.json": {
+      "related_commit": "db85a63",
+      "git_blob_sha256": "edfc21a069b64dfc9776393dd2bd56429f224b2e9ec06d7f510c324e06fdf4b9",
+      "current_content_matches_commit_ignoring_crlf": true
+    }
+  }
+}

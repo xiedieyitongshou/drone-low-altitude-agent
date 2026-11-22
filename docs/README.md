@@ -15,6 +15,8 @@
 | 文档 | 内容 |
 |---|---|
 | [架构设计说明.md](架构设计说明.md) | Agent Runtime、业务服务、Guardrail、Trace、RAG、任务单、前端展示关系 |
+| [RAG检索与无答案处理说明.md](RAG检索与无答案处理说明.md) | 当前 RAG 行为、无答案与异常分类、11 月 20 日原始结果及证据 |
+| [RAG Eval 测试指标设计.md](RAG%20Eval%20测试指标设计.md) | 样例范围、指标分母、报告生成与 pytest 的区别 |
 | [本地开发与测试说明.md](本地开发与测试说明.md) | 本地启动、依赖、环境变量、后端测试、前端构建、Eval 命令 |
 | [Docker部署说明.md](Docker部署说明.md) | Docker Compose 服务、本地联调、从 GitHub 到服务器部署、Dockerfile 省略内容、`.env` 必填项和部署注意事项 |
 | [CI-CD说明.md](CI-CD说明.md) | GitHub Actions、快速 Eval 门禁、完整 Eval、服务器手动部署边界 |
@@ -40,7 +42,8 @@
 | 混合编排验收 | [Day90-Day91-混合编排验收与演示说明.md](Day90-Day91-混合编排验收与演示说明.md) |
 | Guardrail | [Day92-Guardrail架构设计.md](Day92-Guardrail架构设计.md) |
 | 权限与工具边界 | [Day94-用户权限与工具调用边界.md](Day94-用户权限与工具调用边界.md) |
-| RAG 架构 | [Day99-RAG检索架构重构.md](Day99-RAG检索架构重构.md) |
+| RAG 当前实现 | [RAG检索与无答案处理说明.md](RAG检索与无答案处理说明.md) |
+| RAG 架构历史 | [Day99-RAG检索架构重构.md](Day99-RAG检索架构重构.md) |
 | BM25 召回 | [Day100-BM25关键词召回实现.md](Day100-BM25关键词召回实现.md) |
 | Embedding 召回 | [Day101-Embedding向量召回实现.md](Day101-Embedding向量召回实现.md) |
 | Hybrid Retrieval | [Day102-混合检索与Metadata加权.md](Day102-混合检索与Metadata加权.md) |

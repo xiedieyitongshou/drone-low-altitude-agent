@@ -15,7 +15,7 @@
 - 核心决策：支持单地点评估、逐小时风险解释、天气预警修正和 `适飞 / 慎飞 / 禁飞` 结论输出。
 - 调度辅助：支持未来推荐执行窗口、多地点比选、历史复盘和任务单状态流转。
 - Agent 交互：支持自然语言统一入口、多轮上下文继承、字段覆盖、缺字段追问、失败恢复和工具编排。
-- 知识增强：支持 RAG 操作建议、风险解释、SOP/政策提示、metadata filter、低置信 fallback。
+- 知识增强：支持原问句检索、SOP/政策提示、权限及适用性过滤、逐条相关性复核、一次改写重试，并区分无答案 fallback 与检索异常。
 - 用户体系：支持注册、登录、JWT 鉴权、普通用户数据隔离、Profile Memory、Conversation History 和管理员审计。
 - 前端控制台：React + Vite 页面覆盖 Agent 对话、评估、推荐、比选、历史、Profile、Trace 和管理员功能。
 - 部署验证：支持本地运行、Docker Compose 联调、PostgreSQL、Redis、GitHub Actions CI、服务器私有部署和轻量压测。
@@ -26,11 +26,13 @@
 - 安全边界：LLM 不直接判断飞行安全，RAG 不覆盖规则结论，Guardrail 固定在输入、工具调用和最终输出阶段。
 - 可解释 Trace：记录 plan、tool_call、tool_result、error、fallback、final_response 等事件，支持按用户查询执行链路。
 - 多轮上下文：支持 pending task、字段继承、字段覆盖、会话隔离和 Profile Memory 补全。
-- RAG 数据治理：支持知识类型、地域、租户、用户、可见性、时效、审核状态等 metadata 过滤。
+- RAG 数据治理：支持知识类型、地域、租户、用户、可见性、生效/失效日期、审核状态、风险结论和预警要求等过滤；记录约束来源与候选拒绝原因。
 - Eval 体系：包含 Tool Calling Eval、Multi-turn State Eval、Failure Recovery Eval 和 RAG Eval，用样例集量化 Agent 行为。
 - Docker 化：提供后端、前端、PostgreSQL 和 Redis 的 Docker Compose 联调环境，便于本地运行和服务器部署前验证。
 
 ## 系统架构
+
+RAG 最近一次专项重构关联提交为 `db85a63`（2026-11-20）。当日自动 Eval 为 BM25 10/10、Hybrid 11/11，TF-IDF 7/9、Mock Embedding 8/10；原有语料经 Agent 回放为有答案 Top-3 命中 6/6、无答案正确兜底 2/2。报告于 2026-11-22 从既有原始记录同步入库，未重新运行。默认检索器是 BM25，Embedding 为本地 Mock；样例规模和真实模型边界见 [RAG 检索与无答案处理说明](docs/RAG检索与无答案处理说明.md)。
 
 ```text
 Browser / React Console
@@ -213,6 +215,8 @@ docker-compose.yml      本地 Docker Compose 联调入口
 |---|---|
 | 文档总览 | [docs/README.md](docs/README.md) |
 | 系统架构与 Agent Runtime | [docs/架构设计说明.md](docs/架构设计说明.md) |
+| 当前 RAG 链路与 11 月 20 日验收 | [docs/RAG检索与无答案处理说明.md](docs/RAG检索与无答案处理说明.md) |
+| RAG 指标与报告维护 | [docs/RAG Eval 测试指标设计.md](docs/RAG%20Eval%20测试指标设计.md) |
 | 本地开发、测试与 Eval | [docs/本地开发与测试说明.md](docs/本地开发与测试说明.md) |
 | Docker 部署 | [docs/Docker部署说明.md](docs/Docker部署说明.md) |
 | 服务器私有部署验证 | [docs/服务器部署说明.md](docs/服务器部署说明.md) |

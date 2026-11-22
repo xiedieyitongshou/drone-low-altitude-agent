@@ -1,0 +1,1798 @@
+{
+  "corpus_sha256": "86a5b505d3dca3c4e2a508ebb74f101d6f314fa3736f0f6221c6c1f7dc8232a7",
+  "configuration": {
+    "retriever": "bm25",
+    "parser": "rule",
+    "llm": false,
+    "database": "isolated_sqlite",
+    "network": "none"
+  },
+  "answerable_hits": 6,
+  "answerable_total": 6,
+  "no_answer_correct": 2,
+  "no_answer_total": 2,
+  "results": [
+    {
+      "case_id": "SZ1",
+      "question": "深圳无人机作业报备政策有哪些注意事项？",
+      "expected_id": "policy-shenzhen-airspace-check-001",
+      "passed": true,
+      "http_status": 200,
+      "parsed": {
+        "task_type": "cruise",
+        "top_k": 3,
+        "query": "深圳无人机作业报备政策有哪些注意事项？",
+        "city": "深圳",
+        "constraint_sources": {
+          "task_type": "profile",
+          "city": "user_input"
+        }
+      },
+      "tool_calls": [
+        {
+          "name": "query_knowledge_snippets",
+          "input": {
+            "constraint_sources": {
+              "task_type": "profile",
+              "city": "user_input"
+            },
+            "task_type": "cruise",
+            "query": "深圳无人机作业报备政策有哪些注意事项？",
+            "top_k": 3,
+            "city": "深圳"
+          }
+        }
+      ],
+      "trace_id": "19411cb4-8312-41da-845d-9a1f176fe62b",
+      "retrieval_status": "success",
+      "knowledge_ids": [
+        "policy-shenzhen-airspace-check-001",
+        "policy-national-regulation-check-001"
+      ],
+      "retrieval_message": null,
+      "retrieval_metadata": {
+        "query_rewritten": false,
+        "attempts": [
+          {
+            "attempt": 1,
+            "query": "深圳无人机作业报备政策有哪些注意事项？",
+            "status": "success",
+            "reason": "no_applicable_knowledge",
+            "top_score": 38.45024,
+            "result_count": 2,
+            "threshold": 0.2,
+            "candidate_count": 9,
+            "rejected_candidates": [
+              {
+                "id": "advice-thunderstorm-cancel-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-thunderstorm-cancel-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-high-wind-change-task-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-high-wind-change-task-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-humidity-equipment-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-humidity-equipment-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-hover-sensitive-001::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-hover-sensitive-001::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-survey-precision-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-survey-precision-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "policy-guangzhou-controlled-airspace-001::chunk-1",
+                "reasons": [
+                  "region_mismatch"
+                ]
+              },
+              {
+                "id": "policy-registration-activation-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "报备"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "policy-geozone-check-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "报备"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "advice-thunderstorm-delay-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "报备"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "advice-warning-yellow-caution-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "报备"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "advice-compare-topk-002::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "报备"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "advice-compare-topk-002::chunk-2",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "报备"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "advice-rainfall-delay-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "报备"
+                ],
+                "reason": "no_topic_match"
+              }
+            ],
+            "filter_counts": {
+              "task_type_mismatch": 10,
+              "region_mismatch": 1
+            },
+            "llm_review_status": "not_needed"
+          }
+        ],
+        "reason_code": "no_applicable_knowledge",
+        "constraint_sources": {
+          "task_type": "profile",
+          "city": "user_input"
+        },
+        "retriever": "bm25",
+        "candidate_limit": 10
+      }
+    },
+    {
+      "case_id": "SZ2",
+      "question": "深圳，空域核查政策",
+      "expected_id": "policy-shenzhen-airspace-check-001",
+      "passed": true,
+      "http_status": 200,
+      "parsed": {
+        "task_type": "cruise",
+        "top_k": 3,
+        "query": "深圳，空域核查政策",
+        "city": "深圳",
+        "constraint_sources": {
+          "task_type": "profile",
+          "city": "user_input"
+        }
+      },
+      "tool_calls": [
+        {
+          "name": "query_knowledge_snippets",
+          "input": {
+            "constraint_sources": {
+              "task_type": "profile",
+              "city": "user_input"
+            },
+            "task_type": "cruise",
+            "query": "深圳，空域核查政策",
+            "top_k": 3,
+            "city": "深圳"
+          }
+        }
+      ],
+      "trace_id": "f38222db-3154-4c65-8076-cdd7776c67df",
+      "retrieval_status": "success",
+      "knowledge_ids": [
+        "policy-shenzhen-airspace-check-001",
+        "policy-national-regulation-check-001"
+      ],
+      "retrieval_message": null,
+      "retrieval_metadata": {
+        "query_rewritten": false,
+        "attempts": [
+          {
+            "attempt": 1,
+            "query": "深圳，空域核查政策",
+            "status": "success",
+            "reason": "no_applicable_knowledge",
+            "top_score": 59.932689,
+            "result_count": 2,
+            "threshold": 0.2,
+            "candidate_count": 4,
+            "rejected_candidates": [
+              {
+                "id": "advice-thunderstorm-cancel-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-thunderstorm-cancel-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-high-wind-change-task-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-high-wind-change-task-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-humidity-equipment-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-humidity-equipment-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-hover-sensitive-001::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-hover-sensitive-001::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-survey-precision-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-survey-precision-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "policy-guangzhou-controlled-airspace-001::chunk-1",
+                "reasons": [
+                  "region_mismatch"
+                ]
+              },
+              {
+                "id": "policy-geozone-check-001::chunk-1",
+                "coverage": 0.3333,
+                "matched_terms": [
+                  "核查"
+                ],
+                "missing_terms": [
+                  "域核",
+                  "空域"
+                ],
+                "reason": "insufficient_relevance"
+              },
+              {
+                "id": "policy-registration-activation-001::chunk-1",
+                "coverage": 0.3333,
+                "matched_terms": [
+                  "核查"
+                ],
+                "missing_terms": [
+                  "域核",
+                  "空域"
+                ],
+                "reason": "insufficient_relevance"
+              }
+            ],
+            "filter_counts": {
+              "task_type_mismatch": 10,
+              "region_mismatch": 1
+            },
+            "llm_review_status": "disabled"
+          }
+        ],
+        "reason_code": "no_applicable_knowledge",
+        "constraint_sources": {
+          "task_type": "profile",
+          "city": "user_input"
+        },
+        "retriever": "bm25",
+        "candidate_limit": 10
+      }
+    },
+    {
+      "case_id": "REG",
+      "question": "深圳，实名登记政策",
+      "expected_id": "policy-registration-activation-001",
+      "passed": true,
+      "http_status": 200,
+      "parsed": {
+        "task_type": "cruise",
+        "top_k": 3,
+        "query": "深圳，实名登记政策",
+        "city": "深圳",
+        "constraint_sources": {
+          "task_type": "profile",
+          "city": "user_input"
+        }
+      },
+      "tool_calls": [
+        {
+          "name": "query_knowledge_snippets",
+          "input": {
+            "constraint_sources": {
+              "task_type": "profile",
+              "city": "user_input"
+            },
+            "task_type": "cruise",
+            "query": "深圳，实名登记政策",
+            "top_k": 3,
+            "city": "深圳"
+          }
+        }
+      ],
+      "trace_id": "d918d168-d0a5-4215-aeaf-475d33142340",
+      "retrieval_status": "success",
+      "knowledge_ids": [
+        "policy-registration-activation-001",
+        "policy-national-regulation-check-001"
+      ],
+      "retrieval_message": null,
+      "retrieval_metadata": {
+        "query_rewritten": false,
+        "attempts": [
+          {
+            "attempt": 1,
+            "query": "深圳，实名登记政策",
+            "status": "success",
+            "reason": "no_applicable_knowledge",
+            "top_score": 39.743382,
+            "result_count": 2,
+            "threshold": 0.2,
+            "candidate_count": 4,
+            "rejected_candidates": [
+              {
+                "id": "advice-thunderstorm-cancel-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-thunderstorm-cancel-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-high-wind-change-task-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-high-wind-change-task-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-humidity-equipment-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-humidity-equipment-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-hover-sensitive-001::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-hover-sensitive-001::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-survey-precision-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-survey-precision-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "policy-guangzhou-controlled-airspace-001::chunk-1",
+                "reasons": [
+                  "region_mismatch"
+                ]
+              },
+              {
+                "id": "policy-shenzhen-airspace-check-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "名登",
+                  "实名",
+                  "登记"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "advice-compare-topk-002::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "名登",
+                  "实名",
+                  "登记"
+                ],
+                "reason": "no_topic_match"
+              }
+            ],
+            "filter_counts": {
+              "task_type_mismatch": 10,
+              "region_mismatch": 1
+            },
+            "llm_review_status": "not_needed"
+          }
+        ],
+        "reason_code": "no_applicable_knowledge",
+        "constraint_sources": {
+          "task_type": "profile",
+          "city": "user_input"
+        },
+        "retriever": "bm25",
+        "candidate_limit": 10
+      }
+    },
+    {
+      "case_id": "GZ",
+      "question": "广州无人机作业报备政策有哪些注意事项？",
+      "expected_id": "policy-guangzhou-controlled-airspace-001",
+      "passed": true,
+      "http_status": 200,
+      "parsed": {
+        "task_type": "cruise",
+        "top_k": 3,
+        "query": "广州无人机作业报备政策有哪些注意事项？",
+        "city": "广州",
+        "constraint_sources": {
+          "task_type": "profile",
+          "city": "user_input"
+        }
+      },
+      "tool_calls": [
+        {
+          "name": "query_knowledge_snippets",
+          "input": {
+            "constraint_sources": {
+              "task_type": "profile",
+              "city": "user_input"
+            },
+            "task_type": "cruise",
+            "query": "广州无人机作业报备政策有哪些注意事项？",
+            "top_k": 3,
+            "city": "广州"
+          }
+        }
+      ],
+      "trace_id": "d6b4e675-8336-4a01-9ba8-ccf8480a8b4a",
+      "retrieval_status": "success",
+      "knowledge_ids": [
+        "policy-guangzhou-controlled-airspace-001",
+        "policy-national-regulation-check-001"
+      ],
+      "retrieval_message": null,
+      "retrieval_metadata": {
+        "query_rewritten": false,
+        "attempts": [
+          {
+            "attempt": 1,
+            "query": "广州无人机作业报备政策有哪些注意事项？",
+            "status": "success",
+            "reason": "no_applicable_knowledge",
+            "top_score": 40.475903,
+            "result_count": 2,
+            "threshold": 0.2,
+            "candidate_count": 9,
+            "rejected_candidates": [
+              {
+                "id": "advice-thunderstorm-cancel-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-thunderstorm-cancel-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-high-wind-change-task-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-high-wind-change-task-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-humidity-equipment-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-humidity-equipment-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-hover-sensitive-001::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-hover-sensitive-001::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-survey-precision-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-survey-precision-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "policy-shenzhen-airspace-check-001::chunk-1",
+                "reasons": [
+                  "region_mismatch"
+                ]
+              },
+              {
+                "id": "policy-registration-activation-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "报备"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "policy-geozone-check-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "报备"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "advice-thunderstorm-delay-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "报备"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "advice-warning-yellow-caution-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "报备"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "advice-compare-topk-002::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "报备"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "advice-compare-topk-002::chunk-2",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "报备"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "advice-rainfall-delay-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "报备"
+                ],
+                "reason": "no_topic_match"
+              }
+            ],
+            "filter_counts": {
+              "task_type_mismatch": 10,
+              "region_mismatch": 1
+            },
+            "llm_review_status": "not_needed"
+          }
+        ],
+        "reason_code": "no_applicable_knowledge",
+        "constraint_sources": {
+          "task_type": "profile",
+          "city": "user_input"
+        },
+        "retriever": "bm25",
+        "candidate_limit": 10
+      }
+    },
+    {
+      "case_id": "WIND",
+      "question": "大风情况下测绘 SOP 怎么处理？",
+      "expected_id": "advice-high-wind-change-task-002",
+      "passed": true,
+      "http_status": 200,
+      "parsed": {
+        "task_type": "survey",
+        "top_k": 3,
+        "query": "大风情况下测绘 SOP 怎么处理？",
+        "constraint_sources": {
+          "task_type": "user_input"
+        }
+      },
+      "tool_calls": [
+        {
+          "name": "query_knowledge_snippets",
+          "input": {
+            "constraint_sources": {
+              "task_type": "user_input"
+            },
+            "task_type": "survey",
+            "query": "大风情况下测绘 SOP 怎么处理？",
+            "top_k": 3
+          }
+        }
+      ],
+      "trace_id": "f5b91216-9519-4cd1-b59b-1c1685a76f9e",
+      "retrieval_status": "success",
+      "knowledge_ids": [
+        "advice-high-wind-change-task-002"
+      ],
+      "retrieval_message": null,
+      "retrieval_metadata": {
+        "query_rewritten": false,
+        "attempts": [
+          {
+            "attempt": 1,
+            "query": "大风情况下测绘 SOP 怎么处理？",
+            "status": "success",
+            "reason": "no_applicable_knowledge",
+            "top_score": 10.255696,
+            "result_count": 2,
+            "threshold": 0.2,
+            "candidate_count": 10,
+            "rejected_candidates": [
+              {
+                "id": "advice-hover-sensitive-001::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-hover-sensitive-001::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "policy-geozone-check-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "大风",
+                  "测绘"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "policy-guangzhou-controlled-airspace-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "大风",
+                  "测绘"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "advice-humidity-equipment-002::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "大风",
+                  "测绘"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "advice-survey-precision-002::chunk-2",
+                "coverage": 0.5,
+                "matched_terms": [
+                  "测绘"
+                ],
+                "missing_terms": [
+                  "大风"
+                ],
+                "reason": "insufficient_relevance"
+              },
+              {
+                "id": "advice-survey-precision-002::chunk-1",
+                "coverage": 0.5,
+                "matched_terms": [
+                  "测绘"
+                ],
+                "missing_terms": [
+                  "大风"
+                ],
+                "reason": "insufficient_relevance"
+              },
+              {
+                "id": "advice-thunderstorm-cancel-002::chunk-1",
+                "coverage": 0.5,
+                "matched_terms": [
+                  "测绘"
+                ],
+                "missing_terms": [
+                  "大风"
+                ],
+                "reason": "insufficient_relevance"
+              },
+              {
+                "id": "advice-thunderstorm-cancel-002::chunk-2",
+                "coverage": 0.5,
+                "matched_terms": [
+                  "测绘"
+                ],
+                "missing_terms": [
+                  "大风"
+                ],
+                "reason": "insufficient_relevance"
+              },
+              {
+                "id": "policy-national-regulation-check-001::chunk-1",
+                "coverage": 0.5,
+                "matched_terms": [
+                  "大风"
+                ],
+                "missing_terms": [
+                  "测绘"
+                ],
+                "reason": "insufficient_relevance"
+              }
+            ],
+            "filter_counts": {
+              "task_type_mismatch": 2
+            },
+            "llm_review_status": "disabled"
+          }
+        ],
+        "reason_code": "no_applicable_knowledge",
+        "constraint_sources": {
+          "task_type": "user_input"
+        },
+        "retriever": "bm25",
+        "candidate_limit": 10
+      }
+    },
+    {
+      "case_id": "RAIN",
+      "question": "持续降雨时怎么办，有哪些作业建议？",
+      "expected_id": "advice-rainfall-delay-001",
+      "passed": true,
+      "http_status": 200,
+      "parsed": {
+        "task_type": "cruise",
+        "top_k": 3,
+        "query": "持续降雨时怎么办，有哪些作业建议？",
+        "constraint_sources": {
+          "task_type": "profile"
+        }
+      },
+      "tool_calls": [
+        {
+          "name": "query_knowledge_snippets",
+          "input": {
+            "constraint_sources": {
+              "task_type": "profile"
+            },
+            "task_type": "cruise",
+            "query": "持续降雨时怎么办，有哪些作业建议？",
+            "top_k": 3
+          }
+        }
+      ],
+      "trace_id": "6a5597e3-7a39-4bc2-8f78-5b56e04d3073",
+      "retrieval_status": "success",
+      "knowledge_ids": [
+        "advice-rainfall-delay-001"
+      ],
+      "retrieval_message": null,
+      "retrieval_metadata": {
+        "query_rewritten": false,
+        "attempts": [
+          {
+            "attempt": 1,
+            "query": "持续降雨时怎么办，有哪些作业建议？",
+            "status": "success",
+            "reason": "no_applicable_knowledge",
+            "top_score": 22.466035,
+            "result_count": 1,
+            "threshold": 0.2,
+            "candidate_count": 10,
+            "rejected_candidates": [
+              {
+                "id": "advice-thunderstorm-cancel-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-thunderstorm-cancel-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-high-wind-change-task-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-high-wind-change-task-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-humidity-equipment-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-humidity-equipment-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-hover-sensitive-001::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-hover-sensitive-001::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-survey-precision-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-survey-precision-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-thunderstorm-delay-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "持续",
+                  "续降",
+                  "降雨"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "advice-warning-yellow-caution-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "持续",
+                  "续降",
+                  "降雨"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "advice-high-wind-reduce-risk-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "持续",
+                  "续降",
+                  "降雨"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "advice-warning-orange-cancel-002::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "持续",
+                  "续降",
+                  "降雨"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "policy-geozone-check-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "持续",
+                  "续降",
+                  "降雨"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "advice-compare-topk-002::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "持续",
+                  "续降",
+                  "降雨"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "policy-guangzhou-controlled-airspace-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "持续",
+                  "续降",
+                  "降雨"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "policy-shenzhen-airspace-check-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "持续",
+                  "续降",
+                  "降雨"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "advice-recommend-window-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "持续",
+                  "续降",
+                  "降雨"
+                ],
+                "reason": "no_topic_match"
+              }
+            ],
+            "filter_counts": {
+              "task_type_mismatch": 10
+            },
+            "llm_review_status": "not_needed"
+          }
+        ],
+        "reason_code": "no_applicable_knowledge",
+        "constraint_sources": {
+          "task_type": "profile"
+        },
+        "retriever": "bm25",
+        "candidate_limit": 10
+      }
+    },
+    {
+      "case_id": "NA1",
+      "question": "ZXQ734电池循环寿命 FAQ",
+      "expected_id": null,
+      "passed": true,
+      "http_status": 200,
+      "parsed": {
+        "task_type": "cruise",
+        "top_k": 3,
+        "query": "ZXQ734电池循环寿命 FAQ",
+        "constraint_sources": {
+          "task_type": "profile"
+        }
+      },
+      "tool_calls": [
+        {
+          "name": "query_knowledge_snippets",
+          "input": {
+            "constraint_sources": {
+              "task_type": "profile"
+            },
+            "task_type": "cruise",
+            "query": "ZXQ734电池循环寿命 FAQ",
+            "top_k": 3
+          }
+        }
+      ],
+      "trace_id": "d47ea240-c253-4661-907f-8be75d14718f",
+      "retrieval_status": "fallback",
+      "knowledge_ids": [],
+      "retrieval_message": "当前知识库没有找到足以回答本次问题的适用依据，请补充具体对象或查询条件。",
+      "retrieval_metadata": {
+        "query_rewritten": true,
+        "attempts": [
+          {
+            "attempt": 1,
+            "query": "ZXQ734电池循环寿命 FAQ",
+            "status": "no_answer",
+            "reason": "insufficient_relevance",
+            "top_score": 1.556472,
+            "result_count": 0,
+            "threshold": 0.2,
+            "candidate_count": 3,
+            "rejected_candidates": [
+              {
+                "id": "advice-thunderstorm-cancel-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-thunderstorm-cancel-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-high-wind-change-task-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-high-wind-change-task-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-humidity-equipment-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-humidity-equipment-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-hover-sensitive-001::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-hover-sensitive-001::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-survey-precision-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-survey-precision-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-compare-topk-002::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "zxq734",
+                  "寿命",
+                  "循环",
+                  "池循",
+                  "环寿",
+                  "电池"
+                ],
+                "reason": "subject_not_supported"
+              },
+              {
+                "id": "advice-warning-orange-cancel-002::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "zxq734",
+                  "寿命",
+                  "循环",
+                  "池循",
+                  "环寿",
+                  "电池"
+                ],
+                "reason": "subject_not_supported"
+              },
+              {
+                "id": "advice-warning-yellow-caution-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "zxq734",
+                  "寿命",
+                  "循环",
+                  "池循",
+                  "环寿",
+                  "电池"
+                ],
+                "reason": "subject_not_supported"
+              }
+            ],
+            "filter_counts": {
+              "task_type_mismatch": 10
+            },
+            "llm_review_status": "not_needed"
+          },
+          {
+            "attempt": 2,
+            "query": "ZXQ734电池循环寿命 FAQ",
+            "status": "no_answer",
+            "reason": "insufficient_relevance",
+            "top_score": 1.556472,
+            "result_count": 0,
+            "threshold": 0.2,
+            "candidate_count": 3,
+            "rejected_candidates": [
+              {
+                "id": "advice-thunderstorm-cancel-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-thunderstorm-cancel-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-high-wind-change-task-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-high-wind-change-task-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-humidity-equipment-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-humidity-equipment-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-hover-sensitive-001::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-hover-sensitive-001::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-survey-precision-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-survey-precision-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-compare-topk-002::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "zxq734",
+                  "寿命",
+                  "循环",
+                  "池循",
+                  "环寿",
+                  "电池"
+                ],
+                "reason": "subject_not_supported"
+              },
+              {
+                "id": "advice-warning-orange-cancel-002::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "zxq734",
+                  "寿命",
+                  "循环",
+                  "池循",
+                  "环寿",
+                  "电池"
+                ],
+                "reason": "subject_not_supported"
+              },
+              {
+                "id": "advice-warning-yellow-caution-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "zxq734",
+                  "寿命",
+                  "循环",
+                  "池循",
+                  "环寿",
+                  "电池"
+                ],
+                "reason": "subject_not_supported"
+              }
+            ],
+            "filter_counts": {
+              "task_type_mismatch": 10
+            },
+            "llm_review_status": "not_needed"
+          }
+        ],
+        "reason_code": "insufficient_relevance",
+        "constraint_sources": {
+          "task_type": "profile"
+        },
+        "retriever": "bm25",
+        "candidate_limit": 10,
+        "rewrite_query": "ZXQ734电池循环寿命 FAQ"
+      }
+    },
+    {
+      "case_id": "NA2",
+      "question": "无人机电池寿命有哪些规定？",
+      "expected_id": null,
+      "passed": true,
+      "http_status": 200,
+      "parsed": {
+        "task_type": "cruise",
+        "top_k": 3,
+        "query": "无人机电池寿命有哪些规定？",
+        "constraint_sources": {
+          "task_type": "profile"
+        }
+      },
+      "tool_calls": [
+        {
+          "name": "query_knowledge_snippets",
+          "input": {
+            "constraint_sources": {
+              "task_type": "profile"
+            },
+            "task_type": "cruise",
+            "query": "无人机电池寿命有哪些规定？",
+            "top_k": 3
+          }
+        }
+      ],
+      "trace_id": "ce040482-337f-41e2-b645-acd0aedd28ec",
+      "retrieval_status": "fallback",
+      "knowledge_ids": [],
+      "retrieval_message": "当前知识库没有找到足以回答本次问题的适用依据，请补充具体对象或查询条件。",
+      "retrieval_metadata": {
+        "query_rewritten": true,
+        "attempts": [
+          {
+            "attempt": 1,
+            "query": "无人机电池寿命有哪些规定？",
+            "status": "no_answer",
+            "reason": "insufficient_relevance",
+            "top_score": 18.921005,
+            "result_count": 0,
+            "threshold": 0.2,
+            "candidate_count": 10,
+            "rejected_candidates": [
+              {
+                "id": "advice-thunderstorm-cancel-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-thunderstorm-cancel-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-high-wind-change-task-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-high-wind-change-task-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-humidity-equipment-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-humidity-equipment-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-hover-sensitive-001::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-hover-sensitive-001::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-survey-precision-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-survey-precision-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "policy-registration-activation-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "寿命",
+                  "池寿",
+                  "电池"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "policy-shenzhen-airspace-check-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "寿命",
+                  "池寿",
+                  "电池"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "policy-guangzhou-controlled-airspace-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "寿命",
+                  "池寿",
+                  "电池"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "policy-national-regulation-check-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "寿命",
+                  "池寿",
+                  "电池"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "advice-thunderstorm-delay-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "寿命",
+                  "池寿",
+                  "电池"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "advice-compare-topk-002::chunk-2",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "寿命",
+                  "池寿",
+                  "电池"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "advice-warning-yellow-caution-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "寿命",
+                  "池寿",
+                  "电池"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "advice-compare-topk-002::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "寿命",
+                  "池寿",
+                  "电池"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "advice-warning-orange-cancel-002::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "寿命",
+                  "池寿",
+                  "电池"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "advice-recommend-window-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "寿命",
+                  "池寿",
+                  "电池"
+                ],
+                "reason": "no_topic_match"
+              }
+            ],
+            "filter_counts": {
+              "task_type_mismatch": 10
+            },
+            "llm_review_status": "not_needed"
+          },
+          {
+            "attempt": 2,
+            "query": "无人机电池寿命有哪些规定？",
+            "status": "no_answer",
+            "reason": "insufficient_relevance",
+            "top_score": 18.921005,
+            "result_count": 0,
+            "threshold": 0.2,
+            "candidate_count": 10,
+            "rejected_candidates": [
+              {
+                "id": "advice-thunderstorm-cancel-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-thunderstorm-cancel-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-high-wind-change-task-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-high-wind-change-task-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-humidity-equipment-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-humidity-equipment-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-hover-sensitive-001::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-hover-sensitive-001::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-survey-precision-002::chunk-1",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "advice-survey-precision-002::chunk-2",
+                "reasons": [
+                  "task_type_mismatch"
+                ]
+              },
+              {
+                "id": "policy-registration-activation-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "寿命",
+                  "池寿",
+                  "电池"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "policy-shenzhen-airspace-check-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "寿命",
+                  "池寿",
+                  "电池"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "policy-guangzhou-controlled-airspace-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "寿命",
+                  "池寿",
+                  "电池"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "policy-national-regulation-check-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "寿命",
+                  "池寿",
+                  "电池"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "advice-thunderstorm-delay-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "寿命",
+                  "池寿",
+                  "电池"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "advice-compare-topk-002::chunk-2",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "寿命",
+                  "池寿",
+                  "电池"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "advice-warning-yellow-caution-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "寿命",
+                  "池寿",
+                  "电池"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "advice-compare-topk-002::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "寿命",
+                  "池寿",
+                  "电池"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "advice-warning-orange-cancel-002::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "寿命",
+                  "池寿",
+                  "电池"
+                ],
+                "reason": "no_topic_match"
+              },
+              {
+                "id": "advice-recommend-window-001::chunk-1",
+                "coverage": 0.0,
+                "matched_terms": [],
+                "missing_terms": [
+                  "寿命",
+                  "池寿",
+                  "电池"
+                ],
+                "reason": "no_topic_match"
+              }
+            ],
+            "filter_counts": {
+              "task_type_mismatch": 10
+            },
+            "llm_review_status": "not_needed"
+          }
+        ],
+        "reason_code": "insufficient_relevance",
+        "constraint_sources": {
+          "task_type": "profile"
+        },
+        "retriever": "bm25",
+        "candidate_limit": 10,
+        "rewrite_query": "无人机电池寿命有哪些规定？"
+      }
+    }
+  ]
+}

@@ -7,7 +7,7 @@
 - `tests/` 验证代码是否按预期运行。
 - `evals/` 验证 Agent 决策质量和 RAG 召回质量是否符合业务期望。
 
-Day106 只建立数据集结构和首批样例，后续 Day107-Day110 会基于这些样例实现评测脚本、指标统计和报告生成。
+评测脚本、快速门禁及报告生成已实现。RAG 内容按 2026-11-20 重构同步，文档更新于 2026-11-22；本次复用当日原始结果，不重新运行。当前入口见 [RAG 检索与无答案处理说明](../docs/RAG检索与无答案处理说明.md)。
 
 ## 目录结构
 
@@ -17,6 +17,11 @@ evals/
     cases.json
   rag/
     cases.json
+    fixtures.json
+  reports/
+    README.md
+    rag_eval.md
+    rag_eval.json
   README.md
 ```
 
@@ -56,6 +61,7 @@ evals/
 - `expected_metadata`：期望 metadata 条件。
 - `expected_behavior`：空召回、二次召回、fallback 等行为期望。
 - `top_k`：评估召回前 K 个结果。
+- `retrievers`：限定样例适用检索器；省略时对所有检索器执行。
 - `notes`：样例设计目的。
 
 ## 覆盖范围
@@ -78,13 +84,18 @@ evals/
 - SOP 步骤检索。
 - FAQ 问答对检索。
 - 私有知识权限隔离。
+- 私有知识授权正例、未生效知识排除。
+- 预警未知与明确无预警的适用性差异。
 - Hybrid metadata boost 与规则 rerank。
-- 空召回 query rewrite。
-- 低置信 fallback。
+- 无答案 fallback（具体型号和普通电池寿命问题）。
 
-## 后续指标
+当前 RAG 共 11 条样例，TF-IDF / BM25 / Embedding / Hybrid 分别适用 9 / 10 / 10 / 11 条。种子知识与 3 条合成 FAQ/权限/日期夹具组合，在临时目录建立索引。原有语料的 Agent 回放另存于 [11 月 20 日证据](../docs/evidence/rag-applicability-20261120/README.md)，不与这组混算。
 
-后续脚本应基于这些样例输出：
+当前样例未声明 query rewrite 计分要求，该指标为 N/A；空召回、低分、两轮重试和索引异常由 `tests/test_rag_fallback.py` 等单独覆盖。
+
+## 已实现指标与报告
+
+现有脚本输出：
 
 - 意图识别准确率。
 - 工具选择准确率。
@@ -96,6 +107,10 @@ evals/
 - RAG Recall@K。
 - RAG metadata filter 通过率。
 - RAG fallback 通过率。
+
+已保存的 2026-11-20 RAG 报告：TF-IDF 7/9、BM25 10/10、Mock Embedding 8/10、Hybrid 11/11。保留漏检明细；Embedding 为本地模拟向量，不是真实模型评测。[来源与边界](reports/README.md) · [指标定义](../docs/RAG%20Eval%20测试指标设计.md)
+
+`run_eval()` 只计算结果，pytest 不刷新报告。以后需要生成新报告时运行 `scripts/rag_eval.py`，由命令行入口调用 `write_reports()`；生成新的日期版本并同步来源，不能把新运行结果标记成历史结果。
 
 ## 设计原则
 

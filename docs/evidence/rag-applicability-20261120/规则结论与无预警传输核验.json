@@ -1,0 +1,74 @@
+{
+  "same_weather_rule_invariance": [
+    {
+      "wind_speed_kmh": "5",
+      "with_rag": {
+        "overall_decision": "适飞",
+        "allow_execute": true,
+        "risk_reasons": []
+      },
+      "without_rag": {
+        "overall_decision": "适飞",
+        "allow_execute": true,
+        "risk_reasons": []
+      },
+      "unchanged": true,
+      "snippet_count": 0
+    },
+    {
+      "wind_speed_kmh": "20",
+      "with_rag": {
+        "overall_decision": "慎飞",
+        "allow_execute": false,
+        "risk_reasons": [
+          "2026-11-20T08:00:00+08:00 风险较高：风速中等偏高"
+        ]
+      },
+      "without_rag": {
+        "overall_decision": "慎飞",
+        "allow_execute": false,
+        "risk_reasons": [
+          "2026-11-20T08:00:00+08:00 风险较高：风速中等偏高"
+        ]
+      },
+      "unchanged": true,
+      "snippet_count": 3
+    },
+    {
+      "wind_speed_kmh": "35",
+      "with_rag": {
+        "overall_decision": "禁飞",
+        "allow_execute": false,
+        "risk_reasons": [
+          "2026-11-20T08:00:00+08:00 风险较高：风速偏高"
+        ]
+      },
+      "without_rag": {
+        "overall_decision": "禁飞",
+        "allow_execute": false,
+        "risk_reasons": [
+          "2026-11-20T08:00:00+08:00 风险较高：风速偏高"
+        ]
+      },
+      "unchanged": true,
+      "snippet_count": 1
+    }
+  ],
+  "known_no_warning_agent_flow": {
+    "tool_input": {
+      "warning_levels": [],
+      "query": "当前无预警，有哪些作业建议？",
+      "warning_types": [],
+      "constraint_sources": {
+        "task_type": "profile",
+        "warning_types": "user_input",
+        "warning_levels": "user_input"
+      },
+      "task_type": "cruise",
+      "top_k": 3
+    },
+    "ids": [],
+    "status": "fallback",
+    "passed": true
+  }
+}

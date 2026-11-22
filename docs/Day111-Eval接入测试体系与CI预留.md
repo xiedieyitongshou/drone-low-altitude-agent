@@ -1,5 +1,7 @@
 # Day111 Eval 接入测试体系与 CI 预留
 
+> 2026-11-22 同步：本文保留 Day111 阶段的接入过程和 CI 预留方案。CI 已实际接入，现行运行方式见 [CI/CD 说明](CI-CD说明.md)；RAG 当前实现和 11 月 20 日结果见 [RAG 专项说明](RAG检索与无答案处理说明.md)。
+
 ## 目标
 
 Day111 的目标是把 Day107-Day110 的评测脚本接入测试体系，让 Agent 行为具备持续回归能力。
@@ -142,6 +144,7 @@ recall_at_k >= 0.70
 hit_rate_at_k >= 0.70
 metadata_filter_pass_rate >= 0.95
 permission_leakage_rate == 0
+fallback_pass_rate == 1.0
 p95_latency_ms <= 500
 ```
 
@@ -153,7 +156,7 @@ p95_latency_ms <= 500
 
 说明：
 
-当前 RAG 数据集里 SOP、FAQ 和 fallback case 仍暴露召回质量问题，所以快速门禁只卡核心底线，不把完整 pass rate 作为硬门禁。
+上述原始阶段问题已在 11 月 20 日重构中修正或明确分类。当日 BM25 10/10、Hybrid 11/11；TF-IDF 和 Mock Embedding 各保留两条漏检。快速 Hybrid 门禁仍按上述分项指标执行，BM25 完整通过和 fallback 检查另在 `tests/test_rag_eval.py`；不能再将旧阶段的 SOP/FAQ/fallback 失败作为现行 Hybrid 状态。[指标和样例口径](RAG%20Eval%20测试指标设计.md)
 
 ## CI 预留命令
 
