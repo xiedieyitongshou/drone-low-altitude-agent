@@ -72,6 +72,7 @@ def build_agent_fallback_output(
         state=state,
         guardrail_result=guardrail_result,
     )
+    latest_tool = next(reversed(state.tool_results.values()), None)
     return {
         "message": message,
         "trace_id": state.trace_id,
@@ -84,6 +85,8 @@ def build_agent_fallback_output(
         "retryable": policy.retryable if policy else False,
         "guardrail": guardrail_explanation,
         "errors": state.errors,
+        "error_code": latest_tool.error_code if latest_tool and not latest_tool.success else None,
+        "details": (latest_tool.metadata.get("weather_data") or {}).get("details", []) if latest_tool else [],
     }
 
 

@@ -3,6 +3,7 @@ from app.services.weather.exceptions import (
     WeatherAuthenticationError,
     WeatherRequestError,
     WeatherResponseError,
+    WeatherDataError,
     WeatherServiceError,
 )
 from app.services.weather.schemas import (
@@ -36,6 +37,7 @@ __all__ = [
     "WeatherAuthenticationError",
     "WeatherRequestError",
     "WeatherResponseError",
+    "WeatherDataError",
     "WeatherServiceError",
     "WeatherWarning",
     "WeatherWarningResponse",

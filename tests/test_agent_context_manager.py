@@ -138,3 +138,12 @@ def test_resolve_invalidated_tools_for_task_type_change():
         "recommend_flight_windows",
         "query_knowledge_snippets",
     ]
+def test_weather_retry_context_wins_in_parser_and_tool_input_merge():
+    pending = {"location": "广州", "date": "2026-11-23", "start_time": "14:00", "end_time": "17:00", "task_type": "inspection"}
+    context = {"intent": "evaluate", "location": "深圳", "date": "2026-11-22", "task_type": "cruise",
+               "pending_task": {"intent": "evaluate", "parsed": pending, "retry_reason": "weather_unavailable"}}
+    parser_context = build_agent_parser_context(session_context=context, profile=None)
+    assert parser_context["location"] == "广州" and parser_context["date"] == "2026-11-23"
+    merged = merge_agent_context(intent="evaluate", parsed={}, session_context=context, profile=None)
+    assert merged.parsed["location"] == "广州" and merged.parsed["task_type"] == "inspection"
+    assert merged.parsed["start_time"] == "14:00" and merged.field_sources["location"] == "session"

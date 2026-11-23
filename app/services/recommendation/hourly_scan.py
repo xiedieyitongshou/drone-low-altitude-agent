@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date
 
 from app.schemas.assessment import CruiseAssessmentAdvice
 from app.schemas.recommendation import RecommendationResult
@@ -7,6 +7,8 @@ from app.schemas.warning import WarningDataBundle
 from app.schemas.weather import WeatherDataBundle
 from app.rules import assess_cruise_window
 from app.services.recommendation.window_recommender import RecommendationConfig, build_recommendation_result
+from app.services.weather.exceptions import WeatherDataError
+from app.services.weather.validation import forecast_datetime, weather_datetime
 
 
 def build_recommendation_from_weather(
@@ -24,6 +26,13 @@ def build_recommendation_from_weather(
         start_date_text=date_text,
         max_hours=scan_hours,
     )
+    if not filtered_weather and weather_data.hourly_weather:
+        raise WeatherDataError(
+            "当前预报未覆盖所选日期，无法推荐执行窗口，请调整日期。",
+            error_code="WEATHER_FORECAST_OUT_OF_RANGE", retryable=False,
+        )
+    if len(filtered_weather) < min_window_hours:
+        raise WeatherDataError("可用天气数据不足以覆盖所需的连续窗口，无法完成推荐。")
     advice = assess_cruise_window(
         filtered_weather,
         warnings,
@@ -45,11 +54,11 @@ def filter_weather_from_date(
     max_hours: int,
 ) -> list:
     start_date = date.fromisoformat(start_date_text)
-    filtered = [
+    filtered = sorted([
         hour
         for hour in weather_data.hourly_weather
-        if datetime.fromisoformat(hour.fx_time).date() >= start_date
-    ]
+        if forecast_datetime(hour.fx_time).date() >= start_date
+    ], key=lambda hour: weather_datetime(hour.fx_time))
     if max_hours <= 0:
         return filtered
     return filtered[:max_hours]

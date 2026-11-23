@@ -1,0 +1,119 @@
+{
+  "date": "2026-11-22",
+  "base_commit": "cb0c92758d3e3e55d6e8618dea54ad93dd15c8f6",
+  "code_state": "Base commit plus uncommitted weather validation changes; source hashes identify the tested files.",
+  "runtime": {
+    "python": "3.11.5",
+    "platform": "Windows",
+    "backend": "native pytest"
+  },
+  "environment": {
+    "LLM_ENABLED": "false",
+    "NL_PARSER_MODE": "rule (set by relevant fixtures)",
+    "AGENT_RUNTIME_MODE": "loop (legacy retry tested separately)",
+    "SESSION_MEMORY_BACKEND": "ttlcache",
+    "DATABASE_URL": "sqlite:///:memory: (individual fixtures also create isolated databases)"
+  },
+  "command": "python -B -m pytest -q --tb=short",
+  "results": {
+    "passed": 404,
+    "warnings": 2,
+    "duration_seconds": 145.2
+  },
+  "weather_tests": "httpx.MockTransport; no live weather or LLM calls in the new weather API tests.",
+  "log": {
+    "file": "backend-tests.log",
+    "sha256": "56bc5e641d0fcad2711cdca8f5a69608947c71dde572fcaa853873fb4fa45532",
+    "normalization": "CRLF to LF only"
+  },
+  "source_files": {
+    "app/agent/context_manager.py": {
+      "raw_sha256": "825ca0f8737409770cfede559408ba5e7bc626a420f3972f3abbfa3dbd6294b0",
+      "normalized_lf_sha256": "825ca0f8737409770cfede559408ba5e7bc626a420f3972f3abbfa3dbd6294b0"
+    },
+    "app/agent/failure_policy.py": {
+      "raw_sha256": "c43b4c973e8a127375940eaaae940e1c708f7efb80d0802ca10dca2319089783",
+      "normalized_lf_sha256": "c43b4c973e8a127375940eaaae940e1c708f7efb80d0802ca10dca2319089783"
+    },
+    "app/agent/fallback.py": {
+      "raw_sha256": "663bbe810d17a20f8d30593a9097c57b6947984dd2125406f275519532a26773",
+      "normalized_lf_sha256": "663bbe810d17a20f8d30593a9097c57b6947984dd2125406f275519532a26773"
+    },
+    "app/agent/tools.py": {
+      "raw_sha256": "6872165aec5607d2150a2dc0e8a9d1de5f1126bb50bb7c75d98611327fd44a93",
+      "normalized_lf_sha256": "6872165aec5607d2150a2dc0e8a9d1de5f1126bb50bb7c75d98611327fd44a93"
+    },
+    "app/rules/cruise.py": {
+      "raw_sha256": "5d6ce6434320523721b5ccd68e5b4b2450d8d223e2da2ca78dd48fed00e206c0",
+      "normalized_lf_sha256": "5d6ce6434320523721b5ccd68e5b4b2450d8d223e2da2ca78dd48fed00e206c0"
+    },
+    "app/services/comparison/location_comparison.py": {
+      "raw_sha256": "5b6a0a58f351b352dd75430729fe95d3a4e62d9ca7ebe7061465790f1b500ee0",
+      "normalized_lf_sha256": "5b6a0a58f351b352dd75430729fe95d3a4e62d9ca7ebe7061465790f1b500ee0"
+    },
+    "app/services/cruise_evaluator.py": {
+      "raw_sha256": "4d79aa29f422c574b785a13f9a6e938f5c21c5d3331041d7727003545adaedf3",
+      "normalized_lf_sha256": "4d79aa29f422c574b785a13f9a6e938f5c21c5d3331041d7727003545adaedf3"
+    },
+    "app/services/nl_parser.py": {
+      "raw_sha256": "308d91f097833e817c92a9a911695eb3770a323989f36d9d70a33325ccfb1d0d",
+      "normalized_lf_sha256": "308d91f097833e817c92a9a911695eb3770a323989f36d9d70a33325ccfb1d0d"
+    },
+    "app/services/recommendation/hourly_scan.py": {
+      "raw_sha256": "c75781af5cf05d1952779cc9cc9c324fbdf712c567afa86098e812b78551e323",
+      "normalized_lf_sha256": "c75781af5cf05d1952779cc9cc9c324fbdf712c567afa86098e812b78551e323"
+    },
+    "app/services/task_orchestrator.py": {
+      "raw_sha256": "1c02a4ca80215cb671667928934c68283943757cfcce574e30a2657b399ef49c",
+      "normalized_lf_sha256": "1c02a4ca80215cb671667928934c68283943757cfcce574e30a2657b399ef49c"
+    },
+    "app/services/weather/__init__.py": {
+      "raw_sha256": "9ca3ee766082b8a955126a2447aedabd982e9f8375c836de72ee724da1e5c63b",
+      "normalized_lf_sha256": "9ca3ee766082b8a955126a2447aedabd982e9f8375c836de72ee724da1e5c63b"
+    },
+    "app/services/weather/exceptions.py": {
+      "raw_sha256": "fb1e3558c815ad73e73198fca8980b0b435e29da248f022a9c8c94e748c1d2cf",
+      "normalized_lf_sha256": "fb1e3558c815ad73e73198fca8980b0b435e29da248f022a9c8c94e748c1d2cf"
+    },
+    "app/services/weather/extractor.py": {
+      "raw_sha256": "d15006d43fe61e6a1574b709e5f14073fd1cb7872b94a57317db0fa411fdcbd0",
+      "normalized_lf_sha256": "b9be18c7958493484f3747ffedb4cb6e9189d85c69faabd7649c90a0720d1530"
+    },
+    "main.py": {
+      "raw_sha256": "aaa64dfde3dc58cd1aed271bb403c89c96a505fc5c8edbb9a76da129b0df9e24",
+      "normalized_lf_sha256": "90d6db1ceca72fd9d8907c24e3aeb99dd790abc49b58110bbc29829826c1f59b"
+    },
+    "tests/test_agent_context_manager.py": {
+      "raw_sha256": "e5c53e54c2d444e4cb702c1785611dc9833e245f119337bbd94a0ce5adf97163",
+      "normalized_lf_sha256": "d9502829e13bb38a2836a7529c94598aadc27fa042ec95e3166121169def851e"
+    },
+    "tests/test_failure_policy.py": {
+      "raw_sha256": "dd9cfb01b50cf159bdd5cefcce66b48f3be9aeea37121a7a25dc54d01e5f366f",
+      "normalized_lf_sha256": "dd9cfb01b50cf159bdd5cefcce66b48f3be9aeea37121a7a25dc54d01e5f366f"
+    },
+    "tests/test_nl_parser_business_intents.py": {
+      "raw_sha256": "87bb27644a0aead376e633639398c0dfa6379747c59db5aa0430f95b4447eb7c",
+      "normalized_lf_sha256": "87bb27644a0aead376e633639398c0dfa6379747c59db5aa0430f95b4447eb7c"
+    },
+    "tests/test_rule_engine.py": {
+      "raw_sha256": "de5b3adc405a830f061d9c7cbd7f668b2972ecf23275c58a8a12031c22aa9946",
+      "normalized_lf_sha256": "de5b3adc405a830f061d9c7cbd7f668b2972ecf23275c58a8a12031c22aa9946"
+    },
+    "tests/test_time_window_extractor.py": {
+      "raw_sha256": "f1ec08d1167a2c48413fb08fdf4bdd58d216da36148c5b3326c797e20a07e1bc",
+      "normalized_lf_sha256": "f1ec08d1167a2c48413fb08fdf4bdd58d216da36148c5b3326c797e20a07e1bc"
+    },
+    "app/services/weather/validation.py": {
+      "raw_sha256": "cda4731b6aee0190ee492bdec305e5656b8171c6f3b444d50cc2e14636bf2192",
+      "normalized_lf_sha256": "cda4731b6aee0190ee492bdec305e5656b8171c6f3b444d50cc2e14636bf2192"
+    },
+    "tests/test_weather_validation.py": {
+      "raw_sha256": "eee6a049fef517d7b4f5035f3796153f240069f54c718e6540c09a5d5f17af39",
+      "normalized_lf_sha256": "eee6a049fef517d7b4f5035f3796153f240069f54c718e6540c09a5d5f17af39"
+    },
+    "tests/test_weather_data_api.py": {
+      "raw_sha256": "33d7232fa261941c5b10c09db84480e78b24b6f56319d77bcbcae3b50b46d448",
+      "normalized_lf_sha256": "33d7232fa261941c5b10c09db84480e78b24b6f56319d77bcbcae3b50b46d448"
+    }
+  }
+}

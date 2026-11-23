@@ -47,7 +47,7 @@ def build_agent_parser_context(
             if pending_task.get("intent"):
                 merged["intent"] = pending_task["intent"]
                 merged["pending_task_intent"] = pending_task["intent"]
-        merged.update(_session_fields(session_context, session_context.get("intent")))
+        merged.update(_completed_context_fields(session_context, pending_task))
     return {key: value for key, value in merged.items() if value not in (None, "", [])} or None
 
 
@@ -81,7 +81,7 @@ def merge_agent_context(
             for field_name, value in pending_fields.items():
                 _set_if_present(merged, field_sources, field_name, value, "session", overwrite=True)
         if intent != "create_task":
-            for field_name, value in _session_fields(session_context, session_context.get("intent")).items():
+            for field_name, value in _completed_context_fields(session_context, pending_task).items():
                 _set_if_present(merged, field_sources, field_name, value, "session", overwrite=True)
         if intent == "knowledge":
             _set_if_present(merged, field_sources, "city", session_context.get("city"), "session", overwrite=True)
@@ -190,6 +190,16 @@ def _pending_task(context: dict[str, object]) -> dict[str, object] | None:
 
 def _dict_value(value: object) -> dict[str, object]:
     return dict(value) if isinstance(value, dict) else {}
+
+
+def _completed_context_fields(values: dict[str, object], pending_task: dict[str, object] | None) -> dict[str, object]:
+    fields = _session_fields(values, values.get("intent"))
+    if pending_task and pending_task.get("retry_reason") == "weather_unavailable":
+        # The most recent failed input must win over an older completed run,
+        # in both parser context and the later tool-input merge.
+        pending_keys = set(_dict_value(pending_task.get("parsed"))) | {"intent"}
+        fields = {key: value for key, value in fields.items() if key not in pending_keys}
+    return fields
 
 
 def _session_fields(values: dict[str, object], source_intent: object) -> dict[str, object]:

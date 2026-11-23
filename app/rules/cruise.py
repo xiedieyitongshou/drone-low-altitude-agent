@@ -3,6 +3,8 @@ from app.schemas.warning import WarningDataBundle
 from app.schemas.weather import WeatherHourData
 from app.rules.mission_profiles import MissionRuleProfile, build_system_rule_snapshot, get_mission_rule_profile
 from app.services.run_observability import timed_stage
+from app.services.weather.validation import validate_weather_hour, validate_weather_sequence
+from app.services.weather.exceptions import WeatherDataError
 
 
 @timed_stage("rules")
@@ -11,6 +13,7 @@ def assess_cruise_window(
     warnings: WarningDataBundle | None = None,
     task_type: str = "cruise",
 ) -> CruiseAssessmentAdvice:
+    validate_weather_sequence(hourly_weather)
     profile = get_mission_rule_profile(task_type)
     hourly_assessment = [assess_hourly_weather(hour, profile=profile) for hour in hourly_weather]
     if warnings is not None:
@@ -28,6 +31,7 @@ def assess_hourly_weather(
     profile: MissionRuleProfile | None = None,
     task_type: str = "cruise",
 ) -> HourlyAssessment:
+    validate_weather_hour(hour)
     risk_factors: list[str] = []
     rule_hits: list[RuleHit] = []
     decision = RiskDecision.SUITABLE
@@ -263,6 +267,8 @@ def apply_warning_adjustments(
 
 
 def summarize_assessment(hourly_assessment: list[HourlyAssessment]) -> CruiseAssessmentAdvice:
+    if not hourly_assessment:
+        raise WeatherDataError("没有可用的逐小时天气评估，本次无法完成评估。")
     overall_decision = RiskDecision.SUITABLE
     if any(item.decision == RiskDecision.PROHIBITED for item in hourly_assessment):
         overall_decision = RiskDecision.PROHIBITED

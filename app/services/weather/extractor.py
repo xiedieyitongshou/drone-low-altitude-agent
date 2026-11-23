@@ -1,8 +1,12 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from app.schemas.request import CruiseEvaluateRequest
 from app.schemas.weather import WeatherDataBundle, WeatherHourData
+from app.services.weather.exceptions import WeatherDataError
+from app.services.weather.validation import forecast_datetime, weather_datetime, validate_window_coverage
+from app.utils.timezone import APP_TIMEZONE
 
 
 @dataclass(frozen=True)
@@ -62,21 +66,39 @@ def extract_hourly_weather_by_window(
     window: TimeWindow,
 ) -> list[WeatherHourData]:
     selected_hours: list[WeatherHourData] = []
-    normalized_window = window
+    # Naive request times are local wall times at the requested location,
+    # retaining the previous extractor's provider-offset behavior.
+    zone = APP_TIMEZONE
+    if weather_data.location.timezone:
+        try:
+            zone = ZoneInfo(weather_data.location.timezone)
+        except ZoneInfoNotFoundError as exc:
+            raise WeatherDataError("天气地点的时区数据异常，本次无法完成评估。", error_code="WEATHER_DATA_INVALID") from exc
+    elif weather_data.hourly_weather:
+        zone = forecast_datetime(weather_data.hourly_weather[0].fx_time).tzinfo or APP_TIMEZONE
+    start = window.start_datetime
+    end = window.end_datetime
+    start = weather_datetime((start.replace(tzinfo=zone) if start.tzinfo is None else start).isoformat())
+    end = weather_datetime((end.replace(tzinfo=zone) if end.tzinfo is None else end).isoformat())
 
     for hour in weather_data.hourly_weather:
-        hour_start = datetime.fromisoformat(hour.fx_time)
+        hour_start = weather_datetime(hour.fx_time)
         hour_end = hour_start + timedelta(hours=1)
-        normalized_window = _align_window_timezone(window=window, hour_start=hour_start)
         if _intersects(
             left_start=hour_start,
             left_end=hour_end,
-            right_start=normalized_window.start_datetime,
-            right_end=normalized_window.end_datetime,
+            right_start=start,
+            right_end=end,
         ):
             selected_hours.append(hour)
 
-    return selected_hours
+    if not selected_hours and weather_data.hourly_weather:
+        raise WeatherDataError(
+            "当前预报未覆盖所选时段，本次无法完成评估，请调整日期或时间。",
+            error_code="WEATHER_FORECAST_OUT_OF_RANGE", retryable=False,
+        )
+    validate_window_coverage(selected_hours, start, end)
+    return sorted(selected_hours, key=lambda hour: weather_datetime(hour.fx_time))
 
 
 def _intersects(
@@ -87,14 +109,3 @@ def _intersects(
     right_end: datetime,
 ) -> bool:
     return left_start < right_end and right_start < left_end
-
-
-def _align_window_timezone(*, window: TimeWindow, hour_start: datetime) -> TimeWindow:
-    if hour_start.tzinfo is None:
-        return window
-    if window.start_datetime.tzinfo is not None and window.end_datetime.tzinfo is not None:
-        return window
-    return TimeWindow(
-        start_datetime=window.start_datetime.replace(tzinfo=hour_start.tzinfo),
-        end_datetime=window.end_datetime.replace(tzinfo=hour_start.tzinfo),
-    )

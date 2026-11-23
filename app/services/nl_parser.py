@@ -30,6 +30,8 @@ EXPLICIT_CITY_PATTERN = re.compile(
 )
 EXPLAIN_HINTS = ["为什么", "为何", "依据是什么", "规则来源", "判定依据", "为什么判", "为什么不能飞", "为什么高风险", "解释一下"]
 MODIFY_HINTS = ["改成", "换成", "改为", "换为", "还是", "不变"]
+RETRY_INPUTS = {"重试", "再试一次", "再试一下", "重新试一下", "retry", "try again"}
+WEATHER_RETRY_INTENTS = {"evaluate", "recommend", "compare", "evaluate_task", "recommend_task", "preflight_check_task"}
 CREATE_TASK_HINTS = ["创建任务", "新建任务", "建个任务", "建立任务", "创建一个", "新建一个"]
 EVALUATE_TASK_HINTS = ["评估这个任务", "评估一下这个任务", "评估任务", "这个任务能飞吗", "这个任务可以飞吗"]
 RECOMMEND_TASK_HINTS = ["推荐窗口", "推荐一下窗口", "推荐任务窗口", "给这个任务推荐", "这个任务什么时候"]
@@ -109,7 +111,8 @@ def parse_natural_language_request(
     locations = _detect_locations(text)
     context = context or {}
 
-    if not any([locations, date_text, start_time, end_time, scan_hours, task_type_detected, _has_intent_hint(text)]):
+    retry_context = _is_retry_input(text) and context.get("intent") in WEATHER_RETRY_INTENTS
+    if not any([locations, date_text, start_time, end_time, scan_hours, task_type_detected, _has_intent_hint(text), retry_context]):
         raise NaturalLanguageParseError("未检测到可解析的任务要素", missing_fields=["location", "date"])
 
     mission_result = _parse_mission_task_intent(
@@ -399,6 +402,10 @@ def _parse_mission_task_intent(
     defer_context_merge: bool,
 ) -> ParsedTaskRequest | None:
     intent = _detect_mission_task_intent(text)
+    if intent is None and _is_retry_input(text) and context.get("intent") in {
+        "evaluate_task", "recommend_task", "preflight_check_task",
+    }:
+        intent = str(context["intent"])
     continuing_create = (
         defer_context_merge
         and intent is None
@@ -661,7 +668,13 @@ def _detect_knowledge_city(text: str) -> str | None:
     return explicit_city["city"] if explicit_city else None
 
 
+def _is_retry_input(text: str) -> bool:
+    return text.strip(" ，。！？!? ").lower() in RETRY_INPUTS
+
+
 def _detect_locations(text: str) -> list[str]:
+    if _is_retry_input(text):
+        return []
     cleaned = text
 
     for task_keywords in TASK_TYPE_KEYWORDS.values():

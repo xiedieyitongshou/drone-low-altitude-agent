@@ -23,6 +23,7 @@ from app.services.conversation_query import get_user_conversation_detail, list_u
 from app.services.cruise_evaluator import evaluate_cruise_request_with_artifacts
 from app.services.history_persistence import persist_cruise_evaluation
 from app.services.run_observability import current_observation
+from app.services.weather.exceptions import WeatherDataError
 from app.services.mission_task_management import create_mission_task
 from app.services.recommendation_executor import build_recommendation_response
 from app.services.risk_rule_explainer import explain_risk_rules
@@ -127,6 +128,11 @@ class ToolRegistry:
 
         try:
             data = tool.handler(payload or {}, safe_context)
+        except WeatherDataError as exc:
+            return ToolResult(
+                success=False, tool_name=name, error_code=exc.error_code, message=str(exc),
+                metadata={"weather_data": {"details": exc.details}, "retryable": exc.retryable},
+            )
         except ValidationError as exc:
             return ToolResult(
                 success=False,

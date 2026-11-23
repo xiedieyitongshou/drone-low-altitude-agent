@@ -3,6 +3,7 @@ from enum import StrEnum
 from pydantic import BaseModel
 
 from app.agent.tools import ToolResult
+from app.services.weather.exceptions import WEATHER_DATA_ERROR_CODES
 
 
 class ToolFailureType(StrEnum):
@@ -62,6 +63,22 @@ def classify_tool_failure(tool_result: ToolResult) -> ToolFailurePolicy | None:
     if tool_result.success:
         return None
 
+    if tool_result.error_code in WEATHER_DATA_ERROR_CODES:
+        return ToolFailurePolicy(
+            failure_type=ToolFailureType.EXTERNAL_DEPENDENCY_FAILED,
+            recovery_action=ToolRecoveryAction.FAIL_FAST,
+            retryable=bool(tool_result.metadata.get("retryable")),
+            user_message=tool_result.message or "天气数据不足，本次无法完成评估。",
+        )
+    if tool_result.error_code in {"WeatherRequestError", "WeatherResponseError", "WeatherAuthenticationError"}:
+        configuration_error = tool_result.error_code == "WeatherAuthenticationError"
+        return ToolFailurePolicy(
+            failure_type=ToolFailureType.EXTERNAL_DEPENDENCY_FAILED,
+            recovery_action=ToolRecoveryAction.FAIL_FAST,
+            retryable=not configuration_error,
+            user_message=("天气服务配置异常，本次无法完成评估，请联系管理员处理。" if configuration_error else
+                          "天气服务或返回数据暂时不可用，本次评估未完成，请稍后重试。"),
+        )
     failure_type = ERROR_CODE_FAILURE_TYPES.get(tool_result.error_code or "", ToolFailureType.UNKNOWN)
     if failure_type == ToolFailureType.INVALID_INPUT:
         return ToolFailurePolicy(

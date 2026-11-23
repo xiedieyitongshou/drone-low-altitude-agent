@@ -10,6 +10,7 @@ from app.rules import assess_cruise_window
 from app.schemas.assessment import RiskDecision
 from app.schemas.warning import WarningData, WarningDataBundle
 from app.schemas.weather import WeatherHourData
+from app.services.weather.exceptions import WeatherDataError
 
 
 def build_warning_bundle(level: str, event_type: str = "雷电") -> WarningDataBundle:
@@ -244,14 +245,10 @@ class RuleEngineTestCase(unittest.TestCase):
         self.assertEqual(result.overall_decision, RiskDecision.PROHIBITED)
         self.assertIn("风速偏高", result.hourly_assessment[0].risk_factors)
 
-    def test_empty_hourly_weather_returns_empty_assessment(self) -> None:
-        result = assess_cruise_window([])
-
-        self.assertEqual(result.overall_decision, RiskDecision.SUITABLE)
-        self.assertTrue(result.allow_cruise)
-        self.assertEqual(result.hourly_assessment, [])
-        self.assertEqual(result.summary_risk_factors, [])
-        self.assertEqual(result.rule_hits, [])
+    def test_empty_hourly_weather_cannot_produce_a_flight_decision(self) -> None:
+        with self.assertRaises(WeatherDataError) as error:
+            assess_cruise_window([])
+        self.assertEqual(error.exception.error_code, "WEATHER_DATA_INCOMPLETE")
 
 
 if __name__ == "__main__":

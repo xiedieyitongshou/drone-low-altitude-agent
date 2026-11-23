@@ -3,6 +3,16 @@ import pytest
 from app.services.nl_parser import NaturalLanguageParseError, parse_natural_language_request
 
 
+@pytest.mark.parametrize("query", ["重试", "再试一次", "重试。"])
+def test_retry_input_reuses_context_instead_of_becoming_a_location(query):
+    context = {"intent": "evaluate", "location": "广州", "date": "2026-11-23",
+               "start_time": "14:00", "end_time": "17:00", "task_type": "inspection"}
+    parsed = parse_natural_language_request(query, context=context)
+    assert parsed.intent == "evaluate"
+    assert parsed.parsed["location"] == "广州"
+    assert parsed.parsed["task_type"] == "inspection"
+
+
 @pytest.mark.parametrize("day", ["2026-11-22", "2026/11/22", "2026年11月22日"])
 def test_calendar_date_is_not_used_as_the_time_range(day):
     result = parse_natural_language_request(f"深圳{day}下午2点到3点巡航能飞吗", defer_context_merge=True)

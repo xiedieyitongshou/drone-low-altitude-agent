@@ -155,6 +155,7 @@ from app.services.weather import (
     WeatherAuthenticationError,
     WeatherRequestError,
     WeatherResponseError,
+    WeatherDataError,
     WeatherSampleStore,
     WeatherServiceError,
     WeatherWarningResponse,
@@ -248,11 +249,18 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
     return JSONResponse(status_code=500, content=payload.model_dump())
 
 
+@app.exception_handler(WeatherDataError)
+async def weather_data_exception_handler(request: Request, exc: WeatherDataError) -> JSONResponse:
+    logger.warning("Weather data cannot support assessment", extra={"error_code": exc.error_code, "details": exc.details})
+    payload = ErrorResponse(error_code=exc.error_code, message=str(exc), details=exc.details)
+    return JSONResponse(status_code=exc.status_code, content={**payload.model_dump(), "retryable": exc.retryable})
+
+
 @app.exception_handler(WeatherAuthenticationError)
 async def weather_auth_exception_handler(request: Request, exc: WeatherAuthenticationError) -> JSONResponse:
     payload = ErrorResponse(
         error_code="WEATHER_AUTH_ERROR",
-        message=str(exc),
+        message="天气服务配置异常，本次无法完成评估，请联系管理员处理。",
     )
     return JSONResponse(status_code=500, content=payload.model_dump())
 
@@ -285,7 +293,7 @@ async def location_not_found_exception_handler(request: Request, exc: LocationNo
 async def weather_request_exception_handler(request: Request, exc: WeatherServiceError) -> JSONResponse:
     payload = ErrorResponse(
         error_code="WEATHER_REQUEST_ERROR",
-        message=str(exc),
+        message="天气服务或返回数据暂时不可用，本次评估未完成，请稍后重试。",
     )
     return JSONResponse(status_code=502, content=payload.model_dump())
 

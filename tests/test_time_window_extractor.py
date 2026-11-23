@@ -11,6 +11,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from app.schemas.request import CruiseEvaluateRequest
 from app.schemas.weather import LocationInfo, WeatherDataBundle, WeatherHourData
 from app.services.weather import extract_hourly_weather, extract_hourly_weather_from_request
+from app.services.weather.exceptions import WeatherDataError
 
 
 def build_sample_weather() -> WeatherDataBundle:
@@ -81,15 +82,14 @@ class TimeWindowExtractorTestCase(unittest.TestCase):
                 task_type="cruise",
             )
 
-    def test_no_matching_hours_returns_empty_list(self) -> None:
-        result = extract_hourly_weather(
-            date_text="2026-07-11",
-            start_time_text="10:00",
-            end_time_text="11:00",
-            weather_data=build_sample_weather(),
-        )
-
-        self.assertEqual(result, [])
+    def test_no_matching_hours_reports_the_forecast_limit(self) -> None:
+        with self.assertRaises(WeatherDataError) as error:
+            extract_hourly_weather(
+                date_text="2026-07-11", start_time_text="10:00", end_time_text="11:00",
+                weather_data=build_sample_weather(),
+            )
+        self.assertEqual(error.exception.error_code, "WEATHER_FORECAST_OUT_OF_RANGE")
+        self.assertFalse(error.exception.retryable)
 
 
 if __name__ == "__main__":

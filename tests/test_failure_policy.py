@@ -33,7 +33,8 @@ def test_classify_external_dependency_as_terminal_for_agent():
 
     assert policy.failure_type == ToolFailureType.EXTERNAL_DEPENDENCY_FAILED
     assert policy.recovery_action == ToolRecoveryAction.FAIL_FAST
-    assert policy.retryable is False
+    # A new client request may retry; the current Agent run still stops.
+    assert policy.retryable is True
 
 
 def test_classify_unknown_tool_error_as_terminal_for_agent():

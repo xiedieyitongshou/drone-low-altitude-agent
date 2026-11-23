@@ -54,7 +54,7 @@ def compare_locations(payload: MultiLocationComparisonRequest) -> MultiLocationC
     for index, item in enumerate(ranked, start=1):
         item.rank = index
 
-    top_k_locations = ranked[: payload.top_k]
+    top_k_locations = [item for item in ranked if item.available][: payload.top_k]
     return MultiLocationComparisonResponse(
         request={
             "locations": payload.locations,
@@ -68,7 +68,7 @@ def compare_locations(payload: MultiLocationComparisonRequest) -> MultiLocationC
         },
         comparisons=ranked,
         top_k_locations=top_k_locations,
-        recommended_location=ranked[0] if ranked else None,
+        recommended_location=top_k_locations[0] if top_k_locations else None,
     )
 
 

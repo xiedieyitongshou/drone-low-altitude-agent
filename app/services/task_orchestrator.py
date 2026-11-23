@@ -48,6 +48,9 @@ from app.services.response_composer import (
 from app.services.session_memory import build_session_context, session_memory_store
 from app.services.run_observability import current_observation, measure_stage, observe_run, timed_stage
 from app.services.session_execution import session_execution_guard
+from app.services.weather.exceptions import (
+    WEATHER_FAILURE_CODES, WeatherAuthenticationError, WeatherRequestError, WeatherResponseError,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -216,6 +219,8 @@ def _orchestrate_task_query_legacy(
     profile = get_or_create_user_profile(normalized_user_id)
     cached_context = session_memory_store.get(session_id, user_id=normalized_user_id) if session_id else None
     parser_context = merge_profile_context(session_context=cached_context, profile=profile)
+    if cached_context and (cached_context.get("pending_task") or {}).get("retry_reason") == "weather_unavailable":
+        parser_context = build_agent_parser_context(session_context=cached_context, profile=profile)
     parsed_result = _parse_task_query(query, context=parser_context)
 
     try:
@@ -332,6 +337,22 @@ def _orchestrate_task_query_legacy(
                 fallback={"suggestion": "请改用对应的结构化接口直接调用。"},
             ),
         )
+    except (WeatherAuthenticationError, WeatherRequestError, WeatherResponseError) as exc:
+        code = getattr(exc, "error_code", type(exc).__name__)
+        message = str(exc) if hasattr(exc, "details") else "天气服务或返回数据暂时不可用，本次评估未完成。"
+        response = OrchestratorResponse(
+            success=False, session_id=session_id, user_id=normalized_user_id,
+            intent=parsed_result.intent, target_endpoint=parsed_result.target_endpoint,
+            parser_source=parsed_result.parser_source, parsed=parsed_result.parsed,
+            context_used=parsed_result.context_used, warnings=parsed_result.warnings,
+            message=message, fallback={"error_code": code, "details": getattr(exc, "details", []),
+                                       "retryable": getattr(exc, "retryable", code != "WeatherAuthenticationError")},
+        )
+        observation = current_observation()
+        if observation:
+            observation.emit("error", error_code=code, message=message, metadata={"source": "weather", **response.fallback})
+        _save_weather_retry_context(response, cached_context=cached_context, query=query)
+        return _with_conversation_record(query=query, user_id=normalized_user_id, response=response)
     except Exception as exc:
         return _with_conversation_record(
             query=query,
@@ -480,7 +501,32 @@ def _orchestrate_task_query_with_agent_loop(
         knowledge_city = session_parsed["city"]
     if loop_result.success:
         _save_completed_context(response, query=query, knowledge_city=knowledge_city)
+    elif any(result.error_code in WEATHER_FAILURE_CODES for result in loop_result.final_state.tool_results.values()):
+        _save_weather_retry_context(response, cached_context=cached_context, query=query)
     return _with_conversation_record(query=query, user_id=normalized_user_id, response=response)
+
+
+def _save_weather_retry_context(
+    response: OrchestratorResponse, *, cached_context: dict[str, object] | None, query: str,
+) -> None:
+    if not response.session_id:
+        return
+    # Keep the previous completed context intact; a pending input draft takes
+    # precedence for retry and is replaced only after a later successful run.
+    context = dict(cached_context or {})
+    retry_parsed = dict(response.parsed)
+    if retry_parsed.get("task_id"):
+        retry_parsed["current_task_id"] = retry_parsed["task_id"]
+    context["pending_task"] = {
+        "intent": response.intent, "parsed": retry_parsed,
+        "missing_fields": [], "query": query, "retry_reason": "weather_unavailable",
+    }
+    try:
+        with measure_stage("session_write"):
+            session_memory_store.set(response.session_id, context, user_id=response.user_id, title=query[:80])
+    except Exception:
+        logger.exception("Could not save weather retry inputs")
+        response.warnings.append("重试条件保存失败，请使用本次完整查询条件重新提交。")
 
 
 def _handle_agent_parse_error(
