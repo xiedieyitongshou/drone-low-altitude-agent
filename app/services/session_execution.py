@@ -30,6 +30,21 @@ def session_execution_guard(*, user_id: str, session_id: str | None, db: Session
     if not session_id:
         yield True
         return
+    with _execution_guard(key=session_lock_key(user_id, session_id), local_key=(user_id, session_id), db=db) as admitted:
+        yield admitted
+
+
+@contextmanager
+def operation_execution_guard(*, user_id: str, operation: str, key: str, db: Session):
+    parts = ("operation", user_id, operation, key)
+    encoded = json.dumps(parts, ensure_ascii=False).encode("utf-8")
+    lock_key = int.from_bytes(hashlib.blake2b(encoded, digest_size=8).digest(), "big", signed=True)
+    with _execution_guard(key=lock_key, local_key=parts, db=db) as admitted:
+        yield admitted
+
+
+@contextmanager
+def _execution_guard(*, key: int, local_key: tuple, db: Session | None):
     bind = db.get_bind() if db is not None else None
     if bind is None and os.getenv("SESSION_MEMORY_BACKEND", "database") == "database":
         from app.db.session import engine
@@ -40,7 +55,6 @@ def session_execution_guard(*, user_id: str, session_id: str | None, db: Session
         owned = not isinstance(bind, Connection)
         connection = bind.connect() if owned else bind
         acquired = False
-        key = session_lock_key(user_id, session_id)
         try:
             with measure_stage("session_guard"):
                 acquired = bool(connection.scalar(text("SELECT pg_try_advisory_lock(:key)"), {"key": key}))
@@ -57,9 +71,8 @@ def session_execution_guard(*, user_id: str, session_id: str | None, db: Session
         return
 
     # SQLite and TTLCache development/test deployments are process-local.
-    key = (user_id, session_id)
     with _registry_lock:
-        entry = _local_locks.setdefault(key, [Lock(), 0])
+        entry = _local_locks.setdefault(local_key, [Lock(), 0])
         entry[1] += 1
     acquired = entry[0].acquire(blocking=False)
     try:
@@ -70,4 +83,4 @@ def session_execution_guard(*, user_id: str, session_id: str | None, db: Session
         with _registry_lock:
             entry[1] -= 1
             if entry[1] == 0:
-                del _local_locks[key]
+                del _local_locks[local_key]

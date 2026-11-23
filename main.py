@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager, suppress
 from datetime import datetime
 
 import uvicorn
-from fastapi import Depends, FastAPI, HTTPException, Query, Request, status
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -18,6 +18,7 @@ from sqlalchemy.exc import OperationalError
 from redis.exceptions import RedisError
 
 from app.core.config import load_environment
+from app.services.idempotency import IdempotencyError
 from app.db.models import User
 from app.dependencies import get_current_user, get_db
 from app.dependencies.auth import bearer_scheme, require_admin_user
@@ -249,6 +250,12 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
     return JSONResponse(status_code=500, content=payload.model_dump())
 
 
+@app.exception_handler(IdempotencyError)
+async def idempotency_exception_handler(request: Request, exc: IdempotencyError) -> JSONResponse:
+    payload = ErrorResponse(error_code=exc.error_code, message=str(exc))
+    return JSONResponse(status_code=409, content=payload.model_dump())
+
+
 @app.exception_handler(WeatherDataError)
 async def weather_data_exception_handler(request: Request, exc: WeatherDataError) -> JSONResponse:
     logger.warning("Weather data cannot support assessment", extra={"error_code": exc.error_code, "details": exc.details})
@@ -444,9 +451,10 @@ def create_my_mission_task(
     payload: MissionTaskCreateRequest,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    idempotency_key: str | None = Header(default=None, min_length=1, max_length=128, pattern=r"^[A-Za-z0-9._:-]+$"),
 ) -> MissionTaskResponse:
     try:
-        return create_mission_task(db=db, current_user=current_user, payload=payload)
+        return create_mission_task(db=db, current_user=current_user, payload=payload, idempotency_key=idempotency_key)
     except Exception as exc:
         handle_mission_task_error(exc)
 
@@ -1015,9 +1023,11 @@ def orchestrate_task(
     payload: OrchestratorRequest,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    idempotency_key: str | None = Header(default=None, min_length=1, max_length=128, pattern=r"^[A-Za-z0-9._:-]+$"),
 ) -> OrchestratorResponse:
     logger.info("Starting task orchestration")
-    result = orchestrate_task_query(payload.query, session_id=payload.session_id, user_id=current_user.id, db=db)
+    options = {"idempotency_key": idempotency_key} if idempotency_key is not None else {}
+    result = orchestrate_task_query(payload.query, session_id=payload.session_id, user_id=current_user.id, db=db, **options)
     logger.info(
         "Task orchestration completed",
         extra={

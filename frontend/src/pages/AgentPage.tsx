@@ -7,10 +7,13 @@ import { KnowledgeAdvicePanel } from '../components/KnowledgeAdvicePanel'
 import { TraceTimeline } from '../components/TraceTimeline'
 import type {
   AgentMessage,
+  AgentQueryRequest,
   AgentQueryResponse,
   JsonValue,
   ParserSource,
 } from '../types/agent'
+import { useAuth } from '../auth/useAuth'
+import { beginSubmission, completeSubmission, latestPendingSubmission } from '../utils/idempotency'
 
 const defaultQuery = '帮我评估深圳明天下午2点到5点是否适合日常巡航'
 
@@ -487,8 +490,10 @@ function HistoryAnswer({ payload, explanation }: { payload: Record<string, unkno
 }
 
 export function AgentPage() {
-  const [query, setQuery] = useState(defaultQuery)
-  const [sessionId, setSessionId] = useState(createDefaultSessionId)
+  const { user } = useAuth()
+  const [pending] = useState(() => latestPendingSubmission<AgentQueryRequest>('agent.query', user?.id ?? ''))
+  const [query, setQuery] = useState(pending?.payload.query ?? defaultQuery)
+  const [sessionId, setSessionId] = useState(() => pending?.payload.session_id ?? createDefaultSessionId())
   const [messages, setMessages] = useState<AgentMessage[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -499,6 +504,7 @@ export function AgentPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (!user || isSubmitting) return
 
     const trimmedQuery = query.trim()
     if (!trimmedQuery) {
@@ -516,10 +522,14 @@ export function AgentPage() {
     ])
 
     try {
-      const response = await queryAgent({
+      const submission = beginSubmission('agent.query', user.id, {
         query: trimmedQuery,
         session_id: sessionId.trim() || null,
       })
+      const response = await queryAgent(submission.payload, submission.key)
+      if (response.success || response.agent_runtime?.status === 'needs_clarification') {
+        completeSubmission('agent.query', user.id, submission.key)
+      }
 
       setMessages((current) =>
         current.map((message) =>

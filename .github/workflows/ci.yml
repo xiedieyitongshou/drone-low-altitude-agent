@@ -73,6 +73,7 @@ jobs:
 
     env:
       DATABASE_URL: postgresql+psycopg://ci_api_user:ci_api_password@127.0.0.1:5432/ci_api
+      IDEMPOTENCY_TEST_DATABASE_URL: postgresql+psycopg://ci_api_user:ci_api_password@127.0.0.1:5432/ci_api
       LLM_ENABLED: "false"
       NL_PARSER_MODE: rule
 
@@ -103,6 +104,7 @@ jobs:
           tests/test_mission_task_execution_api.py::test_task_evaluation_history_requires_task_visibility
           tests/test_session_memory.py::test_default_database_sessions_restore_latest_context_by_user
           tests/test_session_memory.py::test_session_cleanup_checks_last_write_and_keeps_chat_history
+          tests/test_task_creation_idempotency.py
 
   frontend-test:
     name: Frontend lint and build
@@ -128,6 +130,9 @@ jobs:
 
       - name: Run frontend lint
         run: npm run lint
+
+      - name: Test pending submission recovery
+        run: npm test
 
       - name: Build frontend
         run: npm run build

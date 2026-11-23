@@ -4,6 +4,7 @@ from app.db.models.knowledge import KnowledgeDocument, KnowledgeIndexJob
 from app.db.models.location import Location
 from app.db.models.memory import ConversationRecord, SessionRecord, UserProfile
 from app.db.models.mission_task import MissionTask
+from app.db.models.operation_request import OperationRequest
 from app.db.models.rule_set import RuleItem, RuleSet
 from app.db.models.task_request import TaskRequest
 from app.db.models.user import User
@@ -21,6 +22,7 @@ __all__ = [
     "KnowledgeIndexJob",
     "Location",
     "MissionTask",
+    "OperationRequest",
     "ConversationRecord",
     "SessionRecord",
     "RuleItem",

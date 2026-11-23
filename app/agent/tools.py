@@ -368,6 +368,8 @@ def _query_user_history_with_db(payload: dict[str, Any], context: ToolExecutionC
 
 
 def _create_mission_task(payload: dict[str, Any], context: ToolExecutionContext) -> Any:
+    from app.services.idempotency import AGENT_TASK_CREATE, current_agent_operation_id
+
     def call(db: Session) -> Any:
         current_user = _get_current_tool_user(db, context)
         request_payload = {
@@ -383,7 +385,10 @@ def _create_mission_task(payload: dict[str, Any], context: ToolExecutionContext)
             "metadata": payload.get("metadata") or {},
         }
         request = MissionTaskCreateRequest.model_validate(request_payload)
-        return create_mission_task(db=db, current_user=current_user, payload=request)
+        return create_mission_task(
+            db=db, current_user=current_user, payload=request,
+            idempotency_key=current_agent_operation_id(), operation=AGENT_TASK_CREATE,
+        )
 
     return _with_tool_db(context, call)
 

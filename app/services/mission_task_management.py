@@ -19,6 +19,7 @@ from app.services.mission_task_state import (
     ensure_mission_task_status_transition,
     normalize_mission_task_status,
 )
+from app.services.idempotency import TASK_CREATE, claim_operation
 
 
 class MissionTaskNotFoundError(Exception):
@@ -83,7 +84,32 @@ def create_mission_task(
     db: Session,
     current_user: User,
     payload: MissionTaskCreateRequest,
+    idempotency_key: str | None = None,
+    operation: str = TASK_CREATE,
 ) -> MissionTaskResponse:
+    if idempotency_key is not None:
+        try:
+            receipt = claim_operation(
+                db=db, user_id=current_user.id, operation=operation,
+                key=idempotency_key, payload=payload.model_dump(mode="json"),
+            )
+            if receipt.response_json is not None:
+                response = MissionTaskResponse.model_validate(receipt.response_json)
+                db.commit()
+                return response
+            response = _insert_mission_task(db=db, current_user=current_user, payload=payload)
+            receipt.response_json = response.model_dump(mode="json")
+            db.commit()
+            return response
+        except Exception:
+            db.rollback()
+            raise
+    response = _insert_mission_task(db=db, current_user=current_user, payload=payload)
+    db.commit()
+    return response
+
+
+def _insert_mission_task(*, db: Session, current_user: User, payload: MissionTaskCreateRequest) -> MissionTaskResponse:
     task = MissionTask(
         user_id=current_user.id,
         title=payload.title,
@@ -100,9 +126,7 @@ def create_mission_task(
     )
     db.add(task)
     db.flush()
-    response = to_mission_task_response(task)
-    db.commit()
-    return response
+    return to_mission_task_response(task)
 
 
 def get_mission_task_detail(

@@ -47,7 +47,11 @@ from app.services.response_composer import (
 )
 from app.services.session_memory import build_session_context, session_memory_store
 from app.services.run_observability import current_observation, measure_stage, observe_run, timed_stage
-from app.services.session_execution import session_execution_guard
+from app.services.session_execution import operation_execution_guard, session_execution_guard
+from app.services.idempotency import (
+    AGENT_QUERY, OperationInProgressError, agent_operation, claim_operation,
+    current_agent_operation_id, find_agent_creation,
+)
 from app.services.weather.exceptions import (
     WEATHER_FAILURE_CODES, WeatherAuthenticationError, WeatherRequestError, WeatherResponseError,
 )
@@ -64,13 +68,56 @@ def orchestrate_task_query(
     session_id: str | None = None,
     user_id: str | None = None,
     db: Session | None = None,
+    idempotency_key: str | None = None,
+) -> OrchestratorResponse:
+    if idempotency_key is None:
+        return _run_task_query(query, session_id=session_id, user_id=user_id, db=db)
+    if db is None:
+        from app.db.session import SessionLocal
+
+        with SessionLocal() as owned_db:
+            return orchestrate_task_query(
+                query, session_id=session_id, user_id=user_id, db=owned_db, idempotency_key=idempotency_key,
+            )
+    normalized_user_id = normalize_user_id(user_id)
+    with operation_execution_guard(user_id=normalized_user_id, operation=AGENT_QUERY, key=idempotency_key, db=db) as admitted:
+        if not admitted:
+            raise OperationInProgressError("这次提交仍在处理中，请保留原操作 ID 稍后重试。")
+        try:
+            receipt = claim_operation(
+                db=db, user_id=normalized_user_id, operation=AGENT_QUERY, key=idempotency_key,
+                payload={"query": query, "session_id": session_id},
+            )
+            if receipt.response_json is not None:
+                response = OrchestratorResponse.model_validate(receipt.response_json)
+                db.commit()
+                return response
+            operation_id = receipt.id
+            # The envelope survives intermediate business commits. The creation
+            # tool commits its own receipt atomically with the new task.
+            db.commit()
+            with agent_operation(operation_id):
+                response = _run_task_query(query, session_id=session_id, user_id=normalized_user_id, db=db)
+            if response.success or (response.agent_runtime or {}).get("status") == "needs_clarification":
+                receipt.response_json = response.model_dump(mode="json")
+                db.commit()
+            return response
+        except Exception:
+            db.rollback()
+            raise
+
+
+def _run_task_query(
+    query: str, *, session_id: str | None, user_id: str | None, db: Session | None,
 ) -> OrchestratorResponse:
     with observe_run(user_id=normalize_user_id(user_id), session_id=session_id) as observation:
         observation.emit("state_update", status_after="initialized", input_payload={"query": query})
         try:
             with session_execution_guard(user_id=observation.user_id, session_id=session_id, db=db) as admitted:
                 if admitted:
-                    response = _execute_task_query(query, session_id=session_id, user_id=user_id, db=db)
+                    response = _recover_committed_creation(user_id=observation.user_id, session_id=session_id, db=db)
+                    if response is None:
+                        response = _execute_task_query(query, session_id=session_id, user_id=user_id, db=db)
                 else:
                     response = OrchestratorResponse(
                         success=False, user_id=observation.user_id, session_id=session_id,
@@ -118,6 +165,25 @@ def orchestrate_task_query(
         if not _flush_observation(observation, db=db):
             response.warnings.append("执行记录保存失败，本次业务结果仍可使用。")
         return response
+
+
+def _recover_committed_creation(*, user_id: str, session_id: str | None, db: Session | None) -> OrchestratorResponse | None:
+    operation_id = current_agent_operation_id()
+    if operation_id is None or db is None:
+        return None
+    creation = find_agent_creation(db=db, user_id=user_id, operation_id=operation_id)
+    if creation is None or creation.response_json is None:
+        return None
+    task = creation.response_json
+    return OrchestratorResponse(
+        user_id=user_id, session_id=session_id, intent="create_task", target_endpoint="/tasks",
+        parsed={**creation.request_json, "task_id": task["id"], "current_task_id": task["id"], "current_task_title": task["title"]},
+        message=f"任务单已创建：{task['title']}。",
+        result={"tool_results": {"create_mission_task": {
+            "success": True, "tool_name": "create_mission_task", "data": task,
+        }}},
+        agent_runtime={"mode": os.getenv("AGENT_RUNTIME_MODE", "legacy"), "status": "completed", "idempotency_recovered": True},
+    )
 
 
 def _flush_observation(observation, *, db: Session | None = None) -> bool:

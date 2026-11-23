@@ -18,10 +18,13 @@ import type { JsonValue } from '../types/agent'
 import type { CruiseAssessmentResponse, TaskType } from '../types/evaluation'
 import type { CruiseHistoryResponse, UnifiedBusinessResponse } from '../types/history'
 import type {
+  MissionTaskCreateRequest,
   MissionTaskDetailResponse,
   MissionTaskResponse,
   MissionTaskStatus,
 } from '../types/missionTask'
+import { useAuth } from '../auth/useAuth'
+import { beginSubmission, completeSubmission, latestPendingSubmission } from '../utils/idempotency'
 import type { RecommendationResponse } from '../types/recommendation'
 
 const PAGE_SIZE = 10
@@ -72,6 +75,7 @@ const initialForm: CreateTaskForm = {
 }
 
 export function MissionTasksPage() {
+  const { user } = useAuth()
   const [tasks, setTasks] = useState<MissionTaskResponse[]>([])
   const [selectedTask, setSelectedTask] = useState<MissionTaskDetailResponse | null>(null)
   const [selectedTaskId, setSelectedTaskId] = useState('')
@@ -79,7 +83,16 @@ export function MissionTasksPage() {
   const [statusFilter, setStatusFilter] = useState<MissionTaskStatus | ''>('')
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
-  const [form, setForm] = useState<CreateTaskForm>(initialForm)
+  const [form, setForm] = useState<CreateTaskForm>(() => {
+    const pending = latestPendingSubmission<MissionTaskCreateRequest>('task.create', user?.id ?? '')
+    if (!pending) return initialForm
+    const payload = pending.payload
+    return {
+      title: payload.title, purpose: payload.purpose ?? '', location: payload.location ?? '',
+      date: payload.date ?? '', start_time: payload.start_time ?? '', end_time: payload.end_time ?? '',
+      task_type: payload.task_type ?? 'inspection', candidate_locations: (payload.candidate_locations ?? []).join(', '),
+    }
+  })
   const [lastAction, setLastAction] = useState<LastAction>(null)
   const [historyByRequestId, setHistoryByRequestId] = useState<Record<string, CruiseHistoryResponse>>({})
   const [composedByRequestId, setComposedByRequestId] = useState<Record<string, UnifiedBusinessResponse>>({})
@@ -176,12 +189,13 @@ export function MissionTasksPage() {
 
   async function handleCreateTask(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (!user || isSubmitting) return
     setIsSubmitting(true)
     setErrorMessage('')
     setSuccessMessage('')
 
     try {
-      const created = await createMissionTask({
+      const submission = beginSubmission('task.create', user.id, {
         title: form.title.trim(),
         purpose: cleanText(form.purpose),
         location: cleanText(form.location),
@@ -191,6 +205,8 @@ export function MissionTasksPage() {
         task_type: form.task_type,
         candidate_locations: splitCsv(form.candidate_locations),
       })
+      const created = await createMissionTask(submission.payload, submission.key)
+      completeSubmission('task.create', user.id, submission.key)
       setForm(initialForm)
       setLastAction({ kind: 'task', result: created })
       setSuccessMessage('任务单已创建')

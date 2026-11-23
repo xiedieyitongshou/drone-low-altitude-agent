@@ -18,8 +18,10 @@ export async function listMissionTasks(params: MissionTaskListParams = {}) {
   return response.data
 }
 
-export async function createMissionTask(payload: MissionTaskCreateRequest) {
-  const response = await apiClient.post<MissionTaskResponse>('/tasks', payload)
+export async function createMissionTask(payload: MissionTaskCreateRequest, idempotencyKey?: string) {
+  const response = await apiClient.post<MissionTaskResponse>('/tasks', payload, {
+    headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : undefined,
+  })
   return response.data
 }
 
