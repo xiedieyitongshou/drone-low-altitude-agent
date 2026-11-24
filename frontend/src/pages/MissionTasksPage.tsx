@@ -106,6 +106,7 @@ export function MissionTasksPage() {
   const [runningActions, setRunningActions] = useState<Set<string>>(new Set())
   const selectedTaskRef = useRef<MissionTaskDetailResponse | null>(null)
   const selectedTaskIdRef = useRef('')
+  const listRequestIdRef = useRef(0)
 
   useEffect(() => {
     void loadTasks(page)
@@ -120,6 +121,7 @@ export function MissionTasksPage() {
   const totalPages = Math.max(Math.ceil(total / PAGE_SIZE), 1)
 
   async function loadTasks(nextPage = page, nextKeyword = keyword, nextStatus = statusFilter) {
+    const requestId = ++listRequestIdRef.current
     setIsLoadingList(true)
     setErrorMessage('')
 
@@ -130,6 +132,8 @@ export function MissionTasksPage() {
         keyword: nextKeyword.trim() || undefined,
         status: nextStatus || undefined,
       })
+      // A previous refresh may arrive after a cancellation's newer refresh.
+      if (requestId !== listRequestIdRef.current) return
       setTasks(response.items)
       setTotal(response.total)
       setPage(response.page)
@@ -142,9 +146,9 @@ export function MissionTasksPage() {
         }
       }
     } catch (error) {
-      setErrorMessage(formatError(error, '加载任务列表失败'))
+      if (requestId === listRequestIdRef.current) setErrorMessage(formatError(error, '加载任务列表失败'))
     } finally {
-      setIsLoadingList(false)
+      if (requestId === listRequestIdRef.current) setIsLoadingList(false)
     }
   }
 

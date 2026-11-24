@@ -132,11 +132,76 @@ jobs:
       - name: Run frontend lint
         run: npm run lint
 
-      - name: Test pending submission recovery
+      - name: Test submission recovery and task versions
         run: npm test
+
+      - name: Install Chromium for browser tests
+        run: npx playwright install --with-deps chromium
+
+      - name: Test task cancellation in the browser
+        run: npm run test:e2e
 
       - name: Build frontend
         run: npm run build
+
+      - name: Upload browser failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-browser-failures
+          path: |
+            frontend/playwright-report/
+            frontend/test-results/
+          retention-days: 7
+
+  session-reliability:
+    name: Session persistence and recovery
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SESSION_RELIABILITY_IMAGE: drone-low-altitude-agent:session-ci
+      SESSION_RELIABILITY_PROJECT: session-reliability-ci-${{ github.run_id }}-${{ github.run_attempt }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Build isolated Session test image
+        run: docker build -t "$SESSION_RELIABILITY_IMAGE" .
+
+      - name: Run Session persistence regression scenarios
+        if: github.event_name != 'workflow_dispatch'
+        run: >-
+          python scripts/session_reliability_eval.py --profile smoke
+          --image "$SESSION_RELIABILITY_IMAGE" --project "$SESSION_RELIABILITY_PROJECT"
+          --output data/eval-reports/session-reliability/ci
+
+      - name: Run complete Session fault scenarios
+        if: github.event_name == 'workflow_dispatch'
+        run: >-
+          python scripts/session_reliability_eval.py --profile full
+          --image "$SESSION_RELIABILITY_IMAGE" --project "$SESSION_RELIABILITY_PROJECT"
+          --output data/eval-reports/session-reliability/ci
+
+      - name: Collect Session logs and clean up test resources
+        if: always()
+        run: |
+          mkdir -p data/eval-reports/session-reliability/ci
+          docker compose -f docker/session_reliability.compose.yml -p "$SESSION_RELIABILITY_PROJECT" logs --no-color --timestamps > data/eval-reports/session-reliability/ci/runner-container-logs.txt 2>&1 || true
+          docker compose -f docker/session_reliability.compose.yml -p "$SESSION_RELIABILITY_PROJECT" down --volumes --remove-orphans
+
+      - name: Upload Session evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: session-reliability-evidence
+          path: data/eval-reports/session-reliability/ci/
+          retention-days: 14
 
   full-eval:
     name: Full eval reports

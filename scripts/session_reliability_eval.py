@@ -26,6 +26,10 @@ SCENARIOS = [
     "postgres_outage", "postgres_expiry", "redis_expiry", "redis_outage", "redis_restart",
     "isolation", "session_save_failure", "concurrent_update", "crash_before_session_write",
 ]
+SMOKE_SCENARIOS = [
+    "app_restart", "cross_instance", "isolation", "concurrent_update",
+    "postgres_expiry", "redis_expiry", "redis_restart", "session_save_failure",
+]
 
 
 def sql_literal(value):
@@ -90,7 +94,8 @@ class Suite:
             encoding="utf-8", errors="replace", env=self.env, cwd=ROOT, timeout=timeout,
         )
         if check and result.returncode:
-            raise RuntimeError(f"Compose {args[0]} failed: {result.stderr[-1500:]}")
+            detail = (result.stderr + "\n" + result.stdout).strip()[-2000:]
+            raise RuntimeError(f"Compose {' '.join(args)} failed (exit {result.returncode}): {detail}")
         return result
 
     def sql(self, statement):
@@ -127,14 +132,22 @@ class Suite:
         deadline = time.monotonic() + 90
         failures = []
         while time.monotonic() < deadline:
-            response = self.request("/auth/me" if auth else "/health", server=server, record=False)
+            try:
+                response = self.request("/auth/me" if auth else "/health", server=server, record=False)
+            except RuntimeError as exc:
+                # Readiness is read-only. A Docker exec transport failure should
+                # be recorded and polled like a failed HTTP connection, without
+                # retrying any of the scenario's business requests.
+                failures.append({"stage": "probe_transport", "error": str(exc)})
+                time.sleep(0.3)
+                continue
             if response["status"] == 200:
                 if self.current:
                     self.current.actions.append({"kind": "ready", "server": server, "failed_probes": failures})
                 return
             failures.append({"status": response["status"], "body": response["body"]})
             time.sleep(0.3)
-        raise RuntimeError(f"{server} did not become ready")
+        raise RuntimeError(f"{server} did not become ready; last probes: {failures[-3:]}")
 
     def account(self, owner):
         username = f"sr-{owner}-{uuid4().hex[:8]}"
@@ -512,6 +525,7 @@ class Suite:
             "code_commit": subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True).stdout.strip(),
             "image": self.args.image, "image_id": self.image_id, "source_sha256": self.source_hashes,
             "repeats": self.args.repeats, "scenarios": self.args.scenarios,
+            "profile": self.args.profile,
             "configuration": {"authenticated_session": "PostgreSQL", "anonymous_session": "Redis AOF", "app_instances": 2,
                               "parser": "rule", "llm": "disabled", "weather": "real HTTP to deterministic local fixture", "external_network": "disabled"},
             "summary": {"cases": len(self.results), "passed": sum(item["passed"] for item in self.results),
@@ -531,10 +545,16 @@ def main():
     parser.add_argument("--image", default="drone-low-altitude-agent:session-reliability-validation")
     parser.add_argument("--project")
     parser.add_argument("--output", type=Path)
-    parser.add_argument("--repeats", type=int, default=3)
-    parser.add_argument("--scenarios", nargs="+", choices=SCENARIOS, default=SCENARIOS)
+    parser.add_argument("--profile", choices=("smoke", "full"), default="full",
+                        help="smoke runs the PR regression set once; full runs all fault scenarios three times")
+    parser.add_argument("--repeats", type=int)
+    parser.add_argument("--scenarios", nargs="+", choices=SCENARIOS)
     parser.add_argument("--keep", action="store_true", help="Keep the disposable project for diagnosis")
     args = parser.parse_args()
+    if args.repeats is None:
+        args.repeats = 1 if args.profile == "smoke" else 3
+    if args.scenarios is None:
+        args.scenarios = SMOKE_SCENARIOS if args.profile == "smoke" else SCENARIOS
     if args.repeats < 1:
         parser.error("--repeats must be positive")
     suite = Suite(args)

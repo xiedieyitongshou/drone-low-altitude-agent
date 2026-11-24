@@ -1,0 +1,721 @@
+{
+  "generated_at": "2026-11-24T22:06:05.594378+08:00",
+  "baseline": "cdbb72d plus the uncommitted quality-gate working tree changes",
+  "source_sha256": {
+    ".github/workflows/ci.yml": "f4903def2fa8dedccb543f513f63dafd97f329fefb776ab80c827acdd962c569",
+    "frontend/package-lock.json": "00dbc7f080aba55ade46d161360a2876fa177c70480f314542b98066abf7c06a",
+    "frontend/playwright.config.ts": "13afd2213304057930ddf17fd2010104849e2a162e924bf50457f081805cab04",
+    "frontend/e2e/task-cancellation.spec.ts": "c4b08676a618fd2d5dca038e779400bb5e2801d13dadd7e40782b5bbc033e427",
+    "frontend/src/pages/MissionTasksPage.tsx": "6e9f965888b53d77c667d2d3a60f83adfb117863f79fd842f4546ff654f5f88c",
+    "scripts/session_reliability_eval.py": "714dcf8ef6052011989f847f45723823b74198d6cd10e3e13675bf90bf1e2b00",
+    "tests/test_session_reliability_runner.py": "9fcdf73f03541e04f6d62123ab0fdac765cc0b163a7f619af85e078d38a8615e"
+  },
+  "runs": {
+    "initial_full": {
+      "run_at": "2026-11-24T21:58:53.155278+08:00",
+      "project": "session-reliability-quality-full-20261124",
+      "code_commit": "cdbb72de7fd6399262f56d788004f5c4f755e0a0",
+      "image": "drone-low-altitude-agent:quality-gates-validation",
+      "image_id": "sha256:29715bd90dedf0fe15a95ea81179b71bf5e396d314d2d50cd154cb13943f05ea",
+      "source_sha256": {
+        "main.py": "6942b66e0ea5b749bd7a417647b5474ec5a1cd996d0803ab216a0e18838bd879",
+        "app/db/session.py": "9d90294cfb2e610729eec99291d98863da9b113d693bd6d09ed81d468e2b4d1e",
+        "app/services/task_orchestrator.py": "ab536623bf9980787020c0b88db97e94a990088bb1f5da3cda59b5d4703bb71b",
+        "app/services/session_execution.py": "cf9348e1f8fb2e5e5f5e912436c7d65a721f034b6145ddc772f3c46261c56ded",
+        "scripts/session_reliability_eval.py": "b15de3e62e5118f7d148e6990eba5fc81e41ec412dd11dd517d28bd8dc0af202",
+        "scripts/session_reliability_probe.py": "97b1eb5c46815ef241cd23e00569b040a01c2d6de0278efd67bca977f99c85ab",
+        "scripts/session_reliability_fixture.py": "ae2c4d7ff813bb2e9cc8aef480b1b9245470da69fdfce6d6102158065f274e3b",
+        "docker/session_reliability.compose.yml": "6002bb7be5ad6d1f5168921472eae7e4b7de9baa7f0814392e58c360fb4b15ee"
+      },
+      "profile": "full",
+      "repeats": 3,
+      "scenarios": [
+        "multiturn",
+        "app_restart",
+        "app_kill",
+        "cross_instance",
+        "postgres_restart",
+        "postgres_outage",
+        "postgres_expiry",
+        "redis_expiry",
+        "redis_outage",
+        "redis_restart",
+        "isolation",
+        "session_save_failure",
+        "concurrent_update",
+        "crash_before_session_write"
+      ],
+      "configuration": {
+        "authenticated_session": "PostgreSQL",
+        "anonymous_session": "Redis AOF",
+        "app_instances": 2,
+        "parser": "rule",
+        "llm": "disabled",
+        "weather": "real HTTP to deterministic local fixture",
+        "external_network": "disabled"
+      },
+      "summary": {
+        "cases": 42,
+        "passed": 41,
+        "restoration_eligible": 23,
+        "restoration_passed": 23,
+        "fields_checked": 278,
+        "fields_correct": 278
+      },
+      "by_scenario": {
+        "multiturn": {
+          "cases": 3,
+          "passed": 3,
+          "recovery_ms": {
+            "samples": [],
+            "median": null,
+            "max": null,
+            "p95": null
+          },
+          "continuation_latency_ms": []
+        },
+        "app_restart": {
+          "cases": 3,
+          "passed": 3,
+          "recovery_ms": {
+            "samples": [
+              5562.0,
+              5719.0,
+              6703.0
+            ],
+            "median": 5719.0,
+            "max": 6703.0,
+            "p95": null
+          },
+          "continuation_latency_ms": [
+            205.313,
+            322.783,
+            205.97
+          ]
+        },
+        "app_kill": {
+          "cases": 3,
+          "passed": 2,
+          "recovery_ms": {
+            "samples": [
+              5672.0,
+              6844.0
+            ],
+            "median": 6258.0,
+            "max": 6844.0,
+            "p95": null
+          },
+          "continuation_latency_ms": [
+            209.094,
+            237.866
+          ]
+        },
+        "cross_instance": {
+          "cases": 3,
+          "passed": 3,
+          "recovery_ms": {
+            "samples": [],
+            "median": null,
+            "max": null,
+            "p95": null
+          },
+          "continuation_latency_ms": [
+            234.426,
+            167.852,
+            150.84
+          ]
+        },
+        "postgres_restart": {
+          "cases": 3,
+          "passed": 3,
+          "recovery_ms": {
+            "samples": [
+              2281.0,
+              2734.0,
+              2844.0
+            ],
+            "median": 2734.0,
+            "max": 2844.0,
+            "p95": null
+          },
+          "continuation_latency_ms": [
+            200.271,
+            231.539,
+            353.394
+          ]
+        },
+        "postgres_outage": {
+          "cases": 3,
+          "passed": 3,
+          "recovery_ms": {
+            "samples": [
+              3984.0,
+              3875.0,
+              4625.0
+            ],
+            "median": 3984.0,
+            "max": 4625.0,
+            "p95": null
+          },
+          "continuation_latency_ms": [
+            202.409,
+            172.114,
+            197.812
+          ]
+        },
+        "postgres_expiry": {
+          "cases": 3,
+          "passed": 3,
+          "recovery_ms": {
+            "samples": [],
+            "median": null,
+            "max": null,
+            "p95": null
+          },
+          "continuation_latency_ms": []
+        },
+        "redis_expiry": {
+          "cases": 3,
+          "passed": 3,
+          "recovery_ms": {
+            "samples": [],
+            "median": null,
+            "max": null,
+            "p95": null
+          },
+          "continuation_latency_ms": []
+        },
+        "redis_outage": {
+          "cases": 3,
+          "passed": 3,
+          "recovery_ms": {
+            "samples": [
+              8203.0,
+              5078.0,
+              5343.0
+            ],
+            "median": 5343.0,
+            "max": 8203.0,
+            "p95": null
+          },
+          "continuation_latency_ms": [
+            57.976,
+            50.111,
+            52.318
+          ]
+        },
+        "redis_restart": {
+          "cases": 3,
+          "passed": 3,
+          "recovery_ms": {
+            "samples": [
+              2203.0,
+              1891.0,
+              2125.0
+            ],
+            "median": 2125.0,
+            "max": 2203.0,
+            "p95": null
+          },
+          "continuation_latency_ms": [
+            62.156,
+            48.184,
+            51.606
+          ]
+        },
+        "isolation": {
+          "cases": 3,
+          "passed": 3,
+          "recovery_ms": {
+            "samples": [],
+            "median": null,
+            "max": null,
+            "p95": null
+          },
+          "continuation_latency_ms": []
+        },
+        "session_save_failure": {
+          "cases": 3,
+          "passed": 3,
+          "recovery_ms": {
+            "samples": [],
+            "median": null,
+            "max": null,
+            "p95": null
+          },
+          "continuation_latency_ms": [
+            170.92,
+            147.214,
+            159.562
+          ]
+        },
+        "concurrent_update": {
+          "cases": 3,
+          "passed": 3,
+          "recovery_ms": {
+            "samples": [],
+            "median": null,
+            "max": null,
+            "p95": null
+          },
+          "continuation_latency_ms": []
+        },
+        "crash_before_session_write": {
+          "cases": 3,
+          "passed": 3,
+          "recovery_ms": {
+            "samples": [
+              8531.0,
+              7250.0,
+              8360.0
+            ],
+            "median": 8360.0,
+            "max": 8531.0,
+            "p95": null
+          },
+          "continuation_latency_ms": []
+        }
+      },
+      "source_report": "data/eval-reports/session-reliability/quality-gates-20261124/full/report.json",
+      "source_report_sha256": "91fa1386019ce567d6cf614a224bafdaeb3888e6004090331383b9236138b6ce",
+      "failed_cases": [
+        {
+          "id": "SR-app_kill-2",
+          "checks": [
+            {
+              "name": "scenario_completed",
+              "actual": "RuntimeError: Compose exec failed: ",
+              "expected": "completed",
+              "passed": false
+            }
+          ]
+        }
+      ],
+      "readiness_transport_failures": []
+    },
+    "final_smoke": {
+      "run_at": "2026-11-24T22:02:12.217760+08:00",
+      "project": "session-reliability-quality-smoke-final-20261124",
+      "code_commit": "cdbb72de7fd6399262f56d788004f5c4f755e0a0",
+      "image": "drone-low-altitude-agent:quality-gates-final-20261124",
+      "image_id": "sha256:054ab6cb9bc68648c98125fda63a6642c44527af3afca1364891fee592be06a2",
+      "source_sha256": {
+        "main.py": "6942b66e0ea5b749bd7a417647b5474ec5a1cd996d0803ab216a0e18838bd879",
+        "app/db/session.py": "9d90294cfb2e610729eec99291d98863da9b113d693bd6d09ed81d468e2b4d1e",
+        "app/services/task_orchestrator.py": "ab536623bf9980787020c0b88db97e94a990088bb1f5da3cda59b5d4703bb71b",
+        "app/services/session_execution.py": "cf9348e1f8fb2e5e5f5e912436c7d65a721f034b6145ddc772f3c46261c56ded",
+        "scripts/session_reliability_eval.py": "714dcf8ef6052011989f847f45723823b74198d6cd10e3e13675bf90bf1e2b00",
+        "scripts/session_reliability_probe.py": "97b1eb5c46815ef241cd23e00569b040a01c2d6de0278efd67bca977f99c85ab",
+        "scripts/session_reliability_fixture.py": "ae2c4d7ff813bb2e9cc8aef480b1b9245470da69fdfce6d6102158065f274e3b",
+        "docker/session_reliability.compose.yml": "6002bb7be5ad6d1f5168921472eae7e4b7de9baa7f0814392e58c360fb4b15ee"
+      },
+      "profile": "smoke",
+      "repeats": 1,
+      "scenarios": [
+        "app_restart",
+        "cross_instance",
+        "isolation",
+        "concurrent_update",
+        "postgres_expiry",
+        "redis_expiry",
+        "redis_restart",
+        "session_save_failure"
+      ],
+      "configuration": {
+        "authenticated_session": "PostgreSQL",
+        "anonymous_session": "Redis AOF",
+        "app_instances": 2,
+        "parser": "rule",
+        "llm": "disabled",
+        "weather": "real HTTP to deterministic local fixture",
+        "external_network": "disabled"
+      },
+      "summary": {
+        "cases": 8,
+        "passed": 8,
+        "restoration_eligible": 4,
+        "restoration_passed": 4,
+        "fields_checked": 41,
+        "fields_correct": 41
+      },
+      "by_scenario": {
+        "app_restart": {
+          "cases": 1,
+          "passed": 1,
+          "recovery_ms": {
+            "samples": [
+              6547.0
+            ],
+            "median": 6547.0,
+            "max": 6547.0,
+            "p95": null
+          },
+          "continuation_latency_ms": [
+            244.769
+          ]
+        },
+        "cross_instance": {
+          "cases": 1,
+          "passed": 1,
+          "recovery_ms": {
+            "samples": [],
+            "median": null,
+            "max": null,
+            "p95": null
+          },
+          "continuation_latency_ms": [
+            224.539
+          ]
+        },
+        "isolation": {
+          "cases": 1,
+          "passed": 1,
+          "recovery_ms": {
+            "samples": [],
+            "median": null,
+            "max": null,
+            "p95": null
+          },
+          "continuation_latency_ms": []
+        },
+        "concurrent_update": {
+          "cases": 1,
+          "passed": 1,
+          "recovery_ms": {
+            "samples": [],
+            "median": null,
+            "max": null,
+            "p95": null
+          },
+          "continuation_latency_ms": []
+        },
+        "postgres_expiry": {
+          "cases": 1,
+          "passed": 1,
+          "recovery_ms": {
+            "samples": [],
+            "median": null,
+            "max": null,
+            "p95": null
+          },
+          "continuation_latency_ms": []
+        },
+        "redis_expiry": {
+          "cases": 1,
+          "passed": 1,
+          "recovery_ms": {
+            "samples": [],
+            "median": null,
+            "max": null,
+            "p95": null
+          },
+          "continuation_latency_ms": []
+        },
+        "redis_restart": {
+          "cases": 1,
+          "passed": 1,
+          "recovery_ms": {
+            "samples": [
+              1859.0
+            ],
+            "median": 1859.0,
+            "max": 1859.0,
+            "p95": null
+          },
+          "continuation_latency_ms": [
+            64.038
+          ]
+        },
+        "session_save_failure": {
+          "cases": 1,
+          "passed": 1,
+          "recovery_ms": {
+            "samples": [],
+            "median": null,
+            "max": null,
+            "p95": null
+          },
+          "continuation_latency_ms": [
+            168.4
+          ]
+        }
+      },
+      "source_report": "data/eval-reports/session-reliability/quality-gates-20261124/smoke-final/report.json",
+      "source_report_sha256": "6769c4e305d5888dcabb60edab525f5ff6bfa247e542c0087ff0f842a6035d90",
+      "failed_cases": [],
+      "readiness_transport_failures": []
+    },
+    "final_full": {
+      "run_at": "2026-11-24T22:05:02.286433+08:00",
+      "project": "session-reliability-quality-full-final-20261124",
+      "code_commit": "cdbb72de7fd6399262f56d788004f5c4f755e0a0",
+      "image": "drone-low-altitude-agent:quality-gates-final-20261124",
+      "image_id": "sha256:054ab6cb9bc68648c98125fda63a6642c44527af3afca1364891fee592be06a2",
+      "source_sha256": {
+        "main.py": "6942b66e0ea5b749bd7a417647b5474ec5a1cd996d0803ab216a0e18838bd879",
+        "app/db/session.py": "9d90294cfb2e610729eec99291d98863da9b113d693bd6d09ed81d468e2b4d1e",
+        "app/services/task_orchestrator.py": "ab536623bf9980787020c0b88db97e94a990088bb1f5da3cda59b5d4703bb71b",
+        "app/services/session_execution.py": "cf9348e1f8fb2e5e5f5e912436c7d65a721f034b6145ddc772f3c46261c56ded",
+        "scripts/session_reliability_eval.py": "714dcf8ef6052011989f847f45723823b74198d6cd10e3e13675bf90bf1e2b00",
+        "scripts/session_reliability_probe.py": "97b1eb5c46815ef241cd23e00569b040a01c2d6de0278efd67bca977f99c85ab",
+        "scripts/session_reliability_fixture.py": "ae2c4d7ff813bb2e9cc8aef480b1b9245470da69fdfce6d6102158065f274e3b",
+        "docker/session_reliability.compose.yml": "6002bb7be5ad6d1f5168921472eae7e4b7de9baa7f0814392e58c360fb4b15ee"
+      },
+      "profile": "full",
+      "repeats": 3,
+      "scenarios": [
+        "multiturn",
+        "app_restart",
+        "app_kill",
+        "cross_instance",
+        "postgres_restart",
+        "postgres_outage",
+        "postgres_expiry",
+        "redis_expiry",
+        "redis_outage",
+        "redis_restart",
+        "isolation",
+        "session_save_failure",
+        "concurrent_update",
+        "crash_before_session_write"
+      ],
+      "configuration": {
+        "authenticated_session": "PostgreSQL",
+        "anonymous_session": "Redis AOF",
+        "app_instances": 2,
+        "parser": "rule",
+        "llm": "disabled",
+        "weather": "real HTTP to deterministic local fixture",
+        "external_network": "disabled"
+      },
+      "summary": {
+        "cases": 42,
+        "passed": 42,
+        "restoration_eligible": 24,
+        "restoration_passed": 24,
+        "fields_checked": 288,
+        "fields_correct": 288
+      },
+      "by_scenario": {
+        "multiturn": {
+          "cases": 3,
+          "passed": 3,
+          "recovery_ms": {
+            "samples": [],
+            "median": null,
+            "max": null,
+            "p95": null
+          },
+          "continuation_latency_ms": []
+        },
+        "app_restart": {
+          "cases": 3,
+          "passed": 3,
+          "recovery_ms": {
+            "samples": [
+              5562.0,
+              6406.0,
+              5859.0
+            ],
+            "median": 5859.0,
+            "max": 6406.0,
+            "p95": null
+          },
+          "continuation_latency_ms": [
+            248.676,
+            229.061,
+            253.654
+          ]
+        },
+        "app_kill": {
+          "cases": 3,
+          "passed": 3,
+          "recovery_ms": {
+            "samples": [
+              7109.0,
+              7047.0,
+              7156.0
+            ],
+            "median": 7109.0,
+            "max": 7156.0,
+            "p95": null
+          },
+          "continuation_latency_ms": [
+            221.668,
+            263.54,
+            259.241
+          ]
+        },
+        "cross_instance": {
+          "cases": 3,
+          "passed": 3,
+          "recovery_ms": {
+            "samples": [],
+            "median": null,
+            "max": null,
+            "p95": null
+          },
+          "continuation_latency_ms": [
+            226.996,
+            178.431,
+            175.695
+          ]
+        },
+        "postgres_restart": {
+          "cases": 3,
+          "passed": 3,
+          "recovery_ms": {
+            "samples": [
+              2578.0,
+              2125.0,
+              2187.0
+            ],
+            "median": 2187.0,
+            "max": 2578.0,
+            "p95": null
+          },
+          "continuation_latency_ms": [
+            214.065,
+            190.56,
+            214.048
+          ]
+        },
+        "postgres_outage": {
+          "cases": 3,
+          "passed": 3,
+          "recovery_ms": {
+            "samples": [
+              4125.0,
+              3765.0,
+              3906.0
+            ],
+            "median": 3906.0,
+            "max": 4125.0,
+            "p95": null
+          },
+          "continuation_latency_ms": [
+            198.197,
+            218.501,
+            209.403
+          ]
+        },
+        "postgres_expiry": {
+          "cases": 3,
+          "passed": 3,
+          "recovery_ms": {
+            "samples": [],
+            "median": null,
+            "max": null,
+            "p95": null
+          },
+          "continuation_latency_ms": []
+        },
+        "redis_expiry": {
+          "cases": 3,
+          "passed": 3,
+          "recovery_ms": {
+            "samples": [],
+            "median": null,
+            "max": null,
+            "p95": null
+          },
+          "continuation_latency_ms": []
+        },
+        "redis_outage": {
+          "cases": 3,
+          "passed": 3,
+          "recovery_ms": {
+            "samples": [
+              5328.0,
+              6172.0,
+              5219.0
+            ],
+            "median": 5328.0,
+            "max": 6172.0,
+            "p95": null
+          },
+          "continuation_latency_ms": [
+            59.397,
+            52.7,
+            49.803
+          ]
+        },
+        "redis_restart": {
+          "cases": 3,
+          "passed": 3,
+          "recovery_ms": {
+            "samples": [
+              2219.0,
+              2266.0,
+              1969.0
+            ],
+            "median": 2219.0,
+            "max": 2266.0,
+            "p95": null
+          },
+          "continuation_latency_ms": [
+            56.739,
+            53.735,
+            52.111
+          ]
+        },
+        "isolation": {
+          "cases": 3,
+          "passed": 3,
+          "recovery_ms": {
+            "samples": [],
+            "median": null,
+            "max": null,
+            "p95": null
+          },
+          "continuation_latency_ms": []
+        },
+        "session_save_failure": {
+          "cases": 3,
+          "passed": 3,
+          "recovery_ms": {
+            "samples": [],
+            "median": null,
+            "max": null,
+            "p95": null
+          },
+          "continuation_latency_ms": [
+            240.052,
+            219.352,
+            171.218
+          ]
+        },
+        "concurrent_update": {
+          "cases": 3,
+          "passed": 3,
+          "recovery_ms": {
+            "samples": [],
+            "median": null,
+            "max": null,
+            "p95": null
+          },
+          "continuation_latency_ms": []
+        },
+        "crash_before_session_write": {
+          "cases": 3,
+          "passed": 3,
+          "recovery_ms": {
+            "samples": [
+              8531.0,
+              8921.0,
+              8578.0
+            ],
+            "median": 8578.0,
+            "max": 8921.0,
+            "p95": null
+          },
+          "continuation_latency_ms": []
+        }
+      },
+      "source_report": "data/eval-reports/session-reliability/quality-gates-20261124/full-final/report.json",
+      "source_report_sha256": "24da6c3b19393d9edb488e753beaa41b5d21662909a863b75bb28b1fa8c6f8d1",
+      "failed_cases": [],
+      "readiness_transport_failures": []
+    }
+  }
+}
