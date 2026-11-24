@@ -1,3 +1,5 @@
+from task_api_helpers import versioned_task_payload
+
 from collections.abc import Generator
 from unittest.mock import Mock, patch
 
@@ -269,7 +271,7 @@ def test_task_evaluation_readback_and_cancellation(
     task_url = f"/tasks/{task_id}"
     evaluate_url = f"{task_url}/evaluate"
 
-    evaluation = api_client.post(evaluate_url, headers=owner_headers)
+    evaluation = api_client.post(evaluate_url, json=versioned_task_payload(api_client, task_id, owner_headers), headers=owner_headers)
     assert evaluation.status_code == 200
     result = evaluation.json()
     assert result["request"]["task_id"] == task_id
@@ -295,12 +297,12 @@ def test_task_evaluation_readback_and_cancellation(
     assert other_tasks.status_code == 200
     assert [item["id"] for item in other_tasks.json()["items"]] == [other_task_id]
     assert api_client.get(task_url, headers=other_headers).status_code == 404
-    assert api_client.post(evaluate_url, headers=other_headers).status_code == 403
+    assert api_client.post(evaluate_url, json=versioned_task_payload(api_client, task_id, other_headers), headers=other_headers).status_code == 403
 
-    cancelled = api_client.patch(f"{task_url}/status", headers=owner_headers, json={"status": "cancelled"})
+    cancelled = api_client.patch(f"{task_url}/status", headers=owner_headers, json=versioned_task_payload(api_client, task_id, owner_headers, {"status": "cancelled"}))
     assert cancelled.status_code == 200
     assert cancelled.json()["status"] == "cancelled"
-    assert api_client.post(evaluate_url, headers=owner_headers).status_code == 409
+    assert api_client.post(evaluate_url, json=versioned_task_payload(api_client, task_id, owner_headers), headers=owner_headers).status_code == 409
     evaluate.assert_called_once()
 
     cancelled_detail = api_client.get(task_url, headers=owner_headers)
@@ -334,7 +336,7 @@ def test_task_evaluation_history_requires_task_visibility(
     owner_token = task_history_tokens["owner"]
     task_id = create_task(api_client, owner_token)
     with patch("app.services.mission_task_execution.evaluate_cruise_request_with_artifacts", side_effect=build_artifacts):
-        evaluation = api_client.post(f"/tasks/{task_id}/evaluate", headers=auth_headers(owner_token))
+        evaluation = api_client.post(f"/tasks/{task_id}/evaluate", json=versioned_task_payload(api_client, task_id, auth_headers(owner_token)), headers=auth_headers(owner_token))
     assert evaluation.status_code == 200
     result = evaluation.json()
     request_id = result["request"]["request_id"]
@@ -372,7 +374,7 @@ def test_task_recommend_and_select_window_updates_schedule() -> None:
             recommend_response = client.post(
                 f"/tasks/{task_id}/recommend",
                 headers=auth_headers(tokens["user-a"]),
-                json={"scan_hours": 24, "min_window_hours": 2},
+                json=versioned_task_payload(client, task_id, auth_headers(tokens["user-a"]), {"scan_hours": 24, "min_window_hours": 2}),
             )
 
         assert recommend_response.status_code == 200
@@ -382,7 +384,7 @@ def test_task_recommend_and_select_window_updates_schedule() -> None:
         select_response = client.post(
             f"/tasks/{task_id}/select-window",
             headers=auth_headers(tokens["user-a"]),
-            json={"rank": 1},
+            json=versioned_task_payload(client, task_id, auth_headers(tokens["user-a"]), {"rank": 1}),
         )
         assert select_response.status_code == 200
         selected = select_response.json()
@@ -408,11 +410,11 @@ def test_task_operations_reject_missing_fields_and_other_users() -> None:
         )
         task_id = create_response.json()["id"]
 
-        missing_response = client.post(f"/tasks/{task_id}/evaluate", headers=auth_headers(tokens["user-a"]))
+        missing_response = client.post(f"/tasks/{task_id}/evaluate", json=versioned_task_payload(client, task_id, auth_headers(tokens["user-a"])), headers=auth_headers(tokens["user-a"]))
         assert missing_response.status_code == 422
         assert "location" in missing_response.json()["detail"]["missing_fields"]
 
-        other_user_response = client.post(f"/tasks/{task_id}/recommend", headers=auth_headers(tokens["user-b"]))
+        other_user_response = client.post(f"/tasks/{task_id}/recommend", json=versioned_task_payload(client, task_id, auth_headers(tokens["user-b"])), headers=auth_headers(tokens["user-b"]))
         assert other_user_response.status_code == 403
     finally:
         app.dependency_overrides.clear()
@@ -426,16 +428,16 @@ def test_preflight_check_creates_new_snapshot_and_overrides_latest_decision() ->
             assert client.post(
                 f"/tasks/{task_id}/recommend",
                 headers=auth_headers(tokens["user-a"]),
-                json={"scan_hours": 24, "min_window_hours": 2},
+                json=versioned_task_payload(client, task_id, auth_headers(tokens["user-a"]), {"scan_hours": 24, "min_window_hours": 2}),
             ).status_code == 200
         assert client.post(
             f"/tasks/{task_id}/select-window",
             headers=auth_headers(tokens["user-a"]),
-            json={"rank": 1},
+            json=versioned_task_payload(client, task_id, auth_headers(tokens["user-a"]), {"rank": 1}),
         ).status_code == 200
 
         with patch("app.services.mission_task_execution.evaluate_cruise_request_with_artifacts", side_effect=build_high_risk_artifacts):
-            response = client.post(f"/tasks/{task_id}/preflight-check", headers=auth_headers(tokens["user-a"]))
+            response = client.post(f"/tasks/{task_id}/preflight-check", json=versioned_task_payload(client, task_id, auth_headers(tokens["user-a"])), headers=auth_headers(tokens["user-a"]))
 
         assert response.status_code == 200
         payload = response.json()
@@ -479,11 +481,11 @@ def test_preflight_check_rejects_cancelled_task() -> None:
         cancel_response = client.patch(
             f"/tasks/{task_id}/status",
             headers=auth_headers(tokens["user-a"]),
-            json={"status": "cancelled"},
+            json=versioned_task_payload(client, task_id, auth_headers(tokens["user-a"]), {"status": "cancelled"}),
         )
         assert cancel_response.status_code == 200
 
-        response = client.post(f"/tasks/{task_id}/preflight-check", headers=auth_headers(tokens["user-a"]))
+        response = client.post(f"/tasks/{task_id}/preflight-check", json=versioned_task_payload(client, task_id, auth_headers(tokens["user-a"])), headers=auth_headers(tokens["user-a"]))
         assert response.status_code == 409
     finally:
         app.dependency_overrides.clear()

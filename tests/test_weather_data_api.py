@@ -1,3 +1,5 @@
+from task_api_helpers import versioned_task_payload
+
 from datetime import timedelta
 
 import httpx
@@ -188,12 +190,12 @@ def test_task_failure_keeps_the_last_successful_snapshot_and_status(weather_api)
     client, factory, headers, state, _, request, _ = weather_api
     task = client.post("/tasks", json={"title": "weather data check", **request}, headers=headers).json()
     task_id = task["id"]
-    assert client.post(f"/tasks/{task_id}/evaluate", headers=headers).status_code == 200
+    assert client.post(f"/tasks/{task_id}/evaluate", json=versioned_task_payload(client, task_id, headers), headers=headers).status_code == 200
     with factory() as db:
         record = db.get(MissionTask, task_id)
         before = (record.status, record.latest_request_id, record.latest_decision)
     state["fault"] = "missing"
-    failed = client.post(f"/tasks/{task_id}/evaluate", headers=headers)
+    failed = client.post(f"/tasks/{task_id}/evaluate", json=versioned_task_payload(client, task_id, headers), headers=headers)
     assert failed.status_code == 502, failed.text
     with factory() as db:
         record = db.get(MissionTask, task_id)

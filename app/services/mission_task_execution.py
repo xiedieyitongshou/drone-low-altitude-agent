@@ -31,6 +31,7 @@ from app.services.mission_task_state import (
     normalize_mission_task_status,
 )
 from app.services.recommendation_executor import build_recommendation_response
+from app.services.mission_task_versioning import MissionTaskVersionConflictError, check_task_version, task_write_transaction
 
 
 class MissionTaskMissingFieldsError(ValueError):
@@ -44,166 +45,123 @@ class MissionTaskWindowSelectionError(ValueError):
 
 
 def evaluate_mission_task(
-    *,
-    db: Session,
-    current_user: User,
-    task_id: str,
+    *, db: Session, current_user: User, task_id: str, expected_version: int | None = None,
 ) -> CruiseAssessmentResponse:
-    task = _get_owned_active_task(db=db, current_user=current_user, task_id=task_id)
-    payload = _build_evaluation_request(task)
-    artifacts = evaluate_cruise_request_with_artifacts(payload)
-    request_id = _new_request_id()
-    _persist_cruise_evaluation(
-        session=db,
-        request_id=request_id,
-        payload=payload,
-        artifacts=artifacts,
-        task_id=task.id,
-        user_id=current_user.id,
-    )
-    result = artifacts.response
-    result.request["request_id"] = request_id
-    result.request["task_id"] = task.id
-
-    task.latest_request_id = request_id
-    task.latest_decision = str(result.advice.overall_decision)
-    task.status = ensure_mission_task_status_transition(task.status, MissionTaskStatus.EVALUATED).value
-    task.updated_at = datetime.utcnow()
-    db.commit()
-    return result
+    return _assess_mission_task(db=db, current_user=current_user, task_id=task_id, expected_version=expected_version, preflight=False)
 
 
 def recommend_mission_task_windows(
-    *,
-    db: Session,
-    current_user: User,
-    task_id: str,
-    payload: MissionTaskRecommendRequest,
+    *, db: Session, current_user: User, task_id: str, payload: MissionTaskRecommendRequest,
 ) -> RecommendationResponse:
-    task = _get_owned_active_task(db=db, current_user=current_user, task_id=task_id)
-    request = _build_recommendation_request(task, payload)
-    result = build_recommendation_response(request)
-    result.request["task_id"] = task.id
-    task.metadata_json = {
-        **dict(task.metadata_json or {}),
-        "latest_recommendation": result.model_dump(mode="json"),
-    }
-    task.updated_at = datetime.utcnow()
-    db.commit()
-    return result
+    with task_write_transaction(db):
+        task = _get_owned_active_task(db=db, current_user=current_user, task_id=task_id, expected_version=payload.expected_version)
+        request = _build_recommendation_request(task, payload)
+        input_version = task.version
+        db.rollback()  # Release the read transaction while calling weather providers.
+        result = build_recommendation_response(request)
+        task = _get_owned_active_task(db=db, current_user=current_user, task_id=task_id, expected_version=input_version)
+        result.request.update(task_id=task_id, input_task_version=input_version, task_version=input_version + 1)
+        task.metadata_json = {**dict(task.metadata_json or {}), "latest_recommendation": result.model_dump(mode="json")}
+        task.updated_at = datetime.utcnow()
+        db.flush()  # Atomic UPDATE ... WHERE id=... AND version=input_version.
+        result.request["task_version"] = task.version
+        return result
 
 
 def select_mission_task_window(
-    *,
-    db: Session,
-    current_user: User,
-    task_id: str,
-    payload: MissionTaskSelectWindowRequest,
+    *, db: Session, current_user: User, task_id: str, payload: MissionTaskSelectWindowRequest,
 ) -> MissionTaskResponse:
-    task = _get_owned_active_task(db=db, current_user=current_user, task_id=task_id)
-    selected_window = _resolve_selected_window(task=task, payload=payload)
-    task.selected_window_json = selected_window
-    task.status = ensure_mission_task_status_transition(task.status, MissionTaskStatus.SCHEDULED).value
-    task.updated_at = datetime.utcnow()
-    db.commit()
-    db.refresh(task)
-    return to_mission_task_response(task)
+    with task_write_transaction(db):
+        if payload.expected_version is None:
+            raise MissionTaskVersionConflictError("选择窗口需要对应的任务版本，请重新获取推荐结果。")
+        task = _get_owned_active_task(db=db, current_user=current_user, task_id=task_id, expected_version=payload.expected_version)
+        selected_window = _resolve_selected_window(task=task, payload=payload)
+        task.selected_window_json = selected_window
+        task.status = ensure_mission_task_status_transition(task.status, MissionTaskStatus.SCHEDULED).value
+        task.latest_request_id = None
+        task.latest_trace_id = None
+        task.latest_conversation_id = None
+        task.latest_decision = None
+        metadata = dict(task.metadata_json or {})
+        metadata.pop("latest_preflight_check", None)
+        task.metadata_json = metadata
+        task.updated_at = datetime.utcnow()
+        db.flush()
+        return to_mission_task_response(task)
 
 
 def preflight_check_mission_task(
-    *,
-    db: Session,
-    current_user: User,
-    task_id: str,
+    *, db: Session, current_user: User, task_id: str, expected_version: int | None = None,
 ) -> CruiseAssessmentResponse:
-    task = _get_owned_active_task(db=db, current_user=current_user, task_id=task_id)
-    previous_status = task.status
-    payload = _build_preflight_request(task)
-    artifacts = evaluate_cruise_request_with_artifacts(payload)
-    request_id = _new_request_id()
-    observation = current_observation()
-    trace_id = observation.trace_id if observation else uuid4().hex
-    run_id = observation.run_id if observation else uuid4().hex
-    _persist_cruise_evaluation(
-        session=db,
-        request_id=request_id,
-        payload=payload,
-        artifacts=artifacts,
-        task_id=task.id,
-        request_type="preflight_check",
-        user_id=current_user.id,
-        trace_id=trace_id,
-    )
-    result = artifacts.response
-    result.request["request_id"] = request_id
-    result.request["task_id"] = task.id
-    result.request["request_type"] = "preflight_check"
-    result.request["trace_id"] = trace_id
+    return _assess_mission_task(db=db, current_user=current_user, task_id=task_id, expected_version=expected_version, preflight=True)
 
-    task.latest_request_id = request_id
-    task.latest_trace_id = trace_id
-    task.latest_decision = str(result.advice.overall_decision)
-    task.status = ensure_mission_task_status_transition(task.status, MissionTaskStatus.RECHECK).value
-    _record_preflight_events(
-        [
-            build_trace_event(
-                trace_id=trace_id,
-                run_id=run_id,
-                user_id=current_user.id,
-                event_type=TraceEventType.TOOL_CALL,
-                step_index=1,
-                status_before=previous_status,
-                tool_name="preflight_check",
-                input_payload=payload,
-                metadata={"task_id": task.id, "request_type": "preflight_check"},
-            ),
-            build_trace_event(
-                trace_id=trace_id,
-                run_id=run_id,
-                user_id=current_user.id,
-                event_type=TraceEventType.TOOL_RESULT,
-                step_index=2,
-                status_after=task.status,
-                tool_name="preflight_check",
-                output_payload={
-                    "request_id": request_id,
-                    "decision": str(result.advice.overall_decision),
-                    "risk_factors": list(result.advice.summary_risk_factors),
+
+def _assess_mission_task(
+    *, db: Session, current_user: User, task_id: str, expected_version: int | None, preflight: bool,
+) -> CruiseAssessmentResponse:
+    with task_write_transaction(db):
+        task = _get_owned_active_task(db=db, current_user=current_user, task_id=task_id, expected_version=expected_version)
+        target = MissionTaskStatus.RECHECK if preflight else MissionTaskStatus.EVALUATED
+        ensure_mission_task_status_transition(task.status, target)
+        previous_status, input_version, owner_id = task.status, task.version, current_user.id
+        payload = _build_preflight_request(task) if preflight else _build_evaluation_request(task)
+        db.rollback()
+        artifacts = evaluate_cruise_request_with_artifacts(payload)
+        task = _get_owned_active_task(db=db, current_user=current_user, task_id=task_id, expected_version=input_version)
+        request_id = _new_request_id()
+        result = artifacts.response
+        result.request.update(request_id=request_id, task_id=task_id, input_task_version=input_version)
+        task.latest_request_id = request_id
+        task.latest_decision = str(result.advice.overall_decision)
+        task.status = ensure_mission_task_status_transition(task.status, target).value
+        task.updated_at = datetime.utcnow()
+        trace_id = None
+        if preflight:
+            observation = current_observation()
+            trace_id = observation.trace_id if observation else uuid4().hex
+            run_id = observation.run_id if observation else uuid4().hex
+            result.request.update(request_type="preflight_check", trace_id=trace_id)
+            task.latest_trace_id = trace_id
+            task.metadata_json = {
+                **dict(task.metadata_json or {}),
+                "latest_preflight_check": {
+                    "request_id": request_id, "trace_id": trace_id,
+                    "decision": str(result.advice.overall_decision), "checked_at": datetime.utcnow().isoformat(),
                 },
-                metadata={"task_id": task.id, "request_type": "preflight_check"},
-            ),
-            build_trace_event(
-                trace_id=trace_id,
-                run_id=run_id,
-                user_id=current_user.id,
-                event_type=TraceEventType.STATE_UPDATE,
-                step_index=3,
-                status_before=previous_status,
-                status_after=task.status,
-                output_payload={
-                    "latest_request_id": request_id,
-                    "latest_trace_id": trace_id,
-                    "latest_decision": str(result.advice.overall_decision),
-                },
-                metadata={"task_id": task.id, "request_type": "preflight_check"},
-            ),
-        ],
-        db=db,
-        task_id=task.id,
-        commit=False,
-    )
-    task.metadata_json = {
-        **dict(task.metadata_json or {}),
-        "latest_preflight_check": {
-            "request_id": request_id,
-            "trace_id": trace_id,
-            "decision": str(result.advice.overall_decision),
-            "checked_at": datetime.utcnow().isoformat(),
-        },
-    }
-    task.updated_at = datetime.utcnow()
-    db.commit()
-    return result
+            }
+        db.flush()
+        result.request["task_version"] = task.version
+        _persist_cruise_evaluation(
+            session=db, request_id=request_id, payload=payload, artifacts=artifacts,
+            task_id=task_id, user_id=owner_id, trace_id=trace_id,
+            request_type="preflight_check" if preflight else "evaluate", task_version=input_version,
+        )
+        if preflight:
+            _record_preflight_events([
+                build_trace_event(
+                    trace_id=trace_id, run_id=run_id, user_id=owner_id,
+                    event_type=TraceEventType.TOOL_CALL, step_index=1, status_before=previous_status,
+                    tool_name="preflight_check", input_payload=payload,
+                    metadata={"task_id": task_id, "request_type": "preflight_check", "input_task_version": input_version},
+                ),
+                build_trace_event(
+                    trace_id=trace_id, run_id=run_id, user_id=owner_id,
+                    event_type=TraceEventType.TOOL_RESULT, step_index=2, status_after=task.status,
+                    tool_name="preflight_check", output_payload={
+                        "request_id": request_id, "decision": str(result.advice.overall_decision),
+                        "risk_factors": list(result.advice.summary_risk_factors),
+                    }, metadata={"task_id": task_id, "request_type": "preflight_check"},
+                ),
+                build_trace_event(
+                    trace_id=trace_id, run_id=run_id, user_id=owner_id,
+                    event_type=TraceEventType.STATE_UPDATE, step_index=3,
+                    status_before=previous_status, status_after=task.status,
+                    output_payload={"latest_request_id": request_id, "latest_trace_id": trace_id,
+                                    "latest_decision": task.latest_decision, "task_version": task.version},
+                    metadata={"task_id": task_id, "request_type": "preflight_check"},
+                ),
+            ], db=db, task_id=task_id, commit=False)
+        return result
 
 
 def _record_preflight_events(events, *, db: Session, task_id: str, commit: bool) -> None:
@@ -216,12 +174,13 @@ def _record_preflight_events(events, *, db: Session, task_id: str, commit: bool)
         observation.record(event)
 
 
-def _get_owned_active_task(*, db: Session, current_user: User, task_id: str) -> MissionTask:
-    task = db.get(MissionTask, task_id)
+def _get_owned_active_task(*, db: Session, current_user: User, task_id: str, expected_version: int | None = None) -> MissionTask:
+    task = db.get(MissionTask, task_id, populate_existing=True)
     if task is None:
         raise MissionTaskNotFoundError("mission task not found")
     if task.user_id != current_user.id:
         raise MissionTaskPermissionError("cannot operate another user's mission task")
+    check_task_version(task, expected_version)
     if normalize_mission_task_status(task.status) in TERMINAL_MISSION_TASK_STATUSES:
         raise MissionTaskLockedError("completed or cancelled mission tasks cannot run scheduling operations")
     return task

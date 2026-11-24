@@ -19,7 +19,10 @@ from redis.exceptions import RedisError
 
 from app.core.config import load_environment
 from app.services.idempotency import IdempotencyError
+from app.services.mission_task_versioning import MissionTaskVersionConflictError, require_task_version
+from app.schemas.mission_task import MissionTaskVersionRequest
 from app.db.models import User
+from app.db.migrations import upgrade_database_to_head
 from app.dependencies import get_current_user, get_db
 from app.dependencies.auth import bearer_scheme, require_admin_user
 from app.schemas import (
@@ -201,6 +204,8 @@ logger = logging.getLogger(settings.app_name)
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     logger.info("Application starting")
+    if os.getenv("AUTO_MIGRATE_ON_STARTUP", "true").lower() == "true":
+        await asyncio.to_thread(upgrade_database_to_head)
     cleanup_task = asyncio.create_task(run_database_session_cleanup())
     try:
         yield
@@ -248,6 +253,12 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
         message="internal server error",
     )
     return JSONResponse(status_code=500, content=payload.model_dump())
+
+
+@app.exception_handler(MissionTaskVersionConflictError)
+async def task_version_exception_handler(request: Request, exc: MissionTaskVersionConflictError) -> JSONResponse:
+    payload = ErrorResponse(error_code=exc.error_code, message=str(exc))
+    return JSONResponse(status_code=exc.status_code, content=payload.model_dump())
 
 
 @app.exception_handler(IdempotencyError)
@@ -479,6 +490,7 @@ def patch_my_mission_task(
     db: Session = Depends(get_db),
 ) -> MissionTaskResponse:
     try:
+        require_task_version(payload.expected_version)
         return update_mission_task(db=db, current_user=current_user, task_id=task_id, payload=payload)
     except Exception as exc:
         handle_mission_task_error(exc)
@@ -492,6 +504,7 @@ def patch_my_mission_task_status(
     db: Session = Depends(get_db),
 ) -> MissionTaskResponse:
     try:
+        require_task_version(payload.expected_version)
         return update_mission_task_status(db=db, current_user=current_user, task_id=task_id, payload=payload)
     except Exception as exc:
         handle_mission_task_error(exc)
@@ -502,9 +515,11 @@ def evaluate_my_mission_task(
     task_id: str,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    payload: MissionTaskVersionRequest | None = None,
 ) -> CruiseAssessmentResponse:
     try:
-        return evaluate_mission_task(db=db, current_user=current_user, task_id=task_id)
+        version = require_task_version(payload.expected_version if payload else None)
+        return evaluate_mission_task(db=db, current_user=current_user, task_id=task_id, expected_version=version)
     except Exception as exc:
         handle_mission_task_error(exc)
 
@@ -517,6 +532,7 @@ def recommend_my_mission_task_windows(
     db: Session = Depends(get_db),
 ) -> RecommendationResponse:
     try:
+        require_task_version(payload.expected_version if payload else None)
         return recommend_mission_task_windows(
             db=db,
             current_user=current_user,
@@ -535,6 +551,7 @@ def select_my_mission_task_window(
     db: Session = Depends(get_db),
 ) -> MissionTaskResponse:
     try:
+        require_task_version(payload.expected_version)
         return select_mission_task_window(db=db, current_user=current_user, task_id=task_id, payload=payload)
     except Exception as exc:
         handle_mission_task_error(exc)
@@ -545,9 +562,11 @@ def preflight_check_my_mission_task(
     task_id: str,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    payload: MissionTaskVersionRequest | None = None,
 ) -> CruiseAssessmentResponse:
     try:
-        return preflight_check_mission_task(db=db, current_user=current_user, task_id=task_id)
+        version = require_task_version(payload.expected_version if payload else None)
+        return preflight_check_mission_task(db=db, current_user=current_user, task_id=task_id, expected_version=version)
     except Exception as exc:
         handle_mission_task_error(exc)
 

@@ -74,6 +74,28 @@ def current_agent_operation_id() -> str | None:
     return _agent_operation.get()
 
 
+def bind_agent_task_version(*, db: Session, user_id: str, task_id: str, action: str, version: int) -> int:
+    """A retry must not silently upgrade the version used by its first attempt."""
+    from app.services.mission_task_versioning import MissionTaskVersionConflictError
+
+    operation_id = current_agent_operation_id()
+    if operation_id is None:
+        return version
+    operation = "agent.task.version"
+    previous = db.scalar(select(OperationRequest).where(
+        OperationRequest.user_id == user_id, OperationRequest.operation == operation,
+        OperationRequest.idempotency_key == operation_id,
+    ))
+    if previous is not None:
+        if previous.request_json["task_id"] != task_id or previous.request_json["action"] != action:
+            raise MissionTaskVersionConflictError()
+        return previous.request_json["expected_version"]
+    claim_operation(db=db, user_id=user_id, operation=operation, key=operation_id,
+                    payload={"task_id": task_id, "action": action, "expected_version": version})
+    db.commit()
+    return version
+
+
 @contextmanager
 def agent_operation(operation_id: str):
     token = _agent_operation.set(operation_id)

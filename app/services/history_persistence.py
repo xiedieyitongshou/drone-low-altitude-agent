@@ -65,11 +65,14 @@ def _persist_cruise_evaluation(
     request_type: str = "evaluate",
     user_id: str | None = None,
     trace_id: str | None = None,
+    task_version: int | None = None,
 ) -> None:
     observation = current_observation()
     user_id = user_id or (observation.user_id if observation else None)
     trace_id = trace_id or (observation.trace_id if observation else None)
     raw_request = payload.model_dump()
+    if task_version is not None:
+        raw_request["input_task_version"] = task_version
     if trace_id:
         raw_request["trace_id"] = trace_id
     task_request = TaskRequest(

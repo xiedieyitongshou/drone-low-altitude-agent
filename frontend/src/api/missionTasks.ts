@@ -40,28 +40,30 @@ export async function updateMissionTask(taskId: string, payload: MissionTaskUpda
   return response.data
 }
 
-export async function updateMissionTaskStatus(taskId: string, status: MissionTaskStatus) {
+export async function updateMissionTaskStatus(taskId: string, status: MissionTaskStatus, expectedVersion: number) {
   const response = await apiClient.patch<MissionTaskResponse>(
     `/tasks/${encodeURIComponent(taskId)}/status`,
-    { status },
+    { status, expected_version: expectedVersion },
   )
   return response.data
 }
 
-export async function evaluateMissionTask(taskId: string) {
+export async function evaluateMissionTask(taskId: string, expectedVersion: number) {
   const response = await apiClient.post<CruiseAssessmentResponse>(
     `/tasks/${encodeURIComponent(taskId)}/evaluate`,
+    { expected_version: expectedVersion },
   )
   return response.data
 }
 
 export async function recommendMissionTaskWindows(
   taskId: string,
+  expectedVersion: number,
   payload: MissionTaskRecommendRequest = {},
 ) {
   const response = await apiClient.post<RecommendationResponse>(
     `/tasks/${encodeURIComponent(taskId)}/recommend`,
-    payload,
+    { ...payload, expected_version: expectedVersion },
   )
   return response.data
 }
@@ -77,9 +79,10 @@ export async function selectMissionTaskWindow(
   return response.data
 }
 
-export async function preflightCheckMissionTask(taskId: string) {
+export async function preflightCheckMissionTask(taskId: string, expectedVersion: number) {
   const response = await apiClient.post<CruiseAssessmentResponse>(
     `/tasks/${encodeURIComponent(taskId)}/preflight-check`,
+    { expected_version: expectedVersion },
   )
   return response.data
 }

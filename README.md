@@ -71,9 +71,10 @@ if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 docker compose up -d --wait postgres redis
 .\.venv\Scripts\activate
 python -m pip install -r requirements.txt
-python -m alembic upgrade head
 python -m uvicorn main:app --reload
 ```
+
+后端启动时默认自动检查数据库版本并应用待执行的迁移，数据库已是最新时直接启动；本机运行也不需要另行手动更新表结构。
 
 本机通过 `127.0.0.1:5432` 访问 Compose 的 PostgreSQL。要使用 SQLite，在 `.env` 设置 `DATABASE_URL=sqlite:///./data/drone_agent.db` 后重启后端。两种数据库各自存储数据，有旧数据时可执行迁移。[本地配置与切换](docs/本地开发与测试说明.md)
 

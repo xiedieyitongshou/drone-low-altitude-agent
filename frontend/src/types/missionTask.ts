@@ -17,7 +17,7 @@ export type MissionTaskCreateRequest = {
   profile_context?: Record<string, JsonValue>
 }
 
-export type MissionTaskUpdateRequest = Partial<Omit<MissionTaskCreateRequest, 'profile_context'>>
+export type MissionTaskUpdateRequest = Partial<Omit<MissionTaskCreateRequest, 'profile_context'>> & { expected_version: number }
 
 export type MissionTaskRecommendRequest = {
   scan_hours?: number
@@ -25,12 +25,14 @@ export type MissionTaskRecommendRequest = {
 }
 
 export type MissionTaskSelectWindowRequest = {
+  expected_version: number
   rank?: number
   window?: RecommendationWindow
 }
 
 export type MissionTaskResponse = {
   id: string
+  version: number | null
   user_id: string
   title: string
   purpose?: string | null

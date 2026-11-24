@@ -1,3 +1,5 @@
+from task_api_helpers import versioned_task_payload
+
 from collections.abc import Generator
 from datetime import datetime
 
@@ -133,7 +135,7 @@ def test_user_can_create_list_get_and_patch_own_task() -> None:
 
         patch_response = client.patch(
             f"/tasks/{task_id}",
-            json={"title": "Updated task", "task_type": "survey"},
+            json=versioned_task_payload(client, task_id, auth_headers(tokens["user-a"]), {"title": "Updated task", "task_type": "survey"}),
             headers=auth_headers(tokens["user-a"]),
         )
         assert patch_response.status_code == 200
@@ -164,14 +166,14 @@ def test_user_cannot_read_or_modify_another_users_task() -> None:
 
         patch_response = client.patch(
             f"/tasks/{task_id}",
-            json={"title": "illegal update"},
+            json=versioned_task_payload(client, task_id, auth_headers(tokens["user-b"]), {"title": "illegal update"}),
             headers=auth_headers(tokens["user-b"]),
         )
         assert patch_response.status_code == 404
 
         status_response = client.patch(
             f"/tasks/{task_id}/status",
-            json={"status": "cancelled"},
+            json=versioned_task_payload(client, task_id, auth_headers(tokens["user-b"]), {"status": "cancelled"}),
             headers=auth_headers(tokens["user-b"]),
         )
         assert status_response.status_code == 404
@@ -191,7 +193,7 @@ def test_status_transition_and_terminal_task_locking() -> None:
 
         evaluated_response = client.patch(
             f"/tasks/{task_id}/status",
-            json={"status": "evaluated"},
+            json=versioned_task_payload(client, task_id, auth_headers(tokens["user-a"]), {"status": "evaluated"}),
             headers=auth_headers(tokens["user-a"]),
         )
         assert evaluated_response.status_code == 200
@@ -199,21 +201,21 @@ def test_status_transition_and_terminal_task_locking() -> None:
 
         completed_response = client.patch(
             f"/tasks/{task_id}/status",
-            json={"status": "completed"},
+            json=versioned_task_payload(client, task_id, auth_headers(tokens["user-a"]), {"status": "completed"}),
             headers=auth_headers(tokens["user-a"]),
         )
         assert completed_response.status_code == 409
 
         scheduled_response = client.patch(
             f"/tasks/{task_id}/status",
-            json={"status": "scheduled"},
+            json=versioned_task_payload(client, task_id, auth_headers(tokens["user-a"]), {"status": "scheduled"}),
             headers=auth_headers(tokens["user-a"]),
         )
         assert scheduled_response.status_code == 200
 
         completed_response = client.patch(
             f"/tasks/{task_id}/status",
-            json={"status": "completed"},
+            json=versioned_task_payload(client, task_id, auth_headers(tokens["user-a"]), {"status": "completed"}),
             headers=auth_headers(tokens["user-a"]),
         )
         assert completed_response.status_code == 200
@@ -221,14 +223,14 @@ def test_status_transition_and_terminal_task_locking() -> None:
 
         patch_response = client.patch(
             f"/tasks/{task_id}",
-            json={"title": "should be locked"},
+            json=versioned_task_payload(client, task_id, auth_headers(tokens["user-a"]), {"title": "should be locked"}),
             headers=auth_headers(tokens["user-a"]),
         )
         assert patch_response.status_code == 409
 
         reopen_response = client.patch(
             f"/tasks/{task_id}/status",
-            json={"status": "scheduled"},
+            json=versioned_task_payload(client, task_id, auth_headers(tokens["user-a"]), {"status": "scheduled"}),
             headers=auth_headers(tokens["user-a"]),
         )
         assert reopen_response.status_code == 409
@@ -263,7 +265,7 @@ def test_admin_can_audit_task_list_and_detail() -> None:
 
         patch_response = client.patch(
             f"/tasks/{task_id}",
-            json={"title": "admin should not mutate audited task"},
+            json=versioned_task_payload(client, task_id, auth_headers(tokens["admin-a"]), {"title": "admin should not mutate audited task"}),
             headers=auth_headers(tokens["admin-a"]),
         )
         assert patch_response.status_code == 403

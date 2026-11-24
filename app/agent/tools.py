@@ -25,6 +25,7 @@ from app.services.history_persistence import persist_cruise_evaluation
 from app.services.run_observability import current_observation
 from app.services.weather.exceptions import WeatherDataError
 from app.services.mission_task_management import create_mission_task
+from app.services.mission_task_versioning import MissionTaskVersionConflictError
 from app.services.recommendation_executor import build_recommendation_response
 from app.services.risk_rule_explainer import explain_risk_rules
 
@@ -49,6 +50,8 @@ class ToolExecutionContext:
     tenant_id: str | None = None
     role: str | None = None
     db: Session | None = None
+    task_version: int | None = None
+    has_recommended_windows: bool = False
 
 
 class ToolSpec(BaseModel):
@@ -133,6 +136,8 @@ class ToolRegistry:
                 success=False, tool_name=name, error_code=exc.error_code, message=str(exc),
                 metadata={"weather_data": {"details": exc.details}, "retryable": exc.retryable},
             )
+        except MissionTaskVersionConflictError as exc:
+            return ToolResult(success=False, tool_name=name, error_code=exc.error_code, message=str(exc))
         except ValidationError as exc:
             return ToolResult(
                 success=False,
@@ -407,6 +412,7 @@ def _recommend_mission_task_windows(payload: dict[str, Any], context: ToolExecut
         task_id = _require_task_id(payload)
         request = MissionTaskRecommendRequest.model_validate(
             {
+                "expected_version": _task_operation_version(db, current_user, context, payload, "recommend_task"),
                 "scan_hours": payload.get("scan_hours") or 72,
                 "min_window_hours": payload.get("min_window_hours") or 2,
             }
@@ -424,6 +430,7 @@ def _select_mission_task_window(payload: dict[str, Any], context: ToolExecutionC
         task_id = _require_task_id(payload)
         request = MissionTaskSelectWindowRequest.model_validate(
             {
+                "expected_version": _task_operation_version(db, current_user, context, payload, "select_task_window"),
                 "rank": payload.get("rank") or payload.get("window_rank"),
                 "window": payload.get("window"),
             }
@@ -442,9 +449,31 @@ def _preflight_check_mission_task(payload: dict[str, Any], context: ToolExecutio
 def _call_task_action(payload: dict[str, Any], context: ToolExecutionContext, handler: Callable[..., Any]) -> Any:
     def call(db: Session) -> Any:
         current_user = _get_current_tool_user(db, context)
-        return handler(db=db, current_user=current_user, task_id=_require_task_id(payload))
+        version = _task_operation_version(db, current_user, context, payload, handler.__name__)
+        return handler(db=db, current_user=current_user, task_id=_require_task_id(payload), expected_version=version)
 
     return _with_tool_db(context, call)
+
+
+def _task_operation_version(db: Session, user: User, context: ToolExecutionContext, payload: dict, action: str) -> int:
+    from app.services.idempotency import bind_agent_task_version
+    from app.db.models import MissionTask
+    from app.services.mission_task_management import MissionTaskNotFoundError, MissionTaskPermissionError, _ensure_not_terminal
+    from app.services.mission_task_versioning import check_task_version
+
+    task_id = _require_task_id(payload)
+    task = db.get(MissionTask, task_id, populate_existing=True)
+    if task is None:
+        raise MissionTaskNotFoundError("mission task not found")
+    if task.user_id != user.id:
+        raise MissionTaskPermissionError("cannot operate another user's mission task")
+    if action == "select_task_window" and (context.task_version is None or not context.has_recommended_windows):
+        raise MissionTaskVersionConflictError("当前会话缺少推荐结果的任务版本，请重新推荐窗口。")
+    version = context.task_version if context.task_version is not None else task.version
+    version = bind_agent_task_version(db=db, user_id=user.id, task_id=task_id, action=action, version=version)
+    check_task_version(task, version)
+    _ensure_not_terminal(task)
+    return version
 
 
 def _with_tool_db(context: ToolExecutionContext, callback: Callable[[Session], Any]) -> Any:

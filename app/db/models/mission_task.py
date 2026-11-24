@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import uuid4
 
-from sqlalchemy import DateTime, ForeignKey, Index, JSON, String, Text
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, JSON, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -21,6 +21,8 @@ class MissionTask(Base):
     title: Mapped[str] = mapped_column(String(255))
     purpose: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(String(32), default="draft", index=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default="1")
+    __mapper_args__ = {"version_id_col": version}
     location_text: Mapped[str | None] = mapped_column(String(255), nullable=True)
     task_date: Mapped[str | None] = mapped_column(String(32), nullable=True)
     start_time: Mapped[str | None] = mapped_column(String(32), nullable=True)

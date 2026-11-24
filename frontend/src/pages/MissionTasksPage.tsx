@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { isAxiosError } from 'axios'
 import type { FormEvent } from 'react'
 import {
   createMissionTask,
@@ -24,6 +25,7 @@ import type {
   MissionTaskStatus,
 } from '../types/missionTask'
 import { useAuth } from '../auth/useAuth'
+import { taskResultVersion, canApplyTaskResult } from '../utils/taskVersion'
 import { beginSubmission, completeSubmission, latestPendingSubmission } from '../utils/idempotency'
 import type { RecommendationResponse } from '../types/recommendation'
 
@@ -101,7 +103,9 @@ export function MissionTasksPage() {
   const [isLoadingList, setIsLoadingList] = useState(false)
   const [isLoadingDetail, setIsLoadingDetail] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [runningAction, setRunningAction] = useState('')
+  const [runningActions, setRunningActions] = useState<Set<string>>(new Set())
+  const selectedTaskRef = useRef<MissionTaskDetailResponse | null>(null)
+  const selectedTaskIdRef = useRef('')
 
   useEffect(() => {
     void loadTasks(page)
@@ -130,8 +134,12 @@ export function MissionTasksPage() {
       setTotal(response.total)
       setPage(response.page)
       if (selectedTaskId && response.items.every((item) => item.id !== selectedTaskId)) {
-        setSelectedTask(null)
-        setSelectedTaskId('')
+        if (selectedTaskIdRef.current === selectedTaskId) {
+          selectedTaskRef.current = null
+          selectedTaskIdRef.current = ''
+          setSelectedTask(null)
+          setSelectedTaskId('')
+        }
       }
     } catch (error) {
       setErrorMessage(formatError(error, '加载任务列表失败'))
@@ -149,11 +157,18 @@ export function MissionTasksPage() {
 
     try {
       const detail = await getMissionTask(taskId)
+      if (selectedTaskIdRef.current !== taskId) return null
+      const current = selectedTaskRef.current
+      if (current?.id === detail.id && (current.version ?? 0) > (detail.version ?? 0)) return current
+      selectedTaskRef.current = detail
       setSelectedTask(detail)
       setSelectedTaskId(detail.id)
+      setLastAction((action) => action && taskResultVersion(action.result) === detail.version ? action : null)
       void loadTaskArtifacts(detail.request_ids)
+      return detail
     } catch (error) {
-      setErrorMessage(formatError(error, '加载任务详情失败'))
+      if (selectedTaskIdRef.current === taskId) setErrorMessage(formatError(error, '加载任务详情失败'))
+      return null
     } finally {
       setIsLoadingDetail(false)
     }
@@ -208,6 +223,7 @@ export function MissionTasksPage() {
       const created = await createMissionTask(submission.payload, submission.key)
       completeSubmission('task.create', user.id, submission.key)
       setForm(initialForm)
+      selectedTaskIdRef.current = created.id
       setLastAction({ kind: 'task', result: created })
       setSuccessMessage('任务单已创建')
       await loadTasks(1, keyword, statusFilter)
@@ -220,30 +236,59 @@ export function MissionTasksPage() {
   }
 
   async function handleSelectTask(taskId: string) {
+    selectedTaskIdRef.current = taskId
+    selectedTaskRef.current = null
     setSelectedTaskId(taskId)
     setLastAction(null)
     await refreshSelectedTask(taskId)
   }
 
   async function runTaskAction(action: string, callback: () => Promise<LastAction>) {
-    if (!selectedTask) {
-      return
-    }
-    setRunningAction(action)
+    if (!selectedTask || runningActions.has(action)) return
+    const taskId = selectedTask.id
+    setRunningActions((current) => new Set(current).add(action))
     setErrorMessage('')
     setSuccessMessage('')
-
     try {
       const result = await callback()
-      setLastAction(result)
-      setSuccessMessage(actionSuccessText(action))
-      await refreshSelectedTask(selectedTask.id)
-      await loadTasks(page, keyword, statusFilter)
+      const detail = await refreshSelectedTask(taskId)
+      if (selectedTaskIdRef.current !== taskId) return
+      if (!detail) {
+        setLastAction(null)
+        setErrorMessage('操作已处理，但任务详情刷新失败，请刷新任务确认最新状态。')
+        return
+      }
+      if (result && detail && (result.kind === 'task'
+        ? taskResultVersion(result.result) === detail.version
+        : canApplyTaskResult(result.result, detail))) {
+        setLastAction(result)
+        setSuccessMessage(actionSuccessText(action))
+      } else {
+        setLastAction(null)
+        setSuccessMessage('任务已有后续变更，已显示最新状态。')
+      }
+      await loadTasks(page)
     } catch (error) {
+      if (selectedTaskIdRef.current !== taskId) return
+      if (isAxiosError(error) && error.response?.status === 409) {
+        setLastAction(null)
+        await refreshSelectedTask(taskId)
+        await loadTasks(page)
+      }
       setErrorMessage(formatError(error, actionSuccessText(action, true)))
     } finally {
-      setRunningAction('')
+      setRunningActions((current) => {
+        const next = new Set(current)
+        next.delete(action)
+        return next
+      })
     }
+  }
+
+  function currentTaskVersion(task: MissionTaskDetailResponse) {
+    const version = taskResultVersion(task)
+    if (version === null) throw new Error('请刷新任务后重新操作。')
+    return version
   }
 
   function canRunSchedulingAction(task: MissionTaskDetailResponse | null) {
@@ -496,48 +541,48 @@ export function MissionTasksPage() {
             <div className="mission-action-row">
               <button
                 type="button"
-                disabled={!canRunSchedulingAction(selectedTask) || runningAction === 'evaluate'}
+                disabled={!canRunSchedulingAction(selectedTask) || runningActions.has('evaluate')}
                 onClick={() =>
                   void runTaskAction('evaluate', async () => ({
                     kind: 'evaluation',
-                    result: await evaluateMissionTask(selectedTask.id),
+                    result: await evaluateMissionTask(selectedTask.id, currentTaskVersion(selectedTask)),
                   }))
                 }
               >
-                {runningAction === 'evaluate' ? '评估中...' : '评估'}
+                {runningActions.has('evaluate') ? '评估中...' : '评估'}
               </button>
               <button
                 type="button"
-                disabled={!canRunSchedulingAction(selectedTask) || runningAction === 'recommend'}
+                disabled={!canRunSchedulingAction(selectedTask) || runningActions.has('recommend')}
                 onClick={() =>
                   void runTaskAction('recommend', async () => ({
                     kind: 'recommendation',
-                    result: await recommendMissionTaskWindows(selectedTask.id),
+                    result: await recommendMissionTaskWindows(selectedTask.id, currentTaskVersion(selectedTask)),
                   }))
                 }
               >
-                {runningAction === 'recommend' ? '推荐中...' : '推荐窗口'}
+                {runningActions.has('recommend') ? '推荐中...' : '推荐窗口'}
               </button>
               <button
                 type="button"
-                disabled={!canRunSchedulingAction(selectedTask) || runningAction === 'preflight'}
+                disabled={!canRunSchedulingAction(selectedTask) || runningActions.has('preflight')}
                 onClick={() =>
                   void runTaskAction('preflight', async () => ({
                     kind: 'evaluation',
-                    result: await preflightCheckMissionTask(selectedTask.id),
+                    result: await preflightCheckMissionTask(selectedTask.id, currentTaskVersion(selectedTask)),
                   }))
                 }
               >
-                {runningAction === 'preflight' ? '复核中...' : '执行前复核'}
+                {runningActions.has('preflight') ? '复核中...' : '执行前复核'}
               </button>
               <button
                 type="button"
                 className="secondary-button"
-                disabled={!canComplete(selectedTask) || runningAction === 'complete'}
+                disabled={!canComplete(selectedTask) || runningActions.has('complete')}
                 onClick={() =>
                   void runTaskAction('complete', async () => ({
                     kind: 'task',
-                    result: await updateMissionTaskStatus(selectedTask.id, 'completed'),
+                    result: await updateMissionTaskStatus(selectedTask.id, 'completed', currentTaskVersion(selectedTask)),
                   }))
                 }
               >
@@ -546,11 +591,11 @@ export function MissionTasksPage() {
               <button
                 type="button"
                 className="secondary-button danger-button"
-                disabled={!canCancel(selectedTask) || runningAction === 'cancel'}
+                disabled={!canCancel(selectedTask) || runningActions.has('cancel')}
                 onClick={() =>
                   void runTaskAction('cancel', async () => ({
                     kind: 'task',
-                    result: await updateMissionTaskStatus(selectedTask.id, 'cancelled'),
+                    result: await updateMissionTaskStatus(selectedTask.id, 'cancelled', currentTaskVersion(selectedTask)),
                   }))
                 }
               >
@@ -589,11 +634,11 @@ export function MissionTasksPage() {
                         </div>
                         <button
                           type="button"
-                          disabled={!canRunSchedulingAction(selectedTask) || runningAction === `select-${window.rank}`}
+                          disabled={!canRunSchedulingAction(selectedTask) || runningActions.has(`select-${window.rank}`)}
                           onClick={() =>
                             void runTaskAction(`select-${window.rank}`, async () => ({
                               kind: 'task',
-                              result: await selectMissionTaskWindow(selectedTask.id, { rank: window.rank }),
+                              result: await selectMissionTaskWindow(selectedTask.id, { rank: window.rank, expected_version: currentTaskVersion(selectedTask) }),
                             }))
                           }
                         >
@@ -764,5 +809,6 @@ function actionSuccessText(action: string, failed = false) {
 }
 
 function formatError(error: unknown, fallback: string) {
+  if (isAxiosError(error) && typeof error.response?.data?.message === 'string') return error.response.data.message
   return error instanceof Error ? error.message : fallback
 }

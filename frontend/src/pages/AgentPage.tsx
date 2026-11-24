@@ -527,7 +527,8 @@ export function AgentPage() {
         session_id: sessionId.trim() || null,
       })
       const response = await queryAgent(submission.payload, submission.key)
-      if (response.success || response.agent_runtime?.status === 'needs_clarification') {
+      if (response.success || response.agent_runtime?.status === 'needs_clarification'
+        || ['TASK_VERSION_CONFLICT', 'TASK_VERSION_REQUIRED'].includes(String(response.fallback?.error_code))) {
         completeSubmission('agent.query', user.id, submission.key)
       }
 

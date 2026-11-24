@@ -32,9 +32,14 @@ class MissionTaskCreateRequest(MissionTaskBase):
     profile_context: dict[str, object] = Field(default_factory=dict)
 
 
+class MissionTaskVersionRequest(BaseModel):
+    expected_version: int | None = Field(default=None, ge=1, description="读取任务或推荐结果时获得的版本；缺少时接口返回 428")
+
+
 class MissionTaskUpdateRequest(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
+    expected_version: int | None = Field(default=None, ge=1)
     title: str | None = Field(default=None, min_length=1, max_length=255)
     purpose: str | None = None
     location: str | None = Field(default=None, max_length=255)
@@ -58,6 +63,7 @@ class MissionTaskUpdateRequest(BaseModel):
 
 class MissionTaskStatusUpdateRequest(BaseModel):
     status: MissionTaskStatus
+    expected_version: int | None = Field(default=None, ge=1)
 
     @field_validator("status", mode="before")
     @classmethod
@@ -75,17 +81,22 @@ class SelectedMissionWindow(BaseModel):
 
 
 class MissionTaskRecommendRequest(BaseModel):
+    expected_version: int | None = Field(default=None, ge=1)
     scan_hours: int = Field(default=72, ge=1, le=168)
     min_window_hours: int = Field(default=2, ge=1, le=24)
 
 
 class MissionTaskSelectWindowRequest(BaseModel):
+    expected_version: int | None = Field(default=None, ge=1)
     rank: int | None = Field(default=None, ge=1)
     window: SelectedMissionWindow | None = None
 
 
 class MissionTaskResponse(BaseModel):
     id: str
+    # Older idempotency snapshots predate the counter; never invent a current
+    # version for them. Task reads and new writes always populate this field.
+    version: int | None = Field(default=None, ge=1)
     user_id: str
     title: str
     purpose: str | None = None

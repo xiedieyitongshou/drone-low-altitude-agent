@@ -63,6 +63,12 @@ def classify_tool_failure(tool_result: ToolResult) -> ToolFailurePolicy | None:
     if tool_result.success:
         return None
 
+    if tool_result.error_code in {"TASK_VERSION_CONFLICT", "TASK_VERSION_REQUIRED"}:
+        return ToolFailurePolicy(
+            failure_type=ToolFailureType.INVALID_INPUT, recovery_action=ToolRecoveryAction.FAIL_FAST,
+            retryable=False, user_message=tool_result.message or "任务已发生变化，请刷新后重新操作。",
+        )
+
     if tool_result.error_code in WEATHER_DATA_ERROR_CODES:
         return ToolFailurePolicy(
             failure_type=ToolFailureType.EXTERNAL_DEPENDENCY_FAILED,

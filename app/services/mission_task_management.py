@@ -20,6 +20,7 @@ from app.services.mission_task_state import (
     normalize_mission_task_status,
 )
 from app.services.idempotency import TASK_CREATE, claim_operation
+from app.services.mission_task_versioning import check_task_version, task_write_transaction
 
 
 class MissionTaskNotFoundError(Exception):
@@ -146,28 +147,40 @@ def update_mission_task(
     task_id: str,
     payload: MissionTaskUpdateRequest,
 ) -> MissionTaskResponse:
-    task = _get_owned_task(db=db, current_user=current_user, task_id=task_id)
-    _ensure_not_terminal(task)
-
-    values = payload.model_dump(exclude_unset=True)
-    field_map = {
-        "location": "location_text",
-        "date": "task_date",
-        "candidate_locations": "candidate_locations_json",
-        "metadata": "metadata_json",
-    }
-    for field_name, value in values.items():
-        model_field = field_map.get(field_name, field_name)
-        if field_name in {"candidate_locations"} and value is not None:
-            value = list(value)
-        if field_name in {"metadata"} and value is not None:
-            value = dict(value)
-        setattr(task, model_field, value)
-
-    task.updated_at = datetime.utcnow()
-    db.commit()
-    db.refresh(task)
-    return to_mission_task_response(task)
+    with task_write_transaction(db):
+        task = _get_owned_task(db=db, current_user=current_user, task_id=task_id)
+        check_task_version(task, payload.expected_version)
+        _ensure_not_terminal(task)
+        values = payload.model_dump(exclude_unset=True, exclude={"expected_version"})
+        reserved_metadata = {
+            key: value for key, value in dict(task.metadata_json or {}).items()
+            if key in {"latest_recommendation", "latest_preflight_check"}
+        }
+        field_map = {
+            "location": "location_text", "date": "task_date",
+            "candidate_locations": "candidate_locations_json", "metadata": "metadata_json",
+        }
+        critical_fields = {"location", "date", "start_time", "end_time", "task_type", "purpose", "candidate_locations"}
+        invalidates_results = any(
+            name in critical_fields and value != getattr(task, field_map.get(name, name))
+            for name, value in values.items()
+        )
+        for field_name, value in values.items():
+            setattr(task, field_map.get(field_name, field_name), value)
+        if invalidates_results:
+            task.status = ensure_mission_task_status_transition(task.status, MissionTaskStatus.DRAFT).value
+            invalidate_current_task_results(task)
+        # These are server-owned artifacts, not writable user metadata.
+        if invalidates_results or "metadata" in values:
+            metadata = dict(task.metadata_json or {})
+            for key in ("latest_recommendation", "latest_preflight_check"):
+                metadata.pop(key, None)
+            if not invalidates_results:
+                metadata.update(reserved_metadata)
+            task.metadata_json = metadata
+        task.updated_at = datetime.utcnow()
+        db.flush()
+        return to_mission_task_response(task)
 
 
 def update_mission_task_status(
@@ -177,18 +190,37 @@ def update_mission_task_status(
     task_id: str,
     payload: MissionTaskStatusUpdateRequest,
 ) -> MissionTaskResponse:
-    task = _get_owned_task(db=db, current_user=current_user, task_id=task_id)
-    target_status = ensure_mission_task_status_transition(task.status, payload.status)
-    task.status = target_status.value
-    task.updated_at = datetime.utcnow()
-    db.commit()
-    db.refresh(task)
-    return to_mission_task_response(task)
+    with task_write_transaction(db):
+        task = _get_owned_task(db=db, current_user=current_user, task_id=task_id)
+        # A repeated cancellation acknowledges an already achieved terminal state.
+        if task.status == MissionTaskStatus.CANCELLED.value and payload.status == MissionTaskStatus.CANCELLED:
+            return to_mission_task_response(task)
+        check_task_version(task, payload.expected_version)
+        target_status = ensure_mission_task_status_transition(task.status, payload.status)
+        task.status = target_status.value
+        if target_status == MissionTaskStatus.DRAFT:
+            invalidate_current_task_results(task)
+        task.updated_at = datetime.utcnow()
+        db.flush()
+        return to_mission_task_response(task)
+
+
+def invalidate_current_task_results(task: MissionTask) -> None:
+    task.latest_request_id = None
+    task.latest_trace_id = None
+    task.latest_conversation_id = None
+    task.latest_decision = None
+    task.selected_window_json = None
+    metadata = dict(task.metadata_json or {})
+    metadata.pop("latest_recommendation", None)
+    metadata.pop("latest_preflight_check", None)
+    task.metadata_json = metadata
 
 
 def to_mission_task_response(task: MissionTask) -> MissionTaskResponse:
     return MissionTaskResponse(
         id=task.id,
+        version=task.version,
         user_id=task.user_id,
         title=task.title,
         purpose=task.purpose,

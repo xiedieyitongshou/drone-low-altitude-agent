@@ -27,11 +27,13 @@ MISSION_TASK_STATUS_TRANSITIONS: dict[MissionTaskStatus, set[MissionTaskStatus]]
         MissionTaskStatus.CANCELLED,
     },
     MissionTaskStatus.SCHEDULED: {
+        MissionTaskStatus.DRAFT,
         MissionTaskStatus.RECHECK,
         MissionTaskStatus.COMPLETED,
         MissionTaskStatus.CANCELLED,
     },
     MissionTaskStatus.RECHECK: {
+        MissionTaskStatus.DRAFT,
         MissionTaskStatus.SCHEDULED,
         MissionTaskStatus.COMPLETED,
         MissionTaskStatus.CANCELLED,

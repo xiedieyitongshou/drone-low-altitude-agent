@@ -8,6 +8,13 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 
+@pytest.fixture(autouse=True)
+def isolate_startup_migrations(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Most API tests supply their own schema/session via dependency overrides.
+    # Startup migration integration tests explicitly re-enable this behavior.
+    monkeypatch.setenv("AUTO_MIGRATE_ON_STARTUP", "false")
+
+
 def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
         "--api-db",

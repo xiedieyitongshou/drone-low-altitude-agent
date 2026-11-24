@@ -259,7 +259,9 @@ def build_session_context(
         "scan_hours": parsed.get("scan_hours"),
         "current_task_id": parsed.get("task_id") or parsed.get("current_task_id"),
         "current_task_title": parsed.get("task_title") or parsed.get("current_task_title"),
+        "current_task_version": parsed.get("current_task_version"),
         "last_recommended_windows": parsed.get("last_recommended_windows"),
+        "last_recommendation_task_id": parsed.get("last_recommendation_task_id"),
         "selected_window_rank": parsed.get("window_rank") or parsed.get("selected_window_rank"),
     }
     if intent == "knowledge":

@@ -98,7 +98,8 @@ def orchestrate_task_query(
             db.commit()
             with agent_operation(operation_id):
                 response = _run_task_query(query, session_id=session_id, user_id=normalized_user_id, db=db)
-            if response.success or (response.agent_runtime or {}).get("status") == "needs_clarification":
+            if (response.success or (response.agent_runtime or {}).get("status") == "needs_clarification"
+                    or (response.fallback or {}).get("error_code") in {"TASK_VERSION_CONFLICT", "TASK_VERSION_REQUIRED"}):
                 receipt.response_json = response.model_dump(mode="json")
                 db.commit()
             return response
@@ -118,6 +119,8 @@ def _run_task_query(
                     response = _recover_committed_creation(user_id=observation.user_id, session_id=session_id, db=db)
                     if response is None:
                         response = _execute_task_query(query, session_id=session_id, user_id=user_id, db=db)
+                    if (response.fallback or {}).get("error_code") in {"TASK_VERSION_CONFLICT", "TASK_VERSION_REQUIRED"}:
+                        _clear_stale_task_context(response)
                 else:
                     response = OrchestratorResponse(
                         success=False, user_id=observation.user_id, session_id=session_id,
@@ -165,6 +168,36 @@ def _run_task_query(
         if not _flush_observation(observation, db=db):
             response.warnings.append("执行记录保存失败，本次业务结果仍可使用。")
         return response
+
+
+def _trusted_task_version(context: dict | None, parsed: dict) -> int | None:
+    if not context or parsed.get("task_id") != context.get("current_task_id"):
+        return None
+    version = context.get("current_task_version")
+    return version if isinstance(version, int) and not isinstance(version, bool) and version > 0 else None
+
+
+def _trusted_task_windows(context: dict | None, parsed: dict) -> bool:
+    return (_trusted_task_version(context, parsed) is not None
+            and context.get("last_recommendation_task_id") == parsed.get("task_id")
+            and isinstance(context.get("last_recommended_windows"), list)
+            and bool(context["last_recommended_windows"]))
+
+
+def _clear_stale_task_context(response: OrchestratorResponse) -> None:
+    if not response.session_id:
+        return
+    try:
+        context = dict(session_memory_store.get(response.session_id, user_id=response.user_id) or {})
+        task_id = response.parsed.get("task_id") or response.parsed.get("current_task_id")
+        if context.get("current_task_id") != task_id:
+            return
+        for key in ("current_task_version", "last_recommended_windows", "last_recommendation_task_id", "selected_window_rank", "pending_task"):
+            context.pop(key, None)
+        session_memory_store.set(response.session_id, context, user_id=response.user_id)
+    except Exception:
+        logger.exception("Could not clear stale task context")
+        response.warnings.append("旧任务上下文清理失败，请新建会话后重试。")
 
 
 def _recover_committed_creation(*, user_id: str, session_id: str | None, db: Session | None) -> OrchestratorResponse | None:
@@ -384,6 +417,8 @@ def _orchestrate_task_query_legacy(
                 user_id=normalized_user_id,
                 parsed_result=parsed_result,
                 db=db,
+                task_version=_trusted_task_version(cached_context, parsed_result.parsed),
+                has_recommended_windows=_trusted_task_windows(cached_context, parsed_result.parsed),
             )
 
         return _with_conversation_record(
@@ -507,7 +542,9 @@ def _orchestrate_task_query_with_agent_loop(
     legacy_handler = fallback_handler if route and route.route_kind == AgentRouteKind.BUSINESS_COMPUTE else None
     loop_result = AgentLoop(fallback_handler=legacy_handler).run(
         state,
-        context=ToolExecutionContext(user_id=normalized_user_id, tenant_id="public", role="user", db=db),
+        context=ToolExecutionContext(user_id=normalized_user_id, tenant_id="public", role="user", db=db,
+                                     task_version=_trusted_task_version(cached_context, parsed_result.parsed),
+                                     has_recommended_windows=_trusted_task_windows(cached_context, parsed_result.parsed)),
     )
     if isinstance(loop_result.fallback_result, OrchestratorResponse):
         return _with_agent_runtime_debug(
@@ -563,6 +600,10 @@ def _orchestrate_task_query_with_agent_loop(
         fallback=None if loop_result.success else loop_result.output if isinstance(loop_result.output, dict) else {"errors": loop_result.final_state.errors},
         agent_runtime=_build_agent_runtime_debug(loop_result, mode="loop", context_result=context_result),
     )
+    conflict = next((item for item in loop_result.final_state.tool_results.values()
+                     if item.error_code in {"TASK_VERSION_CONFLICT", "TASK_VERSION_REQUIRED"}), None)
+    if conflict is not None:
+        response.fallback = {"error_code": conflict.error_code, "retryable": False, "message": conflict.message}
     if parsed_result.intent == "knowledge" and context_result.field_sources.get("city") == "user_input":
         knowledge_city = session_parsed["city"]
     if loop_result.success:
@@ -650,6 +691,8 @@ def _handle_legacy_mission_task_intent(
     user_id: str,
     parsed_result: ParsedTaskRequest,
     db: Session | None,
+    task_version: int | None = None,
+    has_recommended_windows: bool = False,
 ) -> OrchestratorResponse:
     route = get_business_route(parsed_result.intent)
     if route is None:
@@ -659,7 +702,8 @@ def _handle_legacy_mission_task_intent(
     tool_result = default_tool_registry.call(
         route.primary_tool,
         tool_input,
-        context=ToolExecutionContext(user_id=user_id, tenant_id="public", role="user", db=db),
+        context=ToolExecutionContext(user_id=user_id, tenant_id="public", role="user", db=db, task_version=task_version,
+                                     has_recommended_windows=has_recommended_windows),
     )
     session_parsed = _enrich_task_session_context_from_results(parsed_result.parsed, [tool_result])
     response = OrchestratorResponse(
@@ -752,6 +796,17 @@ def _enrich_task_session_context_from_results(parsed: dict[str, object], tool_re
         if not result.success or not isinstance(result.data, dict):
             continue
         data: dict[str, Any] = result.data
+        if result.tool_name in {"create_mission_task", "select_mission_task_window", "evaluate_mission_task",
+                                "preflight_check_mission_task", "recommend_mission_task_windows"}:
+            result_task_id = data.get("id") or (data.get("request") or {}).get("task_id")
+            if result_task_id and result_task_id != enriched.get("last_recommendation_task_id"):
+                enriched.pop("last_recommended_windows", None)
+                enriched.pop("last_recommendation_task_id", None)
+                enriched.pop("selected_window_rank", None)
+            version = data.get("version") or (data.get("request") or {}).get("task_version")
+            enriched.pop("current_task_version", None)
+            if isinstance(version, int) and not isinstance(version, bool) and version > 0:
+                enriched["current_task_version"] = version
         if result.tool_name in {"create_mission_task", "select_mission_task_window"}:
             task_id = data.get("id")
             if task_id:
@@ -765,6 +820,7 @@ def _enrich_task_session_context_from_results(parsed: dict[str, object], tool_re
             if isinstance(selected_window, dict) and selected_window.get("rank"):
                 enriched["selected_window_rank"] = selected_window["rank"]
         if result.tool_name == "recommend_mission_task_windows":
+            enriched["last_recommendation_task_id"] = (data.get("request") or {}).get("task_id")
             recommendation = data.get("recommendation")
             if isinstance(recommendation, dict):
                 windows = recommendation.get("recommended_windows")

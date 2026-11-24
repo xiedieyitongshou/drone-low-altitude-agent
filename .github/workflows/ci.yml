@@ -105,6 +105,7 @@ jobs:
           tests/test_session_memory.py::test_default_database_sessions_restore_latest_context_by_user
           tests/test_session_memory.py::test_session_cleanup_checks_last_write_and_keeps_chat_history
           tests/test_task_creation_idempotency.py
+          tests/test_mission_task_versioning.py
 
   frontend-test:
     name: Frontend lint and build
