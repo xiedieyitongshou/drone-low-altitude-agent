@@ -1,9 +1,12 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from contextvars import copy_context
 from datetime import datetime, timedelta
 
 from app.schemas import ComparedLocationResult, HourlyAssessment, MultiLocationComparisonRequest, MultiLocationComparisonResponse, RecommendationWindow, RiskDecision
 from app.services.comparison.comparison_profiles import ComparisonWeightProfile, get_comparison_weight_profile
 from app.services.cruise_evaluator import build_cruise_request, evaluate_cruise_request
+from app.services.execution_budget import ExecutionTimeout, check_execution_budget
+from app.services.run_observability import isolated_tool_observation, merge_tool_observation
 
 
 def compare_locations(payload: MultiLocationComparisonRequest) -> MultiLocationComparisonResponse:
@@ -11,32 +14,46 @@ def compare_locations(payload: MultiLocationComparisonRequest) -> MultiLocationC
     max_workers = min(4, len(payload.locations))
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        future_to_location = {
-            executor.submit(
-                _evaluate_single_location,
-                location,
-                payload.date,
-                payload.start_time,
-                payload.end_time,
-                payload.task_type,
-                payload.purpose,
-            ): location
-            for location in payload.locations
-        }
+        locations = iter(payload.locations)
+        future_to_location = {}
 
-        for future in as_completed(future_to_location):
-            location = future_to_location[future]
-            try:
-                comparisons.append(future.result())
-            except Exception as exc:
-                comparisons.append(
-                    ComparedLocationResult(
-                        rank=0,
-                        location=location,
-                        available=False,
-                        error_message=str(exc),
-                    )
+        def submit_next():
+            check_execution_budget()
+            location = next(locations, None)
+            if location is not None:
+                future = executor.submit(
+                    copy_context().run, _evaluate_location_branch, location, payload,
                 )
+                future_to_location[future] = location
+
+        # Keep at most four branches submitted, including for large input lists.
+        for _ in range(max_workers):
+            submit_next()
+
+        try:
+            while future_to_location:
+                check_execution_budget()
+                future = next(as_completed(future_to_location))
+                location = future_to_location.pop(future)
+                try:
+                    result, observation, error = future.result()
+                    check_execution_budget()
+                    merge_tool_observation(observation)
+                    if error is not None:
+                        raise error
+                    comparisons.append(result)
+                except ExecutionTimeout:
+                    raise
+                except Exception as exc:
+                    comparisons.append(
+                        ComparedLocationResult(
+                            rank=0, location=location, available=False, error_message=str(exc),
+                        )
+                    )
+                submit_next()
+        finally:
+            for future in future_to_location:
+                future.cancel()
 
     weight_profile = get_comparison_weight_profile(payload.comparison_mode)
     _apply_comparison_scores(comparisons, weight_profile)
@@ -70,6 +87,18 @@ def compare_locations(payload: MultiLocationComparisonRequest) -> MultiLocationC
         top_k_locations=top_k_locations,
         recommended_location=top_k_locations[0] if top_k_locations else None,
     )
+
+
+def _evaluate_location_branch(location: str, payload: MultiLocationComparisonRequest):
+    with isolated_tool_observation() as observation:
+        try:
+            check_execution_budget()
+            result = _evaluate_single_location(location, payload.date, payload.start_time,
+                                               payload.end_time, payload.task_type, payload.purpose)
+            check_execution_budget()
+            return result, observation, None
+        except BaseException as exc:
+            return None, observation, exc
 
 
 def _evaluate_single_location(

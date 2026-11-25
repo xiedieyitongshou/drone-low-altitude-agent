@@ -1,5 +1,4 @@
 import logging
-import time
 from typing import Any
 
 import httpx
@@ -10,6 +9,7 @@ from app.services.weather.exceptions import (
     WeatherResponseError,
 )
 from app.services.run_observability import measure_stage, timed_stage
+from app.services.execution_budget import budgeted_sleep, check_execution_budget, remaining_timeout
 
 
 logger = logging.getLogger(__name__)
@@ -36,9 +36,11 @@ class HttpClient:
         last_exception: Exception | None = None
 
         for attempt in range(1, self._max_retries + 1):
+            check_execution_budget()
             try:
                 with measure_stage("weather_http"):
-                    response = self._client.get(url, params=params)
+                    response = self._client.get(url, params=params, timeout=remaining_timeout(self._timeout_seconds))
+                    check_execution_budget()
                     self._raise_for_status(response)
             except (httpx.HTTPError, WeatherResponseError) as exc:
                 last_exception = exc
@@ -48,7 +50,7 @@ class HttpClient:
                 )
                 if attempt == self._max_retries:
                     break
-                time.sleep(self._retry_backoff_seconds * attempt)
+                budgeted_sleep(self._retry_backoff_seconds * attempt)
             else:
                 try:
                     payload = response.json()

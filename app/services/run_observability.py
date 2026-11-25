@@ -68,12 +68,49 @@ def current_observation() -> RunObservation | None:
 
 @contextmanager
 def observe_run(*, user_id: str, session_id: str | None) -> Iterator[RunObservation]:
+    from app.services.execution_budget import current_budget
+
     observation = RunObservation(user_id=user_id, session_id=session_id)
+    budget = current_budget()
+    if budget is not None:
+        observation.trace_id, observation.run_id = budget.trace_id, budget.run_id
     token = _current_run.set(observation)
     try:
         yield observation
     finally:
         _current_run.reset(token)
+
+
+@contextmanager
+def isolated_tool_observation() -> Iterator[RunObservation | None]:
+    """A late worker must not mutate the caller's Trace or timing stack."""
+    parent = current_observation()
+    child = RunObservation(user_id=parent.user_id, session_id=parent.session_id,
+                           trace_id=parent.trace_id, run_id=parent.run_id,
+                           started=parent.started) if parent else None
+    token = _current_run.set(child)
+    try:
+        yield child
+    finally:
+        _current_run.reset(token)
+
+
+def merge_tool_observation(child: RunObservation | None) -> None:
+    parent = current_observation()
+    if parent is None or child is None:
+        return
+    frame = parent.stack[-1] if parent.stack else None
+    for sample in child.samples:
+        if sample["parent_stage"] is None and frame:
+            frame["children"] += sample["duration_ms"] / 1000
+            sample["parent_stage"] = frame["stage"]
+        parent.samples.append(sample)
+    for event in child.events:
+        if frame and event.event_type == "stage" and event.metadata.get("parent_stage") is None:
+            event.metadata["parent_stage"] = frame["stage"]
+        # The child's sequence is local to its buffer, not an Agent step number.
+        event.step_index = None
+        parent.record(event)
 
 
 @contextmanager

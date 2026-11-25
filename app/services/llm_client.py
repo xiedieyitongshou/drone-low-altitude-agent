@@ -6,6 +6,7 @@ from typing import Any
 
 import httpx
 from app.services.run_observability import timed_stage
+from app.services.execution_budget import check_execution_budget, remaining_timeout
 
 
 logger = logging.getLogger(__name__)
@@ -66,6 +67,7 @@ def generate_text(
     temperature: float = 0.2,
     max_tokens: int | None = None,
 ) -> str | None:
+    check_execution_budget()
     config = load_llm_config()
     if not _is_config_usable(config):
         logger.info(
@@ -102,6 +104,7 @@ def generate_text_or_raise(
     max_tokens: int | None = None,
     config: LLMClientConfig | None = None,
 ) -> str:
+    check_execution_budget()
     active_config = config or load_llm_config()
     if not _is_config_usable(active_config):
         raise LLMClientError("LLM config is incomplete or disabled")
@@ -124,12 +127,14 @@ def generate_text_or_raise(
     }
 
     try:
-        with httpx.Client(timeout=active_config.timeout_seconds) as client:
+        with httpx.Client(timeout=remaining_timeout(active_config.timeout_seconds)) as client:
             response = client.post(
                 f"{active_config.base_url}/chat/completions",
                 headers=headers,
                 content=json.dumps(payload, ensure_ascii=False),
+                timeout=remaining_timeout(active_config.timeout_seconds),
             )
+            check_execution_budget()
             response.raise_for_status()
             data = response.json()
     except httpx.HTTPStatusError as exc:

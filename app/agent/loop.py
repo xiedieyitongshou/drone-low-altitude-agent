@@ -29,6 +29,7 @@ from app.agent.tools import ToolExecutionContext, ToolRegistry, default_tool_reg
 from app.agent.trace import TraceEventType, build_trace_event
 from app.services.agent_trace import record_trace_event
 from app.services.run_observability import emit_trace_event, measure_stage
+from app.services.execution_budget import check_execution_budget
 
 
 FallbackHandler = Callable[[AgentState, AgentPlan | None], Any]
@@ -102,6 +103,7 @@ class AgentLoop:
             )
 
         for _ in range(self.max_iterations):
+            check_execution_budget()
             with measure_stage("planner"):
                 plan = plan_next_step(current_state, tool_registry=self.tool_registry)
             plans.append(plan)
@@ -338,6 +340,7 @@ class AgentLoop:
             and not state.tool_results
             and all(step.status != AgentStatus.TOOL_RUNNING for step in state.steps)
         )
+        check_execution_budget()
         self._record_event(failed_state, TraceEventType.FALLBACK, error_code=error_code, message=message,
                            metadata={"allow_legacy_fallback": allow_legacy_fallback,
                                      "fallback_available": self.fallback_handler is not None})

@@ -1,5 +1,6 @@
 from collections.abc import Callable
-from dataclasses import dataclass
+from copy import deepcopy
+from dataclasses import dataclass, replace
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field, ValidationError
@@ -22,7 +23,11 @@ from app.services.comparison import compare_locations
 from app.services.conversation_query import get_user_conversation_detail, list_user_conversations
 from app.services.cruise_evaluator import evaluate_cruise_request_with_artifacts
 from app.services.history_persistence import persist_cruise_evaluation
-from app.services.run_observability import current_observation
+from app.services.run_observability import current_observation, isolated_tool_observation, merge_tool_observation
+from app.services.execution_budget import (
+    ExecutionBudget, ExecutionCapacityError, ExecutionTimeout, check_execution_budget,
+    current_budget, execution_pool, worker_database, worker_database_bind,
+)
 from app.services.weather.exceptions import WeatherDataError
 from app.services.mission_task_management import create_mission_task
 from app.services.mission_task_versioning import MissionTaskVersionConflictError
@@ -52,6 +57,7 @@ class ToolExecutionContext:
     db: Session | None = None
     task_version: int | None = None
     has_recommended_windows: bool = False
+    budget: ExecutionBudget | None = None
 
 
 class ToolSpec(BaseModel):
@@ -63,7 +69,7 @@ class ToolSpec(BaseModel):
     requires_admin: bool = False
     allowed_roles: list[str] = Field(default_factory=lambda: ["user", "admin"])
     user_scope: ToolUserScope = "current_user"
-    timeout_ms: int = 30000
+    timeout_ms: int = Field(default=30000, gt=0)
     input_schema_name: str | None = None
     output_schema_name: str | None = None
 
@@ -129,8 +135,42 @@ class ToolRegistry:
                 message="tool requires admin context",
             )
 
+        parent_budget = current_budget() or safe_context.budget
+        budget = ExecutionBudget.start(tool.spec.timeout_ms, parent=parent_budget,
+                                       error_code="TOOL_TIMEOUT")
+        if safe_context.budget is not None:
+            budget.deadline = min(budget.deadline, safe_context.budget.deadline)
+        execution_payload = deepcopy(payload or {})
         try:
-            data = tool.handler(payload or {}, safe_context)
+            database_bind = worker_database_bind(safe_context.db)
+        except ValueError as exc:
+            return ToolResult(success=False, tool_name=name, error_code="INVALID_TOOL_INPUT", message=str(exc))
+        worker_context = replace(safe_context, db=None, budget=budget)
+
+        def invoke():
+            with worker_database(database_bind) as owned_db, isolated_tool_observation() as observation:
+                execution_context = replace(worker_context, db=owned_db)
+                try:
+                    data = tool.handler(execution_payload, execution_context)
+                    budget.check()
+                    return _dump_tool_data(data), observation, None
+                except BaseException as exc:
+                    return None, observation, exc
+
+        try:
+            if safe_context.budget is not None:
+                safe_context.budget.check()
+            data, observation, error = execution_pool("tool").run(invoke, budget)
+            merge_tool_observation(observation)
+            if error is not None:
+                raise error
+        except (ExecutionTimeout, ExecutionCapacityError) as exc:
+            return ToolResult(
+                success=False, tool_name=name, error_code=exc.error_code, message=str(exc),
+                metadata={"retryable": True, "timeout_ms": tool.spec.timeout_ms,
+                          "operation_may_have_committed": tool.spec.side_effect == "write",
+                          "retry_with_same_operation_id": True},
+            )
         except WeatherDataError as exc:
             return ToolResult(
                 success=False, tool_name=name, error_code=exc.error_code, message=str(exc),
@@ -477,6 +517,7 @@ def _task_operation_version(db: Session, user: User, context: ToolExecutionConte
 
 
 def _with_tool_db(context: ToolExecutionContext, callback: Callable[[Session], Any]) -> Any:
+    check_execution_budget()
     if context.db is not None:
         return callback(context.db)
 

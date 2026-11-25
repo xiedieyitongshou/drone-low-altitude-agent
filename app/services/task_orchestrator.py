@@ -4,6 +4,11 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
+from app.services.execution_budget import (
+    ExecutionBudget, ExecutionCapacityError, ExecutionTimeout, check_execution_budget,
+    current_budget, execution_pool, worker_database, worker_database_bind,
+)
+
 from app.schemas import (
     CruiseEvaluateRequest,
     MultiLocationComparisonRequest,
@@ -70,6 +75,63 @@ def orchestrate_task_query(
     db: Session | None = None,
     idempotency_key: str | None = None,
 ) -> OrchestratorResponse:
+    if current_budget() is not None:
+        return _orchestrate_task_query(query, session_id=session_id, user_id=user_id,
+                                       db=db, idempotency_key=idempotency_key)
+    # Authentication may have opened a read transaction. The worker owns its own
+    # Session; the request dependency can be closed even when a worker is late.
+    database_bind = worker_database_bind(db)
+    timeout_ms = max(int(os.getenv("AGENT_REQUEST_TIMEOUT_MS", "45000")), 1)
+    total_budget = ExecutionBudget.start(timeout_ms)
+    work_budget = ExecutionBudget.start(timeout_ms - min(250, timeout_ms * 0.1), parent=total_budget)
+
+    def invoke():
+        with worker_database(database_bind) as owned_db:
+            return _orchestrate_task_query(query, session_id=session_id, user_id=user_id,
+                                           db=owned_db, idempotency_key=idempotency_key)
+
+    try:
+        return execution_pool("request").run(invoke, work_budget)
+    except (ExecutionTimeout, ExecutionCapacityError) as exc:
+        error_code, error_message = exc.error_code, str(exc)
+        response = OrchestratorResponse(
+            success=False, session_id=session_id, user_id=normalize_user_id(user_id),
+            intent="unknown", target_endpoint="/agent/query", parsed={}, message=str(exc),
+            trace_id=total_budget.trace_id,
+            fallback={"error_code": exc.error_code, "retryable": True,
+                      "retry_with_same_operation_id": True, "operation_may_have_committed": True},
+            agent_runtime={"mode": os.getenv("AGENT_RUNTIME_MODE", "legacy"), "status": "failed",
+                           "trace_id": total_budget.trace_id, "run_id": total_budget.run_id,
+                           "fallback_used": False},
+        )
+        # Timeout diagnostics use only the reserved tail of the same total budget.
+        # They never refresh a successful session or complete an operation receipt.
+        def save_timeout_trace():
+            from app.agent.trace import build_trace_event
+            from app.services.agent_trace import record_trace_events
+
+            events = [build_trace_event(
+                trace_id=total_budget.trace_id, run_id=total_budget.run_id,
+                user_id=response.user_id, session_id=session_id, event_type=event_type,
+                status_after="failed", error_code=error_code, message=error_message,
+                metadata={"source": "request_budget", "timeout_ms": timeout_ms},
+            ) for event_type in ("error", "final_response")]
+            with worker_database(database_bind) as trace_db:
+                record_trace_events(events, db=trace_db)
+
+        try:
+            cleanup_budget = ExecutionBudget.start(min(250, timeout_ms * 0.1), parent=total_budget)
+            execution_pool("cleanup").run(save_timeout_trace, cleanup_budget)
+        except Exception:
+            response.warnings.append("本次超时的执行记录未能完整保存。")
+        return response
+
+
+def _orchestrate_task_query(
+    query: str, *, session_id: str | None = None, user_id: str | None = None,
+    db: Session | None = None, idempotency_key: str | None = None,
+) -> OrchestratorResponse:
+    check_execution_budget()
     if idempotency_key is None:
         return _run_task_query(query, session_id=session_id, user_id=user_id, db=db)
     if db is None:
@@ -869,6 +931,7 @@ def _with_agent_runtime_debug(response: OrchestratorResponse, debug: dict[str, o
 def _save_completed_context(
     response: OrchestratorResponse, *, query: str, knowledge_city: object = None
 ) -> None:
+    check_execution_budget()
     log_context = {"session_id": response.session_id, "user_id": response.user_id, "intent": response.intent}
     try:
         _save_context(
@@ -899,6 +962,7 @@ def _save_context(
     query: str,
     knowledge_city: object = None,
 ) -> None:
+    check_execution_budget()
     if not session_id:
         return
     context = build_session_context(intent, parsed, knowledge_city=knowledge_city)
@@ -909,6 +973,7 @@ def _save_context(
 def _parse_task_query(
     query: str, *, context: dict[str, object] | None = None, defer_context_merge: bool = False
 ) -> ParsedTaskRequest:
+    check_execution_budget()
     parser_kwargs = {"context": context, "defer_context_merge": defer_context_merge}
     mode = os.getenv("NL_PARSER_MODE", "rule").strip().lower()
     if mode not in SUPPORTED_PARSER_MODES:
@@ -949,6 +1014,8 @@ def _parse_task_query(
             if rule_result is not None and rule_result.intent == "knowledge" and parsed.intent != "knowledge":
                 return rule_result
             return parsed
+    except ExecutionTimeout:
+        raise
     except Exception as exc:
         llm_error = exc
         logger.warning("LLM parser failed, fallback to rule parser: %s", exc)

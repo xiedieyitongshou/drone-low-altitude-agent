@@ -42,6 +42,8 @@ ERROR_CODE_FAILURE_TYPES: dict[str, ToolFailureType] = {
     "TOOL_NOT_FOUND": ToolFailureType.NOT_FOUND,
     "TimeoutError": ToolFailureType.TIMEOUT,
     "TimeoutException": ToolFailureType.TIMEOUT,
+    "TOOL_TIMEOUT": ToolFailureType.TIMEOUT,
+    "REQUEST_DEADLINE_EXCEEDED": ToolFailureType.TIMEOUT,
     "ConnectionError": ToolFailureType.EXTERNAL_DEPENDENCY_FAILED,
     "HTTPError": ToolFailureType.EXTERNAL_DEPENDENCY_FAILED,
     "KeyError": ToolFailureType.NOT_FOUND,
@@ -62,6 +64,13 @@ ERROR_CODE_FAILURE_TYPES: dict[str, ToolFailureType] = {
 def classify_tool_failure(tool_result: ToolResult) -> ToolFailurePolicy | None:
     if tool_result.success:
         return None
+
+    if tool_result.error_code == "EXECUTION_CAPACITY_EXCEEDED":
+        return ToolFailurePolicy(
+            failure_type=ToolFailureType.EXTERNAL_DEPENDENCY_FAILED,
+            recovery_action=ToolRecoveryAction.FAIL_FAST, retryable=True,
+            user_message=tool_result.message or "执行资源暂时繁忙，请稍后重试。",
+        )
 
     if tool_result.error_code in {"TASK_VERSION_CONFLICT", "TASK_VERSION_REQUIRED"}:
         return ToolFailurePolicy(
@@ -123,7 +132,10 @@ def classify_tool_failure(tool_result: ToolResult) -> ToolFailurePolicy | None:
         return ToolFailurePolicy(
             failure_type=failure_type,
             recovery_action=ToolRecoveryAction.FAIL_FAST,
-            user_message="工具调用超时，请稍后重试。",
+            retryable=bool(tool_result.metadata.get("retryable")),
+            user_message=(tool_result.message or "工具调用超时，请稍后重试。") if tool_result.error_code in {
+                "TOOL_TIMEOUT", "REQUEST_DEADLINE_EXCEEDED"
+            } else "工具调用超时，请稍后重试。",
         )
     if failure_type == ToolFailureType.INTERNAL_ERROR:
         return ToolFailurePolicy(

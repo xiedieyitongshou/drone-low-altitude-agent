@@ -16,6 +16,7 @@ from sqlalchemy.sql.elements import ColumnElement
 
 from app.db.models import SessionRecord
 from app.db.session import SessionLocal
+from app.services.execution_budget import check_execution_budget
 
 
 DEFAULT_SESSION_USER_ID = "default_user"
@@ -63,10 +64,12 @@ class TTLSessionMemoryStore:
         title: str | None = None,
     ) -> None:
         with self._lock:
+            check_execution_budget()
             self._cache[_scoped_session_key(session_id, user_id)] = deepcopy(context)
 
     def delete(self, session_id: str, *, user_id: str | None = None) -> None:
         with self._lock:
+            check_execution_budget()
             self._cache.pop(_scoped_session_key(session_id, user_id), None)
 
 
@@ -102,6 +105,7 @@ class RedisSessionMemoryStore:
         user_id: str | None = None,
         title: str | None = None,
     ) -> None:
+        check_execution_budget()
         self._client.setex(
             self._key(session_id, user_id),
             self._ttl_seconds,
@@ -109,6 +113,7 @@ class RedisSessionMemoryStore:
         )
 
     def delete(self, session_id: str, *, user_id: str | None = None) -> None:
+        check_execution_budget()
         self._client.delete(self._key(session_id, user_id))
 
     def _key(self, session_id: str, user_id: str | None) -> str:

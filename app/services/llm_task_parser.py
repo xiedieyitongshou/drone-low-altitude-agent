@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_valida
 from app.rules.mission_profiles import is_supported_task_type, normalize_task_type
 from app.schemas import CruiseEvaluateRequest, MultiLocationComparisonRequest, RecommendationRequest
 from app.services.llm_client import generate_text, is_llm_enabled
+from app.services.execution_budget import check_execution_budget
 from app.services.nl_parser import NaturalLanguageParseError, ParsedTaskRequest, parse_natural_language_request
 from app.utils.timezone import now_in_app_timezone
 
@@ -279,6 +280,7 @@ def parse_task_request_with_llm(
 ) -> dict[str, Any] | None:
     """Return the raw JSON object produced by the LLM, kept for debugging compatibility."""
 
+    check_execution_budget()
     if not is_llm_enabled():
         return None
 
@@ -299,12 +301,14 @@ def parse_task_request_with_llm(
         max_tokens=2000,
     )
     if not content:
+        check_execution_budget()
         content = generate_text(
             system_prompt=TASK_PARSER_RETRY_SYSTEM_PROMPT + KNOWLEDGE_PARSER_INSTRUCTION + create_task_instruction,
             user_prompt=user_prompt,
             temperature=0,
             max_tokens=3000,
         )
+    check_execution_budget()
     if not content:
         return None
     return _extract_json_object(content)

@@ -1,3 +1,6 @@
+from threading import Event
+from time import perf_counter
+
 from app.agent import (
     AgentLoop,
     AgentStatus,
@@ -133,3 +136,33 @@ def test_agent_loop_uses_tool_executor_for_trace_records():
     assert [event.event_type for event in events] == [TraceEventType.TOOL_CALL, TraceEventType.TOOL_RESULT]
     assert events[0].tool_name == "evaluate_flight_risk"
     assert result.final_state.status == AgentStatus.COMPLETED
+
+
+def test_tool_executor_enforces_timeout_before_a_slow_handler_finishes():
+    released = Event()
+    finished = Event()
+
+    def slow_handler(payload, context):
+        try:
+            released.wait(0.5)
+            return {"late": True}
+        finally:
+            finished.set()
+
+    registry = _build_registry(slow_handler)
+    registry.get("evaluate_flight_risk").spec.timeout_ms = 20
+    state = mark_tool_running(initialize_state("评估深圳", user_id="user-1"), tool_name="evaluate_flight_risk")
+    started = perf_counter()
+    try:
+        result = ToolExecutor(tool_registry=registry, trace_recorder=None).execute(
+            tool_name="evaluate_flight_risk", tool_input={}, state=state,
+            context=ToolExecutionContext(user_id="user-1", role="user"),
+        )
+        elapsed = perf_counter() - started
+        assert result.success is False
+        assert result.error_code == "TOOL_TIMEOUT"
+        assert elapsed < 0.3
+        assert not finished.is_set()
+    finally:
+        released.set()
+        assert finished.wait(2)

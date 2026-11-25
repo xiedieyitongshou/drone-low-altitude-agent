@@ -173,6 +173,8 @@ DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
 
 因此 Docker 实例可以调用 DeepSeek 的前提是：启动容器前 `.env` 已写入 `LLM_ENABLED=true`、`NL_PARSER_MODE=hybrid` 和有效的 `DEEPSEEK_API_KEY`。不要把真实 API Key 写入 `Dockerfile`、README 或 Git 仓库。
 
+`POST /agent/query` 默认共享 45 秒处理预算，解析、工具执行和外部请求重试均计入；工具同时受 `ToolSpec.timeout_ms` 限制。可通过 `AGENT_REQUEST_TIMEOUT_MS`、`AGENT_REQUEST_WORKERS` 和 `AGENT_TOOL_WORKERS` 调整。超时后继续使用原操作 ID 确认已提交结果。具体边界与回归场景见 [Agent 工具超时与请求预算说明](docs/Agent工具超时与请求预算说明.md)。
+
 ## 演示入口
 
 - 前端控制台：[frontend/](frontend/)

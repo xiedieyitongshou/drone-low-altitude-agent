@@ -106,6 +106,8 @@ jobs:
           tests/test_session_memory.py::test_session_cleanup_checks_last_write_and_keeps_chat_history
           tests/test_task_creation_idempotency.py
           tests/test_mission_task_versioning.py
+          tests/test_execution_budget.py
+          tests/test_tool_executor.py
 
   frontend-test:
     name: Frontend lint and build
