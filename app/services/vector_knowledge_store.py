@@ -29,6 +29,11 @@ def get_default_knowledge_path() -> Path:
     configured_path = os.getenv("KNOWLEDGE_SOURCE_PATH")
     if configured_path:
         return Path(configured_path)
+    from app.services.knowledge_index_versions import published_admin_source
+
+    published = published_admin_source(DEFAULT_DB_KNOWLEDGE_PATH.parent)
+    if published is not None:
+        return published
     if DEFAULT_DB_KNOWLEDGE_PATH.exists():
         return DEFAULT_DB_KNOWLEDGE_PATH
     configured_advice_path = os.getenv("ADVICE_KNOWLEDGE_PATH")
@@ -50,7 +55,11 @@ class IndexedKnowledgeDocument:
 class LocalVectorKnowledgeStore:
     """Lightweight local vector index based on TF-IDF for Day 30."""
 
+    index_kind = "tfidf"
+
     def __init__(self, *, knowledge_path: Path | None = None, index_dir: Path | None = None) -> None:
+        self._default_location = knowledge_path is None and index_dir is None
+        self._snapshot = None
         self.knowledge_path = knowledge_path or get_default_knowledge_path()
         self.index_dir = index_dir or DEFAULT_INDEX_DIR
         self.index_dir.mkdir(parents=True, exist_ok=True)
@@ -59,6 +68,12 @@ class LocalVectorKnowledgeStore:
         self.metadata_path = self.index_dir / "documents.json"
 
     def build_index(self) -> int:
+        from app.services.knowledge_index_versions import store_snapshot
+
+        store = store_snapshot(self, force=True)
+        return len(store._load_library().items)
+
+    def _build_index(self) -> int:
         library = self._load_library()
         documents = build_indexed_documents(library)
         if not documents:
@@ -91,6 +106,20 @@ class LocalVectorKnowledgeStore:
         access_context: KnowledgeAccessContext | None = None,
         business_context: KnowledgeBusinessContext | None = None,
     ) -> list[RetrievedKnowledgeSnippet]:
+        from app.services.knowledge_index_versions import store_snapshot
+        from app.services.knowledge_runtime_control import filter_runtime_results, store_retrieval_paused
+
+        if store_retrieval_paused(self):
+            return []
+        store = store_snapshot(self)
+        results = store._retrieve(query_text, top_k=top_k, access_context=access_context, business_context=business_context)
+        results = [item.model_copy(update={"metadata": {**item.metadata, "index_version": store._snapshot.version}}) for item in results]
+        return filter_runtime_results(results, access_context, root=store._snapshot.root)
+
+    def _retrieve(self, query_text, *, top_k=5, access_context=None, business_context=None):
+        from app.services.knowledge_runtime_control import document_allowed, read_control
+
+        control = read_control(self._snapshot.root)
         self._ensure_index()
         documents = [IndexedKnowledgeDocument(**item) for item in json.loads(self.metadata_path.read_text(encoding="utf-8-sig"))]
         if not documents:
@@ -100,7 +129,9 @@ class LocalVectorKnowledgeStore:
         with self.matrix_path.open("rb") as file:
             matrix = pickle.load(file)
         if vectorizer is None or matrix is None:
-            return []
+            raise ValueError("Nonempty TF-IDF documents require an index")
+        if matrix.shape[0] != len(documents) or matrix.shape[1] != len(vectorizer.vocabulary_):
+            raise ValueError("TF-IDF index/document mismatch")
 
         query_vector = vectorizer.transform([query_text])
         scores = cosine_similarity(query_vector, matrix).flatten()
@@ -114,6 +145,8 @@ class LocalVectorKnowledgeStore:
             if score <= 0:
                 continue
             doc = documents[index]
+            if not document_allowed(doc.id, access_context, control, self._snapshot.version):
+                continue
             if not is_document_retrievable(doc.metadata, access_context, business_context, document_id=doc.id):
                 continue
             results.append(
@@ -131,13 +164,7 @@ class LocalVectorKnowledgeStore:
 
     def _ensure_index(self) -> None:
         if not self.vectorizer_path.exists() or not self.matrix_path.exists() or not self.metadata_path.exists():
-            self.build_index()
-            return
-        if self.knowledge_path.exists():
-            source_mtime = self.knowledge_path.stat().st_mtime
-            index_mtime = self.metadata_path.stat().st_mtime
-            if source_mtime > index_mtime:
-                self.build_index()
+            raise RuntimeError("知识索引版本不完整，请重新发布。")
 
     def _load_library(self) -> KnowledgeAdviceLibrary:
         payload = json.loads(self.knowledge_path.read_text(encoding="utf-8-sig"))

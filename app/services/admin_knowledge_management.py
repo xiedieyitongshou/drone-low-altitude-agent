@@ -4,6 +4,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.db.models import KnowledgeDocument
+from app.services.knowledge_runtime_control import restrict_document
 from app.schemas import (
     KnowledgeDocumentCreate,
     KnowledgeDocumentListResponse,
@@ -93,20 +94,25 @@ def update_knowledge_document(
     db: Session,
     knowledge_id: str,
     payload: KnowledgeDocumentUpdate,
+    actor: str | None = None,
 ) -> KnowledgeDocumentResponse:
     document = _get_document(db=db, knowledge_id=knowledge_id)
+    previous_access = {"visibility": document.visibility, "tenant_id": document.tenant_id, "user_id": document.user_id}
     for field_name, value in _update_values(payload).items():
         setattr(document, field_name, value)
     document.index_dirty = True
+    restrict_document(document, previous_access=previous_access, actor=actor,
+                      allow_release=payload.is_active is True or payload.review_status == "approved")
     db.commit()
     db.refresh(document)
     return to_knowledge_document_response(document)
 
 
-def soft_delete_knowledge_document(*, db: Session, knowledge_id: str) -> KnowledgeDocumentResponse:
+def soft_delete_knowledge_document(*, db: Session, knowledge_id: str, actor: str | None = None) -> KnowledgeDocumentResponse:
     document = _get_document(db=db, knowledge_id=knowledge_id)
     document.is_active = False
     document.index_dirty = True
+    restrict_document(document, actor=actor)
     db.commit()
     db.refresh(document)
     return to_knowledge_document_response(document)
@@ -117,14 +123,17 @@ def update_knowledge_document_status(
     db: Session,
     knowledge_id: str,
     payload: KnowledgeDocumentStatusUpdate,
+    actor: str | None = None,
 ) -> KnowledgeDocumentResponse:
     document = _get_document(db=db, knowledge_id=knowledge_id)
     if payload.review_status is not None:
         document.review_status = payload.review_status.value
     if payload.is_active is not None:
         document.is_active = payload.is_active
-    if payload.index_dirty:
+    if payload.index_dirty or payload.is_active is not None or payload.review_status is not None:
         document.index_dirty = True
+    restrict_document(document, actor=actor,
+                      allow_release=payload.is_active is True or payload.review_status == "approved")
     db.commit()
     db.refresh(document)
     return to_knowledge_document_response(document)

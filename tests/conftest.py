@@ -17,6 +17,22 @@ def isolate_startup_migrations(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("AUTO_MIGRATE_ON_STARTUP", "false")
 
 
+@pytest.fixture(autouse=True)
+def isolate_knowledge_publications(monkeypatch, tmp_path):
+    """Never publish test knowledge or maintenance controls into the live index."""
+    from app.services import admin_knowledge_indexing, vector_knowledge_store
+    from app.services.advice_retriever import load_advice_library
+
+    root = tmp_path / "knowledge-index"
+    source = root / "knowledge_documents_source.json"
+    monkeypatch.setattr(vector_knowledge_store, "DEFAULT_INDEX_DIR", root)
+    monkeypatch.setattr(vector_knowledge_store, "DEFAULT_DB_KNOWLEDGE_PATH", source)
+    monkeypatch.setattr(admin_knowledge_indexing, "DEFAULT_DB_KNOWLEDGE_PATH", source)
+    load_advice_library.cache_clear()
+    yield
+    load_advice_library.cache_clear()
+
+
 def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
         "--api-db",

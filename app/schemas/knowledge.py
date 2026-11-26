@@ -118,3 +118,17 @@ class KnowledgeIndexJobListResponse(BaseModel):
     page: int = 1
     page_size: int = 20
     total: int = 0
+
+
+class KnowledgeRetrievalControlUpdate(BaseModel):
+    paused: bool
+    message: str | None = Field(default=None, max_length=300)
+
+
+class KnowledgeRetrievalControlResponse(BaseModel):
+    paused: bool
+    message: str
+    updated_at: str | None = None
+    updated_by: str | None = None
+    published_version: str | None = None
+    withdrawn_count: int = 0

@@ -136,19 +136,22 @@ class HybridKnowledgeRetriever:
 
 
 def create_default_knowledge_retriever() -> KnowledgeRetriever:
+    from app.services.knowledge_index_versions import bind_store, selected_default_snapshot
+
+    snapshot = selected_default_snapshot()
     retriever_name = os.getenv("KNOWLEDGE_RETRIEVER", "bm25").strip().lower()
     if retriever_name == "tfidf":
-        return TfidfKnowledgeRetriever(store=LocalVectorKnowledgeStore())
+        return TfidfKnowledgeRetriever(store=bind_store(LocalVectorKnowledgeStore(), snapshot))
     if retriever_name == "bm25":
-        return Bm25KnowledgeRetriever(store=LocalBm25KnowledgeStore())
+        return Bm25KnowledgeRetriever(store=bind_store(LocalBm25KnowledgeStore(), snapshot))
     if retriever_name == "embedding":
-        return EmbeddingKnowledgeRetriever(store=LocalEmbeddingKnowledgeStore())
+        return EmbeddingKnowledgeRetriever(store=bind_store(LocalEmbeddingKnowledgeStore(), snapshot))
     if retriever_name == "hybrid":
         return HybridKnowledgeRetriever(
-            bm25_store=LocalBm25KnowledgeStore(),
-            embedding_store=LocalEmbeddingKnowledgeStore(min_score=0.0),
+            bm25_store=bind_store(LocalBm25KnowledgeStore(), snapshot),
+            embedding_store=bind_store(LocalEmbeddingKnowledgeStore(min_score=0.0), snapshot),
         )
-    return TfidfKnowledgeRetriever(store=LocalVectorKnowledgeStore())
+    return TfidfKnowledgeRetriever(store=bind_store(LocalVectorKnowledgeStore(), snapshot))
 
 
 def build_knowledge_retrieval_query(

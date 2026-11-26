@@ -1,19 +1,27 @@
 import json
 from datetime import datetime
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, or_, select, update
 from sqlalchemy.orm import Session
 
 from app.db.models import KnowledgeDocument, KnowledgeIndexJob
 from app.schemas import KnowledgeIndexJobListResponse, KnowledgeIndexJobResponse, KnowledgeIndexJobStatus
 from app.schemas.advice import AdviceCategory, AdvicePriority, KnowledgeAdviceItem, KnowledgeAdviceLibrary
-from app.services.bm25_knowledge_store import LocalBm25KnowledgeStore
-from app.services.embedding_knowledge_store import LocalEmbeddingKnowledgeStore
 from app.services.knowledge_chunker import build_indexed_chunks
-from app.services.vector_knowledge_store import DEFAULT_DB_KNOWLEDGE_PATH, LocalVectorKnowledgeStore
+from app.services.vector_knowledge_store import DEFAULT_DB_KNOWLEDGE_PATH
+from app.services.knowledge_index_versions import (
+    build_bundle, index_lock, prepare_snapshot, publish_snapshot,
+)
+from app.services.knowledge_runtime_control import read_control, release_published_restrictions
 
 
 def reindex_knowledge_documents(*, db: Session, triggered_by_user_id: str | None = None) -> KnowledgeIndexJobResponse:
+    root = DEFAULT_DB_KNOWLEDGE_PATH.parent
+    with index_lock(root):
+        return _reindex_locked(db=db, root=root, triggered_by_user_id=triggered_by_user_id)
+
+
+def _reindex_locked(*, db: Session, root, triggered_by_user_id) -> KnowledgeIndexJobResponse:
     job = KnowledgeIndexJob(
         status=KnowledgeIndexJobStatus.RUNNING.value,
         index_type="hybrid",
@@ -24,17 +32,24 @@ def reindex_knowledge_documents(*, db: Session, triggered_by_user_id: str | None
     db.commit()
     db.refresh(job)
 
+    indexed_ids = []
+    metadata_committed = False
     try:
-        library = build_approved_active_library(db=db)
+        captured_control = read_control(root)
+        timestamps = {}
+        library = build_approved_active_library(db=db, revisions=timestamps)
         chunk_count = len(build_indexed_chunks(library))
-        _write_generated_knowledge_source(library)
-        _build_retrieval_indexes()
-        _clear_knowledge_runtime_caches()
+        snapshot = prepare_snapshot(root, library=library, origin="admin")
+        snapshot.manifest["index_job_id"] = job.id
+        _build_retrieval_indexes(snapshot)
 
         indexed_ids = [item.id for item in library.items]
-        if indexed_ids:
-            for document in db.scalars(select(KnowledgeDocument).where(KnowledgeDocument.id.in_(indexed_ids))):
-                document.index_dirty = False
+        for document_id in indexed_ids:
+            # An edit made during construction must remain pending publication.
+            db.execute(update(KnowledgeDocument).where(
+                KnowledgeDocument.id == document_id,
+                KnowledgeDocument.updated_at == timestamps[document_id],
+            ).values(index_dirty=False), execution_options={"synchronize_session": False})
 
         job.status = KnowledgeIndexJobStatus.SUCCESS.value
         job.document_count = len(library.items)
@@ -42,12 +57,27 @@ def reindex_knowledge_documents(*, db: Session, triggered_by_user_id: str | None
         job.finished_at = datetime.utcnow()
         job.error_message = None
         db.commit()
-        db.refresh(job)
+        metadata_committed = True
+        publish_snapshot(snapshot)
     except Exception as exc:
+        db.rollback()
+        if metadata_committed and indexed_ids:
+            db.execute(update(KnowledgeDocument).where(KnowledgeDocument.id.in_(indexed_ids)).values(index_dirty=True))
         job.status = KnowledgeIndexJobStatus.FAILED.value
         job.error_message = str(exc)
         job.finished_at = datetime.utcnow()
         db.commit()
+        db.refresh(job)
+    else:
+        try:
+            release_published_restrictions(captured=captured_control, published_items=library.items, version=snapshot.version, root=root)
+        except Exception:
+            # Publication is valid; leave restrictions in place on any control
+            # failure. Never reopen a withdrawn item by falling back to disk.
+            job.error_message = "新版已发布，但部分访问限制未解除，请重新发布。"
+            db.commit()
+            db.refresh(job)
+        _clear_knowledge_runtime_caches()
         db.refresh(job)
 
     return to_index_job_response(job)
@@ -77,7 +107,7 @@ def list_knowledge_index_jobs(
     )
 
 
-def build_approved_active_library(*, db: Session, now: datetime | None = None) -> KnowledgeAdviceLibrary:
+def build_approved_active_library(*, db: Session, now: datetime | None = None, revisions: dict | None = None) -> KnowledgeAdviceLibrary:
     current_time = now or datetime.utcnow()
     documents = db.scalars(
         select(KnowledgeDocument)
@@ -89,6 +119,8 @@ def build_approved_active_library(*, db: Session, now: datetime | None = None) -
         )
         .order_by(KnowledgeDocument.updated_at.desc(), KnowledgeDocument.id.desc())
     ).all()
+    if revisions is not None:
+        revisions.update({document.id: document.updated_at for document in documents})
     return KnowledgeAdviceLibrary(
         version=f"db-{current_time.strftime('%Y%m%d%H%M%S')}",
         items=[_document_to_advice_item(document) for document in documents],
@@ -111,20 +143,8 @@ def to_index_job_response(job: KnowledgeIndexJob) -> KnowledgeIndexJobResponse:
     )
 
 
-def _write_generated_knowledge_source(library: KnowledgeAdviceLibrary) -> None:
-    DEFAULT_DB_KNOWLEDGE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    DEFAULT_DB_KNOWLEDGE_PATH.write_text(
-        json.dumps(library.model_dump(mode="json"), ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
-
-
-def _build_retrieval_indexes() -> None:
-    knowledge_path = DEFAULT_DB_KNOWLEDGE_PATH
-    index_dir = DEFAULT_DB_KNOWLEDGE_PATH.parent
-    LocalBm25KnowledgeStore(knowledge_path=knowledge_path, index_dir=index_dir).build_index()
-    LocalEmbeddingKnowledgeStore(knowledge_path=knowledge_path, index_dir=index_dir, min_score=0.0).build_index()
-    LocalVectorKnowledgeStore(knowledge_path=knowledge_path, index_dir=index_dir).build_index()
+def _build_retrieval_indexes(snapshot) -> None:
+    build_bundle(snapshot)
 
 
 def _clear_knowledge_runtime_caches() -> None:

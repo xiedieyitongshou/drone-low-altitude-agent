@@ -10,7 +10,7 @@ from app.schemas.composed_response import (
     ComposedRecommendationWindow,
     UnifiedBusinessResponse,
 )
-from app.services.advice_retriever import build_advice_context, retrieve_advice, retrieve_knowledge_by_request
+from app.services.advice_retriever import retrieve_knowledge_by_request
 from app.services.rag_context_mapper import build_knowledge_request_from_assessment, build_knowledge_request_from_rule_context
 from app.services.response_explainer import build_explanation_guardrail_metadata, explain_business_response
 from app.services.run_observability import timed_stage
@@ -27,14 +27,6 @@ def compose_evaluation_response(response: CruiseAssessmentResponse) -> UnifiedBu
         f"任务结论为 {response.advice.overall_decision}。"
     )
     warning_items = [item.model_dump() for item in response.warnings.warnings] if response.warnings else []
-    advice_context = build_advice_context(
-        task_type=str(request.get('task_type') or 'cruise'),
-        overall_decision=str(response.advice.overall_decision),
-        risk_reasons=response.advice.summary_risk_factors,
-        warning_items=warning_items,
-        limit=3,
-    )
-    advice = [item.model_dump(mode='json') for item in retrieve_advice(advice_context)]
     knowledge = retrieve_knowledge_by_request(
         payload=build_knowledge_request_from_assessment(
             task_type=str(request.get('task_type') or 'cruise'),
@@ -53,7 +45,7 @@ def compose_evaluation_response(response: CruiseAssessmentResponse) -> UnifiedBu
             "request": response.request,
             "warning_count": response.warnings.warning_count if response.warnings else 0,
             "hour_count": len(response.advice.hourly_assessment),
-            "advice": advice,
+            "advice": [item.model_dump(mode='json') for item in knowledge.advice],
             "knowledge_snippets": [item.model_dump(mode='json') for item in knowledge.snippets],
             "knowledge_retrieval_status": knowledge.retrieval_status,
             "knowledge_retrieval_message": knowledge.retrieval_message,
@@ -224,6 +216,9 @@ def _safe_str(value: object) -> str | None:
 
 
 def _with_explanation(response: UnifiedBusinessResponse) -> UnifiedBusinessResponse:
+    from app.services.knowledge_runtime_control import sanitize_composed_knowledge
+
+    sanitize_composed_knowledge(response)
     explanation = explain_business_response(response)
     response.explanation = explanation.text
     response.explanation_source = explanation.source
@@ -232,4 +227,5 @@ def _with_explanation(response: UnifiedBusinessResponse) -> UnifiedBusinessRespo
         **response.details,
         "explanation_guardrail": build_explanation_guardrail_metadata(explanation),
     }
+    sanitize_composed_knowledge(response)
     return response

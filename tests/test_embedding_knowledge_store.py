@@ -3,6 +3,7 @@ import json
 from app.schemas.advice import KnowledgeAccessContext, KnowledgeBusinessContext
 from app.services.embedding_knowledge_store import LocalEmbeddingKnowledgeStore
 from app.services.embedding_providers import MockEmbeddingProvider
+from app.services.knowledge_index_versions import current_snapshot
 
 
 def test_mock_embedding_provider_is_deterministic_and_normalized():
@@ -90,7 +91,7 @@ def test_embedding_index_rebuilds_when_provider_metadata_changes(tmp_path):
         index_dir=index_dir,
     )
     first_store.build_index()
-    first_metadata = json.loads((index_dir / "embedding_metadata.json").read_text(encoding="utf-8"))
+    first_metadata = json.loads((current_snapshot(index_dir, "embedding-current.json").directory / "embedding_metadata.json").read_text(encoding="utf-8"))
     assert first_metadata["dimension"] == 64
 
     second_store = LocalEmbeddingKnowledgeStore(
@@ -100,7 +101,7 @@ def test_embedding_index_rebuilds_when_provider_metadata_changes(tmp_path):
     )
     second_store.retrieve("审批手续", top_k=1)
 
-    second_metadata = json.loads((index_dir / "embedding_metadata.json").read_text(encoding="utf-8"))
+    second_metadata = json.loads((current_snapshot(index_dir, "embedding-current.json").directory / "embedding_metadata.json").read_text(encoding="utf-8"))
     assert second_metadata["dimension"] == 128
 
 

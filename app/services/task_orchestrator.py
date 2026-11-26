@@ -204,6 +204,9 @@ def _run_task_query(
             "trace_id": observation.trace_id, "run_id": observation.run_id,
         }
         _attach_evaluation_result(response)
+        from app.services.knowledge_runtime_control import finalize_orchestrator_knowledge
+
+        finalize_orchestrator_knowledge(response)
         if not response.success and db is not None:
             db.rollback()
         timings = observation.timing_summary()

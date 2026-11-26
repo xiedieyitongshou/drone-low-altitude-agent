@@ -246,7 +246,8 @@
 
 .agent-form input,
 .agent-form select,
-.agent-form textarea {
+.agent-form textarea,
+.admin-retrieval-control input {
   width: 100%;
   border: 1px solid #cbd5e1;
   border-radius: 12px;
@@ -263,7 +264,8 @@
 
 .agent-form input:focus,
 .agent-form select:focus,
-.agent-form textarea:focus {
+.agent-form textarea:focus,
+.admin-retrieval-control input:focus {
   border-color: #2563eb;
   outline: 3px solid rgba(37, 99, 235, 0.16);
 }
@@ -1874,6 +1876,22 @@
 .admin-index-status strong {
   color: #0f172a;
   font-size: 24px;
+}
+
+.admin-retrieval-control {
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 1fr) auto;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.admin-retrieval-control label {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.admin-retrieval-control > button {
+  white-space: nowrap;
 }
 
 .admin-knowledge-layout {

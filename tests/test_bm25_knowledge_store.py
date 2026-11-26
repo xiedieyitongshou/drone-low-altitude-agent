@@ -46,8 +46,11 @@ def test_bm25_retrieves_keyword_match_and_preserves_metadata_filters(tmp_path):
     assert result[0].metadata["chunk_id"].startswith("policy-shenzhen::chunk-")
     assert result[0].metadata["chunk_type"] == "policy_clause"
     assert result[0].metadata["rerank_boost"] > 0
-    assert (index_dir / "bm25_index.pkl").exists()
-    assert (index_dir / "bm25_documents.json").exists()
+    from app.services.knowledge_index_versions import current_snapshot
+
+    snapshot = current_snapshot(index_dir, "bm25-current.json")
+    assert (snapshot.directory / "bm25_index.pkl").exists()
+    assert (snapshot.directory / "bm25_documents.json").exists()
 
 
 def test_bm25_respects_private_user_visibility(tmp_path):

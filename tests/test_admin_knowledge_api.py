@@ -223,3 +223,60 @@ def test_admin_knowledge_returns_404_for_missing_document() -> None:
         assert response.status_code == 404
     finally:
         app.dependency_overrides.clear()
+
+
+def test_only_admin_can_pause_and_resume_knowledge_retrieval():
+    client, _ = build_test_client()
+    path = "/admin/knowledge/retrieval-control"
+    try:
+        assert client.get(path).status_code == 401
+        assert client.get(path, headers=auth_headers("user-a")).status_code == 403
+        assert client.put(path, json={"paused": True}, headers=auth_headers("user-a")).status_code == 403
+        paused = client.put(path, json={"paused": True, "message": "知识库维护中"}, headers=auth_headers("admin-a"))
+        assert paused.status_code == 200
+        assert paused.json()["paused"] is True
+        assert paused.json()["updated_by"] == "admin-a"
+        retrieval = client.post("/knowledge/advice/retrieve", json={"task_type": "inspection", "query": "深圳巡检政策"})
+        assert retrieval.status_code == 200
+        assert retrieval.json()["retrieval_status"] == "maintenance"
+        assert retrieval.json()["retrieval_message"] == "知识库维护中"
+        assert retrieval.json()["snippets"] == retrieval.json()["advice"] == []
+        assert client.get(path, headers=auth_headers("admin-a")).json()["paused"] is True
+        resumed = client.put(path, json={"paused": False}, headers=auth_headers("admin-a"))
+        assert resumed.status_code == 200
+        assert resumed.json()["paused"] is False
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_admin_withdraws_published_knowledge_without_rebuilding():
+    from app.services.knowledge_retrievers import create_default_knowledge_retriever
+
+    client, _ = build_test_client()
+    try:
+        created = client.post("/admin/knowledge", json={**valid_knowledge_payload(), "review_status": "approved"}, headers=auth_headers("admin-a"))
+        knowledge_id = created.json()["id"]
+        job = client.post("/admin/knowledge/reindex", headers=auth_headers("admin-a"))
+        assert job.json()["status"] == "success"
+        reader = create_default_knowledge_retriever()
+        assert {item.id for item in reader.retrieve("深圳 大风 巡检", top_k=5)} == {knowledge_id}
+        assert client.delete(f"/admin/knowledge/{knowledge_id}", headers=auth_headers("user-a")).status_code == 403
+        assert client.delete(f"/admin/knowledge/{knowledge_id}", headers=auth_headers("admin-a")).status_code == 200
+        assert reader.retrieve("深圳 大风 巡检", top_k=5) == []
+        control = client.get("/admin/knowledge/retrieval-control", headers=auth_headers("admin-a")).json()
+        assert control["withdrawn_count"] == 1
+        assert control["paused"] is False
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_admin_concurrent_publication_returns_conflict():
+    from app.services.knowledge_index_versions import default_index_root, index_lock
+
+    client, _ = build_test_client()
+    try:
+        with index_lock(default_index_root()):
+            response = client.post("/admin/knowledge/reindex", headers=auth_headers("admin-a"))
+        assert response.status_code == 409
+    finally:
+        app.dependency_overrides.clear()

@@ -92,6 +92,9 @@ from app.services.admin_knowledge_management import (
     update_knowledge_document_status,
 )
 from app.services.admin_knowledge_indexing import list_knowledge_index_jobs, reindex_knowledge_documents
+from app.schemas.knowledge import KnowledgeRetrievalControlResponse, KnowledgeRetrievalControlUpdate
+from app.services.knowledge_index_versions import KnowledgeIndexBusyError, current_snapshot, default_index_root
+from app.services.knowledge_runtime_control import read_control, set_retrieval_maintenance
 from app.services.admin_stats import get_admin_task_stats
 from app.services.admin_user_management import (
     AdminUserNotFoundError,
@@ -253,6 +256,11 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
         message="internal server error",
     )
     return JSONResponse(status_code=500, content=payload.model_dump())
+
+
+@app.exception_handler(KnowledgeIndexBusyError)
+async def knowledge_index_busy_handler(request: Request, exc: KnowledgeIndexBusyError):
+    return JSONResponse(status_code=409, content={"detail": str(exc)})
 
 
 @app.exception_handler(MissionTaskVersionConflictError)
@@ -772,6 +780,31 @@ def admin_list_knowledge_index_jobs(
     return list_knowledge_index_jobs(db=db, page=page, page_size=page_size)
 
 
+def _knowledge_control_response() -> KnowledgeRetrievalControlResponse:
+    control = read_control()
+    snapshot = current_snapshot(default_index_root())
+    return KnowledgeRetrievalControlResponse(
+        paused=control["paused"], message=control["message"],
+        updated_at=control.get("updated_at"), updated_by=control.get("updated_by"),
+        published_version=snapshot.version if snapshot else None,
+        withdrawn_count=sum(1 for item in control["documents"].values() if item["blocked"]),
+    )
+
+
+@app.get("/admin/knowledge/retrieval-control", response_model=KnowledgeRetrievalControlResponse)
+def admin_get_knowledge_retrieval_control(current_user: User = Depends(require_admin_user)):
+    return _knowledge_control_response()
+
+
+@app.put("/admin/knowledge/retrieval-control", response_model=KnowledgeRetrievalControlResponse)
+def admin_set_knowledge_retrieval_control(
+    payload: KnowledgeRetrievalControlUpdate,
+    current_user: User = Depends(require_admin_user),
+):
+    set_retrieval_maintenance(paused=payload.paused, message=payload.message, actor=current_user.id)
+    return _knowledge_control_response()
+
+
 @app.get("/admin/knowledge/{knowledge_id}", response_model=KnowledgeDocumentResponse)
 def admin_get_knowledge(
     knowledge_id: str,
@@ -794,7 +827,7 @@ def admin_update_knowledge(
 ) -> KnowledgeDocumentResponse:
     _ = current_user
     try:
-        return update_knowledge_document(db=db, knowledge_id=knowledge_id, payload=payload)
+        return update_knowledge_document(db=db, knowledge_id=knowledge_id, payload=payload, actor=current_user.id)
     except KnowledgeDocumentNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
 
@@ -807,7 +840,7 @@ def admin_delete_knowledge(
 ) -> KnowledgeDocumentResponse:
     _ = current_user
     try:
-        return soft_delete_knowledge_document(db=db, knowledge_id=knowledge_id)
+        return soft_delete_knowledge_document(db=db, knowledge_id=knowledge_id, actor=current_user.id)
     except KnowledgeDocumentNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
 
@@ -821,7 +854,7 @@ def admin_update_knowledge_status(
 ) -> KnowledgeDocumentResponse:
     _ = current_user
     try:
-        return update_knowledge_document_status(db=db, knowledge_id=knowledge_id, payload=payload)
+        return update_knowledge_document_status(db=db, knowledge_id=knowledge_id, payload=payload, actor=current_user.id)
     except KnowledgeDocumentNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
 

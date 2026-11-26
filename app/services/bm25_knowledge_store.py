@@ -38,7 +38,11 @@ class Bm25Index:
 class LocalBm25KnowledgeStore:
     """Lightweight BM25 index for keyword-oriented knowledge retrieval."""
 
+    index_kind = "bm25"
+
     def __init__(self, *, knowledge_path: Path | None = None, index_dir: Path | None = None) -> None:
+        self._default_location = knowledge_path is None and index_dir is None
+        self._snapshot = None
         self.knowledge_path = knowledge_path or get_default_knowledge_path()
         self.index_dir = index_dir or DEFAULT_INDEX_DIR
         self.index_dir.mkdir(parents=True, exist_ok=True)
@@ -46,6 +50,12 @@ class LocalBm25KnowledgeStore:
         self.documents_path = self.index_dir / "bm25_documents.json"
 
     def build_index(self) -> int:
+        from app.services.knowledge_index_versions import store_snapshot
+
+        store = store_snapshot(self, force=True)
+        return len(build_indexed_chunks(store._load_library()))
+
+    def _build_index(self) -> int:
         library = self._load_library()
         chunks = build_indexed_chunks(library)
         doc_tokens = [_tokenize_chunk(chunk) for chunk in chunks]
@@ -81,18 +91,36 @@ class LocalBm25KnowledgeStore:
         access_context: KnowledgeAccessContext | None = None,
         business_context: KnowledgeBusinessContext | None = None,
     ) -> list[RetrievedKnowledgeSnippet]:
+        from app.services.knowledge_index_versions import store_snapshot
+        from app.services.knowledge_runtime_control import filter_runtime_results, store_retrieval_paused
+
+        if store_retrieval_paused(self):
+            return []
+        store = store_snapshot(self)
+        results = store._retrieve(query_text, top_k=top_k, access_context=access_context, business_context=business_context)
+        results = [item.model_copy(update={"metadata": {**item.metadata, "index_version": store._snapshot.version}}) for item in results]
+        return filter_runtime_results(results, access_context, root=store._snapshot.root)
+
+    def _retrieve(self, query_text, *, top_k=5, access_context=None, business_context=None):
+        from app.services.knowledge_runtime_control import document_allowed, read_control
+
+        control = read_control(self._snapshot.root)
         self._ensure_index()
         index = self._load_index()
         chunks = [
             IndexedKnowledgeChunk(**item)
             for item in json.loads(self.documents_path.read_text(encoding="utf-8-sig"))
         ]
+        if len(chunks) != len(index.doc_term_freqs) or len(chunks) != len(index.doc_lengths):
+            raise ValueError("BM25 index/document count mismatch")
         query_tokens = tokenize_text(query_text)
         if not query_tokens:
             return []
 
         scored_chunks: list[tuple[float, float, IndexedKnowledgeChunk]] = []
         for chunk_index, chunk in enumerate(chunks):
+            if not document_allowed(chunk.knowledge_id, access_context, control, self._snapshot.version):
+                continue
             if not is_document_retrievable(chunk.metadata, access_context, business_context, document_id=chunk.id):
                 continue
 
@@ -124,13 +152,7 @@ class LocalBm25KnowledgeStore:
 
     def _ensure_index(self) -> None:
         if not self.index_path.exists() or not self.documents_path.exists():
-            self.build_index()
-            return
-        if self.knowledge_path.exists():
-            source_mtime = self.knowledge_path.stat().st_mtime
-            index_mtime = self.documents_path.stat().st_mtime
-            if source_mtime > index_mtime:
-                self.build_index()
+            raise RuntimeError("知识索引版本不完整，请重新发布。")
 
     def _load_index(self) -> Bm25Index:
         with self.index_path.open("rb") as file:

@@ -98,6 +98,7 @@ class AdviceSuggestion(BaseModel):
     source: str | None = None
     source_url: str | None = None
     matched_by: list[str] = Field(default_factory=list)
+    index_version: str | None = None
 
 
 class RetrievedKnowledgeSnippet(BaseModel):

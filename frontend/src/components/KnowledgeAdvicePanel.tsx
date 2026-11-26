@@ -49,8 +49,8 @@ export function KnowledgeAdvicePanel({ details }: KnowledgeAdvicePanelProps) {
   const snippets = normalizeList<KnowledgeSnippet>(
     details?.knowledge_snippets ?? details?.snippets,
   )
-  const retrievalStatus = readString(details?.retrieval_status)
-  const retrievalMessage = readString(details?.retrieval_message)
+  const retrievalStatus = readString(details?.retrieval_status ?? details?.knowledge_retrieval_status)
+  const retrievalMessage = readString(details?.retrieval_message ?? details?.knowledge_retrieval_message)
   const retrievalMetadata = readObject<RetrievalMetadata>(details?.retrieval_metadata)
   const dataSource = getDataSource(details)
 
@@ -296,7 +296,7 @@ function formatJsonNumber(value: JsonValue) {
 }
 
 function getRetrievalTone(status: string) {
-  if (status === 'fallback' || status.toLowerCase().includes('low_confidence')) {
+  if (status === 'fallback' || status === 'maintenance' || status.toLowerCase().includes('low_confidence')) {
     return 'warning'
   }
 

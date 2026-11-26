@@ -167,3 +167,12 @@ export type KnowledgeIndexJobListResponse = {
   page_size: number
   total: number
 }
+
+export type KnowledgeRetrievalControl = {
+  paused: boolean
+  message: string
+  updated_at: string | null
+  updated_by: string | null
+  published_version: string | null
+  withdrawn_count: number
+}

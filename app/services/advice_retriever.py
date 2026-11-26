@@ -2,6 +2,7 @@ import json
 import os
 import pickle
 from functools import lru_cache
+from contextlib import nullcontext
 from app.services.run_observability import timed_stage
 from pathlib import Path
 
@@ -59,11 +60,21 @@ WARNING_LEVEL_MAP = {
 }
 
 
-@lru_cache(maxsize=1)
 def load_advice_library(path: str | None = None) -> KnowledgeAdviceLibrary:
-    knowledge_path = Path(path) if path else get_default_knowledge_path()
+    from app.services.knowledge_index_versions import pinned_default_source
+
+    knowledge_path = Path(path) if path else pinned_default_source() or get_default_knowledge_path()
+    return _load_advice_library(str(knowledge_path.resolve()))
+
+
+@lru_cache(maxsize=8)
+def _load_advice_library(path: str) -> KnowledgeAdviceLibrary:
+    knowledge_path = Path(path)
     payload = json.loads(knowledge_path.read_text(encoding="utf-8-sig"))
     return KnowledgeAdviceLibrary.model_validate(payload)
+
+
+load_advice_library.cache_clear = _load_advice_library.cache_clear
 
 
 def infer_risk_tags(risk_reasons: list[str]) -> list[str]:
@@ -166,7 +177,13 @@ def retrieve_advice(
         )
 
     candidates.sort(key=lambda item: (-item[0], item[1].title))
-    return [item[1] for item in candidates[: context.limit]]
+    from app.services.knowledge_runtime_control import filter_runtime_results
+    from app.services.knowledge_index_versions import pinned_default_source
+
+    source = Path(path) if path else pinned_default_source() or get_default_knowledge_path()
+    version = source.parent.name if source.parent.parent.name == "versions" else None
+    suggestions = [item[1].model_copy(update={"index_version": version}) for item in candidates[: context.limit]]
+    return filter_runtime_results(suggestions, access_context)
 
 
 def build_advice_context(
@@ -199,6 +216,34 @@ def build_advice_context(
 
 @timed_stage("knowledge")
 def retrieve_knowledge_by_request(
+    payload: KnowledgeRetrievalRequest,
+    *,
+    access_context: KnowledgeAccessContext | None = None,
+    retriever: KnowledgeRetriever | None = None,
+) -> KnowledgeRetrievalResponse:
+    from app.services.knowledge_index_versions import pin_default_snapshot
+    from app.services.knowledge_runtime_control import finalize_retrieval, read_control
+
+    try:
+        control = read_control()
+        if control["paused"]:
+            return finalize_retrieval(KnowledgeRetrievalResponse(
+                context=AdviceRetrievalContext(task_type=payload.task_type),
+            ), access_context)
+        with pin_default_snapshot() if retriever is None else nullcontext() as snapshot:
+            response = _retrieve_knowledge_by_request(payload, access_context=access_context, retriever=retriever)
+            if snapshot:
+                response.retrieval_metadata["index_version"] = snapshot.version
+            return finalize_retrieval(response, access_context)
+    except (OSError, ValueError, TypeError, RuntimeError, EOFError, IndexError, pickle.UnpicklingError) as exc:
+        return KnowledgeRetrievalResponse(
+            context=AdviceRetrievalContext(task_type=payload.task_type),
+            retrieval_status="error", retrieval_message="知识检索暂时不可用，请稍后重试。",
+            retrieval_metadata={"reason_code": "retrieval_error", "error_type": type(exc).__name__},
+        )
+
+
+def _retrieve_knowledge_by_request(
     payload: KnowledgeRetrievalRequest,
     *,
     access_context: KnowledgeAccessContext | None = None,
@@ -259,6 +304,9 @@ def retrieve_knowledge_by_request(
             snippets = active_retriever.retrieve(
                 query_text, top_k=candidate_limit, access_context=access_context, business_context=business_context,
             )
+            from app.services.knowledge_runtime_control import filter_runtime_results
+
+            snippets = filter_runtime_results(snippets, access_context)
             decision = evaluate_rag_confidence(snippets)
             accepted = []
             rejections = list(business_context.rejected_candidates)
@@ -304,7 +352,7 @@ def retrieve_knowledge_by_request(
                     warning_types=context.warning_types, warning_levels=context.warning_levels,
                 )
                 retrieval_metadata.update(query_rewritten=True, rewrite_query=query_text)
-    except (OSError, ValueError, TypeError, RuntimeError, EOFError, pickle.UnpicklingError) as exc:
+    except (OSError, ValueError, TypeError, RuntimeError, EOFError, IndexError, pickle.UnpicklingError) as exc:
         retrieval_metadata.update(reason_code="retrieval_error", error_type=type(exc).__name__)
         return KnowledgeRetrievalResponse(
             context=context, advice=advice, retrieval_status="error", retrieval_metadata=retrieval_metadata,

@@ -38,6 +38,8 @@ class EmbeddingIndex:
 class LocalEmbeddingKnowledgeStore:
     """Local embedding index with provider metadata validation."""
 
+    index_kind = "embedding"
+
     def __init__(
         self,
         *,
@@ -46,6 +48,8 @@ class LocalEmbeddingKnowledgeStore:
         index_dir: Path | None = None,
         min_score: float | None = None,
     ) -> None:
+        self._default_location = provider is None and knowledge_path is None and index_dir is None
+        self._snapshot = None
         self.provider = provider or MockEmbeddingProvider()
         self.knowledge_path = knowledge_path or get_default_knowledge_path()
         self.index_dir = index_dir or DEFAULT_INDEX_DIR
@@ -56,6 +60,12 @@ class LocalEmbeddingKnowledgeStore:
         self.min_score = min_score if min_score is not None else _load_min_score()
 
     def build_index(self) -> int:
+        from app.services.knowledge_index_versions import store_snapshot
+
+        store = store_snapshot(self, force=True)
+        return len(build_indexed_chunks(store._load_library()))
+
+    def _build_index(self) -> int:
         library = self._load_library()
         chunks = build_indexed_chunks(library)
         embeddings = self.provider.embed_texts([_embedding_chunk_text(chunk) for chunk in chunks])
@@ -79,18 +89,36 @@ class LocalEmbeddingKnowledgeStore:
         access_context: KnowledgeAccessContext | None = None,
         business_context: KnowledgeBusinessContext | None = None,
     ) -> list[RetrievedKnowledgeSnippet]:
+        from app.services.knowledge_index_versions import store_snapshot
+        from app.services.knowledge_runtime_control import filter_runtime_results, store_retrieval_paused
+
+        if store_retrieval_paused(self):
+            return []
+        store = store_snapshot(self)
+        results = store._retrieve(query_text, top_k=top_k, access_context=access_context, business_context=business_context)
+        results = [item.model_copy(update={"metadata": {**item.metadata, "index_version": store._snapshot.version}}) for item in results]
+        return filter_runtime_results(results, access_context, root=store._snapshot.root)
+
+    def _retrieve(self, query_text, *, top_k=5, access_context=None, business_context=None):
+        from app.services.knowledge_runtime_control import document_allowed, read_control
+
+        control = read_control(self._snapshot.root)
         self._ensure_index()
         index = self._load_index()
         chunks = [
             IndexedKnowledgeChunk(**item)
             for item in json.loads(self.documents_path.read_text(encoding="utf-8-sig"))
         ]
+        if len(chunks) != len(index.embeddings):
+            raise ValueError("Embedding index/document count mismatch")
         query_embedding = self.provider.embed_texts([query_text])[0]
         if not query_embedding:
             return []
 
         scored_chunks: list[tuple[float, float, IndexedKnowledgeChunk]] = []
-        for chunk, embedding in zip(chunks, index.embeddings, strict=False):
+        for chunk, embedding in zip(chunks, index.embeddings, strict=True):
+            if not document_allowed(chunk.knowledge_id, access_context, control, self._snapshot.version):
+                continue
             if not is_document_retrievable(chunk.metadata, access_context, business_context, document_id=chunk.id):
                 continue
 
@@ -123,11 +151,7 @@ class LocalEmbeddingKnowledgeStore:
 
     def _ensure_index(self) -> None:
         if not self.index_path.exists() or not self.documents_path.exists() or not self.metadata_path.exists():
-            self.build_index()
-            return
-        metadata = json.loads(self.metadata_path.read_text(encoding="utf-8-sig"))
-        if self._metadata_mismatch(metadata) or self._source_is_newer_than_index(metadata):
-            self.build_index()
+            raise RuntimeError("知识索引版本不完整，请重新发布。")
 
     def _load_index(self) -> EmbeddingIndex:
         with self.index_path.open("rb") as file:
@@ -144,19 +168,6 @@ class LocalEmbeddingKnowledgeStore:
             "knowledge_mtime": self.knowledge_path.stat().st_mtime if self.knowledge_path.exists() else None,
             "created_at": int(time.time()),
         }
-
-    def _metadata_mismatch(self, metadata: dict[str, object]) -> bool:
-        expected = provider_metadata(self.provider)
-        return any(metadata.get(key) != value for key, value in expected.items())
-
-    def _source_is_newer_than_index(self, metadata: dict[str, object]) -> bool:
-        if not self.knowledge_path.exists():
-            return False
-        indexed_mtime = metadata.get("knowledge_mtime")
-        if not isinstance(indexed_mtime, (int, float)):
-            return True
-        return self.knowledge_path.stat().st_mtime > indexed_mtime
-
 
 def _embedding_chunk_text(chunk: IndexedKnowledgeChunk) -> str:
     keywords = chunk.metadata.get("keywords")

@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   createAdminKnowledge,
-  deleteAdminKnowledge,
+  getAdminKnowledgeRetrievalControl,
   listAdminKnowledge,
   listAdminKnowledgeIndexJobs,
   reindexAdminKnowledge,
+  setAdminKnowledgeRetrievalControl,
   updateAdminKnowledge,
   updateAdminKnowledgeStatus,
 } from '../api/admin'
@@ -13,6 +14,7 @@ import type {
   KnowledgeDocument,
   KnowledgeDocumentPayload,
   KnowledgeIndexJob,
+  KnowledgeRetrievalControl,
   KnowledgeReviewStatus,
   KnowledgeType,
   KnowledgeVisibility,
@@ -91,10 +93,14 @@ export function AdminKnowledgePage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isReindexing, setIsReindexing] = useState(false)
+  const [retrievalControl, setRetrievalControl] = useState<KnowledgeRetrievalControl | null>(null)
+  const [maintenanceMessage, setMaintenanceMessage] = useState('知识检索已暂停，管理员正在维护知识库，请稍后重试。')
+  const [isUpdatingControl, setIsUpdatingControl] = useState(false)
 
   useEffect(() => {
     void loadDocuments()
     void loadJobs()
+    void loadRetrievalControl()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page])
 
@@ -135,6 +141,32 @@ export function AdminKnowledgePage() {
     }
   }
 
+  async function loadRetrievalControl() {
+    try {
+      const control = await getAdminKnowledgeRetrievalControl()
+      setRetrievalControl(control)
+      setMaintenanceMessage(control.message)
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : '加载检索状态失败')
+    }
+  }
+
+  async function handleMaintenanceChange() {
+    if (!retrievalControl) return
+    setIsUpdatingControl(true)
+    setErrorMessage('')
+    setSuccessMessage('')
+    try {
+      const control = await setAdminKnowledgeRetrievalControl(!retrievalControl.paused, maintenanceMessage)
+      setRetrievalControl(control)
+      setSuccessMessage(control.paused ? '全部知识检索已暂停，需由管理员手动恢复。' : '知识检索已恢复，单条撤回限制继续有效。')
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : '更新检索状态失败')
+    } finally {
+      setIsUpdatingControl(false)
+    }
+  }
+
   async function handleSave() {
     setIsSaving(true)
     setErrorMessage('')
@@ -145,8 +177,9 @@ export function AdminKnowledgePage() {
         ? await updateAdminKnowledge(form.id, payload)
         : await createAdminKnowledge(payload)
       setForm(toFormState(saved))
-      setSuccessMessage(form.id ? '知识已更新，索引状态已标记为待重建。' : '知识已新增。')
+      setSuccessMessage('知识已保存，待发布；撤回和权限收紧立即生效。')
       await loadDocuments(1)
+      await loadRetrievalControl()
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : '保存知识失败')
     } finally {
@@ -169,24 +202,10 @@ export function AdminKnowledgePage() {
       if (form.id === updated.id) {
         setForm(toFormState(updated))
       }
-      setSuccessMessage('知识状态已更新，索引状态已标记为待重建。')
+      setSuccessMessage(payload.is_active === false ? '该知识已立即撤回，其他知识继续提供检索。' : '知识状态已保存，启用或审核通过后需发布更新。')
+      await loadRetrievalControl()
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : '更新知识状态失败')
-    }
-  }
-
-  async function handleDelete(document: KnowledgeDocument) {
-    setErrorMessage('')
-    setSuccessMessage('')
-    try {
-      const updated = await deleteAdminKnowledge(document.id)
-      setDocuments((current) => current.map((item) => (item.id === updated.id ? updated : item)))
-      if (form.id === updated.id) {
-        setForm(toFormState(updated))
-      }
-      setSuccessMessage('知识已禁用，保留记录用于审计。')
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : '禁用知识失败')
     }
   }
 
@@ -197,9 +216,14 @@ export function AdminKnowledgePage() {
     try {
       const job = await reindexAdminKnowledge()
       setJobs((current) => [job, ...current.filter((item) => item.id !== job.id)].slice(0, 5))
-      setSuccessMessage(`索引重建完成：${job.document_count} 条知识，${job.chunk_count} 个切片。`)
       await loadDocuments()
       await loadJobs()
+      await loadRetrievalControl()
+      if (job.status === 'success') {
+        setSuccessMessage(`新版已发布：${job.document_count} 条知识。${job.error_message || ''}`)
+      } else {
+        setErrorMessage(`发布失败，当前已发布版本继续使用，撤回限制保持有效。${job.error_message || ''}`)
+      }
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : '重建索引失败')
     } finally {
@@ -212,10 +236,25 @@ export function AdminKnowledgePage() {
       <div className="page-header">
         <div>
           <h2>RAG 知识库管理</h2>
-          <p>维护数据库知识、审核发布，并触发 BM25 / Embedding / TF-IDF 索引重建。</p>
+          <p>普通修改发布成功后生效；紧急撤回立即停止使用对应知识。</p>
         </div>
         <button type="button" onClick={() => void handleReindex()} disabled={isReindexing}>
-          {isReindexing ? '重建中...' : '重建索引'}
+          {isReindexing ? '发布中...' : '发布知识更新'}
+        </button>
+      </div>
+
+      <div className="admin-index-status admin-retrieval-control">
+        <div>
+          <span>知识检索</span>
+          <strong>{retrievalControl ? (retrievalControl.paused ? '全部暂停' : '正常提供') : '状态加载中'}</strong>
+          <small>已撤回 {retrievalControl?.withdrawn_count ?? 0} 条；发布更新不会自动恢复全局暂停。</small>
+        </div>
+        <label>
+          <span>暂停期间向用户显示的提示</span>
+          <input value={maintenanceMessage} maxLength={300} onChange={(event) => setMaintenanceMessage(event.target.value)} />
+        </label>
+        <button type="button" className="secondary-button" disabled={!retrievalControl || isUpdatingControl} onClick={() => void handleMaintenanceChange()}>
+          {isUpdatingControl ? '处理中...' : retrievalControl?.paused ? '恢复全部检索' : '暂停全部检索'}
         </button>
       </div>
 
@@ -226,11 +265,11 @@ export function AdminKnowledgePage() {
           <small>
             {latestJob
               ? `${latestJob.index_type} / docs ${latestJob.document_count} / chunks ${latestJob.chunk_count}`
-              : '创建或审核知识后可手动重建索引'}
+              : '创建或审核知识后可发布更新'}
           </small>
         </div>
         <div>
-          <span>待重建知识</span>
+          <span>待发布知识</span>
           <strong>{documents.filter((item) => item.index_dirty).length}</strong>
           <small>当前页 index_dirty=true 的数量</small>
         </div>
@@ -292,8 +331,8 @@ export function AdminKnowledgePage() {
           <span>索引状态</span>
           <select value={indexDirty === '' ? '' : String(indexDirty)} onChange={(event) => setIndexDirty(toBooleanFilter(event.target.value))}>
             <option value="">全部</option>
-            <option value="true">待重建</option>
-            <option value="false">已同步</option>
+            <option value="true">待发布</option>
+            <option value="false">已发布</option>
           </select>
         </label>
         <div className="form-actions">
@@ -345,7 +384,7 @@ export function AdminKnowledgePage() {
                   </td>
                   <td>
                     <span className={document.index_dirty ? 'dirty-index' : 'clean-index'}>
-                      {document.index_dirty ? '待重建' : '已同步'}
+                      {document.index_dirty ? '待发布' : '已发布'}
                     </span>
                   </td>
                   <td>
@@ -358,7 +397,7 @@ export function AdminKnowledgePage() {
                         className="secondary-button"
                         onClick={() => void handleStatusChange(document, { is_active: !document.is_active })}
                       >
-                        {document.is_active ? '禁用' : '启用'}
+                        {document.is_active ? '立即撤回' : '启用（待发布）'}
                       </button>
                       <button
                         type="button"
@@ -366,9 +405,6 @@ export function AdminKnowledgePage() {
                         onClick={() => void handleStatusChange(document, { review_status: 'approved' })}
                       >
                         审核通过
-                      </button>
-                      <button type="button" className="secondary-button" onClick={() => void handleDelete(document)}>
-                        软删除
                       </button>
                     </div>
                   </td>
@@ -432,7 +468,7 @@ export function AdminKnowledgePage() {
               {jobs.map((job) => (
                 <tr key={job.id}>
                   <td>{job.id}</td>
-                  <td><StatusBadge value={job.status} /></td>
+                  <td><StatusBadge value={job.status} /><small>{job.error_message}</small></td>
                   <td>{job.index_type}</td>
                   <td>{job.document_count} / {job.chunk_count}</td>
                   <td>{job.triggered_by_user_id || '-'}</td>

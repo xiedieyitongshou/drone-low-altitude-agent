@@ -12,6 +12,7 @@ import type {
   KnowledgeIndexJob,
   KnowledgeIndexJobListResponse,
   KnowledgeReviewStatus,
+  KnowledgeRetrievalControl,
   KnowledgeType,
   KnowledgeVisibility,
 } from '../types/admin'
@@ -124,6 +125,16 @@ export async function deleteAdminKnowledge(knowledgeId: string) {
 
 export async function reindexAdminKnowledge() {
   const response = await apiClient.post<KnowledgeIndexJob>('/admin/knowledge/reindex')
+  return response.data
+}
+
+export async function getAdminKnowledgeRetrievalControl() {
+  const response = await apiClient.get<KnowledgeRetrievalControl>('/admin/knowledge/retrieval-control')
+  return response.data
+}
+
+export async function setAdminKnowledgeRetrievalControl(paused: boolean, message: string) {
+  const response = await apiClient.put<KnowledgeRetrievalControl>('/admin/knowledge/retrieval-control', { paused, message })
   return response.data
 }
 
