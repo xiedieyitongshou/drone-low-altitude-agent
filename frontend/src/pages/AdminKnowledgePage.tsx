@@ -221,6 +221,8 @@ export function AdminKnowledgePage() {
       await loadRetrievalControl()
       if (job.status === 'success') {
         setSuccessMessage(`新版已发布：${job.document_count} 条知识。${job.error_message || ''}`)
+      } else if (job.status === 'running' || job.status === 'pending') {
+        setSuccessMessage('新版已切换，发布状态正在自动恢复，请稍后刷新查看结果。撤回和暂停限制保持有效。')
       } else {
         setErrorMessage(`发布失败，当前已发布版本继续使用，撤回限制保持有效。${job.error_message || ''}`)
       }

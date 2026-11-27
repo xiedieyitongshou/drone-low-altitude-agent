@@ -52,6 +52,8 @@ class KnowledgeIndexJob(Base):
     id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: str(uuid4()))
     status: Mapped[str] = mapped_column(String(32), default="pending", index=True)
     index_type: Mapped[str] = mapped_column(String(32), default="hybrid", index=True)
+    index_version: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    publication_phase: Mapped[str | None] = mapped_column(String(32), nullable=True)
     triggered_by_user_id: Mapped[str | None] = mapped_column(String(64), ForeignKey("users.id"), index=True, nullable=True)
     document_count: Mapped[int] = mapped_column(Integer, default=0)
     chunk_count: Mapped[int] = mapped_column(Integer, default=0)

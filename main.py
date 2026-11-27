@@ -95,6 +95,7 @@ from app.services.admin_knowledge_indexing import list_knowledge_index_jobs, rei
 from app.schemas.knowledge import KnowledgeRetrievalControlResponse, KnowledgeRetrievalControlUpdate
 from app.services.knowledge_index_versions import KnowledgeIndexBusyError, current_snapshot, default_index_root
 from app.services.knowledge_runtime_control import read_control, set_retrieval_maintenance
+from app.services import knowledge_publication_recovery
 from app.services.admin_stats import get_admin_task_stats
 from app.services.admin_user_management import (
     AdminUserNotFoundError,
@@ -209,13 +210,17 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     logger.info("Application starting")
     if os.getenv("AUTO_MIGRATE_ON_STARTUP", "true").lower() == "true":
         await asyncio.to_thread(upgrade_database_to_head)
+    await asyncio.to_thread(knowledge_publication_recovery.recover_pending_knowledge_publications)
     cleanup_task = asyncio.create_task(run_database_session_cleanup())
+    publication_recovery_task = asyncio.create_task(knowledge_publication_recovery.run_knowledge_publication_recovery())
     try:
         yield
     finally:
-        cleanup_task.cancel()
-        with suppress(asyncio.CancelledError):
-            await cleanup_task
+        for task in (cleanup_task, publication_recovery_task):
+            task.cancel()
+        for task in (cleanup_task, publication_recovery_task):
+            with suppress(asyncio.CancelledError):
+                await task
 
 
 app = FastAPI(title=settings.app_name, lifespan=lifespan)

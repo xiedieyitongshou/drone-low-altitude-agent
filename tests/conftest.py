@@ -20,7 +20,7 @@ def isolate_startup_migrations(monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.fixture(autouse=True)
 def isolate_knowledge_publications(monkeypatch, tmp_path):
     """Never publish test knowledge or maintenance controls into the live index."""
-    from app.services import admin_knowledge_indexing, vector_knowledge_store
+    from app.services import admin_knowledge_indexing, knowledge_publication_recovery, vector_knowledge_store
     from app.services.advice_retriever import load_advice_library
 
     root = tmp_path / "knowledge-index"
@@ -28,6 +28,9 @@ def isolate_knowledge_publications(monkeypatch, tmp_path):
     monkeypatch.setattr(vector_knowledge_store, "DEFAULT_INDEX_DIR", root)
     monkeypatch.setattr(vector_knowledge_store, "DEFAULT_DB_KNOWLEDGE_PATH", source)
     monkeypatch.setattr(admin_knowledge_indexing, "DEFAULT_DB_KNOWLEDGE_PATH", source)
+    # Request sessions are overridden in API tests. Background recovery must not
+    # open the separately configured live database; integration tests opt in.
+    monkeypatch.setattr(knowledge_publication_recovery, "recover_pending_knowledge_publications", lambda: 0)
     load_advice_library.cache_clear()
     yield
     load_advice_library.cache_clear()

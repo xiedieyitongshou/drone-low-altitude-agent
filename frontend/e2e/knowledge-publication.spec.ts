@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import type { Page, Route } from '@playwright/test'
 
-async function openKnowledge(page: Page, publicationStatus: 'success' | 'failed' = 'success') {
+async function openKnowledge(page: Page, publicationStatus: 'success' | 'failed' | 'running' = 'success') {
   let document = {
     id: 'policy', title: '巡检知识', content: '原有巡检建议', knowledge_type: 'risk_advice', category: 'risk_advice',
     region: null, province: null, city: null, task_types: [], risk_tags: [], warning_types: [], warning_levels: [],
@@ -60,9 +60,9 @@ async function openKnowledge(page: Page, publicationStatus: 'success' | 'failed'
         error_message: publicationStatus === 'failed' ? '模拟构建失败' : null,
       }
       jobs.unshift(job)
-      if (publicationStatus === 'success') {
+      if (publicationStatus === 'success' || publicationStatus === 'running') {
         control = { ...control, published_version: 'new-version' }
-        document = { ...document, index_dirty: false }
+        document = { ...document, index_dirty: publicationStatus === 'running' }
       }
       await route.fulfill({ json: job })
     },
@@ -96,6 +96,16 @@ test('withdrawing one item does not pause all retrieval or publish a new index',
   expect(api.control().withdrawn_count).toBe(1)
   expect(api.control().published_version).toBe('old-version')
   expect(api.writes.map((write) => write.path)).toEqual(['/admin/knowledge/policy/status'])
+  expect(api.unexpected).toEqual([])
+})
+
+test('a switched publication awaiting recovery is not reported as a failed switch', async ({ page }) => {
+  const api = await openKnowledge(page, 'running')
+  await page.getByRole('button', { name: '发布知识更新', exact: true }).click()
+  await api.finishPublication()
+  await expect(page.locator('.success-panel')).toContainText('发布状态正在自动恢复')
+  await expect(page.locator('.error-panel')).toHaveCount(0)
+  expect(api.control().published_version).toBe('new-version')
   expect(api.unexpected).toEqual([])
 })
 

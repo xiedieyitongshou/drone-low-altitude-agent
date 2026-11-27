@@ -38,7 +38,7 @@ def test_fresh_database_updates_once_and_preserves_existing_rows(migration_engin
     upgrade.assert_not_called()
     with migration_engine.connect() as connection:
         assert connection.scalar(text("SELECT count(*) FROM users WHERE id='existing'")) == 1
-        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "d8a4c6e1f025"
+        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "e3b7a9d20c64"
         assert inspect(connection).has_table("operation_requests")
 
 
@@ -51,6 +51,23 @@ def test_existing_database_receives_pending_revision(migration_engine):
     assert not inspect(migration_engine).has_table("operation_requests")
     assert upgrade_database_to_head(migration_engine) is True
     assert inspect(migration_engine).has_table("operation_requests")
+
+
+def test_existing_publication_jobs_receive_nullable_recovery_fields(migration_engine):
+    config = Config(str(BASE_DIR / "alembic.ini"))
+    config.attributes["configure_logger"] = False
+    with migration_engine.begin() as connection:
+        config.attributes["connection"] = connection
+        command.upgrade(config, "d8a4c6e1f025")
+        connection.execute(text("""
+            INSERT INTO knowledge_index_jobs
+                (id, status, index_type, document_count, chunk_count, created_at, updated_at)
+            VALUES ('legacy-job', 'success', 'hybrid', 1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        """))
+    assert upgrade_database_to_head(migration_engine) is True
+    with migration_engine.connect() as connection:
+        row = connection.execute(text("SELECT status, index_version, publication_phase FROM knowledge_index_jobs WHERE id='legacy-job'")).one()
+        assert tuple(row) == ("success", None, None)
 
 
 def test_overlapping_local_startups_apply_migrations_once(migration_engine):

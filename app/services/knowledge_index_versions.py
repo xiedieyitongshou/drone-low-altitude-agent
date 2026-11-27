@@ -103,11 +103,19 @@ def current_snapshot(root: Path, pointer: str = "current.json") -> KnowledgeSnap
     if not path.exists():
         return None
     data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError("Invalid knowledge index publication pointer")
     version = data.get("version", "")
+    return snapshot_for_version(root, version)
+
+
+def snapshot_for_version(root: Path, version: str) -> KnowledgeSnapshot:
     if not isinstance(version, str) or not re.fullmatch(r"[a-z0-9]+-[0-9a-f]{32}", version):
         raise ValueError("Invalid knowledge index publication pointer")
     directory = filesystem_path(root / "versions" / version)
     manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
+    if not isinstance(manifest, dict):
+        raise ValueError("Invalid knowledge index publication manifest")
     return KnowledgeSnapshot(root=root, directory=directory, manifest=manifest)
 
 
@@ -294,6 +302,27 @@ def build_bundle(snapshot: KnowledgeSnapshot) -> None:
         store._build_index()
         validate_index(snapshot, store.index_kind)
     complete_snapshot(snapshot)
+
+
+def validate_bundle(snapshot: KnowledgeSnapshot) -> None:
+    """Check durable artifacts before recovery trusts a published generation."""
+    required = {
+        "source.json", "bm25_index.pkl", "bm25_documents.json",
+        "embedding_index.pkl", "embedding_documents.json", "embedding_metadata.json",
+        "tfidf_vectorizer.pkl", "tfidf_matrix.pkl", "documents.json",
+    }
+    files = snapshot.manifest.get("files")
+    if not isinstance(files, dict) or not required.issubset(files):
+        raise ValueError("Incomplete knowledge publication manifest")
+    for name, expected in files.items():
+        if not isinstance(name, str) or Path(name).name != name or name in {".", ".."}:
+            raise ValueError("Invalid knowledge publication artifact")
+        if hashlib.sha256((snapshot.directory / name).read_bytes()).hexdigest() != expected:
+            raise ValueError(f"Knowledge publication checksum mismatch: {name}")
+    if files["source.json"] != snapshot.manifest.get("source_sha256"):
+        raise ValueError("Knowledge publication source checksum mismatch")
+    for kind in ("bm25", "embedding", "tfidf"):
+        validate_index(snapshot, kind)
 
 
 def ensure_default_snapshot(*, force: bool = False) -> KnowledgeSnapshot:

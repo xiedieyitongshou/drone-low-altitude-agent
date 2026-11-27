@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 
-from sqlalchemy import func, or_, select, update
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.db.models import KnowledgeDocument, KnowledgeIndexJob
@@ -10,20 +10,25 @@ from app.schemas.advice import AdviceCategory, AdvicePriority, KnowledgeAdviceIt
 from app.services.knowledge_chunker import build_indexed_chunks
 from app.services.vector_knowledge_store import DEFAULT_DB_KNOWLEDGE_PATH
 from app.services.knowledge_index_versions import (
-    build_bundle, index_lock, prepare_snapshot, publish_snapshot,
+    build_bundle, current_snapshot, index_lock, prepare_snapshot, publish_snapshot,
 )
-from app.services.knowledge_runtime_control import read_control, release_published_restrictions
+from app.services.knowledge_runtime_control import read_control
+from app.services.knowledge_publication_recovery import (
+    fail_interrupted_job, finish_published_job, recover_locked,
+)
 
 
 def reindex_knowledge_documents(*, db: Session, triggered_by_user_id: str | None = None) -> KnowledgeIndexJobResponse:
     root = DEFAULT_DB_KNOWLEDGE_PATH.parent
     with index_lock(root):
+        recover_locked(db=db, root=root)
         return _reindex_locked(db=db, root=root, triggered_by_user_id=triggered_by_user_id)
 
 
 def _reindex_locked(*, db: Session, root, triggered_by_user_id) -> KnowledgeIndexJobResponse:
     job = KnowledgeIndexJob(
         status=KnowledgeIndexJobStatus.RUNNING.value,
+        publication_phase="building",
         index_type="hybrid",
         triggered_by_user_id=triggered_by_user_id,
         started_at=datetime.utcnow(),
@@ -32,8 +37,7 @@ def _reindex_locked(*, db: Session, root, triggered_by_user_id) -> KnowledgeInde
     db.commit()
     db.refresh(job)
 
-    indexed_ids = []
-    metadata_committed = False
+    snapshot = None
     try:
         captured_control = read_control(root)
         timestamps = {}
@@ -41,45 +45,43 @@ def _reindex_locked(*, db: Session, root, triggered_by_user_id) -> KnowledgeInde
         chunk_count = len(build_indexed_chunks(library))
         snapshot = prepare_snapshot(root, library=library, origin="admin")
         snapshot.manifest["index_job_id"] = job.id
-        _build_retrieval_indexes(snapshot)
-
-        indexed_ids = [item.id for item in library.items]
-        for document_id in indexed_ids:
-            # An edit made during construction must remain pending publication.
-            db.execute(update(KnowledgeDocument).where(
-                KnowledgeDocument.id == document_id,
-                KnowledgeDocument.updated_at == timestamps[document_id],
-            ).values(index_dirty=False), execution_options={"synchronize_session": False})
-
-        job.status = KnowledgeIndexJobStatus.SUCCESS.value
+        snapshot.manifest["publication"] = {
+            "schema_version": 1,
+            "document_revisions": {key: value.isoformat() for key, value in timestamps.items()},
+            "captured_control": {"documents": {
+                item.id: captured_control["documents"][item.id]
+                for item in library.items if item.id in captured_control["documents"]
+            }},
+        }
+        job.index_version = snapshot.version
         job.document_count = len(library.items)
         job.chunk_count = chunk_count
-        job.finished_at = datetime.utcnow()
-        job.error_message = None
         db.commit()
-        metadata_committed = True
+        _build_retrieval_indexes(snapshot)
+        job.publication_phase = "ready"
+        db.commit()
+        job.publication_phase = "publishing"
+        db.commit()
         publish_snapshot(snapshot)
+        finish_published_job(db=db, job=job, snapshot=snapshot)
     except Exception as exc:
         db.rollback()
-        if metadata_committed and indexed_ids:
-            db.execute(update(KnowledgeDocument).where(KnowledgeDocument.id.in_(indexed_ids)).values(index_dirty=True))
-        job.status = KnowledgeIndexJobStatus.FAILED.value
-        job.error_message = str(exc)
-        job.finished_at = datetime.utcnow()
-        db.commit()
-        db.refresh(job)
-    else:
         try:
-            release_published_restrictions(captured=captured_control, published_items=library.items, version=snapshot.version, root=root)
-        except Exception:
-            # Publication is valid; leave restrictions in place on any control
-            # failure. Never reopen a withdrawn item by falling back to disk.
-            job.error_message = "新版已发布，但部分访问限制未解除，请重新发布。"
+            active = current_snapshot(root)
+        except (OSError, ValueError, TypeError):
+            active = None
+        if snapshot is not None and active is not None and active.version == snapshot.version:
+            # The pointer is the source of truth even if an exception was raised
+            # after os.replace or while committing the final DB transaction.
+            job.status = KnowledgeIndexJobStatus.RUNNING.value
+            job.publication_phase = "publishing"
+            job.error_message = f"新版已切换，发布收尾等待自动恢复：{exc}"
+            job.finished_at = None
             db.commit()
-            db.refresh(job)
-        _clear_knowledge_runtime_caches()
-        db.refresh(job)
+        else:
+            fail_interrupted_job(db=db, job=job, message=str(exc))
 
+    db.refresh(job)
     return to_index_job_response(job)
 
 
@@ -145,12 +147,6 @@ def to_index_job_response(job: KnowledgeIndexJob) -> KnowledgeIndexJobResponse:
 
 def _build_retrieval_indexes(snapshot) -> None:
     build_bundle(snapshot)
-
-
-def _clear_knowledge_runtime_caches() -> None:
-    from app.services.advice_retriever import load_advice_library
-
-    load_advice_library.cache_clear()
 
 
 def _document_to_advice_item(document: KnowledgeDocument) -> KnowledgeAdviceItem:
