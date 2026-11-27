@@ -1,4 +1,31 @@
 from scripts.rag_eval import _id_matched, evaluate_rag_checks, run_eval, summarize_results
+from scripts.rag_eval import DEFAULT_CASES_PATH, quality_gate_failures
+from copy import deepcopy
+import json
+import pytest
+
+
+@pytest.mark.parametrize("case_id,mutation,failed_gate", [
+    ("rag_low_confidence_fallback_001", "fallback_snippet", "fallback_cases_passed"),
+    ("rag_private_authorized_001", "missing_authorized_result", "permission_cases_passed"),
+])
+def test_critical_rag_case_cannot_be_hidden_by_aggregate_metrics(case_id, mutation, failed_gate):
+    _, results = run_eval(retriever_names=["hybrid"])
+    row = next(result for result in results if result["case_id"] == case_id)
+    case = next(case for case in json.loads(DEFAULT_CASES_PATH.read_text(encoding="utf-8-sig")) if case["id"] == case_id)
+    actual = deepcopy(row["actual"])
+    if mutation == "fallback_snippet":
+        actual["snippet_count"] = 1
+    else:
+        actual["knowledge_ids"] = []
+    row["checks"] = evaluate_rag_checks(case, actual)
+    row["actual"] = actual
+    row["passed"] = row["checks"]["passed"]
+    summary = summarize_results(results)
+    assert summary.fallback_pass_rate == 1.0
+    assert summary.permission_leakage_rate == 0
+    assert row["passed"] is False
+    assert failed_gate in quality_gate_failures(summary)
 
 
 def test_default_bm25_passes_applicability_permission_and_no_answer_cases(monkeypatch):

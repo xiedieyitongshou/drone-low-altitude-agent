@@ -7,6 +7,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from unittest.mock import patch
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -46,7 +47,8 @@ def run_failure_case(case: dict[str, Any]) -> dict[str, Any]:
     from app.agent import AgentLoop, ToolExecutionContext, ToolExecutor, initialize_state, mark_parsed
 
     trace_events = []
-    registry = build_failure_registry(case)
+    handler_calls = []
+    registry = build_failure_registry(case, handler_calls=handler_calls)
     executor = ToolExecutor(tool_registry=registry, trace_recorder=trace_events.append)
     state = initialize_state(
         f"eval:{case['id']}",
@@ -59,18 +61,19 @@ def run_failure_case(case: dict[str, Any]) -> dict[str, Any]:
         return {"source": "failure_recovery_eval"}
 
     context_data = case.get("context") or {}
-    result = AgentLoop(
-        tool_registry=registry,
-        tool_executor=executor,
-        fallback_handler=fallback_handler,
-    ).run(
-        state,
-        context=ToolExecutionContext(
-            user_id=context_data.get("user_id"),
-            tenant_id=context_data.get("tenant_id") or "public",
-            role=context_data.get("role") or "user",
-        ),
-    )
+    with patch("app.agent.loop.record_trace_event", trace_events.append):
+        result = AgentLoop(
+            tool_registry=registry,
+            tool_executor=executor,
+            fallback_handler=fallback_handler,
+        ).run(
+            state,
+            context=ToolExecutionContext(
+                user_id=context_data.get("user_id"),
+                tenant_id=context_data.get("tenant_id") or "public",
+                role=context_data.get("role") or "user",
+            ),
+        )
 
     output = result.output if isinstance(result.output, dict) else {}
     latest_error = result.final_state.errors[-1] if result.final_state.errors else {}
@@ -85,6 +88,9 @@ def run_failure_case(case: dict[str, Any]) -> dict[str, Any]:
         "output": output,
         "trace_event_types": [event.event_type.value for event in trace_events],
         "trace_error_codes": [event.error_code for event in trace_events if event.error_code],
+        "handler_called": bool(handler_calls),
+        "handler_call_count": len(handler_calls),
+        "tool_data": {name: item.data for name, item in result.final_state.tool_results.items() if item.data is not None},
     }
     checks = evaluate_failure_checks(case, actual)
     return {
@@ -98,12 +104,19 @@ def run_failure_case(case: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def build_failure_registry(case: dict[str, Any]) -> Any:
+def build_failure_registry(case: dict[str, Any], *, handler_calls: list | None = None) -> Any:
     from app.agent import ToolRegistry, ToolSpec
 
     failure = case.get("failure") or {}
     tool_name = str(case["tool_name"])
     registry = ToolRegistry()
+    original_handler = build_failure_handler(failure)
+
+    def handler(payload, context):
+        if handler_calls is not None:
+            handler_calls.append(tool_name)
+        return original_handler(payload, context)
+
     registry.register(
         ToolSpec(
             name=tool_name,
@@ -113,7 +126,7 @@ def build_failure_registry(case: dict[str, Any]) -> Any:
             requires_auth=bool(failure.get("requires_auth", True)),
             requires_admin=bool(failure.get("requires_admin", False)),
         ),
-        build_failure_handler(failure),
+        handler,
     )
     return registry
 
@@ -150,12 +163,20 @@ def evaluate_failure_checks(case: dict[str, Any], actual: dict[str, Any]) -> dic
 
     structured_fields = expected.get("structured_error_fields") or []
     missing_structured_fields = [
-        field for field in structured_fields if field not in (actual.get("output") or {})
+        field for field in structured_fields if not _structured_field_present(field, actual.get("output") or {})
     ]
 
     permission_bypass_pass = True
-    if "permission" in str(case.get("category")):
-        permission_bypass_pass = not bool(expected.get("permission_bypass", False)) and not bool(actual.get("fallback_used"))
+    if _is_permission_case(case):
+        permission_bypass_pass = (
+            not bool(expected.get("permission_bypass", False))
+            and actual.get("success") is False
+            and actual.get("fallback_used") is False
+            and actual.get("handler_called") is False
+            and actual.get("recovery_action") == "deny"
+            and actual.get("failure_type") in {"permission_denied", "auth_required"}
+            and not actual.get("tool_data")
+        )
 
     checks = {
         "success_pass": actual.get("success") == expected.get("success"),
@@ -165,7 +186,11 @@ def evaluate_failure_checks(case: dict[str, Any], actual: dict[str, Any]) -> dic
         "fallback_decision_pass": actual.get("fallback_used") == expected.get("fallback_used"),
         "error_code_pass": actual.get("error_code") == expected.get("error_code"),
         "message_keywords_pass": all(keyword in combined_text for keyword in expected.get("message_keywords", [])),
-        "no_fabrication_pass": not any(term in combined_text for term in FABRICATION_TERMS)
+        "no_fabrication_pass": (
+            not any(term in combined_text for term in FABRICATION_TERMS)
+            and not _contains_business_decision(actual.get("output"))
+            and not _contains_business_decision(actual.get("tool_data"))
+        )
         if expected.get("no_fabrication", True)
         else True,
         "trace_event_pass": not missing_trace_events,
@@ -197,9 +222,30 @@ def evaluate_failure_checks(case: dict[str, Any], actual: dict[str, Any]) -> dic
     return checks
 
 
+def _is_permission_case(case: dict[str, Any]) -> bool:
+    return "permission" in str(case.get("category")) or case.get("category") == "auth_required"
+
+
+def _structured_field_present(field: str, output: dict[str, Any]) -> bool:
+    value = output.get(field)
+    if field == "retryable":
+        return isinstance(value, bool)
+    if field == "errors":
+        return isinstance(value, list) and bool(value)
+    return value is not None and not (isinstance(value, str) and not value.strip())
+
+
+def _contains_business_decision(value: Any) -> bool:
+    if isinstance(value, dict):
+        decision_fields = {"allow_cruise", "overall_decision", "risk_score", "recommended_windows"}
+        return any((key in decision_fields and item is not None) or _contains_business_decision(item)
+                   for key, item in value.items())
+    return isinstance(value, list) and any(_contains_business_decision(item) for item in value)
+
+
 def summarize_results(results: list[dict[str, Any]]) -> FailureRecoverySummary:
     total = len(results)
-    permission_results = [result for result in results if "permission" in str(result.get("category"))]
+    permission_results = [result for result in results if _is_permission_case(result)]
     category_counts: dict[str, int] = defaultdict(int)
     category_passes: dict[str, int] = defaultdict(int)
     for result in results:

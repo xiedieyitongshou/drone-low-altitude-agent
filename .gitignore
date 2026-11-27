@@ -16,3 +16,6 @@ data/samples/
 data/knowledge/index/
 evals/reports/load/*.json
 evals/reports/load/*.db
+
+# Local-only private notes
+/.local/private/

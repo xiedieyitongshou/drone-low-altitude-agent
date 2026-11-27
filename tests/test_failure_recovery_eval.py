@@ -1,4 +1,43 @@
 from scripts.failure_recovery_eval import evaluate_failure_checks, summarize_results
+import json
+import pytest
+
+
+@pytest.fixture
+def failure_baseline():
+    from scripts.failure_recovery_eval import DEFAULT_CASES_PATH, run_failure_case
+    cases = json.loads(DEFAULT_CASES_PATH.read_text(encoding="utf-8-sig"))
+    return {case["category"]: (case, run_failure_case(case)["actual"]) for case in cases}
+
+
+@pytest.mark.parametrize("category", ["permission", "auth_required"])
+def test_permission_metrics_detect_handler_execution_even_after_denial(failure_baseline, category):
+    case, actual = failure_baseline[category]
+    assert evaluate_failure_checks(case, actual)["permission_bypass_pass"] is True
+    assert actual["handler_called"] is False
+    actual["handler_called"] = True
+    assert evaluate_failure_checks(case, actual)["permission_bypass_pass"] is False
+
+
+def test_permission_metric_fails_closed_without_handler_evidence(failure_baseline):
+    case, actual = failure_baseline["permission"]
+    actual.pop("handler_called")
+    assert evaluate_failure_checks(case, actual)["permission_bypass_pass"] is False
+
+
+@pytest.mark.parametrize("field,value", [("trace_id", ""), ("run_id", None), ("retryable", "false"), ("errors", [])])
+def test_structured_error_requires_meaningful_values(failure_baseline, field, value):
+    case, actual = failure_baseline["timeout"]
+    actual["output"][field] = value
+    checks = evaluate_failure_checks(case, actual)
+    assert checks["structured_error_pass"] is False
+    assert field in checks["missing_structured_fields"]
+
+
+def test_failure_cannot_hide_successful_business_decision_in_tool_data(failure_baseline):
+    case, actual = failure_baseline["timeout"]
+    actual["tool_data"] = {"evaluate_flight_risk": {"advice": {"allow_cruise": True}}}
+    assert evaluate_failure_checks(case, actual)["no_fabrication_pass"] is False
 
 
 def test_evaluate_failure_checks_passes_timeout_case():

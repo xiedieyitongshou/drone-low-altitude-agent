@@ -69,6 +69,10 @@ raise SystemExit(pytest.main(["tests/test_deepseek_regression.py", "-q", "--tb=s
         assert len(reports) == 5
         assert all(row["passed"] for row in reports)
         assert all(row["model_calls"] for row in reports)
+        assert all(row["model_transport"] == "fixture" for row in reports)
+        assert all(attempt["latency_ms"] >= 0 for row in reports for attempt in row["model_attempts"])
+        invalid = next(row for row in reports if row["case_id"] == "test_deepseek_invalid_model_format")
+        assert {call["format_fault"] for call in invalid["model_calls"]} == {"json", "schema"}
 
 
 def test_live_runner_rejects_missing_credentials_before_starting_tests(tmp_path):

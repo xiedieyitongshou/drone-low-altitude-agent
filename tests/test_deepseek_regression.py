@@ -4,6 +4,7 @@ from datetime import timedelta
 import json
 import os
 from pathlib import Path
+from time import perf_counter
 
 import pytest
 
@@ -18,10 +19,12 @@ class RecordingCase:
     def __init__(self, name):
         self.name = name
         self.model_calls = []
+        self.model_attempts = []
         self.turns = []
         self.checks = []
         self.completed = False
         self.inject_invalid_format = False
+        self.format_fault = None
 
     def check(self, name, condition):
         self.checks.append({"name": name, "passed": bool(condition)})
@@ -79,11 +82,21 @@ def live_case(request, monkeypatch, tmp_path):
     original_generate = llm_task_parser.generate_text
 
     def generate(**kwargs):
+        started = perf_counter()
         content = original_generate(**kwargs)
-        case.check("received_nonempty_real_model_response", isinstance(content, str) and bool(content.strip()))
-        case.model_calls.append({"query": json.loads(kwargs["user_prompt"])["query"], "response": content,
-                                 "format_fault_injected": case.inject_invalid_format})
-        return "{deliberately invalid JSON" if case.inject_invalid_format else content
+        received = isinstance(content, str) and bool(content.strip())
+        fault = case.format_fault or ("json" if case.inject_invalid_format else None)
+        attempt = {"query": json.loads(kwargs["user_prompt"])["query"],
+                   "latency_ms": round((perf_counter() - started) * 1000, 3),
+                   "response_received": received, "format_fault": fault}
+        case.model_attempts.append(attempt)
+        case.check("received_nonempty_real_model_response", received)
+        case.model_calls.append({**attempt, "response": content, "format_fault_injected": bool(fault)})
+        if fault == "json":
+            return "{deliberately invalid JSON"
+        if fault == "schema":
+            return json.dumps({"intent": "evaluate", "date": "not-a-date"})
+        return content
 
     monkeypatch.setattr(llm_task_parser, "generate_text", generate)
     monkeypatch.setattr("app.services.cruise_evaluator.QWeatherService", FixedWeather)
@@ -100,6 +113,7 @@ def live_case(request, monkeypatch, tmp_path):
             "model_transport": os.getenv("DEEPSEEK_EVAL_MODEL_TRANSPORT", "deepseek"),
             "passed": case.completed and bool(case.checks) and all(check["passed"] for check in case.checks),
             "checks": case.checks, "model_calls": case.model_calls, "turns": case.turns,
+            "model_attempts": case.model_attempts,
             "weather_calls": case.weather_calls,
         }
         (Path(os.environ["DEEPSEEK_EVAL_REPORT_DIR"]) / f"case-{case.name}.json").write_text(
@@ -217,9 +231,11 @@ def test_deepseek_invalid_model_format(live_case):
 
     case = live_case
     case.inject_invalid_format = True
-    response = query(case, f"深圳{case.day_text}14:00到16:00适合巡检吗？")
-    case.check("malformed_output_not_executed", not response.success and not case.turns[-1]["tool_inputs"] and not case.weather_calls)
-    case.check("structured_clarification", response.agent_runtime["status"] == "needs_clarification" and bool(response.fallback))
+    for fault in ("json", "schema"):
+        case.format_fault = fault
+        response = query(case, f"深圳{case.day_text}14:00到16:00适合巡检吗？")
+        case.check(f"{fault}_output_not_executed", not response.success and not case.turns[-1]["tool_inputs"] and not case.weather_calls)
+        case.check(f"{fault}_structured_clarification", response.agent_runtime["status"] == "needs_clarification" and bool(response.fallback))
     with SessionLocal() as db:
         case.check("no_evaluation_write", db.scalar(select(func.count()).select_from(TaskRequest).where(TaskRequest.user_id == case.user_id)) == 0)
     case.completed = True

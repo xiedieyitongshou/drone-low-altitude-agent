@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 from collections import defaultdict
 from dataclasses import dataclass
@@ -58,9 +57,6 @@ class MetricCounter:
 
 
 def run_eval(cases_path: Path = DEFAULT_CASES_PATH) -> tuple[MultiTurnSummary, list[dict[str, Any]]]:
-    os.environ["AGENT_RUNTIME_MODE"] = "loop"
-    os.environ.setdefault("NL_PARSER_MODE", "rule")
-
     cases = json.loads(cases_path.read_text(encoding="utf-8-sig"))
     results: list[dict[str, Any]] = []
 
@@ -75,6 +71,7 @@ def run_dialogue_case(case: dict[str, Any]) -> list[dict[str, Any]]:
 
     store = TTLSessionMemoryStore()
     previous_state_by_scope: dict[tuple[str, str], dict[str, object]] = {}
+    previous_action_by_scope: dict[tuple[str, str], str] = {}
     results: list[dict[str, Any]] = []
 
     for index, turn in enumerate(case.get("turns", []), start=1):
@@ -92,8 +89,10 @@ def run_dialogue_case(case: dict[str, Any]) -> list[dict[str, Any]]:
             session_id=session_id,
             profile=profile,
             previous_state=previous_state,
+            previous_action=previous_action_by_scope.get(scope),
         )
         results.append(result)
+        previous_action_by_scope[scope] = result["actual_action"]
         if result["actual_state"]:
             previous_state_by_scope[scope] = result["actual_state"]
 
@@ -110,6 +109,7 @@ def run_turn(
     session_id: str,
     profile: Any,
     previous_state: dict[str, object],
+    previous_action: str | None = None,
 ) -> dict[str, Any]:
     from app.agent import initialize_state, mark_parsed, plan_next_step
     from app.agent.context_manager import build_agent_parser_context, build_pending_task_context, merge_agent_context
@@ -124,7 +124,7 @@ def run_turn(
         parsed = parsed_result.parsed
         explicit_missing_fields: list[str] = []
     except NaturalLanguageParseError as exc:
-        intent = exc.intent or str(turn.get("expected_intent") or "unknown")
+        intent = exc.intent or "unknown"
         parsed = {key: value for key, value in exc.parsed.items() if value not in (None, "", [])}
         explicit_missing_fields = list(exc.missing_fields)
 
@@ -179,6 +179,7 @@ def run_turn(
         modified_fields=context_result.modified_fields,
         invalidated_tools=context_result.invalidated_tools,
         missing_fields=context_result.missing_fields,
+        previous_action=previous_action,
     )
 
     return {
@@ -224,6 +225,7 @@ def evaluate_turn_checks(
     modified_fields: list[str],
     invalidated_tools: list[str],
     missing_fields: list[str],
+    previous_action: str | None = None,
 ) -> dict[str, Any]:
     expected_state = turn.get("expected_state") or {}
     expected_tool_input = _expected_tool_input(turn)
@@ -259,12 +261,20 @@ def evaluate_turn_checks(
     override_pass = all(override_matches.values())
     modified_fields_pass = set(expected_modified_fields).issubset(set(modified_fields))
     invalidated_tools_pass = set(expected_invalidated_tools).issubset(set(invalidated_tools))
-    missing_fields_pass = set(expected_missing_fields).issubset(set(missing_fields))
+    missing_fields_pass = "expected_missing_fields" not in turn or set(expected_missing_fields) == set(missing_fields)
     no_context_pollution = all(absent_matches.values())
 
     clarification_continuation_pass = None
     if turn.get("expected_continues_after_clarification"):
-        clarification_continuation_pass = actual_action == "call_tool" and bool(actual_tool)
+        clarification_continuation_pass = (
+            previous_action == "ask_clarification"
+            and actual_action == "call_tool"
+            and bool(expected_tool)
+            and actual_tool == expected_tool
+            and not missing_fields
+            and intent_pass and state_pass and tool_input_pass
+            and inheritance_pass and override_pass and no_context_pollution
+        )
 
     session_isolation_pass = None
     if turn.get("expected_isolation"):
@@ -492,7 +502,10 @@ def main() -> None:
     write_reports(summary, results, args.report_dir)
     print(f"Multi-turn State Eval completed: {summary.total_turns} turns, pass_rate={_pct(summary.pass_rate)}")
     print(f"Reports written to: {args.report_dir}")
-    if not results or any(not result["passed"] for result in results):
+    complete_dialogue_coverage = len({row["case_id"] for row in results}) == summary.total_dialogues
+    if not complete_dialogue_coverage:
+        print("Multi-turn quality gate failed: empty dialogue or duplicate dialogue ID")
+    if not results or not complete_dialogue_coverage or any(not result["passed"] for result in results):
         raise SystemExit(1)
 
 

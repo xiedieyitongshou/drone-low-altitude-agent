@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+from statistics import median
 from tempfile import TemporaryDirectory
 from uuid import uuid4
 
@@ -55,6 +56,8 @@ def main() -> int:
     passed = result.returncode == 0 and len(reports) == 5 and all(
         row["passed"] and row.get("model_transport") == "deepseek" for row in reports
     )
+    attempts = [attempt for row in reports for attempt in row.get("model_attempts", [])]
+    latencies = [attempt["latency_ms"] for attempt in attempts]
     metadata = {
         "run_id": run_id, "model": model, "provider": "deepseek",
         "base_url": env.get("LLM_BASE_URL") or "https://api.deepseek.com",
@@ -64,6 +67,13 @@ def main() -> int:
         "model_scope": "task parser only; explanation and relevance-review LLM calls disabled",
         "total_cases": len(reports), "passed_cases": sum(bool(row["passed"]) for row in reports),
         "real_model_responses": sum(len(row["model_calls"]) for row in reports),
+        "model_request_attempts": len(attempts),
+        "model_attempt_latency_ms": {
+            "count": len(latencies), "includes_failed_attempts": True,
+            "min": min(latencies) if latencies else None,
+            "median": median(latencies) if latencies else None,
+            "max": max(latencies) if latencies else None,
+        },
         "passed": passed,
     }
     (output / "summary.json").write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8")

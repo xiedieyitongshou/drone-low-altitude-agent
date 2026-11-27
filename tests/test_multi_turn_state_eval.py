@@ -1,4 +1,41 @@
 from scripts.multi_turn_state_eval import evaluate_turn_checks, summarize_results
+import pytest
+
+
+@pytest.mark.parametrize("mutation", ["wrong_tool", "wrong_arguments", "not_after_question", "still_missing"])
+def test_continuation_metric_requires_correct_resumed_request(mutation):
+    actual = {
+        "actual_tool": "evaluate_flight_risk", "actual_tool_input": {"location": "深圳", "date": "2026-08-08"},
+        "previous_action": "ask_clarification", "missing_fields": [],
+    }
+    if mutation == "wrong_tool":
+        actual["actual_tool"] = "recommend_flight_windows"
+    elif mutation == "wrong_arguments":
+        actual["actual_tool_input"]["location"] = "广州"
+    elif mutation == "not_after_question":
+        actual["previous_action"] = "call_tool"
+    else:
+        actual["missing_fields"] = ["location"]
+    checks = evaluate_turn_checks(
+        turn={"expected_intent": "evaluate", "expected_tool": "evaluate_flight_risk",
+              "expected_continues_after_clarification": True,
+              "expected_state": {"location": "深圳", "date": "2026-08-08"},
+              "expected_tool_input": {"location": "深圳", "date": "2026-08-08"}},
+        actual_intent="evaluate", actual_action="call_tool", actual_state={"location": "深圳", "date": "2026-08-08"},
+        previous_state={"date": "2026-08-08"}, modified_fields=[], invalidated_tools=[], **actual,
+    )
+    assert checks["clarification_continuation_pass"] is False
+
+
+def test_multi_turn_clarification_rejects_extra_missing_fields():
+    checks = evaluate_turn_checks(
+        turn={"expected_intent": "evaluate", "expected_missing_fields": ["location"]},
+        actual_intent="evaluate", actual_action="ask_clarification", actual_tool=None,
+        actual_state={}, actual_tool_input={}, previous_state={}, modified_fields=[], invalidated_tools=[],
+        missing_fields=["location", "task_type"],
+    )
+    assert checks["missing_fields_pass"] is False
+    assert checks["passed"] is False
 
 
 def test_evaluate_turn_checks_passes_inheritance_and_override():

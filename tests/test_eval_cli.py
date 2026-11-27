@@ -46,3 +46,23 @@ def test_agent_eval_cli_fails_bad_or_empty_cases_and_preserves_reports(tmp_path,
     if script != "rag_eval":
         assert payload["summary"]["pass_rate"] < 1.0
     assert (output / f"{report}.md").exists()
+
+
+@pytest.mark.parametrize("malformation", ["empty_dialogue", "duplicate_id"])
+def test_multi_turn_cli_detects_unexecuted_or_duplicate_dialogues(tmp_path, malformation):
+    cases = json.loads((ROOT / "evals/agent/multi_turn_cases.json").read_text(encoding="utf-8-sig"))[:2]
+    if malformation == "empty_dialogue":
+        cases[1]["turns"] = []
+    else:
+        cases[1]["id"] = cases[0]["id"]
+    source = tmp_path / "invalid-dialogues.json"
+    source.write_text(json.dumps(cases, ensure_ascii=False), encoding="utf-8")
+    output = tmp_path / "reports"
+    result = subprocess.run([
+        sys.executable, str(ROOT / "scripts/multi_turn_state_eval.py"), "--cases", str(source), "--report-dir", str(output),
+    ], cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=45,
+        env={**os.environ, "LLM_ENABLED": "false", "PYTHONIOENCODING": "utf-8"})
+    assert result.returncode == 1, result.stdout + result.stderr
+    report = json.loads((output / "multi_turn_state_eval.json").read_text(encoding="utf-8"))
+    assert report["summary"]["pass_rate"] == 1.0  # All executed turns pass; dataset integrity must still fail.
+    assert "empty dialogue or duplicate dialogue ID" in result.stdout

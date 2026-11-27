@@ -476,6 +476,8 @@ def quality_gate_failures(summary: RagRetrieverSummary) -> list[str]:
         "metadata_filter_pass_rate": summary.metadata_filter_pass_rate >= 0.95,
         "permission_leakage_rate": summary.permission_leakage_rate == 0,
         "fallback_pass_rate": summary.fallback_pass_rate == 1.0,
+        "permission_cases_passed": summary.category_pass_rate.get("permission") == 1.0,
+        "fallback_cases_passed": summary.category_pass_rate.get("fallback") == 1.0,
         "p95_latency_ms": summary.p95_latency_ms <= 500,
     }
     return [name for name, passed in checks.items() if not passed]

@@ -23,6 +23,8 @@
 | [本地开发与测试说明.md](本地开发与测试说明.md) | 本地启动、依赖、环境变量、后端测试、前端构建、Eval 命令 |
 | [Docker部署说明.md](Docker部署说明.md) | Docker Compose 服务、本地联调、从 GitHub 到服务器部署、Dockerfile 省略内容、`.env` 必填项和部署注意事项 |
 | [CI-CD说明.md](CI-CD说明.md) | GitHub Actions、快速 Eval 门禁、完整 Eval、服务器手动部署边界 |
+| [Eval质量门禁与断言审计.md](Eval质量门禁与断言审计.md) | 多轮、失败恢复、RAG 和公共入口的指标、错误通过路径、负例及验证边界 |
+| [真实DeepSeek回归验收方案.md](真实DeepSeek回归验收方案.md) | 模型与程序职责、五类回归、参数/状态断言、故障注入、耗时与报告口径 |
 | [设计取舍说明.md](设计取舍说明.md) | 规则引擎 vs LLM、RAG 边界、SQLite、Eval fast/full、前端权限边界 |
 | [数据库迁移说明.md](数据库迁移说明.md) | SQLite 到 PostgreSQL 的迁移触发条件、部署拓扑、执行步骤、校验和回滚 |
 | [权限模型说明.md](权限模型说明.md) | `user_id`、`tenant_id`、`role`、`visibility` 在业务数据中的边界 |
