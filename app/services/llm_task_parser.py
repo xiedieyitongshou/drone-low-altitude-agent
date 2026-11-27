@@ -407,9 +407,6 @@ def build_parsed_task_request_from_llm_payload(
                 "end_time": end_time,
             }
         )
-        if missing_fields:
-            raise NaturalLanguageParseError("大模型解析的评估请求信息不完整", missing_fields=missing_fields)
-
         parsed = {
             "location": location,
             "date": task_date,
@@ -418,8 +415,13 @@ def build_parsed_task_request_from_llm_payload(
             "task_type": task_type,
             "purpose": payload.purpose or query,
         }
-        CruiseEvaluateRequest.model_validate(parsed)
         target_endpoint = "/cruise/evaluate"
+        if missing_fields:
+            raise NaturalLanguageParseError(
+                "大模型解析的评估请求信息不完整", missing_fields=missing_fields,
+                intent=payload.intent, target_endpoint=target_endpoint, parsed=parsed, parser_source="llm",
+            )
+        CruiseEvaluateRequest.model_validate(parsed)
 
     elif payload.intent == "recommend":
         location, used_location_context = _merge_value(payload.location, context, "location")
@@ -433,9 +435,6 @@ def build_parsed_task_request_from_llm_payload(
             warnings.append("未显式识别日期，已默认使用今天")
 
         missing_fields = _missing_fields({"location": location, "date": task_date})
-        if missing_fields:
-            raise NaturalLanguageParseError("大模型解析的推荐请求信息不完整", missing_fields=missing_fields)
-
         parsed = {
             "location": location,
             "date": task_date,
@@ -444,8 +443,13 @@ def build_parsed_task_request_from_llm_payload(
             "scan_hours": int(scan_hours),
             "min_window_hours": int(min_window_hours),
         }
-        RecommendationRequest.model_validate(parsed)
         target_endpoint = "/cruise/recommend"
+        if missing_fields:
+            raise NaturalLanguageParseError(
+                "大模型解析的推荐请求信息不完整", missing_fields=missing_fields,
+                intent=payload.intent, target_endpoint=target_endpoint, parsed=parsed, parser_source="llm",
+            )
+        RecommendationRequest.model_validate(parsed)
 
     else:
         locations, used_locations_context = _merge_locations(payload.locations, context)
@@ -466,9 +470,6 @@ def build_parsed_task_request_from_llm_payload(
         )
         if len(locations) < 2:
             missing_fields.insert(0, "locations")
-        if missing_fields:
-            raise NaturalLanguageParseError("大模型解析的多地点比选请求信息不完整", missing_fields=missing_fields)
-
         top_k = payload.top_k or min(3, len(locations))
         parsed = {
             "locations": locations,
@@ -480,8 +481,13 @@ def build_parsed_task_request_from_llm_payload(
             "top_k": min(int(top_k), len(locations)),
             "comparison_mode": payload.comparison_mode or "default",
         }
-        MultiLocationComparisonRequest.model_validate(parsed)
         target_endpoint = "/cruise/compare"
+        if missing_fields:
+            raise NaturalLanguageParseError(
+                "大模型解析的多地点比选请求信息不完整", missing_fields=missing_fields,
+                intent=payload.intent, target_endpoint=target_endpoint, parsed=parsed, parser_source="llm",
+            )
+        MultiLocationComparisonRequest.model_validate(parsed)
 
     warnings.extend(_missing_field_warnings(payload.intent, payload.missing_fields))
     return ParsedTaskRequest(

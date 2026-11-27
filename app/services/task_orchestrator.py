@@ -738,7 +738,7 @@ def _handle_agent_parse_error(
             user_id=user_id,
             intent=intent,
             target_endpoint=target_endpoint,
-            parser_source="rule",
+            parser_source=error.parser_source,
             parsed=parsed,
             context_used=False,
             warnings=error.warnings,
@@ -989,11 +989,16 @@ def _parse_task_query(
         return parse_natural_language_request(query, **parser_kwargs)
 
     if mode == "llm":
-        parsed = parse_natural_language_request_with_llm(query, **parser_kwargs)
+        try:
+            parsed = parse_natural_language_request_with_llm(query, **parser_kwargs)
+        except NaturalLanguageParseError as exc:
+            exc.parser_source = "llm"
+            raise
         if parsed is None:
             raise NaturalLanguageParseError(
                 "LLM parser is unavailable or disabled",
                 missing_fields=["llm"],
+                parser_source="llm",
             )
         return parsed
 

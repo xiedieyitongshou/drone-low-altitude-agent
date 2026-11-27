@@ -492,6 +492,8 @@ def main() -> None:
     write_reports(summary, results, args.report_dir)
     print(f"Multi-turn State Eval completed: {summary.total_turns} turns, pass_rate={_pct(summary.pass_rate)}")
     print(f"Reports written to: {args.report_dir}")
+    if not results or any(not result["passed"] for result in results):
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

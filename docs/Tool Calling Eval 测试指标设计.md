@@ -1,5 +1,7 @@
 # Tool Calling Eval 测试指标设计
 
+> 2026-11-27 更新：默认入口已由 Planner-only 改为规则 Parser + Context Merge + 真实 AgentLoop/ToolExecutor/Guardrail，业务 handler 为固定夹具，当前九条基线 9/9；追问样例包含补参续接，权限负例明确注入伪造用户参数。快速门禁新增总通过率、追问/续接、Guardrail 和关键类别断言，报告命令失败或空集返回 `1`。手动真实 DeepSeek 回归已加入，实际模型验收待外发授权；详见 [CI/CD 说明](CI-CD说明.md#本轮修补与验证)。本文其余内容保留原指标设计，当前执行和门禁口径以该说明及源码为准。
+
 ## 目标
 
 Day107 的目标是自动评估 Agent 是否选对工具、少调用工具、不乱调用工具。

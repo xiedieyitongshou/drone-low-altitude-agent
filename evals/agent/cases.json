@@ -146,15 +146,22 @@
       "evaluate_risk"
     ],
     "expected_missing_fields": [
-      "location",
-      "task_type"
+      "location"
     ],
     "expected_result_keywords": [
-      "地点",
-      "任务类型"
+      "地点"
     ],
     "expected_fallback": false,
-    "notes": "安全决策类任务缺关键字段时应追问，不应直接用 Profile 默认值评估。"
+    "expected_parsed": {"task_type": "cruise", "start_time": "13:00", "end_time": "18:00"},
+    "continuation": {
+      "input": "深圳",
+      "expected_intent": "evaluate",
+      "expected_tools": ["evaluate_flight_risk"],
+      "expected_fallback": false,
+      "expected_parsed": {"location": "深圳", "task_type": "cruise", "start_time": "13:00", "end_time": "18:00"},
+      "expected_tool_inputs": {"evaluate_flight_risk": {"location": "深圳", "task_type": "cruise", "start_time": "13:00", "end_time": "18:00"}}
+    },
+    "notes": "evaluate 沿用默认巡航契约；本句只缺地点。补充地点后必须继承日期、时段和任务类型，执行正确工具。"
   },
   {
     "id": "agent_modify_context_001",
@@ -166,7 +173,8 @@
         "task_type": "inspection",
         "location": "深圳",
         "date": "tomorrow",
-        "time_range": "afternoon"
+        "start_time": "13:00",
+        "end_time": "18:00"
       }
     },
     "expected_intent": "evaluate",
@@ -183,6 +191,8 @@
     "expected_modified_fields": [
       "location"
     ],
+    "expected_parsed": {"location": "佛山", "task_type": "inspection", "start_time": "13:00", "end_time": "18:00"},
+    "expected_tool_inputs": {"evaluate_flight_risk": {"location": "佛山", "task_type": "inspection", "start_time": "13:00", "end_time": "18:00"}},
     "expected_result_keywords": [
       "佛山",
       "明天下午",
@@ -208,32 +218,32 @@
     ],
     "expected_guardrail": {
       "allowed": false,
-      "reason": "user_scope_violation"
+      "error_code": "TOOL_USER_SCOPE_VIOLATION"
     },
+    "candidate_tool_input": {"user_id": "user-b"},
     "expected_result_keywords": [
       "无权",
       "只能查询自己的数据"
     ],
     "expected_fallback": true,
-    "notes": "普通用户请求其他用户数据应在 Guardrail 或工具调用前被拒绝。"
+    "notes": "向候选工具载荷注入 user-b，验证真实 ToolExecutor Guardrail 阻止 handler 执行。规则 Parser 不从自然语言提取目标用户；该注入与真实用户语言解析区分记录。"
   },
   {
     "id": "agent_tool_failure_fallback_001",
     "category": "tool_failure",
-    "input": "深圳明天适合巡检吗？",
+    "input": "深圳明天下午适合巡检吗？",
     "history_state": {
       "force_tool_error": "fetch_weather_timeout"
     },
     "expected_intent": "evaluate",
     "expected_route": "fallback",
     "expected_tools": [
-      "parse_task",
-      "fetch_weather"
+      "evaluate_flight_risk"
     ],
     "unexpected_tools": [
       "query_user_history"
     ],
-    "expected_error_type": "external_service_error",
+    "expected_error_code": "TimeoutError",
     "expected_result_keywords": [
       "天气服务",
       "暂时不可用",

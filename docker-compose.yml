@@ -201,6 +201,7 @@ services:
       TZ: Asia/Shanghai
       <<: *database-environment
       SESSION_MEMORY_BACKEND: ttlcache
+      LLM_ENABLED: "false"
       AGENT_RUNTIME_MODE: ${AGENT_RUNTIME_MODE:-loop}
       NL_PARSER_MODE: ${NL_PARSER_MODE:-rule}
       ADVICE_KNOWLEDGE_PATH: ${ADVICE_KNOWLEDGE_PATH:-data/knowledge/advice_rules.json}
@@ -231,6 +232,7 @@ services:
       TZ: Asia/Shanghai
       <<: *database-environment
       SESSION_MEMORY_BACKEND: ttlcache
+      LLM_ENABLED: "false"
       AGENT_RUNTIME_MODE: loop
       NL_PARSER_MODE: rule
       ADVICE_KNOWLEDGE_PATH: ${ADVICE_KNOWLEDGE_PATH:-data/knowledge/advice_rules.json}
@@ -262,6 +264,7 @@ services:
       TZ: Asia/Shanghai
       <<: *database-environment
       SESSION_MEMORY_BACKEND: ttlcache
+      LLM_ENABLED: "false"
       AGENT_RUNTIME_MODE: loop
       NL_PARSER_MODE: rule
       ADVICE_KNOWLEDGE_PATH: ${ADVICE_KNOWLEDGE_PATH:-data/knowledge/advice_rules.json}
@@ -273,11 +276,14 @@ services:
     entrypoint: ["sh", "-c"]
     command:
       - |
-        python -m alembic upgrade head
-        python scripts/tool_calling_eval.py
-        python scripts/multi_turn_state_eval.py
-        python scripts/failure_recovery_eval.py
-        python scripts/rag_eval.py
+        python -m alembic upgrade head || exit 1
+        status=0
+        python scripts/tool_calling_eval.py || status=1
+        python scripts/multi_turn_state_eval.py || status=1
+        python scripts/failure_recovery_eval.py || status=1
+        python scripts/rag_eval.py || status=1
+        python -m pytest -m eval_fast -q || status=1
+        exit "$$status"
     depends_on:
       postgres:
         condition: service_healthy

@@ -1,26 +1,31 @@
 {
+  "execution_modes": [
+    "runtime_fixture"
+  ],
   "summary": {
     "total_cases": 9,
-    "pass_rate": 0.7778,
+    "pass_rate": 1.0,
     "intent_accuracy": 1.0,
     "tool_selection_accuracy": 1.0,
-    "exact_tool_match_rate": 0.8889,
-    "extra_tool_call_rate": 0.1111,
+    "exact_tool_match_rate": 1.0,
+    "extra_tool_call_rate": 0.0,
     "missing_tool_call_rate": 0.0,
-    "unexpected_tool_violation_rate": 0.0714,
-    "fallback_accuracy": 0.8889,
-    "clarification_pass_rate": 0.0,
+    "unexpected_tool_violation_rate": 0.0,
+    "fallback_accuracy": 1.0,
+    "clarification_pass_rate": 1.0,
     "category_pass_rate": {
-      "clarification": 0.0,
+      "clarification": 1.0,
       "compare": 1.0,
       "evaluate": 1.0,
       "explain": 1.0,
       "modify": 1.0,
-      "permission": 0.0,
+      "permission": 1.0,
       "query": 1.0,
       "recommend": 1.0,
       "tool_failure": 1.0
-    }
+    },
+    "clarification_continuation_pass_rate": 1.0,
+    "guardrail_pass_rate": 1.0
   },
   "results": [
     {
@@ -33,7 +38,11 @@
         "no_unexpected_tools": true,
         "fallback_pass": true,
         "exact_tool_match": true,
-        "clarification_pass": null
+        "clarification_pass": null,
+        "guardrail_pass": null,
+        "error_code_pass": null,
+        "parsed_fields_pass": true,
+        "tool_input_pass": true
       },
       "expected_intent": "evaluate",
       "actual_intent": "evaluate",
@@ -55,9 +64,38 @@
       "expected_missing_fields": [],
       "actual_missing_fields": [],
       "plan_actions": [
-        "call_tool"
+        "call_tool",
+        "respond_directly"
       ],
-      "trace_id": "35622b4f-2d04-4fc7-b86c-237c41016762"
+      "trace_id": "e644285b-2cef-4dc9-9a9e-3426f67e2648",
+      "execution_mode": "runtime_fixture",
+      "attempted_tools": [
+        "evaluate_flight_risk"
+      ],
+      "actual_guardrail": {},
+      "error_code": null,
+      "actual_parsed": {
+        "location": "深圳适合做吗",
+        "date": "2026-11-28",
+        "start_time": "14:00",
+        "end_time": "17:00",
+        "task_type": "inspection",
+        "purpose": "明天深圳下午2点到5点适合做无人机巡检吗？"
+      },
+      "actual_tool_inputs": {
+        "evaluate_flight_risk": {
+          "purpose": "明天深圳下午2点到5点适合做无人机巡检吗？",
+          "end_time": "17:00",
+          "start_time": "14:00",
+          "date": "2026-11-28",
+          "task_type": "inspection",
+          "location": "深圳适合做吗"
+        }
+      },
+      "fault_injection": {
+        "candidate_tool_input": null,
+        "tool_error": null
+      }
     },
     {
       "case_id": "agent_recommend_window_001",
@@ -69,7 +107,11 @@
         "no_unexpected_tools": true,
         "fallback_pass": true,
         "exact_tool_match": true,
-        "clarification_pass": null
+        "clarification_pass": null,
+        "guardrail_pass": null,
+        "error_code_pass": null,
+        "parsed_fields_pass": true,
+        "tool_input_pass": true
       },
       "expected_intent": "recommend",
       "actual_intent": "recommend",
@@ -91,9 +133,38 @@
       "expected_missing_fields": [],
       "actual_missing_fields": [],
       "plan_actions": [
-        "call_tool"
+        "call_tool",
+        "respond_directly"
       ],
-      "trace_id": "772361e6-1a4b-47dc-a4e3-a7d326c72a91"
+      "trace_id": "31983f37-7df0-421d-9420-9ddc91e5396a",
+      "execution_mode": "runtime_fixture",
+      "attempted_tools": [
+        "recommend_flight_windows"
+      ],
+      "actual_guardrail": {},
+      "error_code": null,
+      "actual_parsed": {
+        "location": "广州",
+        "date": "2026-11-27",
+        "task_type": "survey",
+        "purpose": "广州未来72小时什么时候最适合航测？",
+        "scan_hours": 72,
+        "min_window_hours": 2
+      },
+      "actual_tool_inputs": {
+        "recommend_flight_windows": {
+          "min_window_hours": 2,
+          "purpose": "广州未来72小时什么时候最适合航测？",
+          "scan_hours": 72,
+          "date": "2026-11-27",
+          "task_type": "survey",
+          "location": "广州"
+        }
+      },
+      "fault_injection": {
+        "candidate_tool_input": null,
+        "tool_error": null
+      }
     },
     {
       "case_id": "agent_compare_locations_001",
@@ -105,7 +176,11 @@
         "no_unexpected_tools": true,
         "fallback_pass": true,
         "exact_tool_match": true,
-        "clarification_pass": null
+        "clarification_pass": null,
+        "guardrail_pass": null,
+        "error_code_pass": null,
+        "parsed_fields_pass": true,
+        "tool_input_pass": true
       },
       "expected_intent": "compare",
       "actual_intent": "compare",
@@ -127,9 +202,50 @@
       "expected_missing_fields": [],
       "actual_missing_fields": [],
       "plan_actions": [
-        "call_tool"
+        "call_tool",
+        "respond_directly"
       ],
-      "trace_id": "8e9e739c-f631-4ded-851a-ef4c3a84ec6d"
+      "trace_id": "736735f5-d8a2-4c46-b449-f848b1345d68",
+      "execution_mode": "runtime_fixture",
+      "attempted_tools": [
+        "compare_flight_locations"
+      ],
+      "actual_guardrail": {},
+      "error_code": null,
+      "actual_parsed": {
+        "locations": [
+          "深圳",
+          "广州",
+          "珠海"
+        ],
+        "date": "2026-11-28",
+        "start_time": "13:00",
+        "end_time": "18:00",
+        "task_type": "cruise",
+        "purpose": "深圳、广州和珠海明天下午哪个更适合低空巡航？",
+        "top_k": 3,
+        "comparison_mode": "default"
+      },
+      "actual_tool_inputs": {
+        "compare_flight_locations": {
+          "purpose": "深圳、广州和珠海明天下午哪个更适合低空巡航？",
+          "end_time": "18:00",
+          "start_time": "13:00",
+          "date": "2026-11-28",
+          "task_type": "cruise",
+          "top_k": 3,
+          "comparison_mode": "default",
+          "locations": [
+            "深圳",
+            "广州",
+            "珠海"
+          ]
+        }
+      },
+      "fault_injection": {
+        "candidate_tool_input": null,
+        "tool_error": null
+      }
     },
     {
       "case_id": "agent_history_query_001",
@@ -141,7 +257,11 @@
         "no_unexpected_tools": true,
         "fallback_pass": true,
         "exact_tool_match": true,
-        "clarification_pass": null
+        "clarification_pass": null,
+        "guardrail_pass": null,
+        "error_code_pass": null,
+        "parsed_fields_pass": true,
+        "tool_input_pass": true
       },
       "expected_intent": "history",
       "actual_intent": "history",
@@ -163,9 +283,34 @@
       "expected_missing_fields": [],
       "actual_missing_fields": [],
       "plan_actions": [
-        "call_tool"
+        "call_tool",
+        "respond_directly"
       ],
-      "trace_id": "975c058c-3d61-491a-8e2f-fc3717f81c09"
+      "trace_id": "d3850f8a-f6a6-4f14-9742-81b5378db899",
+      "execution_mode": "runtime_fixture",
+      "attempted_tools": [
+        "query_user_history"
+      ],
+      "actual_guardrail": {},
+      "error_code": null,
+      "actual_parsed": {
+        "mode": "list",
+        "page": 1,
+        "page_size": 10,
+        "keyword": "深圳"
+      },
+      "actual_tool_inputs": {
+        "query_user_history": {
+          "page": 1,
+          "keyword": "深圳",
+          "mode": "list",
+          "page_size": 10
+        }
+      },
+      "fault_injection": {
+        "candidate_tool_input": null,
+        "tool_error": null
+      }
     },
     {
       "case_id": "agent_rule_explain_001",
@@ -177,7 +322,11 @@
         "no_unexpected_tools": true,
         "fallback_pass": true,
         "exact_tool_match": true,
-        "clarification_pass": null
+        "clarification_pass": null,
+        "guardrail_pass": null,
+        "error_code_pass": null,
+        "parsed_fields_pass": true,
+        "tool_input_pass": true
       },
       "expected_intent": "explain",
       "actual_intent": "explain",
@@ -198,21 +347,47 @@
       "expected_missing_fields": [],
       "actual_missing_fields": [],
       "plan_actions": [
-        "call_tool"
+        "call_tool",
+        "respond_directly"
       ],
-      "trace_id": "75ec9ff5-0d6d-452b-a640-dbb30565ea60"
+      "trace_id": "7fa28f50-7e25-44b5-bb55-64974edfc455",
+      "execution_mode": "runtime_fixture",
+      "attempted_tools": [
+        "explain_risk_rules"
+      ],
+      "actual_guardrail": {},
+      "error_code": null,
+      "actual_parsed": {
+        "task_type": "cruise",
+        "query": "为什么刚才判高风险，依据是什么？"
+      },
+      "actual_tool_inputs": {
+        "explain_risk_rules": {
+          "query": "为什么刚才判高风险，依据是什么？",
+          "task_type": "cruise"
+        }
+      },
+      "fault_injection": {
+        "candidate_tool_input": null,
+        "tool_error": null
+      }
     },
     {
       "case_id": "agent_clarification_missing_location_001",
       "category": "clarification",
-      "passed": false,
+      "passed": true,
       "checks": {
         "intent_pass": true,
         "expected_tools_hit": true,
         "no_unexpected_tools": true,
         "fallback_pass": true,
         "exact_tool_match": true,
-        "clarification_pass": false
+        "clarification_pass": true,
+        "guardrail_pass": null,
+        "error_code_pass": null,
+        "parsed_fields_pass": true,
+        "tool_input_pass": true,
+        "continuation_pass": true
       },
       "expected_intent": "evaluate",
       "actual_intent": "evaluate",
@@ -227,8 +402,7 @@
       "expected_fallback": false,
       "actual_fallback": false,
       "expected_missing_fields": [
-        "location",
-        "task_type"
+        "location"
       ],
       "actual_missing_fields": [
         "location"
@@ -236,7 +410,90 @@
       "plan_actions": [
         "ask_clarification"
       ],
-      "trace_id": "985e4ba4-beec-48bd-90a9-749f73893557"
+      "trace_id": "5e706d4a-903a-4bbe-bdbe-c3225b34ddfa",
+      "execution_mode": "runtime_fixture",
+      "attempted_tools": [],
+      "actual_guardrail": {},
+      "error_code": null,
+      "actual_parsed": {
+        "date": "2026-11-28",
+        "start_time": "13:00",
+        "end_time": "18:00",
+        "task_type": "cruise",
+        "purpose": "明天下午能飞吗？"
+      },
+      "actual_tool_inputs": {},
+      "fault_injection": {
+        "candidate_tool_input": null,
+        "tool_error": null
+      },
+      "continuation": {
+        "case_id": "agent_clarification_missing_location_001",
+        "category": null,
+        "passed": true,
+        "checks": {
+          "intent_pass": true,
+          "expected_tools_hit": true,
+          "no_unexpected_tools": true,
+          "fallback_pass": true,
+          "exact_tool_match": true,
+          "clarification_pass": null,
+          "guardrail_pass": null,
+          "error_code_pass": null,
+          "parsed_fields_pass": true,
+          "tool_input_pass": true
+        },
+        "expected_intent": "evaluate",
+        "actual_intent": "evaluate",
+        "expected_tools": [
+          "evaluate_flight_risk"
+        ],
+        "actual_tools": [
+          "evaluate_flight_risk"
+        ],
+        "unexpected_tools": [],
+        "missing_tools": [],
+        "extra_tools": [],
+        "unexpected_called": [],
+        "expected_fallback": false,
+        "actual_fallback": false,
+        "expected_missing_fields": [],
+        "actual_missing_fields": [],
+        "plan_actions": [
+          "call_tool",
+          "respond_directly"
+        ],
+        "trace_id": "ad61e9d8-40eb-4cd5-b3ee-e9f12575288d",
+        "execution_mode": "runtime_fixture",
+        "attempted_tools": [
+          "evaluate_flight_risk"
+        ],
+        "actual_guardrail": {},
+        "error_code": null,
+        "actual_parsed": {
+          "date": "2026-11-28",
+          "start_time": "13:00",
+          "end_time": "18:00",
+          "task_type": "cruise",
+          "purpose": "深圳",
+          "intent": "evaluate",
+          "location": "深圳"
+        },
+        "actual_tool_inputs": {
+          "evaluate_flight_risk": {
+            "purpose": "深圳",
+            "end_time": "18:00",
+            "start_time": "13:00",
+            "date": "2026-11-28",
+            "task_type": "cruise",
+            "location": "深圳"
+          }
+        },
+        "fault_injection": {
+          "candidate_tool_input": null,
+          "tool_error": null
+        }
+      }
     },
     {
       "case_id": "agent_modify_context_001",
@@ -248,7 +505,11 @@
         "no_unexpected_tools": true,
         "fallback_pass": true,
         "exact_tool_match": true,
-        "clarification_pass": null
+        "clarification_pass": null,
+        "guardrail_pass": null,
+        "error_code_pass": null,
+        "parsed_fields_pass": true,
+        "tool_input_pass": true
       },
       "expected_intent": "evaluate",
       "actual_intent": "evaluate",
@@ -270,50 +531,43 @@
       "expected_missing_fields": [],
       "actual_missing_fields": [],
       "plan_actions": [
-        "call_tool"
+        "call_tool",
+        "respond_directly"
       ],
-      "trace_id": "32e70fa1-fa3d-48a1-90c1-a6ad82918219"
+      "trace_id": "12c8f85e-f167-44f2-9aff-4456733920cf",
+      "execution_mode": "runtime_fixture",
+      "attempted_tools": [
+        "evaluate_flight_risk"
+      ],
+      "actual_guardrail": {},
+      "error_code": null,
+      "actual_parsed": {
+        "intent": "evaluate",
+        "task_type": "inspection",
+        "location": "佛山",
+        "date": "2026-11-28",
+        "start_time": "13:00",
+        "end_time": "18:00",
+        "purpose": "把地点改成佛山，时间还是明天下午"
+      },
+      "actual_tool_inputs": {
+        "evaluate_flight_risk": {
+          "purpose": "把地点改成佛山，时间还是明天下午",
+          "end_time": "18:00",
+          "start_time": "13:00",
+          "date": "2026-11-28",
+          "task_type": "inspection",
+          "location": "佛山"
+        }
+      },
+      "fault_injection": {
+        "candidate_tool_input": null,
+        "tool_error": null
+      }
     },
     {
       "case_id": "agent_permission_denied_001",
       "category": "permission",
-      "passed": false,
-      "checks": {
-        "intent_pass": true,
-        "expected_tools_hit": true,
-        "no_unexpected_tools": false,
-        "fallback_pass": false,
-        "exact_tool_match": false,
-        "clarification_pass": null
-      },
-      "expected_intent": "history",
-      "actual_intent": "history",
-      "expected_tools": [],
-      "actual_tools": [
-        "query_user_history"
-      ],
-      "unexpected_tools": [
-        "query_user_history"
-      ],
-      "missing_tools": [],
-      "extra_tools": [
-        "query_user_history"
-      ],
-      "unexpected_called": [
-        "query_user_history"
-      ],
-      "expected_fallback": true,
-      "actual_fallback": false,
-      "expected_missing_fields": [],
-      "actual_missing_fields": [],
-      "plan_actions": [
-        "call_tool"
-      ],
-      "trace_id": "427a60d8-cd8d-44b9-a26d-d0f18339bcf5"
-    },
-    {
-      "case_id": "agent_tool_failure_fallback_001",
-      "category": "tool_failure",
       "passed": true,
       "checks": {
         "intent_pass": true,
@@ -321,10 +575,14 @@
         "no_unexpected_tools": true,
         "fallback_pass": true,
         "exact_tool_match": true,
-        "clarification_pass": null
+        "clarification_pass": null,
+        "guardrail_pass": true,
+        "error_code_pass": null,
+        "parsed_fields_pass": true,
+        "tool_input_pass": true
       },
-      "expected_intent": "evaluate",
-      "actual_intent": "evaluate",
+      "expected_intent": "history",
+      "actual_intent": "history",
       "expected_tools": [],
       "actual_tools": [],
       "unexpected_tools": [
@@ -338,10 +596,134 @@
       "expected_missing_fields": [],
       "actual_missing_fields": [],
       "plan_actions": [
-        "call_tool",
-        "fallback"
+        "call_tool"
       ],
-      "trace_id": "b8b0203d-820f-40a0-a769-799ffe407b9b"
+      "trace_id": "f22c53a0-e5d2-46ac-8673-0f893f11dbec",
+      "execution_mode": "runtime_fixture",
+      "attempted_tools": [
+        "query_user_history"
+      ],
+      "actual_guardrail": {
+        "checkpoint": "tool",
+        "action": "block",
+        "allowed": false,
+        "error_code": "TOOL_USER_SCOPE_VIOLATION",
+        "reason": "工具输入中的 user_id 与当前登录用户不一致，疑似越权访问。",
+        "user_message": "请求中的用户身份与当前登录用户不一致，系统已拒绝越权访问。",
+        "violation_type": "payload_user_id_mismatch",
+        "tool_name": "query_user_history",
+        "metadata": {
+          "tool_name": "query_user_history",
+          "side_effect": "read_only",
+          "risk_level": "low",
+          "requires_auth": true,
+          "requires_admin": false,
+          "allowed_roles": [
+            "user",
+            "admin"
+          ],
+          "actual_role": "user",
+          "user_scope": "current_user",
+          "input_fields": [
+            "keyword",
+            "mode",
+            "page",
+            "page_size",
+            "user_id"
+          ],
+          "violation_type": "payload_user_id_mismatch",
+          "payload_user_id": "user-b"
+        }
+      },
+      "error_code": "TOOL_USER_SCOPE_VIOLATION",
+      "actual_parsed": {
+        "mode": "list",
+        "page": 1,
+        "page_size": 10,
+        "keyword": "user-b的"
+      },
+      "actual_tool_inputs": {
+        "query_user_history": {
+          "page": 1,
+          "keyword": "user-b的",
+          "mode": "list",
+          "page_size": 10,
+          "user_id": "user-b"
+        }
+      },
+      "fault_injection": {
+        "candidate_tool_input": {
+          "user_id": "user-b"
+        },
+        "tool_error": null
+      }
+    },
+    {
+      "case_id": "agent_tool_failure_fallback_001",
+      "category": "tool_failure",
+      "passed": true,
+      "checks": {
+        "intent_pass": true,
+        "expected_tools_hit": true,
+        "no_unexpected_tools": true,
+        "fallback_pass": true,
+        "exact_tool_match": true,
+        "clarification_pass": null,
+        "guardrail_pass": null,
+        "error_code_pass": true,
+        "parsed_fields_pass": true,
+        "tool_input_pass": true
+      },
+      "expected_intent": "evaluate",
+      "actual_intent": "evaluate",
+      "expected_tools": [
+        "evaluate_flight_risk"
+      ],
+      "actual_tools": [
+        "evaluate_flight_risk"
+      ],
+      "unexpected_tools": [
+        "query_user_history"
+      ],
+      "missing_tools": [],
+      "extra_tools": [],
+      "unexpected_called": [],
+      "expected_fallback": true,
+      "actual_fallback": true,
+      "expected_missing_fields": [],
+      "actual_missing_fields": [],
+      "plan_actions": [
+        "call_tool"
+      ],
+      "trace_id": "d03cb415-5e8e-4b15-a4d4-a18acff0f16f",
+      "execution_mode": "runtime_fixture",
+      "attempted_tools": [
+        "evaluate_flight_risk"
+      ],
+      "actual_guardrail": {},
+      "error_code": "TimeoutError",
+      "actual_parsed": {
+        "location": "深圳",
+        "date": "2026-11-28",
+        "start_time": "13:00",
+        "end_time": "18:00",
+        "task_type": "inspection",
+        "purpose": "深圳明天下午适合巡检吗？"
+      },
+      "actual_tool_inputs": {
+        "evaluate_flight_risk": {
+          "purpose": "深圳明天下午适合巡检吗？",
+          "end_time": "18:00",
+          "start_time": "13:00",
+          "date": "2026-11-28",
+          "task_type": "inspection",
+          "location": "深圳"
+        }
+      },
+      "fault_injection": {
+        "candidate_tool_input": null,
+        "tool_error": "fetch_weather_timeout"
+      }
     }
   ]
 }

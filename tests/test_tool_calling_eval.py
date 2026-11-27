@@ -86,7 +86,7 @@ def test_evaluate_case_handles_clarification_by_plan_action():
             tools=[],
             actions=["ask_clarification"],
             success=False,
-            missing_fields=["location", "task_type"],
+            missing_fields=["location"],
         ),
     )
 
@@ -138,3 +138,42 @@ def test_summarize_results_computes_core_metrics():
     assert summary.extra_tool_call_rate == 0.5
     assert summary.missing_tool_call_rate == 0.5
     assert summary.unexpected_tool_violation_rate == 0.5
+
+
+def test_default_eval_uses_guardrail_and_continues_clarification_without_external_io(monkeypatch):
+    from scripts.tool_calling_eval import run_eval
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("default eval must not execute real business handlers or persist traces")
+
+    monkeypatch.setattr("app.agent.tools.default_tool_registry.call", forbidden)
+    monkeypatch.setattr("app.services.agent_trace.record_trace_event", forbidden)
+    summary, results = run_eval()
+    assert summary.pass_rate == 1.0
+    permission = next(row for row in results if row["category"] == "permission")
+    assert permission["attempted_tools"] == ["query_user_history"]
+    assert permission["actual_tools"] == []
+    assert permission["actual_guardrail"]["error_code"] == "TOOL_USER_SCOPE_VIOLATION"
+    clarification = next(row for row in results if row["category"] == "clarification")
+    assert clarification["actual_missing_fields"] == ["location"]
+    assert clarification["actual_tools"] == []
+    assert clarification["continuation"]["actual_tools"] == ["evaluate_flight_risk"]
+    assert clarification["continuation"]["actual_parsed"]["date"] == clarification["actual_parsed"]["date"]
+
+
+def test_permission_case_fails_if_guardrail_is_bypassed(monkeypatch):
+    from app.agent.guardrail import GuardrailCheckpoint, allow_guardrail
+    from scripts.tool_calling_eval import run_eval
+
+    monkeypatch.setattr("app.agent.executor.check_tool_guardrail", lambda **kwargs: allow_guardrail(GuardrailCheckpoint.TOOL))
+    _, results = run_eval()
+    permission = next(row for row in results if row["category"] == "permission")
+    assert permission["passed"] is False
+    assert permission["checks"]["guardrail_pass"] is False
+    assert permission["actual_tools"] == ["query_user_history"]
+
+
+def test_clarification_rejects_unnecessary_extra_questions():
+    case = {"expected_intent": "evaluate", "expected_missing_fields": ["location"]}
+    result = evaluate_case(case, _response(actions=["ask_clarification"], missing_fields=["location", "task_type"]))
+    assert result["checks"]["clarification_pass"] is False

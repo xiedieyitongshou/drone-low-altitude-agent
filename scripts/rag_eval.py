@@ -9,6 +9,7 @@ from pathlib import Path
 from time import perf_counter
 from tempfile import TemporaryDirectory
 from typing import Any
+from unittest.mock import patch
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -54,7 +55,7 @@ def run_eval(
     source = json.loads((PROJECT_ROOT / "data/knowledge/advice_rules.json").read_text(encoding="utf-8-sig"))
     fixtures = json.loads((PROJECT_ROOT / "evals/rag/fixtures.json").read_text(encoding="utf-8-sig"))
     source["items"].extend(fixtures)
-    with TemporaryDirectory(prefix="drone-rag-eval-") as temporary_dir:
+    with patch("app.services.knowledge_reranker.is_llm_enabled", return_value=False), TemporaryDirectory(prefix="drone-rag-eval-") as temporary_dir:
         knowledge_path = Path(temporary_dir) / "knowledge.json"
         knowledge_path.write_text(json.dumps(source, ensure_ascii=False), encoding="utf-8")
         for retriever_name in selected_retrievers:
@@ -467,6 +468,19 @@ def _optional_pct(value: float | None) -> str:
     return "N/A" if value is None else _pct(value)
 
 
+def quality_gate_failures(summary: RagRetrieverSummary) -> list[str]:
+    checks = {
+        "nonempty_cases": summary.total_cases > 0,
+        "recall_at_k": summary.recall_at_k >= 0.70,
+        "hit_rate_at_k": summary.hit_rate_at_k >= 0.70,
+        "metadata_filter_pass_rate": summary.metadata_filter_pass_rate >= 0.95,
+        "permission_leakage_rate": summary.permission_leakage_rate == 0,
+        "fallback_pass_rate": summary.fallback_pass_rate == 1.0,
+        "p95_latency_ms": summary.p95_latency_ms <= 500,
+    }
+    return [name for name, passed in checks.items() if not passed]
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run RAG Eval across retrievers.")
     parser.add_argument("--cases", type=Path, default=DEFAULT_CASES_PATH)
@@ -480,6 +494,15 @@ def main() -> None:
     best = summaries.get("hybrid") or next(iter(summaries.values()))
     print(f"RAG Eval completed: {len(results)} runs, hybrid_or_first_recall={_pct(best.recall_at_k)}")
     print(f"Reports written to: {args.report_dir}")
+    # Experimental TF-IDF/mock-embedding misses remain visible in the report.
+    # Gate production retrievers when present; explicitly selected alternatives
+    # use the same published metric thresholds rather than requiring 100% recall.
+    gated = {name: summary for name, summary in summaries.items() if name in {"hybrid", "bm25"}} or summaries
+    failures = {name: quality_gate_failures(summary) for name, summary in gated.items()}
+    failures = {name: checks for name, checks in failures.items() if checks}
+    if not gated or failures:
+        print(f"RAG quality gate failed: {failures or 'no retrievers'}")
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

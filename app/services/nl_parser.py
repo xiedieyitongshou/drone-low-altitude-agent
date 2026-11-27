@@ -73,6 +73,7 @@ class NaturalLanguageParseError(ValueError):
         target_endpoint: str | None = None,
         parsed: dict[str, object] | None = None,
         warnings: list[str] | None = None,
+        parser_source: str = "rule",
     ) -> None:
         super().__init__(message)
         self.missing_fields = missing_fields or []
@@ -80,6 +81,7 @@ class NaturalLanguageParseError(ValueError):
         self.target_endpoint = target_endpoint
         self.parsed = parsed or {}
         self.warnings = warnings or []
+        self.parser_source = parser_source
 
 
 @dataclass

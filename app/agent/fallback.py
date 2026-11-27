@@ -78,6 +78,7 @@ def build_agent_fallback_output(
         "trace_id": state.trace_id,
         "run_id": state.run_id,
         "status": state.status.value,
+        "missing_fields": list(state.missing_fields),
         "tool_name": tool_name,
         "fallback_used": fallback_used,
         "failure_type": policy.failure_type.value if policy else None,

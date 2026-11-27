@@ -8,6 +8,15 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      run_deepseek:
+        description: Run opt-in real DeepSeek regression (requires DEEPSEEK_API_KEY secret)
+        type: boolean
+        default: false
+      deepseek_model:
+        description: DeepSeek model; leave blank to use DEEPSEEK_EVAL_MODEL repository variable
+        type: string
+        default: ""
 
 jobs:
   backend-test:
@@ -238,13 +247,51 @@ jobs:
 
       - name: Generate full eval reports
         run: |
-          python scripts/tool_calling_eval.py
-          python scripts/multi_turn_state_eval.py
-          python scripts/failure_recovery_eval.py
-          python scripts/rag_eval.py
+          status=0
+          python scripts/tool_calling_eval.py || status=1
+          python scripts/multi_turn_state_eval.py || status=1
+          python scripts/failure_recovery_eval.py || status=1
+          python scripts/rag_eval.py || status=1
+          python -m pytest -m eval_fast -q || status=1
+          exit "$status"
 
       - name: Upload eval reports
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: eval-reports
           path: evals/reports/
+
+  deepseek-regression:
+    name: Real DeepSeek regression
+    if: github.event_name == 'workflow_dispatch' && inputs.run_deepseek
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      LLM_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+      LLM_MODEL: ${{ inputs.deepseek_model || vars.DEEPSEEK_EVAL_MODEL }}
+      PYTHONUNBUFFERED: "1"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install Python dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Run isolated real DeepSeek regression
+        run: python scripts/deepseek_regression_eval.py --report-dir data/eval-reports/deepseek
+
+      - name: Upload DeepSeek evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deepseek-regression-evidence
+          path: data/eval-reports/deepseek/
+          retention-days: 14

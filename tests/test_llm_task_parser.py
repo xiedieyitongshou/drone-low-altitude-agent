@@ -2,12 +2,33 @@ from pathlib import Path
 import sys
 import unittest
 
+import pytest
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from app.services.llm_task_parser import LLMParsedTaskPayload, build_parsed_task_request_from_llm_payload
 from app.services.nl_parser import NaturalLanguageParseError
+
+
+@pytest.mark.parametrize("intent,fields,missing", [
+    ("evaluate", {"date": "2026-11-28", "start_time": "14:00", "end_time": "16:00", "task_type": "inspection"}, "location"),
+    ("recommend", {"date": "2026-11-28", "task_type": "survey"}, "location"),
+    ("compare", {"date": "2026-11-28", "start_time": "14:00", "end_time": "16:00", "locations": ["深圳"]}, "locations"),
+])
+def test_llm_partial_compute_request_preserves_context_for_agent_clarification(intent, fields, missing):
+    from app.services.llm_task_parser import LLMParsedTaskPayload, build_parsed_task_request_from_llm_payload
+
+    payload = LLMParsedTaskPayload(intent=intent, **fields)
+    for defer in (False, True):
+        with pytest.raises(NaturalLanguageParseError) as error:
+            build_parsed_task_request_from_llm_payload(payload, query="继续", defer_context_merge=defer)
+        assert error.value.intent == intent
+        assert error.value.parser_source == "llm"
+        for key, value in fields.items():
+            assert error.value.parsed[key] == value
+        assert missing in error.value.missing_fields
 
 
 class LLMTaskParserTestCase(unittest.TestCase):

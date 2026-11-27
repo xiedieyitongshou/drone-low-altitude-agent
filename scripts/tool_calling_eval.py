@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
+from unittest.mock import patch
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -52,6 +52,8 @@ class EvalSummary:
     fallback_accuracy: float
     clarification_pass_rate: float | None
     category_pass_rate: dict[str, float]
+    clarification_continuation_pass_rate: float | None = None
+    guardrail_pass_rate: float | None = None
 
 
 def normalize_tool_name(tool_name: str) -> str | None:
@@ -140,7 +142,7 @@ def evaluate_case(case: dict[str, Any], response: Any) -> dict[str, Any]:
         clarification_pass = (
             "ask_clarification" in actual_actions
             and not (actual_tool_set & BUSINESS_TOOLS)
-            and set(expected_missing_fields).issubset(set(actual_missing_fields))
+            and set(expected_missing_fields) == set(actual_missing_fields)
         )
 
     checks = {
@@ -151,6 +153,24 @@ def evaluate_case(case: dict[str, Any], response: Any) -> dict[str, Any]:
         "exact_tool_match": actual_tool_set == expected_tool_set,
         "clarification_pass": clarification_pass,
     }
+    runtime = getattr(response, "agent_runtime", None) or {}
+    actual_guardrail = runtime.get("guardrail") or {}
+    checks["guardrail_pass"] = None if "expected_guardrail" not in case else all(
+        actual_guardrail.get(key) == value for key, value in case["expected_guardrail"].items()
+    )
+    checks["error_code_pass"] = (
+        None if "expected_error_code" not in case
+        else runtime.get("error_code") == case["expected_error_code"]
+    )
+    checks["parsed_fields_pass"] = all(
+        (getattr(response, "parsed", None) or {}).get(key) == value
+        for key, value in case.get("expected_parsed", {}).items()
+    )
+    checks["tool_input_pass"] = all(
+        runtime.get("tool_inputs", {}).get(tool, {}).get(key) == value
+        for tool, fields in case.get("expected_tool_inputs", {}).items()
+        for key, value in fields.items()
+    )
 
     passed = (
         checks["intent_pass"]
@@ -158,6 +178,10 @@ def evaluate_case(case: dict[str, Any], response: Any) -> dict[str, Any]:
         and checks["no_unexpected_tools"]
         and checks["fallback_pass"]
         and (clarification_pass is not False)
+        and checks["guardrail_pass"] is not False
+        and checks["error_code_pass"] is not False
+        and checks["parsed_fields_pass"]
+        and checks["tool_input_pass"]
     )
 
     runtime = getattr(response, "agent_runtime", None) or {}
@@ -180,6 +204,16 @@ def evaluate_case(case: dict[str, Any], response: Any) -> dict[str, Any]:
         "actual_missing_fields": actual_missing_fields,
         "plan_actions": actual_actions,
         "trace_id": runtime.get("trace_id"),
+        "execution_mode": runtime.get("mode"),
+        "attempted_tools": runtime.get("attempted_tools", actual_tools),
+        "actual_guardrail": actual_guardrail,
+        "error_code": runtime.get("error_code"),
+        "actual_parsed": getattr(response, "parsed", None) or {},
+        "actual_tool_inputs": runtime.get("tool_inputs", {}),
+        "fault_injection": {
+            "candidate_tool_input": case.get("candidate_tool_input"),
+            "tool_error": (case.get("history_state") or {}).get("force_tool_error"),
+        },
     }
 
 
@@ -225,42 +259,36 @@ def summarize_results(results: list[dict[str, Any]]) -> EvalSummary:
             category: _ratio(category_passes[category], count)
             for category, count in sorted(category_counts.items())
         },
+        clarification_continuation_pass_rate=_optional_check_rate(results, "continuation_pass"),
+        guardrail_pass_rate=_optional_check_rate(results, "guardrail_pass"),
     )
 
 
-def run_eval(cases_path: Path = DEFAULT_CASES_PATH, *, execute_tools: bool = False) -> tuple[EvalSummary, list[dict[str, Any]]]:
-    os.environ["AGENT_RUNTIME_MODE"] = "loop"
-    os.environ.setdefault("NL_PARSER_MODE", "rule")
+def _optional_check_rate(results: list[dict[str, Any]], key: str) -> float | None:
+    applicable = [result for result in results if result["checks"].get(key) is not None]
+    return None if not applicable else _ratio(sum(bool(result["checks"][key]) for result in applicable), len(applicable))
 
+
+def run_eval(cases_path: Path = DEFAULT_CASES_PATH, *, execute_tools: bool = False) -> tuple[EvalSummary, list[dict[str, Any]]]:
     cases = json.loads(cases_path.read_text(encoding="utf-8-sig"))
     results: list[dict[str, Any]] = []
-
-    if execute_tools:
-        from app.services.task_orchestrator import orchestrate_task_query
-
-        for case in cases:
-            response = _run_orchestrator_case(case, orchestrate_task_query)
-            results.append(evaluate_case(case, response))
-        return summarize_results(results), results
 
     from app.services.session_memory import TTLSessionMemoryStore
 
     store = TTLSessionMemoryStore()
     for case in cases:
         _seed_history_state(case, store)
-        response = _run_planner_case(case, store)
-        results.append(evaluate_case(case, response))
+        response = _run_runtime_case(case, store, execute_tools=execute_tools)
+        result = evaluate_case(case, response)
+        if case.get("continuation"):
+            follow_up = {**case["continuation"], "id": case["id"], "history_state": case.get("history_state")}
+            continued = evaluate_case(follow_up, _run_runtime_case(follow_up, store, execute_tools=execute_tools))
+            result["continuation"] = continued
+            result["checks"]["continuation_pass"] = continued["passed"]
+            result["passed"] = result["passed"] and continued["passed"]
+        results.append(result)
 
     return summarize_results(results), results
-
-
-def _run_orchestrator_case(case: dict[str, Any], orchestrate_task_query: Any) -> Any:
-    history_state = case.get("history_state") or {}
-    return orchestrate_task_query(
-        case["input"],
-        session_id=history_state.get("session_id") or f"eval-{case['id']}",
-        user_id=history_state.get("user_id") or "eval-user",
-    )
 
 
 def _seed_history_state(case: dict[str, Any], store: Any) -> None:
@@ -274,144 +302,110 @@ def _seed_history_state(case: dict[str, Any], store: Any) -> None:
         store.set(session_id, payload, user_id=user_id)
 
 
-def _run_planner_case(case: dict[str, Any], store: Any) -> Any:
-    from app.agent import initialize_state, mark_parsed, plan_next_step
+def _run_runtime_case(case: dict[str, Any], store: Any, *, execute_tools: bool = False) -> Any:
+    """Exercise production planning/authorization with isolated business fixtures."""
+    from app.agent import (
+        AgentLoop, ToolExecutionContext, ToolExecutor, ToolRegistry,
+        default_tool_registry, initialize_state, mark_parsed,
+    )
+    from app.agent.context_manager import build_agent_parser_context, build_pending_task_context, merge_agent_context
+    from app.services.profile_memory import ProfileMemory
     from app.services.nl_parser import NaturalLanguageParseError, parse_natural_language_request
 
     history_state = case.get("history_state") or {}
     session_id = history_state.get("session_id") or f"eval-{case['id']}"
     user_id = history_state.get("user_id") or "eval-user"
-    context = store.get(session_id, user_id=user_id)
+    session_context = store.get(session_id, user_id=user_id)
+    profile = ProfileMemory(user_id=user_id)
+    context = build_agent_parser_context(session_context=session_context, profile=profile)
 
     try:
-        parsed_result = parse_natural_language_request(case["input"], context=context)
+        parsed_result = parse_natural_language_request(case["input"], context=context, defer_context_merge=True)
         intent = parsed_result.intent
         parsed = parsed_result.parsed
         missing_fields: list[str] = []
     except NaturalLanguageParseError as exc:
-        intent = exc.intent or case.get("expected_intent") or "unknown"
+        intent = exc.intent or "unknown"
         parsed = {key: value for key, value in exc.parsed.items() if value not in (None, "", [])}
         missing_fields = exc.missing_fields
 
+    merged = merge_agent_context(
+        intent=intent, parsed=parsed, session_context=session_context,
+        profile=profile, missing_fields=missing_fields,
+    )
+    parsed, missing_fields = merged.parsed, merged.missing_fields
     state = initialize_state(case["input"], user_id=user_id, session_id=session_id)
     state = mark_parsed(state, intent=intent, parsed=parsed, missing_fields=missing_fields)
-    plan = plan_next_step(state)
+    executed_tools: list[str] = []
+    tool_inputs: dict[str, dict[str, Any]] = {}
+    registry = ToolRegistry()
 
-    if history_state.get("force_tool_error"):
-        return SimpleNamespace(
-            intent=intent,
-            success=False,
-            fallback={
-                "error_type": "external_service_error",
-                "reason": str(history_state["force_tool_error"]),
-            },
-            result={"tool_results": {}},
-            agent_runtime={
-                "mode": "planner_only",
-                "trace_id": state.trace_id,
-                "run_id": state.run_id,
-                "status": "failed",
-                "fallback_used": True,
-                "plan_actions": ["call_tool", "fallback"],
-                "tool_results": [],
-                "errors": [str(history_state["force_tool_error"])],
-            },
+    def handler_for(name):
+        def handler(payload, context):
+            executed_tools.append(name)
+            if history_state.get("force_tool_error"):
+                raise TimeoutError(str(history_state["force_tool_error"]))
+            if execute_tools:
+                return default_tool_registry.get(name).handler(payload, context)
+            return {"tool_input": payload, "user_id": context.user_id}
+        return handler
+
+    for spec in default_tool_registry.list_specs():
+        registry.register(spec.model_copy(deep=True), handler_for(spec.name))
+
+    class EvalExecutor(ToolExecutor):
+        def execute(self, *, tool_input, **kwargs):
+            # An explicitly labelled hostile candidate payload, not an assertion
+            # that the rule parser extracts foreign IDs from natural language.
+            tool_input = {**tool_input, **case.get("candidate_tool_input", {})}
+            tool_inputs[kwargs["tool_name"]] = dict(tool_input)
+            return super().execute(tool_input=tool_input, **kwargs)
+
+    events = []
+    executor = EvalExecutor(tool_registry=registry, trace_recorder=events.append)
+    with patch("app.agent.loop.record_trace_event", events.append):
+        outcome = AgentLoop(tool_registry=registry, tool_executor=executor).run(
+            state, context=ToolExecutionContext(user_id=user_id, role=history_state.get("role", "user")),
         )
-
-    actual_tools = [str(plan.tool_name)] if plan.tool_name else []
-    fallback = None
-    success = True
-    if plan.action.value == "ask_clarification":
-        fallback = {"missing_fields": plan.missing_fields}
-        success = False
-    elif plan.action.value == "fallback":
-        fallback = {"reason": plan.reason}
-        success = False
+    if outcome.requires_clarification:
+        store.set(session_id, build_pending_task_context(
+            intent=intent, parsed=parsed, missing_fields=outcome.final_state.missing_fields, query=case["input"],
+        ), user_id=user_id)
+    elif outcome.success:
+        store.set(session_id, {"intent": intent, **parsed}, user_id=user_id)
+    guardrail = next((result.metadata["guardrail_explanation"]
+                      for result in outcome.final_state.tool_results.values()
+                      if "guardrail_explanation" in result.metadata), {})
+    error_code = next((result.error_code for result in outcome.final_state.tool_results.values()
+                       if result.error_code), None)
 
     return SimpleNamespace(
         intent=intent,
-        success=success,
-        fallback=fallback,
-        result={"tool_results": {tool: {"success": True} for tool in actual_tools}},
+        success=outcome.success,
+        parsed=parsed,
+        fallback=outcome.output if outcome.requires_clarification or not outcome.success else None,
+        result=outcome.output,
         agent_runtime={
-            "mode": "planner_only",
+            "mode": "runtime_live_tools" if execute_tools else "runtime_fixture",
             "trace_id": state.trace_id,
             "run_id": state.run_id,
-            "status": "planned",
-            "fallback_used": plan.action.value == "fallback",
-            "plan_actions": [plan.action.value],
-            "tool_results": actual_tools,
-            "errors": [],
+            "status": outcome.final_state.status.value,
+            "fallback_used": outcome.fallback_used,
+            "plan_actions": [plan.action.value for plan in outcome.plans],
+            "tool_results": executed_tools,
+            "attempted_tools": list(outcome.final_state.tool_results),
+            "tool_inputs": tool_inputs,
+            "guardrail": guardrail,
+            "error_code": error_code,
+            "errors": outcome.final_state.errors,
         },
-    )
-
-
-def _run_with_planner_only(self: Any, state: Any, context: Any) -> Any:
-    from app.agent import (
-        AgentLoopResult,
-        AgentPlanAction,
-        ToolResult,
-        build_agent_fallback_output,
-        build_clarification_message,
-        mark_completed,
-        mark_needs_clarification,
-        plan_next_step,
-        record_tool_result,
-    )
-
-    plan = plan_next_step(state)
-    if plan.action == AgentPlanAction.ASK_CLARIFICATION:
-        message = build_clarification_message(plan.missing_fields)
-        clarified = mark_needs_clarification(state, plan.missing_fields, message=message)
-        return AgentLoopResult(
-            success=True,
-            final_state=clarified,
-            message=message,
-            output=build_agent_fallback_output(state=clarified, message=message),
-            requires_clarification=True,
-            last_plan=plan,
-            plans=[plan],
-        )
-
-    if plan.action == AgentPlanAction.CALL_TOOL:
-        tool_result = ToolResult(
-            success=True,
-            tool_name=str(plan.tool_name),
-            data={
-                "tool_name": plan.tool_name,
-                "tool_input": plan.tool_input,
-                "metadata": plan.metadata,
-            },
-        )
-        completed = record_tool_result(state, tool_name=str(plan.tool_name), tool_result=tool_result)
-        completed = mark_completed(completed, message="planner-only eval completed")
-        return AgentLoopResult(
-            success=True,
-            final_state=completed,
-            message="planner-only eval completed",
-            output={
-                "tool_results": {
-                    str(plan.tool_name): tool_result.model_dump(mode="json"),
-                }
-            },
-            last_plan=plan,
-            plans=[plan],
-        )
-
-    completed = mark_completed(state, message=plan.reason)
-    return AgentLoopResult(
-        success=True,
-        final_state=completed,
-        message=plan.reason,
-        output={},
-        last_plan=plan,
-        plans=[plan],
     )
 
 
 def write_reports(summary: EvalSummary, results: list[dict[str, Any]], report_dir: Path = DEFAULT_REPORT_DIR) -> None:
     report_dir.mkdir(parents=True, exist_ok=True)
     payload = {
+        "execution_modes": sorted({result.get("execution_mode", "unknown") for result in results}),
         "summary": summary.__dict__,
         "results": results,
     }
@@ -441,6 +435,8 @@ def build_markdown_report(summary: EvalSummary, results: list[dict[str, Any]]) -
         f"- Unexpected tool violation rate: {_pct(summary.unexpected_tool_violation_rate)}",
         f"- Fallback accuracy: {_pct(summary.fallback_accuracy)}",
         f"- Clarification pass rate: {'N/A' if summary.clarification_pass_rate is None else _pct(summary.clarification_pass_rate)}",
+        f"- Clarification continuation pass rate: {'N/A' if summary.clarification_continuation_pass_rate is None else _pct(summary.clarification_continuation_pass_rate)}",
+        f"- Guardrail pass rate: {'N/A' if summary.guardrail_pass_rate is None else _pct(summary.guardrail_pass_rate)}",
         "",
         "## Category Pass Rate",
         "",
@@ -460,6 +456,7 @@ def build_markdown_report(summary: EvalSummary, results: list[dict[str, Any]]) -
                 f"  Expected tools: {failure['expected_tools']}; actual tools: {failure['actual_tools']}",
                 f"  Missing tools: {failure['missing_tools']}; unexpected called: {failure['unexpected_called']}",
                 f"  Plan actions: {failure['plan_actions']}; trace_id: {failure['trace_id']}",
+                f"  Checks: {failure['checks']}",
             ]
         )
 
@@ -484,7 +481,7 @@ def main() -> None:
     parser.add_argument(
         "--execute-tools",
         action="store_true",
-        help="Execute real registered tools. Default is planner-only to avoid external service calls.",
+        help="Execute real business handlers (external services/DB). Default executes AgentLoop and Guardrail with fixture handlers.",
     )
     args = parser.parse_args()
 
@@ -492,6 +489,8 @@ def main() -> None:
     write_reports(summary, results, args.report_dir)
     print(f"Tool Calling Eval completed: {summary.total_cases} cases, pass_rate={_pct(summary.pass_rate)}")
     print(f"Reports written to: {args.report_dir}")
+    if not results or any(not result["passed"] for result in results):
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

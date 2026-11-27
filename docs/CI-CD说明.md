@@ -13,6 +13,22 @@ CI 和 Docker 默认验证 Agent Loop 主链路：
 AGENT_RUNTIME_MODE=loop
 ```
 
+## 2026-11-27 门禁版本核对
+
+本节提交记录对应修改前的本地 `main@4cebe72`；本轮工作区中的 Eval 修补见下文“本轮修补与验证”。项目没有独立的质量门禁版本号，需分别看 CI 工作流与其中各专项的更新记录，不能把 `eval_fast` 等同于全部 CI。
+
+| 层级 | 修改前版本依据 | 覆盖及边界 |
+|---|---|---|
+| CI 工作流 | `.github/workflows/ci.yml` 最近修改为 2026-11-25 的 `129a92d` | 延续 11 月 24 日的浏览器、Session 等门禁，并把请求预算和 ToolExecutor 测试加入 PostgreSQL 专项 |
+| 建单幂等与任务版本 | `51064ba`、`cdbb72d` | 重复/并发建单、请求冲突、响应丢失恢复、评估期间取消或修改、旧版本结果不得覆盖新状态；后端全套和 PostgreSQL 专项都会执行相关测试 |
+| 前端取消与 Session 集成 | 2026-11-24 的 `f7a5fc0` | 五个 Chromium 页面场景；Push/PR 执行八个 Session 场景，手动触发执行十四类各三次。天气固定，Session 演练的应用进程、PostgreSQL 和 Redis 真实运行 |
+| Tool Calling 快速 Eval | 四项阈值始于 2026-08-07 的 `c2aa314`，8 月 19 日 `ffbda62` 补充断言错误信息 | 仍为 Planner 级评测；未增加总通过率、追问通过率、fallback 准确率和关键类别全通过断言 |
+| RAG 快速 Eval | `tests/test_eval_regression.py` 最近修改为 2026-11-20 的 `db85a63` | Hybrid 检索质量、过滤、权限、无答案 fallback 和延迟；这里的更新没有改变 Tool Calling 四项断言 |
+
+幂等性及前后端状态不一致修复时新增的门禁持续保留。本轮在此基础上补齐 Tool Calling Eval 的执行层级与断言：默认入口已执行真实 AgentLoop、Planner、ToolExecutor 和 Guardrail，业务 handler 使用固定夹具；因此其通过不代表实际天气服务或业务持久化已经完成端到端验证。
+
+本轮更新了 Eval、样例、测试和 workflow；下文验收记录为本地结果，远程 Actions 和部署状态需另外核验。真实模型回归入口已加入，但实际 DeepSeek 调用因自动审批拒绝而未完成；离线模型夹具的通过情况单独标识。
+
 ## 触发方式
 
 `.github/workflows/ci.yml` 会在以下场景触发：
@@ -33,7 +49,7 @@ DATABASE_URL=sqlite:///./data/ci-test.db
 SESSION_MEMORY_BACKEND=ttlcache
 ```
 
-CI 不依赖真实 LLM 输出，不依赖真实天气 API，不读取本地 `.env`。Docker Compose 校验前会用 `.env.example` 生成临时 `.env`。
+普通 CI 不依赖真实 LLM 输出，不依赖真实天气 API，不读取本地 `.env`。Docker Compose 校验前会用 `.env.example` 生成临时 `.env`。显式勾选 `run_deepseek` 的手动专项另行使用 DeepSeek，天气仍固定；下文说明其隔离与凭据配置。
 
 ## 每次 Push/PR 必跑
 
@@ -64,6 +80,7 @@ docker compose --profile test --profile eval --profile tools config --quiet
 - 登录后 Session 上下文，包括重新创建存储实例后恢复最新状态、同会话编号的用户隔离，以及删除过期上下文后保留聊天历史。
 - 建单幂等性，包括串行/并发重试、请求冲突、用户隔离、事务回滚、提交确认或响应丢失及 Agent 中断恢复。
 - 任务版本控制，包括评估/复核/推荐期间取消或修改、原子写入冲突、快照回滚、HTTP 版本契约、Agent 旧窗口及旧版本重试；取消先提交时，旧计算不得改写任务或留下成功评估。
+- 请求预算与工具超时，包括解析和工具共享请求预算、超时后禁止迟到建单或修改提交、已提交建单的幂等恢复、有界执行容量、天气重试/LLM 调用使用剩余预算，以及比选分支的预算与 Trace 隔离。对应 `tests/test_execution_budget.py` 和 `tests/test_tool_executor.py`，已加入 PostgreSQL 专项。
 
 本地复现时，将 `DATABASE_URL` 指向一个空的 PostgreSQL 测试库。从项目根目录执行：
 
@@ -79,7 +96,7 @@ python -m pytest -q --api-db=postgresql \
   tests/test_task_creation_idempotency.py tests/test_mission_task_versioning.py
 ```
 
-共享 API 夹具默认使用 SQLite 内存库，显式传入 `--api-db=postgresql` 时要求 PostgreSQL 连接，通过事务回滚清理测试数据。幂等性与任务版本专项还需设置 `IDEMPOTENCY_TEST_DATABASE_URL`；CI 将其设为同一专用 PostgreSQL 测试库，两组专项在每例随机 schema 内执行并清理，未设置时使用临时 SQLite 文件。
+共享 API 夹具默认使用 SQLite 内存库，显式传入 `--api-db=postgresql` 时要求 PostgreSQL 连接，在每例独立的随机 schema 中建表，结束后删除该 schema；这样工作线程的独立连接可以看到真实提交。幂等性与任务版本专项还需设置 `IDEMPOTENCY_TEST_DATABASE_URL`；CI 将其设为同一专用 PostgreSQL 测试库，两组专项在每例随机 schema 内执行并清理，未设置时使用临时 SQLite 文件。
 
 ## 前端 CI
 
@@ -153,6 +170,75 @@ python scripts/session_reliability_eval.py --profile full
 - 多轮状态：状态继承、状态覆盖、工具输入一致性、上下文污染、session 隔离。
 - 失败恢复：失败分类、恢复动作、fallback 决策、trace 错误覆盖、权限绕过率。
 - RAG Hybrid：Recall@K、Hit@K、metadata filter、权限泄露率、fallback 通过率、P95 延迟。
+
+四个快速门禁当前实际断言如下；未列出的报告指标不自动构成门禁：
+
+| 专项 | 实际硬断言 |
+|---|---|
+| Tool Calling | 至少九条基线、总通过率 `== 1.0`；追问、追问续接、Guardrail、fallback 和追问/权限/修改/工具失败类别通过率均 `== 1.0`；禁止工具违规率 `== 0`；保留意图 `>= 0.95`、工具选择 `>= 0.90`、漏调 `<= 0.05` |
+| 多轮状态 | 非空且总通过率 `== 1.0`；追问续接、修改字段和工具失效准确率均 `== 1.0`；保留状态继承、状态覆盖、工具输入一致性及 Session 隔离 `>= 0.95`，上下文污染率 `== 0` |
+| 失败恢复 | 非空且总通过率 `== 1.0`；不编造、结构化错误完整性、可重试判断均 `== 1.0`；保留失败分类、恢复动作、fallback 决策及 Trace 错误覆盖 `>= 0.95`，权限绕过率 `== 0` |
+| RAG Hybrid | 非空；Recall@K、Hit@K 均 `>= 0.70`；metadata filter `>= 0.95`；权限泄露率 `== 0`；fallback 通过率 `== 1.0`；P95 延迟 `<= 500ms` |
+
+### 修补前：Tool Calling 7/9 与门禁通过的复现
+
+2026-11-27 在上述未修改代码上，显式设置 `LLM_ENABLED=false`、`NL_PARSER_MODE=rule`、`AGENT_RUNTIME_MODE=loop`，运行默认 Tool Calling Eval 和 `pytest -m eval_fast -q`：前者 **7/9**，后者 **4 passed**。报告保存在本机 `data/eval-reports/tool-calling-confirmed-20261127/`，该目录被 Git 忽略；本次没有覆盖仓库中的历史报告。
+
+| 指标 | 修补前结果 | 修补前 Tool Calling 门禁是否检查 |
+|---|---|---|
+| 意图准确率 | 100% | 是，要求至少 95% |
+| 工具选择准确率 | 100% | 是，要求至少 90% |
+| 缺失工具调用率 | 0% | 是，要求不高于 5% |
+| 禁止工具违规率 | 7.14%（1/14） | 是，但允许不高于 10%，所以该次违规未触发失败 |
+| 总通过率 | 77.78%（7/9） | 否 |
+| 追问通过率 | 0%（0/1） | 否 |
+| fallback 准确率 | 88.89%（8/9） | 否 |
+
+两条失败需要分别解释：
+
+- `agent_clarification_missing_location_001`：输入“明天下午能飞吗？”实际生成 `ask_clarification`，缺失字段为 `location`；样例期望为 `location` 和 `task_type`。现行规则 Parser 会把未指定的评估任务类型默认为 `cruise`，因此这是预期与解析契约不一致，不能说成系统没有追问。后续需明确：沿用默认巡航时修正样例；若产品要求强制确认任务类型，则先统一解析契约及相关测试。
+- `agent_permission_denied_001`：默认入口 `_run_planner_case()` 只产生 `query_user_history` 计划，并将计划映射为模拟成功结果，没有经过 AgentLoop、ToolExecutor 或 Guardrail；因此不能据此判断实际权限拦截成功，也不能据此断言已经读取其他用户数据。`expected_guardrail` 当前还没有被 `evaluate_case()` 检查。
+
+权限样例还存在输入边界：规则 Parser 的历史查询载荷不提取目标 `user_id`，历史工具用登录上下文限定用户。后续接通 Guardrail 时，应区分“自然语言请求其他用户数据的行为”和“候选工具载荷伪造 `user_id` 的拒绝”，分别核对实际数据作用域和 Guardrail 错误码，不能预设仅增加执行层就必然得到样例中的拒绝结果。
+
+另有两个评测边界：`force_tool_error` 在默认路径中直接构造失败响应，没有真实执行天气工具；`expected_result_keywords`、`expected_error_type` 等字段也未参与当前单例通过判定。默认脚本即使有失败样例也正常退出，手动 `full-eval` job 生成报告不等于它会因总通过率不足而失败。
+
+### 本轮修补与验证
+
+已实施的修改：
+
+1. 默认确定性 Eval 执行真实 AgentLoop、ToolExecutor 和 Guardrail，克隆实际工具权限规格，仅替换业务 handler 与 Trace 存储；记录实际 handler 执行、被拦截的尝试、参数、错误码及故障注入。缺参负例通过实际追问链路，再验证同 Session 补充地点后的参数和工具执行。
+2. 评估沿用默认 `cruise` 契约，缺参样例只期待 `location`，禁止无必要的额外追问。权限负例明确标记伪造候选 `user_id` 的注入，断言错误码及 handler 未执行；不将该结果表述为自然语言目标用户提取能力。
+3. Tool Calling、多轮状态和失败恢复的报告命令遇到失败用例或空集时返回 `1`，仍保留 JSON/Markdown。RAG 默认对 BM25/Hybrid 执行既有指标阈值，实验检索器的漏检继续列入报告；单独选择其他检索器时应用同一组指标阈值。RAG Eval 不调用模型相关性复核，保持确定性。
+4. CI 与 Docker 完整 Eval 汇总所有脚本和快速门禁的失败，避免后续成功命令覆盖先前失败退出码；CI 无论通过或失败都上传现有报告。Docker 测试/Eval 明确关闭模型，防止业务 `.env` 影响确定性门禁。
+5. LLM 缺参错误保留已解析字段、意图、接口和解析来源，供实际追问后续接使用；结构化追问响应返回 `missing_fields`。完整参数请求仍经过原 Schema 校验。
+6. 新增 `scripts/deepseek_regression_eval.py` 和五类显式手动模型场景，固定天气 provider 响应，使用临时 SQLite、隔离测试用户和数据库 Session，实际执行 Orchestrator 与业务工具。报告保存模型响应、工具输入、响应与状态断言；未收到真实模型响应、场景失败或未执行完整五类均返回失败。
+
+本地确定性 Tool Calling 已由修补前 **7/9** 提升为 **9/9**。`tests/test_eval_cli.py` 用错误预期及空集验证报告命令失败退出；`tests/test_deepseek_harness.py` 用明确标识的离线模型输出验证五类场景和实际业务工具，禁止访问网络。离线夹具通过不代表真实 DeepSeek 通过。
+
+2026-11-27 本地验收：后端全套 **519 passed、5 skipped**（五个 live 场景按默认设置跳过），其中包含八个错误预期/空集 CLI 负例；Tool Calling **9/9**、多轮状态 **15/15**、失败恢复 **7/7**，RAG BM25 **10/10**、Hybrid **11/11**。本次保存的 TF-IDF **7/9** 和 Mock Embedding **8/10** 仍有漏检，不纳入生产检索器完整通过结论。Workflow YAML、Compose 配置和 `git diff --check` 通过；未运行远程 Actions。全套日志为本机 `data/eval-reports/eval-backend-20261127.log`，其他新报告在 `data/eval-reports/eval-fixed-20261127/`；Tool Calling 报告已同步到 `evals/reports/`。
+
+真实模型专项包含以下断言：
+
+| 场景 | 应验证内容 |
+|---|---|
+| 缺参续接 | 首轮追问且不执行业务工具；补充后继承已有字段，工具参数完整并得到预期结果 |
+| 修改条件 | 地点、时段、任务类型的修改覆盖旧值，保留日期，最终评估使用新条件 |
+| 任务操作 | 建单、评估、推荐/选窗、执行前复核的任务引用、参数、版本及数据库状态与最终响应一致；重试不重复建单 |
+| 模型格式异常 | 收到模型响应后注入无效 JSON，验证不会执行工具、请求天气或写入评估；明确标注注入，不能冒充模型自然发生的失败 |
+| 规则回退 | 在收到真实模型响应后受控注入格式错误，验证 hybrid 的 `llm_fallback_rule` 来源、规则工具参数、最终业务结果和状态；与模型自然输出的正常样例分别记录 |
+
+普通 `pytest` 自动跳过五个 live 场景；不会把跳过当作真实模型通过。显式运行：
+
+```powershell
+.\.venv\Scripts\python.exe scripts/deepseek_regression_eval.py --env-file .env
+```
+
+也可通过进程环境设置 `LLM_MODEL` 和 `LLM_API_KEY`/`DEEPSEEK_API_KEY`，省略 `--env-file`；`--model` 可显式选择待测模型。脚本将合成请求和隔离会话上下文发送给 DeepSeek，只让任务解析使用模型，解释器和知识相关性复核不调用模型。临时数据库不会复用配置文件中的业务库；报告保存在 `data/eval-reports/deepseek/<run_id>/`，不保存凭据。
+
+GitHub Actions 手动触发时勾选 `run_deepseek`，并填写 `deepseek_model` 或设置 repository variable `DEEPSEEK_EVAL_MODEL`，凭据使用 repository secret `DEEPSEEK_API_KEY`。不勾选时保持原确定性流程；勾选后缺模型或凭据会失败，不静默跳过。证据 artifact 为 `deepseek-regression-evidence`。
+
+本机实际请求未通过网络沙箱，随后外网执行又被自动审批拒绝，理由为尚需明确授权外发测试请求；保存的首次运行记录为 0/5、没有收到真实模型响应，不能作为模型能力失败或验收通过的结论。当前真实模型验收待外发授权和可用网络后执行。
 
 RAG 门禁当前还要求 `fallback_pass_rate == 1.0`。BM25 完整样例通过与无答案行为另有 `tests/test_rag_eval.py` 覆盖；具体分母和模拟模型边界见 [RAG Eval 指标](RAG%20Eval%20测试指标设计.md)。
 
